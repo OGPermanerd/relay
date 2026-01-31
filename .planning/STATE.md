@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 6 of 8 (Discovery & Search)
-Plan: 1 of 3
+Plan: 2 of 3
 Status: In progress
-Last activity: 2026-01-31 - Completed 06-01-PLAN.md
+Last activity: 2026-01-31 - Completed 06-02-PLAN.md
 
-Progress: [#####################] 81% (22 of 27 total plans)
+Progress: [######################] 85% (23 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
+- Total plans completed: 23
 - Average duration: 4 min
-- Total execution time: 85 min
+- Total execution time: 91 min
 
 **By Phase:**
 
@@ -32,10 +32,10 @@ Progress: [#####################] 81% (22 of 27 total plans)
 | 03-mcp-integration | 6/6 | 18 min | 3 min |
 | 04-data-model-storage | 5/5 | 16 min | 3 min |
 | 05-skill-publishing | 3/3 | 18 min | 6 min |
-| 06-discovery | 1/3 | 3 min | 3 min |
+| 06-discovery | 2/3 | 9 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-05 (5 min), 05-01 (7 min), 05-02 (7 min), 05-03 (3 min), 06-01 (3 min)
+- Last 5 plans: 05-01 (7 min), 05-02 (7 min), 05-03 (3 min), 06-01 (3 min), 06-02 (6 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -92,6 +92,10 @@ Recent decisions affecting current work:
 - Weight A for name, Weight B for description - name matches rank higher in FTS.
 - websearch_to_tsquery over plainto_tsquery - supports quotes and boolean operators.
 - Fallback to totalUses ordering when no query - optimized browse mode.
+- react-sparklines for usage trend visualization - lightweight, simple API for inline charts.
+- Batch query with date_trunc for sparkline data - single query for all skills to avoid N+1.
+- 14-day lookback for sparklines - balances detail vs. performance.
+- Fill missing days with zeros - ensures continuous sparkline visualization.
 
 ### Pending Todos
 
@@ -107,6 +111,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T18:51:50Z
-Stopped at: Completed 06-01-PLAN.md (Full-Text Search Infrastructure)
+Last session: 2026-01-31T18:54:39Z
+Stopped at: Completed 06-02-PLAN.md (Skill Cards with Sparklines)
 Resume file: None
