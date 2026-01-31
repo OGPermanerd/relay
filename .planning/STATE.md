@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 11 of 11 (E2E Test Coverage)
-Plan: 1 of 4
+Plan: 3 of 4
 Status: In progress
-Last activity: 2026-01-31 - Completed 11-01-PLAN.md (Playwright auth setup)
+Last activity: 2026-01-31 - Completed 11-03-PLAN.md (Skill search and profile E2E tests)
 
-Progress: [███████████████████░░░░░░░] 39/42 (v1.0 complete, 6/9 v1.1)
+Progress: [████████████████████░░░░░░] 40/42 (v1.0 complete, 7/9 v1.1)
 
 ## Performance Metrics
 
@@ -24,9 +24,9 @@ Progress: [███████████████████░░░░
 - Average duration: 3.6 min/plan
 
 **v1.1 Velocity:**
-- Total plans completed: 6
-- Total execution time: 25 min
-- Average duration: 4.2 min/plan
+- Total plans completed: 7
+- Total execution time: 31 min
+- Average duration: 4.4 min/plan
 
 ## Accumulated Context
 
@@ -47,6 +47,7 @@ All v1.0 decisions logged in PROJECT.md Key Decisions table.
 | 10-04 | nuqs for URL state | Consistent with existing CategoryFilter/TagFilter patterns |
 | 10-04 | Inline SQL quality computation | Avoids denormalized column; acceptable for v1.1 scale |
 | 11-01 | Use @relay/db instead of direct postgres | Type-safe, uses existing shared client |
+| 11-03 | Use exact: true for ambiguous button selectors | Avoids strict mode violations with partial matches |
 
 ### Pending Todos
 
@@ -56,14 +57,14 @@ None.
 
 **Known Tech Debt (addressed in v1.1):**
 - ~~Tag filtering UI exists but backend returns empty array~~ - FIXED in Phase 9
-- Limited E2E test coverage (login page only) - Phase 11 IN PROGRESS
+- ~~Limited E2E test coverage (login page only)~~ - Phase 11 IN PROGRESS (skill search, profile done)
 
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 11-01-PLAN.md (Playwright auth setup)
+Stopped at: Completed 11-03-PLAN.md (Skill search and profile E2E tests)
 Resume file: None
 
 ## Next Steps
 
-Continue with 11-02-PLAN.md (E2E tests for skill browsing).
+Continue with 11-04-PLAN.md (Additional E2E test coverage).
