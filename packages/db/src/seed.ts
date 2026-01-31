@@ -46,6 +46,7 @@ const testSkills: NewSkill[] = [
     description:
       "AI-powered code review assistant that analyzes pull requests for bugs, security issues, and best practices.",
     category: "prompt",
+    tags: ["code-review", "best-practices", "security"],
     hoursSaved: 2,
     content: `# Code Review Assistant
 
@@ -78,6 +79,7 @@ The assistant will provide detailed feedback on each issue found.
     description:
       "Generates comprehensive API documentation from code, including endpoints, parameters, and example requests.",
     category: "workflow",
+    tags: ["documentation", "api", "automation"],
     hoursSaved: 4,
     content: `# API Documentation Generator
 
@@ -111,6 +113,7 @@ The generator will create markdown documentation ready for your docs site.
     description:
       "Generates unit and integration tests for your code with high coverage and edge case handling.",
     category: "prompt",
+    tags: ["testing", "automation", "tdd"],
     hoursSaved: 3,
     content: `# Test Writer
 
@@ -172,6 +175,7 @@ async function seed() {
             name: skill.name,
             description: skill.description,
             category: skill.category,
+            tags: skill.tags,
             content: skill.content,
             hoursSaved: skill.hoursSaved,
             authorId: skill.authorId,

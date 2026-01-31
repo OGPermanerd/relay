@@ -29,6 +29,7 @@ export const skills = pgTable(
     slug: text("slug").notNull().unique(),
     description: text("description").notNull(),
     category: text("category").notNull(), // prompt, workflow, agent, mcp
+    tags: text("tags").array().default([]),
 
     // Version references (no FK due to circular dependency with skillVersions)
     publishedVersionId: text("published_version_id"), // Currently published version
