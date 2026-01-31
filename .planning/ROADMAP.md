@@ -1,0 +1,187 @@
+# Roadmap: Relay
+
+## Overview
+
+Relay is an internal skill marketplace delivering Claude skills, prompts, workflows, and agent configurations with wiki-style contribution and metrics-driven quality. The roadmap builds foundation first (auth), then integrates MCP early for usage tracking from the start, then layers web features (publishing, discovery, ratings). Each phase delivers a coherent, verifiable capability that enables the next. Moving MCP Integration early ensures the core metric (FTE Days Saved = uses x hours) has real usage data from day one.
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 1: Project Foundation** - Development infrastructure, tooling, and CI/CD
+- [ ] **Phase 2: Authentication** - Google Workspace SSO and user profiles
+- [ ] **Phase 3: MCP Integration** - Claude Code deployment and usage tracking (early for metrics)
+- [ ] **Phase 4: Data Model & Storage** - Core schema and multi-format skill support (informed by MCP)
+- [ ] **Phase 5: Skill Publishing** - Upload skills with metadata and view details
+- [ ] **Phase 6: Discovery** - Search, browse, and skill cards
+- [ ] **Phase 7: Ratings & Reviews** - User feedback with time-saved estimates
+- [ ] **Phase 8: Metrics & Analytics** - FTE Days Saved, dashboard, trending, leaderboard (with real data)
+
+## Phase Details
+
+### Phase 1: Project Foundation
+**Goal**: Development environment is ready for feature implementation
+**Depends on**: Nothing (first phase)
+**Requirements**: INFR-01
+**Success Criteria** (what must be TRUE):
+  1. Next.js 15+ application runs locally with hot reload
+  2. PostgreSQL database runs locally with migrations applied
+  3. CI pipeline runs linting, type checking, and tests on push
+  4. Project structure follows monorepo pattern from research
+  5. Development documentation enables immediate contribution
+  6. E2E test harness can validate served pages automatically
+**Plans**: TBD
+
+Plans:
+- [ ] 01-01: Project scaffolding and tooling
+- [ ] 01-02: Database setup and migrations
+- [ ] 01-03: CI/CD pipeline
+- [ ] 01-04: E2E testing setup with Playwright
+
+### Phase 2: Authentication
+**Goal**: Users can securely access the application with company credentials
+**Depends on**: Phase 1
+**Requirements**: AUTH-01, AUTH-02
+**Success Criteria** (what must be TRUE):
+  1. User can sign in via Google Workspace SSO
+  2. Only users with company domain email can access the application
+  3. User profile page displays name and avatar from Google
+  4. User profile shows placeholder for contribution statistics
+**Plans**: TBD
+
+Plans:
+- [ ] 02-01: Auth.js Google provider setup
+- [ ] 02-02: Domain restriction middleware
+- [ ] 02-03: User profile page
+
+### Phase 3: MCP Integration
+**Goal**: Users can deploy skills to Claude and usage is tracked automatically
+**Depends on**: Phase 2
+**Requirements**: MCP-01, MCP-02, MCP-03
+**Success Criteria** (what must be TRUE):
+  1. MCP server exposes skill search/list operations to Claude
+  2. User can query skills from within Claude Code
+  3. User can deploy skill to local Claude environment via one-click
+  4. MCP server automatically tracks usage when deployed skills run
+  5. Usage events stored for downstream analytics (schema ready for Phase 4)
+**Plans**: TBD
+
+Plans:
+- [ ] 03-01: MCP server scaffold with TypeScript SDK
+- [ ] 03-02: Search and list tools
+- [ ] 03-03: Skill deployment workflow
+- [ ] 03-04: Usage tracking integration
+- [ ] 03-05: End-to-end MCP testing
+
+### Phase 4: Data Model & Storage
+**Goal**: Database schema supports all skill types with immutable versioning
+**Depends on**: Phase 3
+**Requirements**: SKIL-02
+**Success Criteria** (what must be TRUE):
+  1. Database schema supports skills, versions, users, ratings, usage events
+  2. Skill content stored in object storage (R2/S3)
+  3. System accepts Claude Code skills, prompts, workflows, agent configs
+  4. Version model is immutable (new versions create records, never modify)
+  5. Usage tracking from MCP Phase 3 integrated into skill metrics
+**Plans**: TBD
+
+Plans:
+- [ ] 04-01: Core schema design and migrations
+- [ ] 04-02: Object storage integration
+- [ ] 04-03: Multi-format skill validation
+- [ ] 04-04: Usage event schema integration
+
+### Phase 5: Skill Publishing
+**Goal**: Users can upload skills and view skill details
+**Depends on**: Phase 4
+**Requirements**: SKIL-01, SKIL-03
+**Success Criteria** (what must be TRUE):
+  1. User can upload skill with name, description, category, tags
+  2. User can provide usage instructions and estimated time saved
+  3. Skill detail page displays full metadata
+  4. Skill detail page shows real usage statistics from MCP tracking
+  5. Uploaded skill content persists in object storage
+**Plans**: TBD
+
+Plans:
+- [ ] 05-01: Skill upload form and API
+- [ ] 05-02: Skill detail page
+- [ ] 05-03: Content storage workflow
+
+### Phase 6: Discovery
+**Goal**: Users can find relevant skills through search and browse
+**Depends on**: Phase 5
+**Requirements**: DISC-01, DISC-02, DISC-03
+**Success Criteria** (what must be TRUE):
+  1. User can search skills via full-text search across names, descriptions, tags
+  2. Skill cards display name, author, rating, uses (real data), FTE Days Saved sparkline
+  3. User can browse skills by category
+  4. User can filter search results by tags
+  5. Empty states guide users when no results found
+**Plans**: TBD
+
+Plans:
+- [ ] 06-01: Full-text search with PostgreSQL
+- [ ] 06-02: Skill card components
+- [ ] 06-03: Category browse and tag filtering
+- [ ] 06-04: Search results page
+
+### Phase 7: Ratings & Reviews
+**Goal**: Users can rate skills and provide time-saved feedback
+**Depends on**: Phase 6
+**Requirements**: RATE-01, RATE-02
+**Success Criteria** (what must be TRUE):
+  1. User can rate skill 1-5 stars after viewing
+  2. User can add optional comment with rating
+  3. User can submit time-saved estimate as part of review
+  4. User-submitted time estimates display and override creator estimates
+  5. Skill cards and detail pages reflect aggregated ratings
+**Plans**: TBD
+
+Plans:
+- [ ] 07-01: Rating submission UI and API
+- [ ] 07-02: Time-saved estimate capture
+- [ ] 07-03: Rating aggregation and display
+
+### Phase 8: Metrics & Analytics
+**Goal**: Platform shows value through FTE Days Saved and surfaces quality content
+**Depends on**: Phase 7
+**Requirements**: RATE-03, RATE-04, DISC-04, AUTH-03
+**Success Criteria** (what must be TRUE):
+  1. FTE Days Saved displays at skill level (uses x estimated hours) with real usage data
+  2. Platform dashboard shows total contributors, downloads, uses, FTE Days Saved
+  3. Trending section surfaces skills with high recent usage velocity (from MCP tracking)
+  4. Leaderboard shows top contributors by skills shared, ratings, FTE Days Saved
+  5. User profile displays complete contribution statistics
+**Plans**: TBD
+
+Plans:
+- [ ] 08-01: FTE Days Saved calculation service
+- [ ] 08-02: Platform dashboard
+- [ ] 08-03: Trending algorithm and section
+- [ ] 08-04: Contributor leaderboard
+- [ ] 08-05: Profile statistics completion
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Project Foundation | 0/4 | Not started | - |
+| 2. Authentication | 0/3 | Not started | - |
+| 3. MCP Integration | 0/5 | Not started | - |
+| 4. Data Model & Storage | 0/4 | Not started | - |
+| 5. Skill Publishing | 0/3 | Not started | - |
+| 6. Discovery | 0/4 | Not started | - |
+| 7. Ratings & Reviews | 0/3 | Not started | - |
+| 8. Metrics & Analytics | 0/5 | Not started | - |
+
+---
+*Created: 2026-01-31*
+*Last updated: 2026-01-31 - Added E2E testing (Playwright) to Phase 1*

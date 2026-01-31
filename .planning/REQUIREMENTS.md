@@ -7,6 +7,10 @@
 
 Requirements for initial release. Each maps to roadmap phases.
 
+### Infrastructure
+
+- [ ] **INFR-01**: E2E browser automation testing (Playwright) validates served pages automatically
+
 ### Authentication
 
 - [ ] **AUTH-01**: User can authenticate via Google Workspace SSO restricted to company domain
@@ -30,7 +34,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **RATE-01**: User can rate skill 1-5 stars after use with optional comment
 - [ ] **RATE-02**: User can submit time-saved estimate as part of review (overrides creator estimate when available)
-- [ ] **RATE-03**: FTE Days Saved displays at skill level (uses × estimated hours) and platform aggregate
+- [ ] **RATE-03**: FTE Days Saved displays at skill level (uses x estimated hours) and platform aggregate
 - [ ] **RATE-04**: Dashboard shows total contributors, total downloads, total uses, total FTE Days Saved
 
 ### MCP Integration
@@ -85,29 +89,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| DISC-01 | TBD | Pending |
-| DISC-02 | TBD | Pending |
-| DISC-03 | TBD | Pending |
-| DISC-04 | TBD | Pending |
-| SKIL-01 | TBD | Pending |
-| SKIL-02 | TBD | Pending |
-| SKIL-03 | TBD | Pending |
-| RATE-01 | TBD | Pending |
-| RATE-02 | TBD | Pending |
-| RATE-03 | TBD | Pending |
-| RATE-04 | TBD | Pending |
-| MCP-01 | TBD | Pending |
-| MCP-02 | TBD | Pending |
-| MCP-03 | TBD | Pending |
+| INFR-01 | Phase 1 | Pending |
+| AUTH-01 | Phase 2 | Pending |
+| AUTH-02 | Phase 2 | Pending |
+| AUTH-03 | Phase 8 | Pending |
+| DISC-01 | Phase 6 | Pending |
+| DISC-02 | Phase 6 | Pending |
+| DISC-03 | Phase 6 | Pending |
+| DISC-04 | Phase 8 | Pending |
+| SKIL-01 | Phase 5 | Pending |
+| SKIL-02 | Phase 4 | Pending |
+| SKIL-03 | Phase 5 | Pending |
+| RATE-01 | Phase 7 | Pending |
+| RATE-02 | Phase 7 | Pending |
+| RATE-03 | Phase 8 | Pending |
+| RATE-04 | Phase 8 | Pending |
+| MCP-01 | Phase 3 | Pending |
+| MCP-02 | Phase 3 | Pending |
+| MCP-03 | Phase 3 | Pending |
 
 **Coverage:**
-- v1 requirements: 17 total
-- Mapped to phases: 0
-- Unmapped: 17 (pending roadmap)
+- v1 requirements: 18 total
+- Mapped to phases: 18
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-31*
-*Last updated: 2026-01-31 after initial definition*
+*Last updated: 2026-01-31 - Added INFR-01 (E2E testing with Playwright) for Phase 1*
