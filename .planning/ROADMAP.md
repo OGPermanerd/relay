@@ -51,12 +51,12 @@ Plans:
   2. Only users with company domain email can access the application
   3. User profile page displays name and avatar from Google
   4. User profile shows placeholder for contribution statistics
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: Auth.js Google provider setup
-- [ ] 02-02: Domain restriction middleware
-- [ ] 02-03: User profile page
+- [ ] 02-01-PLAN.md - Auth.js v5 with Google provider and Drizzle adapter
+- [ ] 02-02-PLAN.md - Route protection middleware and login page
+- [ ] 02-03-PLAN.md - User profile page with contribution statistics placeholder
 
 ### Phase 3: MCP Integration
 **Goal**: Users can deploy skills to Claude and usage is tracked automatically
@@ -174,7 +174,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Project Foundation | 4/4 | Complete | 2026-01-31 |
-| 2. Authentication | 0/3 | Not started | - |
+| 2. Authentication | 0/3 | Planned | - |
 | 3. MCP Integration | 0/5 | Not started | - |
 | 4. Data Model & Storage | 0/4 | Not started | - |
 | 5. Skill Publishing | 0/3 | Not started | - |
@@ -184,4 +184,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 ---
 *Created: 2026-01-31*
-*Last updated: 2026-01-31 - Phase 1 complete (4/4 plans executed)*
+*Last updated: 2026-01-31 - Phase 2 planned (3 plans in 3 waves)*
