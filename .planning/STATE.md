@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-31)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 2 complete - Ready for Phase 3 (MCP Integration)
+**Current focus:** Phase 3 - MCP Integration (Plan 1 of 4 complete)
 
 ## Current Position
 
-Phase: 2 of 8 (Authentication) - COMPLETE
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-01-31 - Completed 02-03-PLAN.md (User Profile and Sign-out)
+Phase: 3 of 8 (MCP Integration)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-01-31 - Completed 03-01-PLAN.md (MCP Server Scaffold)
 
-Progress: [#######---] 26% (7 of 27 total plans)
+Progress: [########--] 30% (8 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 8
 - Average duration: 4.4 min
-- Total execution time: 31 min
+- Total execution time: 35 min
 
 **By Phase:**
 
@@ -29,9 +29,10 @@ Progress: [#######---] 26% (7 of 27 total plans)
 |-------|-------|-------|----------|
 | 01-project-foundation | 4/4 | 16 min | 4 min |
 | 02-authentication | 3/3 | 15 min | 5 min |
+| 03-mcp-integration | 1/4 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (3 min), 01-04 (4 min), 02-01 (5 min), 02-02 (2 min), 02-03 (8 min)
+- Last 5 plans: 01-04 (4 min), 02-01 (5 min), 02-02 (2 min), 02-03 (8 min), 03-01 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -58,6 +59,9 @@ Recent decisions affecting current work:
 - Server action form for sign-in - simpler than client component, works without JS.
 - Protected route group (protected) for authenticated pages with shared layout.
 - Contribution statistics placeholder with 4 metrics: Skills Shared, Total Uses, Avg Rating, FTE Days Saved.
+- Use McpServer from @modelcontextprotocol/sdk for official SDK compatibility.
+- stdio transport for universal MCP client support.
+- usageEvents with text skillId to match upcoming skills table.
 
 ### Pending Todos
 
@@ -67,9 +71,10 @@ None yet.
 
 - Node.js version warning (v20 vs required v22) - works but shows warning on pnpm commands.
 - Docker not available in sandbox - database container must be started manually when Docker is available.
+- Database schema push requires interactive confirmation - run `pnpm --filter @relay/db db:push` manually when database is available.
 
 ## Session Continuity
 
-Last session: 2026-01-31T14:13:30Z
-Stopped at: Completed 02-03-PLAN.md (User Profile and Sign-out) - Phase 2 complete
+Last session: 2026-01-31T15:04:53Z
+Stopped at: Completed 03-01-PLAN.md (MCP Server Scaffold)
 Resume file: None
