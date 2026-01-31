@@ -124,13 +124,13 @@ Plans:
   3. User can browse skills by category
   4. User can filter search results by tags
   5. Empty states guide users when no results found
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 06-01: Full-text search with PostgreSQL
-- [ ] 06-02: Skill card components
-- [ ] 06-03: Category browse and tag filtering
-- [ ] 06-04: Search results page
+- [ ] 06-01-PLAN.md - PostgreSQL full-text search with generated tsvector column and searchSkills function
+- [ ] 06-02-PLAN.md - Skill card components with react-sparklines for FTE Days Saved trends
+- [ ] 06-03-PLAN.md - nuqs URL state management with SearchInput, CategoryFilter, TagFilter components
+- [ ] 06-04-PLAN.md - Skills browse page with empty states and home page navigation update
 
 ### Phase 7: Ratings & Reviews
 **Goal**: Users can rate skills and provide time-saved feedback
