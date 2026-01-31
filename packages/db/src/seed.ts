@@ -10,7 +10,7 @@ import postgres from "postgres";
 import { eq } from "drizzle-orm";
 import { skills, type NewSkill } from "./schema/skills";
 import { skillVersions, type NewSkillVersion } from "./schema/skill-versions";
-import { ratings, type NewRating } from "./schema/ratings";
+import { ratings } from "./schema/ratings";
 import { users, type NewUser } from "./schema/users";
 
 // Verify DATABASE_URL is set
@@ -138,74 +138,6 @@ The test writer will generate tests using your project's testing framework.
   },
 ];
 
-// Skill versions for each skill (initial versions)
-const testSkillVersions: NewSkillVersion[] = [
-  {
-    id: "version-code-review-v1",
-    skillId: "skill-code-review",
-    version: 1,
-    contentUrl: "skills/skill-code-review/v1/content",
-    contentHash: "sha256-placeholder-code-review-v1",
-    contentType: "text/markdown",
-    name: "Code Review Assistant",
-    description:
-      "AI-powered code review assistant that analyzes pull requests for bugs, security issues, and best practices.",
-    createdBy: testUser.id,
-    metadata: { format: "markdown", tags: ["code-review", "ai"] },
-  },
-  {
-    id: "version-api-docs-v1",
-    skillId: "skill-api-docs",
-    version: 1,
-    contentUrl: "skills/skill-api-docs/v1/content",
-    contentHash: "sha256-placeholder-api-docs-v1",
-    contentType: "text/markdown",
-    name: "API Documentation Generator",
-    description:
-      "Generates comprehensive API documentation from code, including endpoints, parameters, and example requests.",
-    createdBy: testUser.id,
-    metadata: { format: "markdown", tags: ["documentation", "api"] },
-  },
-  {
-    id: "version-test-writer-v1",
-    skillId: "skill-test-writer",
-    version: 1,
-    contentUrl: "skills/skill-test-writer/v1/content",
-    contentHash: "sha256-placeholder-test-writer-v1",
-    contentType: "text/markdown",
-    name: "Test Writer",
-    description:
-      "Generates unit and integration tests for your code with high coverage and edge case handling.",
-    createdBy: testUser.id,
-    metadata: { format: "markdown", tags: ["testing", "unit-tests"] },
-  },
-];
-
-// Sample ratings (using explicit skill IDs matching testSkills)
-const testRatings: NewRating[] = [
-  {
-    skillId: testSkills[0].id!,
-    userId: testUser.id!,
-    rating: 5,
-    comment: "Excellent prompt, saved me hours on code reviews!",
-    hoursSavedEstimate: 2,
-  },
-  {
-    skillId: testSkills[1].id!,
-    userId: testUser.id!,
-    rating: 4,
-    comment: "Great for generating initial docs, needs minor tweaks.",
-    hoursSavedEstimate: 3,
-  },
-  {
-    skillId: testSkills[2].id!,
-    userId: testUser.id!,
-    rating: 5,
-    comment: "Perfect for generating test boilerplate.",
-    hoursSavedEstimate: 2,
-  },
-];
-
 async function seed() {
   console.log("Seeding database...");
   console.log("");
@@ -225,11 +157,13 @@ async function seed() {
       });
     console.log(`  [+] ${testUser.name} (${testUser.email})`);
 
-    // 2. Insert skills with upsert pattern
+    // 2. Insert skills with upsert pattern and collect actual IDs
     console.log("");
     console.log("Creating skills...");
+    const insertedSkills: { id: string; slug: string; name: string; description: string }[] = [];
     for (const skill of testSkills) {
-      await db
+      // Use RETURNING to get the actual ID (whether inserted or existing)
+      const [result] = await db
         .insert(skills)
         .values(skill)
         .onConflictDoUpdate({
@@ -243,22 +177,44 @@ async function seed() {
             authorId: skill.authorId,
             updatedAt: new Date(),
           },
+        })
+        .returning({
+          id: skills.id,
+          slug: skills.slug,
+          name: skills.name,
+          description: skills.description,
         });
-      console.log(`  [+] ${skill.name} (${skill.slug})`);
+      insertedSkills.push(result);
+      console.log(`  [+] ${skill.name} (${skill.slug}) -> ${result.id}`);
     }
 
-    // 3. Insert skill versions
+    // 3. Insert skill versions using actual skill IDs from step 2
     console.log("");
     console.log("Creating skill versions...");
-    for (const version of testSkillVersions) {
-      await db.insert(skillVersions).values(version).onConflictDoNothing(); // Versions are immutable, skip if exists
-      console.log(`  [+] ${version.name} v${version.version}`);
+    const insertedVersions: { id: string; skillId: string }[] = [];
+    for (const skill of insertedSkills) {
+      const versionId = `version-${skill.slug}-v1`;
+      const version: NewSkillVersion = {
+        id: versionId,
+        skillId: skill.id, // Use actual ID from database
+        version: 1,
+        contentUrl: `skills/${skill.id}/v1/content`,
+        contentHash: `sha256-placeholder-${skill.slug}-v1`,
+        contentType: "text/markdown",
+        name: skill.name,
+        description: skill.description,
+        createdBy: testUser.id,
+        metadata: { format: "markdown" },
+      };
+      await db.insert(skillVersions).values(version).onConflictDoNothing();
+      insertedVersions.push({ id: versionId, skillId: skill.id });
+      console.log(`  [+] ${skill.name} v1`);
     }
 
     // 4. Update skills with publishedVersionId
     console.log("");
     console.log("Linking published versions...");
-    for (const version of testSkillVersions) {
+    for (const version of insertedVersions) {
       await db
         .update(skills)
         .set({ publishedVersionId: version.id })
@@ -266,54 +222,61 @@ async function seed() {
       console.log(`  [+] ${version.skillId} -> ${version.id}`);
     }
 
-    // 5. Insert ratings
+    // 5. Insert ratings using actual skill IDs
     console.log("");
     console.log("Creating ratings...");
-    for (const rating of testRatings) {
+    const ratingValues = [5, 4, 5]; // Rating values for each skill
+    const ratingComments = [
+      "Excellent prompt, saved me hours on code reviews!",
+      "Great for generating initial docs, needs minor tweaks.",
+      "Perfect for generating test boilerplate.",
+    ];
+    const ratingHours = [2, 3, 2];
+
+    for (let i = 0; i < insertedSkills.length; i++) {
+      const skill = insertedSkills[i];
       // Check if rating already exists for this skill/user combo
       const existing = await db
         .select()
         .from(ratings)
-        .where(eq(ratings.skillId, rating.skillId))
+        .where(eq(ratings.skillId, skill.id))
         .limit(1);
 
       if (existing.length === 0) {
-        await db.insert(ratings).values(rating);
-        console.log(`  [+] Rating for ${rating.skillId}: ${rating.rating}/5`);
+        await db.insert(ratings).values({
+          skillId: skill.id,
+          userId: testUser.id!,
+          rating: ratingValues[i],
+          comment: ratingComments[i],
+          hoursSavedEstimate: ratingHours[i],
+        });
+        console.log(`  [+] Rating for ${skill.name}: ${ratingValues[i]}/5`);
       } else {
-        console.log(`  [~] Rating for ${rating.skillId} already exists, skipping`);
+        console.log(`  [~] Rating for ${skill.name} already exists, skipping`);
       }
     }
 
     // 6. Update skill metrics based on ratings
     console.log("");
     console.log("Updating skill metrics...");
-    for (const skill of testSkills) {
-      // Set some sample totalUses
-      const useCounts: Record<string, number> = {
-        "skill-code-review": 42,
-        "skill-api-docs": 28,
-        "skill-test-writer": 35,
-      };
-      const useCount = useCounts[skill.id as string] || 0;
-
+    const useCounts = [42, 28, 35]; // Sample use counts
+    for (let i = 0; i < insertedSkills.length; i++) {
+      const skill = insertedSkills[i];
       await db
         .update(skills)
         .set({
-          totalUses: useCount,
-          averageRating: testRatings.find((r) => r.skillId === skill.id)?.rating
-            ? testRatings.find((r) => r.skillId === skill.id)!.rating * 100
-            : null,
+          totalUses: useCounts[i],
+          averageRating: ratingValues[i] * 100,
         })
-        .where(eq(skills.id, skill.id as string));
-      console.log(`  [+] ${skill.name}: ${useCount} uses`);
+        .where(eq(skills.id, skill.id));
+      console.log(`  [+] ${skill.name}: ${useCounts[i]} uses`);
     }
 
     console.log("");
     console.log("Seed complete:");
-    console.log(`  - ${testSkills.length} skills`);
-    console.log(`  - ${testSkillVersions.length} skill versions`);
-    console.log(`  - ${testRatings.length} ratings`);
+    console.log(`  - ${insertedSkills.length} skills`);
+    console.log(`  - ${insertedVersions.length} skill versions`);
+    console.log(`  - ${insertedSkills.length} ratings`);
   } catch (error) {
     console.error("Failed to seed database:", error);
     process.exit(1);
