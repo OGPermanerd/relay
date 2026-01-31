@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 4 of 8 (Data Model & Storage)
-Plan: 1 of 5
+Plan: 2 of 5
 Status: In progress
-Last activity: 2026-01-31 - Completed 04-01-PLAN.md (Versioned Data Model)
+Last activity: 2026-01-31 - Completed 04-02-PLAN.md (R2 Storage Package)
 
-Progress: [##############..] 52% (14 of 27 total plans)
+Progress: [###############.] 56% (15 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: 4 min
-- Total execution time: 51 min
+- Total execution time: 55 min
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [##############..] 52% (14 of 27 total plans)
 | 01-project-foundation | 4/4 | 16 min | 4 min |
 | 02-authentication | 3/3 | 15 min | 5 min |
 | 03-mcp-integration | 6/6 | 18 min | 3 min |
-| 04-data-model-storage | 1/5 | 2 min | 2 min |
+| 04-data-model-storage | 2/5 | 6 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-03 (2 min), 03-04 (3 min), 03-05 (1 min), 03-06 (0 min), 04-01 (2 min)
-- Trend: improving
+- Last 5 plans: 03-04 (3 min), 03-05 (1 min), 03-06 (0 min), 04-01 (2 min), 04-02 (4 min)
+- Trend: stable
 
 *Updated after each plan completion*
 
@@ -71,6 +71,9 @@ Recent decisions affecting current work:
 - No FK from skills to skillVersions due to circular reference - enforce in app layer.
 - Keep existing content field on skills for backward compatibility with MCP tools.
 - Use integer * 100 for averageRating to preserve decimal precision without floats.
+- Graceful null-handling for @relay/storage - functions return null when R2 not configured.
+- Lazy-initialized S3Client singleton for R2 - created on first use, reused thereafter.
+- Object key pattern for R2: skills/{skillId}/v{version}/content.
 
 ### Pending Todos
 
@@ -82,9 +85,10 @@ None yet.
 - Docker not available in sandbox - database container must be started manually when Docker is available.
 - Database schema push requires interactive confirmation - run `pnpm --filter @relay/db db:push` manually when database is available.
 - ESM/CJS type conflicts in monorepo - drizzle operators have type issues across package boundaries with different moduleResolution settings.
+- R2 requires manual setup - env vars (R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME) and Cloudflare dashboard config before storage features work.
 
 ## Session Continuity
 
-Last session: 2026-01-31T17:36:23Z
-Stopped at: Completed 04-01-PLAN.md (Versioned Data Model)
+Last session: 2026-01-31T17:39:00Z
+Stopped at: Completed 04-02-PLAN.md (R2 Storage Package)
 Resume file: None
