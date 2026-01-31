@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Data Model & Storage** - Core schema and multi-format skill support (informed by MCP)
 - [x] **Phase 5: Skill Publishing** - Upload skills with metadata and view details
 - [x] **Phase 6: Discovery** - Search, browse, and skill cards
-- [ ] **Phase 7: Ratings & Reviews** - User feedback with time-saved estimates
+- [x] **Phase 7: Ratings & Reviews** - User feedback with time-saved estimates
 - [ ] **Phase 8: Metrics & Analytics** - FTE Days Saved, dashboard, trending, leaderboard (with real data)
 
 ## Phase Details
@@ -145,9 +145,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 07-01-PLAN.md - Rating Server Action and form components (star input, rating form)
-- [ ] 07-02-PLAN.md - Reviews list component and skill detail page integration
-- [ ] 07-03-PLAN.md - User time estimate override for FTE calculation and display
+- [x] 07-01-PLAN.md - Rating Server Action and form components (star input, rating form)
+- [x] 07-02-PLAN.md - Reviews list component and skill detail page integration
+- [x] 07-03-PLAN.md - User time estimate override for FTE calculation and display
 
 ### Phase 8: Metrics & Analytics
 **Goal**: Platform shows value through FTE Days Saved and surfaces quality content
@@ -181,9 +181,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 4. Data Model & Storage | 5/5 | Complete | 2026-01-31 |
 | 5. Skill Publishing | 3/3 | Complete | 2026-01-31 |
 | 6. Discovery | 4/4 | Complete | 2026-01-31 |
-| 7. Ratings & Reviews | 0/3 | Not started | - |
+| 7. Ratings & Reviews | 3/3 | Complete | 2026-01-31 |
 | 8. Metrics & Analytics | 0/5 | Not started | - |
 
 ---
 *Created: 2026-01-31*
-*Last updated: 2026-01-31 - Phase 6 complete*
+*Last updated: 2026-01-31 - Phase 7 complete*
