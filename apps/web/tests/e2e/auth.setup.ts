@@ -6,9 +6,7 @@
  */
 import { test as setup } from "@playwright/test";
 import { encode } from "next-auth/jwt";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import { users } from "@relay/db/schema";
+import { db, users } from "@relay/db";
 
 // Test user constants
 const TEST_USER = {
@@ -23,41 +21,33 @@ const AUTH_FILE = "playwright/.auth/user.json";
 setup("authenticate", async ({ page }) => {
   // Get required environment variables
   const authSecret = process.env.AUTH_SECRET;
-  const databaseUrl = process.env.DATABASE_URL;
 
   if (!authSecret) {
     throw new Error("AUTH_SECRET environment variable is required for E2E tests");
   }
 
-  if (!databaseUrl) {
+  if (!db) {
     throw new Error("DATABASE_URL environment variable is required for E2E tests");
   }
 
   // 1. Seed test user in database
-  const client = postgres(databaseUrl);
-  const db = drizzle(client);
-
-  try {
-    await db
-      .insert(users)
-      .values({
-        id: TEST_USER.id,
+  await db
+    .insert(users)
+    .values({
+      id: TEST_USER.id,
+      email: TEST_USER.email,
+      name: TEST_USER.name,
+    })
+    .onConflictDoUpdate({
+      target: users.id,
+      set: {
         email: TEST_USER.email,
         name: TEST_USER.name,
-      })
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          email: TEST_USER.email,
-          name: TEST_USER.name,
-          updatedAt: new Date(),
-        },
-      });
+        updatedAt: new Date(),
+      },
+    });
 
-    console.log(`[auth.setup] Seeded test user: ${TEST_USER.email}`);
-  } finally {
-    await client.end();
-  }
+  console.log(`[auth.setup] Seeded test user: ${TEST_USER.email}`);
 
   // 2. Create a valid JWT session token
   const now = Math.floor(Date.now() / 1000);
