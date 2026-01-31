@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-31)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v1.0 SHIPPED — planning next milestone
+**Current focus:** v1.1 Quality & Polish — defining requirements
 
 ## Current Position
 
-Phase: Complete
-Plan: N/A
-Status: MILESTONE SHIPPED
-Last activity: 2026-01-31 — v1.0 milestone archived
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-01-31 — Milestone v1.1 started
 
-Progress: [##########################] 100% (33 of 33 plans in v1.0)
+Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -67,4 +67,4 @@ Resume file: None
 
 ## Next Steps
 
-Run `/gsd:new-milestone` to define v1.1 requirements and roadmap.
+Define requirements and create roadmap for v1.1.

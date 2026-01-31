@@ -15,6 +15,15 @@ Skills get better as they pass through more hands, with real metrics proving tha
 Tech stack: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK
 LOC: 4,667 TypeScript across 200 files
 
+## Current Milestone: v1.1 Quality & Polish
+
+**Goal:** Fix tech debt from v1.0 and add quality scorecards to surface high-value skills.
+
+**Target features:**
+- Tag filtering backend (complete the UI that already exists)
+- E2E test coverage for authenticated flows
+- Quality scorecards (Gold/Silver/Bronze) based on ratings, usage, documentation
+
 ## Requirements
 
 ### Validated
@@ -40,7 +49,9 @@ LOC: 4,667 TypeScript across 200 files
 
 ### Active
 
-(None yet — define for next milestone)
+- [ ] Tag filtering backend with getAvailableTags implementation
+- [ ] E2E tests for skill upload, rating, and authenticated flows
+- [ ] Quality scorecards (Gold/Silver/Bronze) with auto-calculation
 
 ### Out of Scope
 
@@ -84,4 +95,4 @@ LOC: 4,667 TypeScript across 200 files
 | Hacker News trending formula | Proven time-decay algorithm; simple to implement | ✓ Good |
 
 ---
-*Last updated: 2026-01-31 after v1.0 milestone*
+*Last updated: 2026-01-31 after v1.1 milestone start*
