@@ -45,10 +45,10 @@ Total: 33 plans completed in 120 minutes.
   2. User can select one or more tags to filter the skill list
   3. Tag filtering works together with category dropdown and search input
   4. Selecting tags updates URL state (shareable filtered views)
-**Plans:** TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 09-01: [TBD during planning]
+- [ ] 09-01-PLAN.md — Add tags column and implement backend filtering
 
 ### Phase 10: Quality Scorecards
 **Goal:** Users can identify high-quality skills through visible quality badges
@@ -88,7 +88,7 @@ Phases execute in numeric order: 9 → 10 → 11
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-8 | v1.0 | 33/33 | Complete | 2026-01-31 |
-| 9. Tag Filtering | v1.1 | 0/? | Not started | - |
+| 9. Tag Filtering | v1.1 | 0/1 | Planned | - |
 | 10. Quality Scorecards | v1.1 | 0/? | Not started | - |
 | 11. E2E Test Coverage | v1.1 | 0/? | Not started | - |
 
