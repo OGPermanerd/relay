@@ -52,8 +52,14 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
     conditions.push(eq(skills.category, params.category));
   }
 
-  // TODO: Tag filtering will be added in Plan 03
-  // Tags are stored in metadata JSONB field
+  // TODO: Tag filtering requires adding metadata JSONB column to skills table
+  // For now, tag filter is a no-op
+  if (params.tags && params.tags.length > 0) {
+    // Will be implemented when metadata column is added:
+    // conditions.push(
+    //   sql`${skills.metadata}->'tags' @> ${JSON.stringify(params.tags)}::jsonb`
+    // );
+  }
 
   // Build query
   const baseQuery = db
