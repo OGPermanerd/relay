@@ -52,7 +52,7 @@ export default async function HomePage() {
     {
       title: "Browse Skills",
       description: "Discover skills shared by your colleagues",
-      href: "#", // Placeholder - to be implemented in Phase 6
+      href: "/skills",
       icon: (
         <svg
           className="h-6 w-6"
@@ -68,7 +68,6 @@ export default async function HomePage() {
           />
         </svg>
       ),
-      disabled: true,
     },
   ];
 
@@ -88,29 +87,15 @@ export default async function HomePage() {
           <Link
             key={card.title}
             href={card.href}
-            className={`group rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition ${
-              card.disabled
-                ? "cursor-not-allowed opacity-50"
-                : "hover:border-blue-300 hover:shadow-md"
-            }`}
-            onClick={(e) => card.disabled && e.preventDefault()}
+            className="group rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-blue-300 hover:shadow-md"
           >
             <div className="flex items-center gap-4">
-              <div
-                className={`rounded-lg p-3 ${
-                  card.disabled
-                    ? "bg-gray-100 text-gray-400"
-                    : "bg-blue-50 text-blue-600 group-hover:bg-blue-100"
-                }`}
-              >
+              <div className="rounded-lg bg-blue-50 p-3 text-blue-600 group-hover:bg-blue-100">
                 {card.icon}
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">{card.title}</h2>
                 <p className="text-sm text-gray-600">{card.description}</p>
-                {card.disabled && (
-                  <span className="mt-1 inline-block text-xs text-gray-400">Coming soon</span>
-                )}
               </div>
             </div>
           </Link>
