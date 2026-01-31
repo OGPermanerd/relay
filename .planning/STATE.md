@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 2 of 8 (Authentication)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-31 - Completed 02-01-PLAN.md (Auth.js Configuration)
+Last activity: 2026-01-31 - Completed 02-02-PLAN.md (Route Protection and Login)
 
-Progress: [#####-----] 19% (5 of 27 total plans)
+Progress: [######----] 22% (6 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 4.2 min
-- Total execution time: 21 min
+- Total plans completed: 6
+- Average duration: 3.8 min
+- Total execution time: 23 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-project-foundation | 4/4 | 16 min | 4 min |
-| 02-authentication | 1/3 | 5 min | 5 min |
+| 02-authentication | 2/3 | 7 min | 3.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (7 min), 01-03 (2 min), 01-02 (3 min), 01-04 (4 min), 02-01 (5 min)
+- Last 5 plans: 01-03 (2 min), 01-02 (3 min), 01-04 (4 min), 02-01 (5 min), 02-02 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -54,6 +54,8 @@ Recent decisions affecting current work:
 - Split auth config pattern - auth.config.ts (Edge) + auth.ts (Node with adapter).
 - Text ID for users table - Auth.js DrizzleAdapter requires text primary keys.
 - Graceful null-db handling - allows builds without DATABASE_URL.
+- Route group (auth) for auth pages - organizes login/etc without affecting URLs.
+- Server action form for sign-in - simpler than client component, works without JS.
 
 ### Pending Todos
 
@@ -66,6 +68,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T13:58:13Z
-Stopped at: Completed 02-01-PLAN.md (Auth.js Configuration)
+Last session: 2026-01-31T14:02:36Z
+Stopped at: Completed 02-02-PLAN.md (Route Protection and Login)
 Resume file: None
