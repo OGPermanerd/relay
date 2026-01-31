@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-31)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 9 - Tag Filtering
+**Current focus:** Phase 10 - Quality Scorecards
 
 ## Current Position
 
-Phase: 9 of 11 (Tag Filtering)
-Plan: 1 of 1 in current phase
-Status: Phase complete
-Last activity: 2026-01-31 - Completed 09-01-PLAN.md
+Phase: 10 of 11 (Quality Scorecards)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-01-31 - Completed 10-01-PLAN.md
 
-Progress: [██████████████░░░░░░░░░░░░] 34/34+ (v1.0 complete, 1/3 v1.1)
+Progress: [███████████████░░░░░░░░░░░] 35/37 (v1.0 complete, 2/4 v1.1)
 
 ## Performance Metrics
 
@@ -24,8 +24,8 @@ Progress: [██████████████░░░░░░░░░
 - Average duration: 3.6 min/plan
 
 **v1.1 Velocity:**
-- Total plans completed: 1
-- Total execution time: 4 min
+- Total plans completed: 2
+- Total execution time: 8 min
 - Average duration: 4 min/plan
 
 ## Accumulated Context
@@ -39,6 +39,9 @@ All v1.0 decisions logged in PROJECT.md Key Decisions table.
 |-------|----------|-----------|
 | 09-01 | TEXT[] instead of JSONB for tags | Simpler type inference in Drizzle, direct array operators |
 | 09-01 | && operator for ANY tag match | More user-friendly than @> ALL match |
+| 10-01 | vitest for unit testing | Fast startup, native ESM, simple Next.js config |
+| 10-01 | Rating stored as integer * 100 | Avoids floating point precision issues |
+| 10-01 | Minimum 3 ratings for tier | Prevents gaming, ensures meaningful signals |
 
 ### Pending Todos
 
@@ -53,9 +56,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 09-01-PLAN.md
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None
 
 ## Next Steps
 
-Phase 9 complete. Run `/gsd:plan-phase 10` to plan Quality Scorecards phase.
+Continue with 10-02-PLAN.md (Quality Score API endpoint).
