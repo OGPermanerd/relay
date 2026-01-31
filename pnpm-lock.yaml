@@ -124,6 +124,9 @@ importers:
       '@types/react-sparklines':
         specifier: ^1.7.5
         version: 1.7.5
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
       tailwindcss:
         specifier: ^4.0.0
         version: 4.1.18
