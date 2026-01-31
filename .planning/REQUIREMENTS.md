@@ -92,18 +92,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFR-01 | Phase 1 | Pending |
 | AUTH-01 | Phase 2 | Pending |
 | AUTH-02 | Phase 2 | Pending |
-| AUTH-03 | Phase 8 | Pending |
+| AUTH-03 | Phase 8 | Complete |
 | DISC-01 | Phase 6 | Complete |
 | DISC-02 | Phase 6 | Complete |
 | DISC-03 | Phase 6 | Complete |
-| DISC-04 | Phase 8 | Pending |
+| DISC-04 | Phase 8 | Complete |
 | SKIL-01 | Phase 5 | Complete |
 | SKIL-02 | Phase 4 | Complete |
 | SKIL-03 | Phase 5 | Complete |
 | RATE-01 | Phase 7 | Complete |
 | RATE-02 | Phase 7 | Complete |
-| RATE-03 | Phase 8 | Pending |
-| RATE-04 | Phase 8 | Pending |
+| RATE-03 | Phase 8 | Complete |
+| RATE-04 | Phase 8 | Complete |
 | MCP-01 | Phase 3 | Pending |
 | MCP-02 | Phase 3 | Pending |
 | MCP-03 | Phase 3 | Pending |
@@ -115,4 +115,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-31*
-*Last updated: 2026-01-31 - RATE-01, RATE-02 complete (Phase 7)*
+*Last updated: 2026-01-31 - RATE-03, RATE-04, DISC-04, AUTH-03 complete (Phase 8) - v1.0 MILESTONE COMPLETE*
