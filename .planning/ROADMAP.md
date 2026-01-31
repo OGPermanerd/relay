@@ -31,7 +31,7 @@ Total: 33 plans completed in 120 minutes.
 **Milestone Goal:** Fix tech debt from v1.0 and add quality scorecards to surface high-value skills.
 
 - [x] **Phase 9: Tag Filtering** - Complete backend for existing tag UI
-- [ ] **Phase 10: Quality Scorecards** - Calculate and display quality badges
+- [x] **Phase 10: Quality Scorecards** - Calculate and display quality badges
 - [ ] **Phase 11: E2E Test Coverage** - Validate authenticated user flows
 
 ## Phase Details
@@ -63,10 +63,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 10-01-PLAN.md — TDD quality score calculation utility
-- [ ] 10-02-PLAN.md — QualityBadge component and SkillCard integration
-- [ ] 10-03-PLAN.md — Quality badge and breakdown on detail page
-- [ ] 10-04-PLAN.md — Quality filter and sort on browse page
+- [x] 10-01-PLAN.md — TDD quality score calculation utility
+- [x] 10-02-PLAN.md — QualityBadge component and SkillCard integration
+- [x] 10-03-PLAN.md — Quality badge and breakdown on detail page
+- [x] 10-04-PLAN.md — Quality filter and sort on browse page
 
 ### Phase 11: E2E Test Coverage
 **Goal:** Authenticated user flows are validated through automated browser tests
@@ -92,7 +92,7 @@ Phases execute in numeric order: 9 → 10 → 11
 |-------|-----------|----------------|--------|-----------|
 | 1-8 | v1.0 | 33/33 | Complete | 2026-01-31 |
 | 9. Tag Filtering | v1.1 | 1/1 | Complete | 2026-01-31 |
-| 10. Quality Scorecards | v1.1 | 0/4 | Not started | - |
+| 10. Quality Scorecards | v1.1 | 4/4 | Complete | 2026-01-31 |
 | 11. E2E Test Coverage | v1.1 | 0/? | Not started | - |
 
 ---

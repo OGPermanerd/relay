@@ -22,10 +22,10 @@ Requirements for quality & polish release. Fixes tech debt and adds quality scor
 
 ### Quality Scorecards
 
-- [ ] **QUAL-01**: System calculates quality score based on ratings, usage, and documentation completeness
-- [ ] **QUAL-02**: Skills display quality badge (Gold/Silver/Bronze) on cards and detail pages
-- [ ] **QUAL-03**: User can filter/sort by quality tier
-- [ ] **QUAL-04**: Quality criteria are transparent (user can see why a skill earned its badge)
+- [x] **QUAL-01**: System calculates quality score based on ratings, usage, and documentation completeness
+- [x] **QUAL-02**: Skills display quality badge (Gold/Silver/Bronze) on cards and detail pages
+- [x] **QUAL-03**: User can filter/sort by quality tier
+- [x] **QUAL-04**: Quality criteria are transparent (user can see why a skill earned its badge)
 
 ## v2 Requirements
 
@@ -78,10 +78,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-02 | Phase 11 | Pending |
 | TEST-03 | Phase 11 | Pending |
 | TEST-04 | Phase 11 | Pending |
-| QUAL-01 | Phase 10 | Pending |
-| QUAL-02 | Phase 10 | Pending |
-| QUAL-03 | Phase 10 | Pending |
-| QUAL-04 | Phase 10 | Pending |
+| QUAL-01 | Phase 10 | Complete |
+| QUAL-02 | Phase 10 | Complete |
+| QUAL-03 | Phase 10 | Complete |
+| QUAL-04 | Phase 10 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 11 total
@@ -90,4 +90,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-31*
-*Last updated: 2026-01-31 - TAG-01, TAG-02, TAG-03 complete (Phase 9)*
+*Last updated: 2026-01-31 - QUAL-01, QUAL-02, QUAL-03, QUAL-04 complete (Phase 10)*
