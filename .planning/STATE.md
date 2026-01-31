@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 7 of 8 (Ratings & Reviews)
-Plan: 2 of 2
+Plan: 3 of 3
 Status: Phase complete
-Last activity: 2026-01-31 - Completed 07-02-PLAN.md
+Last activity: 2026-01-31 - Completed 07-03-PLAN.md
 
-Progress: [##########################] 100% (27 of 27 total plans)
+Progress: [##########################] 100% (28 of 28 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 27
+- Total plans completed: 28
 - Average duration: 4 min
-- Total execution time: 107 min
+- Total execution time: 109 min
 
 **By Phase:**
 
@@ -33,10 +33,10 @@ Progress: [##########################] 100% (27 of 27 total plans)
 | 04-data-model-storage | 5/5 | 16 min | 3 min |
 | 05-skill-publishing | 3/3 | 18 min | 6 min |
 | 06-discovery | 4/4 | 20 min | 5 min |
-| 07-ratings-reviews | 2/2 | 5 min | 2.5 min |
+| 07-ratings-reviews | 3/3 | 7 min | 2.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-02 (6 min), 06-03 (7 min), 06-04 (4 min), 07-01 (2 min), 07-02 (3 min)
+- Last 5 plans: 06-03 (7 min), 06-04 (4 min), 07-01 (2 min), 07-02 (3 min), 07-03 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -113,6 +113,10 @@ Recent decisions affecting current work:
 - Pre-populate rating form with existing rating for update functionality using existingRating prop.
 - Dynamic heading based on rating existence: "Update Your Rating" vs "Rate This Skill".
 - Visual separator in SkillDetail: border-t divider at bottom for clean section boundaries.
+- Use user estimates when at least one rating has hoursSavedEstimate, otherwise creator estimate.
+- avg() returns string in drizzle-orm - parse with parseFloat.
+- Track estimate source ('user' | 'creator') in SkillStats for UI transparency.
+- Display source indicator in usage section with count of user estimates.
 
 ### Pending Todos
 
@@ -128,6 +132,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T19:26:37Z
-Stopped at: Completed 07-02-PLAN.md
+Last session: 2026-01-31T19:31:12Z
+Stopped at: Completed 07-03-PLAN.md
 Resume file: None
