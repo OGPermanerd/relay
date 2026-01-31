@@ -78,10 +78,13 @@ Plans:
   3. E2E test searches for skills and verifies results update
   4. E2E test navigates to user profile and verifies contribution stats display
   5. All E2E tests pass in CI pipeline
-**Plans:** TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 11-01: [TBD during planning]
+- [ ] 11-01-PLAN.md — Playwright auth setup infrastructure
+- [ ] 11-02-PLAN.md — Skill upload and rating E2E tests (TEST-01, TEST-02)
+- [ ] 11-03-PLAN.md — Skill search and profile E2E tests (TEST-03, TEST-04)
+- [ ] 11-04-PLAN.md — CI pipeline integration
 
 ## Progress
 
@@ -93,7 +96,7 @@ Phases execute in numeric order: 9 → 10 → 11
 | 1-8 | v1.0 | 33/33 | Complete | 2026-01-31 |
 | 9. Tag Filtering | v1.1 | 1/1 | Complete | 2026-01-31 |
 | 10. Quality Scorecards | v1.1 | 4/4 | Complete | 2026-01-31 |
-| 11. E2E Test Coverage | v1.1 | 0/? | Not started | - |
+| 11. E2E Test Coverage | v1.1 | 0/4 | In progress | - |
 
 ---
 
