@@ -9,9 +9,9 @@ Requirements for quality & polish release. Fixes tech debt and adds quality scor
 
 ### Tag Filtering
 
-- [ ] **TAG-01**: User can see available tags extracted from skills in the catalog
-- [ ] **TAG-02**: User can filter skills by selecting one or more tags
-- [ ] **TAG-03**: Tag filtering combines with category and search filters
+- [x] **TAG-01**: User can see available tags extracted from skills in the catalog
+- [x] **TAG-02**: User can filter skills by selecting one or more tags
+- [x] **TAG-03**: Tag filtering combines with category and search filters
 
 ### E2E Testing
 
@@ -71,9 +71,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TAG-01 | Phase 9 | Pending |
-| TAG-02 | Phase 9 | Pending |
-| TAG-03 | Phase 9 | Pending |
+| TAG-01 | Phase 9 | Complete |
+| TAG-02 | Phase 9 | Complete |
+| TAG-03 | Phase 9 | Complete |
 | TEST-01 | Phase 11 | Pending |
 | TEST-02 | Phase 11 | Pending |
 | TEST-03 | Phase 11 | Pending |
@@ -90,4 +90,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-31*
-*Last updated: 2026-01-31 after v1.1 roadmap creation*
+*Last updated: 2026-01-31 - TAG-01, TAG-02, TAG-03 complete (Phase 9)*
