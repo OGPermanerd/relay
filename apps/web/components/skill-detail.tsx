@@ -82,14 +82,19 @@ export function SkillDetail({ skill, stats }: SkillDetailProps) {
       </div>
 
       {/* Usage section */}
-      {skill.hoursSaved && (
-        <div className="mt-6">
-          <p className="text-sm text-gray-600">
-            Estimated time saved per use: {skill.hoursSaved} hour
-            {skill.hoursSaved !== 1 ? "s" : ""}
-          </p>
-        </div>
-      )}
+      <div className="mt-6">
+        <p className="text-sm text-gray-600">
+          Estimated time saved per use: {stats.hoursSavedEstimate} hour
+          {stats.hoursSavedEstimate !== 1 ? "s" : ""}{" "}
+          <span className="text-gray-400">
+            (
+            {stats.hoursSavedSource === "user"
+              ? `avg of ${stats.totalRatings} user estimate${stats.totalRatings !== 1 ? "s" : ""}`
+              : "creator estimate"}
+            )
+          </span>
+        </p>
+      </div>
 
       {/* Content section */}
       <div className="mt-8">
