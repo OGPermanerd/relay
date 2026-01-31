@@ -98,6 +98,9 @@ export function SkillDetail({ skill, stats }: SkillDetailProps) {
           <code>{skill.content}</code>
         </pre>
       </div>
+
+      {/* Visual separator for page-level additions (rating form, reviews) */}
+      <div className="mt-8 border-t border-gray-200" />
     </div>
   );
 }
