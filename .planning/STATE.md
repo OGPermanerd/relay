@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-31)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 3 - MCP Integration (Plan 2 of 4 complete)
+**Current focus:** Phase 3 - MCP Integration (Plan 3 of 4 complete)
 
 ## Current Position
 
 Phase: 3 of 8 (MCP Integration)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-31 - Completed 03-02-PLAN.md (Skills Schema & MCP Tools)
+Last activity: 2026-01-31 - Completed 03-03-PLAN.md (Deploy Skill Tool)
 
-Progress: [#########-] 33% (9 of 27 total plans)
+Progress: [##########] 37% (10 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 4.8 min
-- Total execution time: 43 min
+- Total plans completed: 10
+- Average duration: 4.5 min
+- Total execution time: 45 min
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [#########-] 33% (9 of 27 total plans)
 |-------|-------|-------|----------|
 | 01-project-foundation | 4/4 | 16 min | 4 min |
 | 02-authentication | 3/3 | 15 min | 5 min |
-| 03-mcp-integration | 2/4 | 12 min | 6 min |
+| 03-mcp-integration | 3/4 | 14 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (5 min), 02-02 (2 min), 02-03 (8 min), 03-01 (4 min), 03-02 (8 min)
+- Last 5 plans: 02-02 (2 min), 02-03 (8 min), 03-01 (4 min), 03-02 (8 min), 03-03 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -64,6 +64,8 @@ Recent decisions affecting current work:
 - usageEvents with text skillId to match upcoming skills table.
 - In-memory filtering for MCP tools to avoid drizzle ESM/CJS type conflicts.
 - Split @relay/db imports for ESM contexts - main export for db, direct path for schema tables.
+- Return skill content + instructions from deploy_skill (Claude Code handles file ops).
+- Use skill.slug for deploy filename (filesystem-safe).
 
 ### Pending Todos
 
@@ -78,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T15:14:43Z
-Stopped at: Completed 03-02-PLAN.md (Skills Schema & MCP Tools)
+Last session: 2026-01-31T15:17:54Z
+Stopped at: Completed 03-03-PLAN.md (Deploy Skill Tool)
 Resume file: None
