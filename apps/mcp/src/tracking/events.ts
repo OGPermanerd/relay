@@ -1,5 +1,6 @@
 import { db } from "@relay/db";
 import { usageEvents, type NewUsageEvent } from "@relay/db/schema/usage-events";
+import { incrementSkillUses } from "@relay/db/services/skill-metrics";
 
 /**
  * Track MCP tool usage for analytics
@@ -12,6 +13,11 @@ export async function trackUsage(event: Omit<NewUsageEvent, "id" | "createdAt">)
       return;
     }
     await db.insert(usageEvents).values(event);
+
+    // Increment skill usage counter for denormalized totalUses
+    if (event.skillId) {
+      await incrementSkillUses(event.skillId);
+    }
   } catch (error) {
     // Log but don't fail the tool call - tracking is non-critical
     console.error("Failed to track usage:", error);
