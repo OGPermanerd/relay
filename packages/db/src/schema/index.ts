@@ -7,3 +7,5 @@ export * from "./users";
 export * from "./auth";
 export * from "./usage-events";
 export * from "./skills";
+export * from "./skill-versions";
+export * from "./ratings";
