@@ -68,13 +68,15 @@ Plans:
   3. User can deploy skill to local Claude environment via one-click
   4. MCP server automatically tracks usage when deployed skills run
   5. Usage events stored for downstream analytics (schema ready for Phase 4)
-**Plans**: 4 plans
+**Plans**: 6 plans (4 original + 2 gap closure)
 
 Plans:
-- [ ] 03-01-PLAN.md - MCP server scaffold with TypeScript SDK and usageEvents schema
-- [ ] 03-02-PLAN.md - Skills schema and search/list tools with usage tracking
-- [ ] 03-03-PLAN.md - Deploy skill tool with usage tracking
-- [ ] 03-04-PLAN.md - MCP tools unit testing with Vitest
+- [x] 03-01-PLAN.md - MCP server scaffold with TypeScript SDK and usageEvents schema
+- [x] 03-02-PLAN.md - Skills schema and search/list tools with usage tracking
+- [x] 03-03-PLAN.md - Deploy skill tool with usage tracking
+- [x] 03-04-PLAN.md - MCP tools unit testing with Vitest
+- [ ] 03-05-PLAN.md - MCP integration documentation and Claude Desktop configuration (gap closure)
+- [ ] 03-06-PLAN.md - Database seed script and setup verification (gap closure)
 
 ### Phase 4: Data Model & Storage
 **Goal**: Database schema supports all skill types with immutable versioning
@@ -174,7 +176,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 |-------|----------------|--------|-----------|
 | 1. Project Foundation | 4/4 | Complete | 2026-01-31 |
 | 2. Authentication | 3/3 | Complete | 2026-01-31 |
-| 3. MCP Integration | 0/4 | Planned | - |
+| 3. MCP Integration | 4/6 | Gap closure in progress | - |
 | 4. Data Model & Storage | 0/4 | Not started | - |
 | 5. Skill Publishing | 0/3 | Not started | - |
 | 6. Discovery | 0/4 | Not started | - |
@@ -183,4 +185,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 ---
 *Created: 2026-01-31*
-*Last updated: 2026-01-31 - Phase 3 planned (4 plans in 4 waves)*
+*Last updated: 2026-01-31 - Phase 3 gap closure plans added (03-05, 03-06)*
