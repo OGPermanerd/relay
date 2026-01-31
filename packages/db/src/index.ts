@@ -7,3 +7,6 @@ export { db, isDatabaseConfigured } from "./client";
 
 // Re-export all schema tables and types
 export * from "./schema";
+
+// Re-export relations
+export * from "./relations";
