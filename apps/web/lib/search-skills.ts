@@ -87,3 +87,22 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
 
   return filteredQuery.orderBy(desc(skills.totalUses));
 }
+
+/**
+ * Get all unique tags from skills metadata
+ *
+ * Extracts tags from the metadata JSONB field across all skills.
+ * Returns sorted array of unique tag strings.
+ *
+ * @returns Array of tag strings
+ */
+export async function getAvailableTags(): Promise<string[]> {
+  // Handle null db case
+  if (!db) {
+    return [];
+  }
+
+  // TODO: Extract tags from metadata JSONB field when tags are added
+  // For now, return empty array since tags aren't implemented yet
+  return [];
+}
