@@ -9,6 +9,7 @@ export interface SearchSkillResult {
   category: string;
   totalUses: number;
   averageRating: number | null;
+  totalRatings: number;
   hoursSaved: number | null;
   author: {
     id: string;
@@ -57,7 +58,7 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
     conditions.push(sql`${skills.tags} && ${params.tags}::text[]`);
   }
 
-  // Build query
+  // Build query with rating count subquery
   const baseQuery = db
     .select({
       id: skills.id,
@@ -67,6 +68,9 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
       category: skills.category,
       totalUses: skills.totalUses,
       averageRating: skills.averageRating,
+      totalRatings: sql<number>`(SELECT count(*) FROM ratings WHERE skill_id = ${skills.id})`.as(
+        "totalRatings"
+      ),
       hoursSaved: skills.hoursSaved,
       author: {
         id: users.id,

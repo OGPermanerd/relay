@@ -11,6 +11,7 @@ export interface SkillCardData {
   category: string;
   totalUses: number;
   averageRating: number | null;
+  totalRatings: number;
   hoursSaved: number | null;
   author: {
     id: string;
