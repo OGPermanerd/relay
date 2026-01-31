@@ -10,3 +10,6 @@ export * from "./schema";
 
 // Re-export relations
 export * from "./relations";
+
+// Re-export validation utilities
+export * from "./validation";
