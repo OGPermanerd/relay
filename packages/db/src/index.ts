@@ -13,3 +13,6 @@ export * from "./relations";
 
 // Re-export validation utilities
 export * from "./validation";
+
+// Re-export services
+export * from "./services";
