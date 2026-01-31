@@ -5,5 +5,4 @@ export const server = new McpServer({
   version: "1.0.0",
 });
 
-// Tools will be registered by importing tool modules
 export type { McpServer };

@@ -1,4 +1,5 @@
-import { db, usageEvents, type NewUsageEvent } from "@relay/db";
+import { db } from "@relay/db";
+import { usageEvents, type NewUsageEvent } from "@relay/db/schema/usage-events";
 
 /**
  * Track MCP tool usage for analytics

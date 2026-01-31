@@ -1,6 +1,9 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { server } from "./server.js";
 
+// Register tools after server is created to avoid circular dependency
+import "./tools/index.js";
+
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
