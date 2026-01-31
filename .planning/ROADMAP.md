@@ -34,13 +34,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Project structure follows monorepo pattern from research
   5. Development documentation enables immediate contribution
   6. E2E test harness can validate served pages automatically
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 01-01: Project scaffolding and tooling
-- [ ] 01-02: Database setup and migrations
-- [ ] 01-03: CI/CD pipeline
-- [ ] 01-04: E2E testing setup with Playwright
+- [ ] 01-01-PLAN.md - Scaffold monorepo with Turborepo, Next.js 15+, shared packages, linting
+- [ ] 01-02-PLAN.md - PostgreSQL Docker Compose and Drizzle ORM setup
+- [ ] 01-03-PLAN.md - GitHub Actions CI pipeline with lint, typecheck, test, build, E2E
+- [ ] 01-04-PLAN.md - Playwright E2E testing with webServer auto-start
 
 ### Phase 2: Authentication
 **Goal**: Users can securely access the application with company credentials
@@ -184,4 +184,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 ---
 *Created: 2026-01-31*
-*Last updated: 2026-01-31 - Added E2E testing (Playwright) to Phase 1*
+*Last updated: 2026-01-31 - Phase 1 plans created (4 plans in 2 waves)*
