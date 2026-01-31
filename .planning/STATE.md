@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 1 of 8 (Project Foundation)
-Plan: 1 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-31 - Completed 01-01-PLAN.md (Monorepo Foundation)
+Last activity: 2026-01-31 - Completed 01-03-PLAN.md (CI/CD Pipeline)
 
-Progress: [#---------] 4% (1 of 27 total plans)
+Progress: [##--------] 7% (2 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 7 min
-- Total execution time: 7 min
+- Total plans completed: 2
+- Average duration: 5 min
+- Total execution time: 9 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-project-foundation | 1/4 | 7 min | 7 min |
+| 01-project-foundation | 2/4 | 9 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (7 min)
-- Trend: -
+- Last 5 plans: 01-01 (7 min), 01-03 (2 min)
+- Trend: improving
 
 *Updated after each plan completion*
 
@@ -45,6 +45,8 @@ Recent decisions affecting current work:
 - MCP Integration moved to Phase 3 (from Phase 8) to enable usage tracking from day one. Core metric (FTE Days Saved = uses x hours) requires real usage data.
 - E2E testing with Playwright added to Phase 1 to ensure served pages can be validated automatically from the start.
 - Inlined Tailwind theme in apps/web/globals.css - CSS imports from workspace packages not supported by Next.js build.
+- 15-minute CI timeout - balanced between allowing E2E tests and preventing runaway builds.
+- PostgreSQL 16 Alpine for CI service container - matches production, minimal image size.
 
 ### Pending Todos
 
@@ -56,6 +58,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T12:55:12Z
-Stopped at: Completed 01-01-PLAN.md (Monorepo Foundation)
+Last session: 2026-01-31T13:01:00Z
+Stopped at: Completed 01-03-PLAN.md (CI/CD Pipeline)
 Resume file: None
