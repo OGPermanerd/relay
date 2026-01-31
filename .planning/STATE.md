@@ -12,25 +12,25 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 Phase: 1 of 8 (Project Foundation)
 Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-31 - Completed 01-03-PLAN.md (CI/CD Pipeline)
+Last activity: 2026-01-31 - Completed 01-02-PLAN.md (Database Setup)
 
-Progress: [##--------] 7% (2 of 27 total plans)
+Progress: [###-------] 11% (3 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 5 min
-- Total execution time: 9 min
+- Total plans completed: 3
+- Average duration: 4 min
+- Total execution time: 12 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-project-foundation | 2/4 | 9 min | 5 min |
+| 01-project-foundation | 3/4 | 12 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (7 min), 01-03 (2 min)
+- Last 5 plans: 01-01 (7 min), 01-03 (2 min), 01-02 (3 min)
 - Trend: improving
 
 *Updated after each plan completion*
@@ -47,6 +47,8 @@ Recent decisions affecting current work:
 - Inlined Tailwind theme in apps/web/globals.css - CSS imports from workspace packages not supported by Next.js build.
 - 15-minute CI timeout - balanced between allowing E2E tests and preventing runaway builds.
 - PostgreSQL 16 Alpine for CI service container - matches production, minimal image size.
+- drizzle-kit push for development, migrations for production workflow.
+- Schema-based drizzle client for type-safe relation queries.
 
 ### Pending Todos
 
@@ -55,9 +57,10 @@ None yet.
 ### Blockers/Concerns
 
 - Node.js version warning (v20 vs required v22) - works but shows warning on pnpm commands.
+- Docker not available in sandbox - database container must be started manually when Docker is available.
 
 ## Session Continuity
 
-Last session: 2026-01-31T13:01:00Z
-Stopped at: Completed 01-03-PLAN.md (CI/CD Pipeline)
+Last session: 2026-01-31T13:02:00Z
+Stopped at: Completed 01-02-PLAN.md (Database Setup)
 Resume file: None
