@@ -2,10 +2,14 @@
 
 import { auth } from "@/auth";
 import { db, skills } from "@relay/db";
+import { skillVersions } from "@relay/db/schema/skill-versions";
+import { generateUploadUrl } from "@relay/storage";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { generateUniqueSlug } from "@/lib/slug";
+import { hashContent } from "@/lib/content-hash";
 
 // Zod schema for form validation
 const createSkillSchema = z.object({
@@ -104,6 +108,54 @@ export async function createSkill(
         authorId: session.user.id,
       })
       .returning({ id: skills.id, slug: skills.slug });
+
+    // Generate content hash
+    const contentHash = await hashContent(content);
+
+    // Attempt R2 upload (gracefully handles missing config)
+    const uploadResult = await generateUploadUrl(newSkill.id, 1, "text/markdown");
+
+    if (uploadResult) {
+      // Upload content to R2
+      const uploadResponse = await fetch(uploadResult.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "text/markdown" },
+        body: content,
+      });
+
+      if (uploadResponse.ok) {
+        // Create version record
+        const [version] = await db
+          .insert(skillVersions)
+          .values({
+            skillId: newSkill.id,
+            version: 1,
+            contentUrl: uploadResult.objectKey,
+            contentHash,
+            contentType: "text/markdown",
+            name,
+            description,
+            metadata: {
+              tags: parsed.data.tags,
+              usageInstructions: parsed.data.usageInstructions,
+            },
+            createdBy: session.user.id,
+          })
+          .returning({ id: skillVersions.id });
+
+        // Update skill with published version reference
+        await db
+          .update(skills)
+          .set({ publishedVersionId: version.id })
+          .where(eq(skills.id, newSkill.id));
+      } else {
+        // eslint-disable-next-line no-console
+        console.warn("R2 upload failed, skill created without version record");
+      }
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn("R2 not configured, skill created without version record");
+    }
 
     // Revalidate relevant paths
     revalidatePath("/skills");

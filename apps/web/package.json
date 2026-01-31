@@ -16,6 +16,7 @@
     "@auth/drizzle-adapter": "^1.11.1",
     "@relay/core": "workspace:*",
     "@relay/db": "workspace:*",
+    "@relay/storage": "workspace:*",
     "@relay/ui": "workspace:*",
     "drizzle-orm": "^0.38.0",
     "next": "^15.1.0",

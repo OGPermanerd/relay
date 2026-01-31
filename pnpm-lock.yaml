@@ -75,6 +75,9 @@ importers:
       '@relay/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@relay/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@relay/ui':
         specifier: workspace:*
         version: link:../../packages/ui
