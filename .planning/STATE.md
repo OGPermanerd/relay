@@ -5,32 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-01-31)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 1 - Project Foundation
+**Current focus:** Phase 2 - Authentication
 
 ## Current Position
 
-Phase: 1 of 8 (Project Foundation)
-Plan: 4 of 4 in current phase
-Status: Phase complete
-Last activity: 2026-01-31 - Completed 01-04-PLAN.md (E2E Testing)
+Phase: 2 of 8 (Authentication)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-31 - Completed 02-01-PLAN.md (Auth.js Configuration)
 
-Progress: [####------] 15% (4 of 27 total plans)
+Progress: [#####-----] 19% (5 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 4 min
-- Total execution time: 16 min
+- Total plans completed: 5
+- Average duration: 4.2 min
+- Total execution time: 21 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-project-foundation | 4/4 | 16 min | 4 min |
+| 02-authentication | 1/3 | 5 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (7 min), 01-03 (2 min), 01-02 (3 min), 01-04 (4 min)
+- Last 5 plans: 01-01 (7 min), 01-03 (2 min), 01-02 (3 min), 01-04 (4 min), 02-01 (5 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -49,6 +50,10 @@ Recent decisions affecting current work:
 - PostgreSQL 16 Alpine for CI service container - matches production, minimal image size.
 - drizzle-kit push for development, migrations for production workflow.
 - Schema-based drizzle client for type-safe relation queries.
+- JWT session strategy for Auth.js - required for Edge middleware compatibility.
+- Split auth config pattern - auth.config.ts (Edge) + auth.ts (Node with adapter).
+- Text ID for users table - Auth.js DrizzleAdapter requires text primary keys.
+- Graceful null-db handling - allows builds without DATABASE_URL.
 
 ### Pending Todos
 
@@ -61,6 +66,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T13:02:28Z
-Stopped at: Completed 01-04-PLAN.md (E2E Testing) - Phase 1 complete
+Last session: 2026-01-31T13:58:13Z
+Stopped at: Completed 02-01-PLAN.md (Auth.js Configuration)
 Resume file: None
