@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 
 ## Current Position
 
-Phase: 6 of 8 (Discovery) - COMPLETE
-Plan: 4 of 4
-Status: Complete
-Last activity: 2026-01-31 - Completed Phase 6
+Phase: 7 of 8 (Ratings & Reviews)
+Plan: 1 of 2
+Status: In progress
+Last activity: 2026-01-31 - Completed 07-01-PLAN.md
 
-Progress: [########################] 93% (25 of 27 total plans)
+Progress: [#########################] 96% (26 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 25
+- Total plans completed: 26
 - Average duration: 4 min
-- Total execution time: 102 min
+- Total execution time: 104 min
 
 **By Phase:**
 
@@ -33,9 +33,10 @@ Progress: [########################] 93% (25 of 27 total plans)
 | 04-data-model-storage | 5/5 | 16 min | 3 min |
 | 05-skill-publishing | 3/3 | 18 min | 6 min |
 | 06-discovery | 4/4 | 20 min | 5 min |
+| 07-ratings-reviews | 1/2 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-03 (3 min), 06-01 (3 min), 06-02 (6 min), 06-03 (7 min), 06-04 (4 min)
+- Last 5 plans: 06-01 (3 min), 06-02 (6 min), 06-03 (7 min), 06-04 (4 min), 07-01 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -104,6 +105,10 @@ Recent decisions affecting current work:
 - Use nuqs over Next.js useRouter/useSearchParams for cleaner URL state management.
 - nuqs parsers: parseAsString for query, parseAsStringEnum for category, parseAsArrayOf for tags.
 - Tag filtering implemented as placeholder until metadata JSONB column added to skills table.
+- skillSlug passed in formData for rating submission to enable proper path revalidation.
+- Upsert pattern for ratings: check for existing rating by skillId + userId, update if exists, insert if not.
+- hoursSavedEstimate uses step=1 (integer only) to match database INTEGER column constraint.
+- Star rating input uses hidden radio buttons for accessibility with hover preview for visual feedback.
 
 ### Pending Todos
 
@@ -119,6 +124,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T19:15:00Z
-Stopped at: Completed Phase 6 (Discovery)
+Last session: 2026-01-31T19:21:39Z
+Stopped at: Completed 07-01-PLAN.md
 Resume file: None
