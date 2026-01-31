@@ -30,7 +30,7 @@ Total: 33 plans completed in 120 minutes.
 
 **Milestone Goal:** Fix tech debt from v1.0 and add quality scorecards to surface high-value skills.
 
-- [ ] **Phase 9: Tag Filtering** - Complete backend for existing tag UI
+- [x] **Phase 9: Tag Filtering** - Complete backend for existing tag UI
 - [ ] **Phase 10: Quality Scorecards** - Calculate and display quality badges
 - [ ] **Phase 11: E2E Test Coverage** - Validate authenticated user flows
 
@@ -48,7 +48,7 @@ Total: 33 plans completed in 120 minutes.
 **Plans:** 1 plan
 
 Plans:
-- [ ] 09-01-PLAN.md — Add tags column and implement backend filtering
+- [x] 09-01-PLAN.md — Add tags column and implement backend filtering
 
 ### Phase 10: Quality Scorecards
 **Goal:** Users can identify high-quality skills through visible quality badges
@@ -88,7 +88,7 @@ Phases execute in numeric order: 9 → 10 → 11
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-8 | v1.0 | 33/33 | Complete | 2026-01-31 |
-| 9. Tag Filtering | v1.1 | 0/1 | Planned | - |
+| 9. Tag Filtering | v1.1 | 1/1 | Complete | 2026-01-31 |
 | 10. Quality Scorecards | v1.1 | 0/? | Not started | - |
 | 11. E2E Test Coverage | v1.1 | 0/? | Not started | - |
 

@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 9 of 11 (Tag Filtering)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-01-31 — v1.1 roadmap created
+Plan: 1 of 1 in current phase
+Status: Phase complete
+Last activity: 2026-01-31 - Completed 09-01-PLAN.md
 
-Progress: [██████████░░░░░░░░░░░░░░░░] 33/33 v1.0 complete, 0/? v1.1
+Progress: [██████████████░░░░░░░░░░░░] 34/34+ (v1.0 complete, 1/3 v1.1)
 
 ## Performance Metrics
 
@@ -23,20 +23,10 @@ Progress: [██████████░░░░░░░░░░░░░
 - Total execution time: 120 min
 - Average duration: 3.6 min/plan
 
-**By Phase (v1.0):**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 01-project-foundation | 4/4 | 16 min | 4 min |
-| 02-authentication | 3/3 | 15 min | 5 min |
-| 03-mcp-integration | 6/6 | 18 min | 3 min |
-| 04-data-model-storage | 5/5 | 16 min | 3 min |
-| 05-skill-publishing | 3/3 | 18 min | 6 min |
-| 06-discovery | 4/4 | 20 min | 5 min |
-| 07-ratings-reviews | 3/3 | 7 min | 2.3 min |
-| 08-metrics-analytics | 5/5 | 11 min | 2.2 min |
-
-**v1.1:** Starting fresh — metrics will populate after first plan.
+**v1.1 Velocity:**
+- Total plans completed: 1
+- Total execution time: 4 min
+- Average duration: 4 min/plan
 
 ## Accumulated Context
 
@@ -44,22 +34,28 @@ Progress: [██████████░░░░░░░░░░░░░
 
 All v1.0 decisions logged in PROJECT.md Key Decisions table.
 
+**v1.1 Decisions:**
+| Phase | Decision | Rationale |
+|-------|----------|-----------|
+| 09-01 | TEXT[] instead of JSONB for tags | Simpler type inference in Drizzle, direct array operators |
+| 09-01 | && operator for ANY tag match | More user-friendly than @> ALL match |
+
 ### Pending Todos
 
 None.
 
 ### Blockers/Concerns
 
-**Known Tech Debt (being addressed in v1.1):**
-- Tag filtering UI exists but backend returns empty array — Phase 9
-- Limited E2E test coverage (login page only) — Phase 11
+**Known Tech Debt (addressed in v1.1):**
+- ~~Tag filtering UI exists but backend returns empty array~~ - FIXED in Phase 9
+- Limited E2E test coverage (login page only) - Phase 11
 
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: v1.1 roadmap created
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None
 
 ## Next Steps
 
-Run `/gsd:plan-phase 9` to plan Tag Filtering phase.
+Phase 9 complete. Run `/gsd:plan-phase 10` to plan Quality Scorecards phase.
