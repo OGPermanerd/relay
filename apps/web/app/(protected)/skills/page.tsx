@@ -4,6 +4,8 @@ import { SkillList } from "@/components/skill-list";
 import { SearchInput } from "@/components/search-input";
 import { CategoryFilter } from "@/components/category-filter";
 import { TagFilter } from "@/components/tag-filter";
+import { QualityFilter } from "@/components/quality-filter";
+import { SortDropdown } from "@/components/sort-dropdown";
 import { EmptyState } from "@/components/empty-state";
 import { ClearFiltersButton } from "./clear-filters-button";
 
@@ -12,6 +14,8 @@ interface SkillsPageProps {
     q?: string;
     category?: string;
     tags?: string;
+    qualityTier?: string;
+    sortBy?: string;
   }>;
 }
 
@@ -22,10 +26,12 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   const query = params.q || "";
   const category = params.category || undefined;
   const tags = params.tags ? params.tags.split(",") : [];
+  const qualityTier = params.qualityTier as "gold" | "silver" | "bronze" | undefined;
+  const sortBy = params.sortBy as "uses" | "quality" | "rating" | undefined;
 
   // Fetch skills and available tags
   const [skills, availableTags] = await Promise.all([
-    searchSkills({ query, category, tags }),
+    searchSkills({ query, category, tags, qualityTier, sortBy }),
     getAvailableTags(),
   ]);
 
@@ -34,7 +40,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   const usageTrends = await getUsageTrends(skillIds);
 
   // Determine empty state type
-  const hasFilters = query || category || tags.length > 0;
+  const hasFilters = query || category || tags.length > 0 || qualityTier;
   const emptyStateType =
     skills.length === 0
       ? hasFilters
@@ -55,7 +61,11 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
       {/* Search and Filters */}
       <div className="mb-6 space-y-4">
         <SearchInput />
-        <CategoryFilter />
+        <div className="flex flex-wrap items-center gap-4">
+          <CategoryFilter />
+          <QualityFilter />
+          <SortDropdown />
+        </div>
         {availableTags.length > 0 && <TagFilter availableTags={availableTags} />}
       </div>
 
