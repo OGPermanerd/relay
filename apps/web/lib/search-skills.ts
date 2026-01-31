@@ -52,13 +52,9 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
     conditions.push(eq(skills.category, params.category));
   }
 
-  // TODO: Tag filtering requires adding metadata JSONB column to skills table
-  // For now, tag filter is a no-op
+  // Tag filtering - match skills containing ANY of the selected tags
   if (params.tags && params.tags.length > 0) {
-    // Will be implemented when metadata column is added:
-    // conditions.push(
-    //   sql`${skills.metadata}->'tags' @> ${JSON.stringify(params.tags)}::jsonb`
-    // );
+    conditions.push(sql`${skills.tags} && ${params.tags}::text[]`);
   }
 
   // Build query
@@ -95,9 +91,9 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
 }
 
 /**
- * Get all unique tags from skills metadata
+ * Get all unique tags from skills
  *
- * Extracts tags from the metadata JSONB field across all skills.
+ * Extracts tags from the tags TEXT[] column across all skills.
  * Returns sorted array of unique tag strings.
  *
  * @returns Array of tag strings
@@ -108,7 +104,11 @@ export async function getAvailableTags(): Promise<string[]> {
     return [];
   }
 
-  // TODO: Extract tags from metadata JSONB field when tags are added
-  // For now, return empty array since tags aren't implemented yet
-  return [];
+  // Use unnest to flatten arrays, then select distinct
+  const result = await db.execute(
+    sql`SELECT DISTINCT unnest(tags) as tag FROM skills WHERE tags IS NOT NULL ORDER BY tag`
+  );
+
+  // db.execute returns RowList which is array-like, cast to array for mapping
+  return (result as unknown as Record<string, unknown>[]).map((row) => String(row.tag));
 }
