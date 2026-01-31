@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-31)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 10 - Quality Scorecards
+**Current focus:** Phase 10 - Quality Scorecards (COMPLETE)
 
 ## Current Position
 
 Phase: 10 of 11 (Quality Scorecards)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-01-31 - Completed 10-03-PLAN.md
+Plan: 4 of 4 in current phase
+Status: Phase complete
+Last activity: 2026-01-31 - Completed 10-04-PLAN.md
 
-Progress: [█████████████████░░░░░░░░░] 37/38 (v1.0 complete, 4/5 v1.1)
+Progress: [██████████████████░░░░░░░░] 38/39 (v1.0 complete, 5/6 v1.1)
 
 ## Performance Metrics
 
@@ -24,9 +24,9 @@ Progress: [█████████████████░░░░░░
 - Average duration: 3.6 min/plan
 
 **v1.1 Velocity:**
-- Total plans completed: 4
-- Total execution time: 15 min
-- Average duration: 3.75 min/plan
+- Total plans completed: 5
+- Total execution time: 19 min
+- Average duration: 3.8 min/plan
 
 ## Accumulated Context
 
@@ -44,6 +44,8 @@ All v1.0 decisions logged in PROJECT.md Key Decisions table.
 | 10-01 | Minimum 3 ratings for tier | Prevents gaming, ensures meaningful signals |
 | 10-02 | Inline style for hex colors | Keeps component self-contained, avoids Tailwind config |
 | 10-02 | Scalar subquery for totalRatings | Efficient for typical search result sizes |
+| 10-04 | nuqs for URL state | Consistent with existing CategoryFilter/TagFilter patterns |
+| 10-04 | Inline SQL quality computation | Avoids denormalized column; acceptable for v1.1 scale |
 
 ### Pending Todos
 
@@ -58,9 +60,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 10-03-PLAN.md
+Stopped at: Completed 10-04-PLAN.md (Phase 10 complete)
 Resume file: None
 
 ## Next Steps
 
-Continue with 10-04-PLAN.md (Wave 2 parallel - may already be complete).
+Continue with Phase 11 (E2E Testing) - final v1.1 phase.
