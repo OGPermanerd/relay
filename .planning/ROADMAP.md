@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Project Foundation** - Development infrastructure, tooling, and CI/CD
 - [x] **Phase 2: Authentication** - Google Workspace SSO and user profiles
 - [x] **Phase 3: MCP Integration** - Claude Code deployment and usage tracking (early for metrics)
-- [ ] **Phase 4: Data Model & Storage** - Core schema and multi-format skill support (informed by MCP)
+- [x] **Phase 4: Data Model & Storage** - Core schema and multi-format skill support (informed by MCP)
 - [ ] **Phase 5: Skill Publishing** - Upload skills with metadata and view details
 - [ ] **Phase 6: Discovery** - Search, browse, and skill cards
 - [ ] **Phase 7: Ratings & Reviews** - User feedback with time-saved estimates
@@ -91,11 +91,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 04-01-PLAN.md - Versioned schema (skillVersions + ratings tables, skills extensions)
-- [ ] 04-02-PLAN.md - R2 storage package with presigned URL helpers
-- [ ] 04-03-PLAN.md - Drizzle relations for type-safe nested queries
-- [ ] 04-04-PLAN.md - Multi-format skill validation with Zod schemas
-- [ ] 04-05-PLAN.md - Skill metrics service and database push [checkpoint: Docker required]
+- [x] 04-01-PLAN.md - Versioned schema (skillVersions + ratings tables, skills extensions)
+- [x] 04-02-PLAN.md - R2 storage package with presigned URL helpers
+- [x] 04-03-PLAN.md - Drizzle relations for type-safe nested queries
+- [x] 04-04-PLAN.md - Multi-format skill validation with Zod schemas
+- [x] 04-05-PLAN.md - Skill metrics service and database push
 
 ### Phase 5: Skill Publishing
 **Goal**: Users can upload skills and view skill details
@@ -178,7 +178,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 1. Project Foundation | 4/4 | Complete | 2026-01-31 |
 | 2. Authentication | 3/3 | Complete | 2026-01-31 |
 | 3. MCP Integration | 6/6 | Complete | 2026-01-31 |
-| 4. Data Model & Storage | 0/5 | Planning | - |
+| 4. Data Model & Storage | 5/5 | Complete | 2026-01-31 |
 | 5. Skill Publishing | 0/3 | Not started | - |
 | 6. Discovery | 0/4 | Not started | - |
 | 7. Ratings & Reviews | 0/3 | Not started | - |
@@ -186,4 +186,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 ---
 *Created: 2026-01-31*
-*Last updated: 2026-01-31 - Phase 4 plans created*
+*Last updated: 2026-01-31 - Phase 4 complete*

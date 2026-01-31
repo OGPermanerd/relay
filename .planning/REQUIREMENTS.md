@@ -98,7 +98,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DISC-03 | Phase 6 | Pending |
 | DISC-04 | Phase 8 | Pending |
 | SKIL-01 | Phase 5 | Pending |
-| SKIL-02 | Phase 4 | Pending |
+| SKIL-02 | Phase 4 | Complete |
 | SKIL-03 | Phase 5 | Pending |
 | RATE-01 | Phase 7 | Pending |
 | RATE-02 | Phase 7 | Pending |

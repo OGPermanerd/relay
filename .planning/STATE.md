@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-31)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 4 - Data Model & Storage
+**Current focus:** Phase 4 complete, ready for Phase 5
 
 ## Current Position
 
-Phase: 4 of 8 (Data Model & Storage)
-Plan: 4 of 5
-Status: In progress
-Last activity: 2026-01-31 - Completed 04-04-PLAN.md (Skill Format Validation)
+Phase: 4 of 8 (Data Model & Storage) - COMPLETE
+Plan: 5 of 5
+Status: Complete
+Last activity: 2026-01-31 - Completed Phase 4
 
-Progress: [################] 63% (17 of 27 total plans)
+Progress: [##################] 67% (18 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
+- Total plans completed: 18
 - Average duration: 4 min
-- Total execution time: 60 min
+- Total execution time: 65 min
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [################] 63% (17 of 27 total plans)
 | 01-project-foundation | 4/4 | 16 min | 4 min |
 | 02-authentication | 3/3 | 15 min | 5 min |
 | 03-mcp-integration | 6/6 | 18 min | 3 min |
-| 04-data-model-storage | 4/5 | 11 min | 3 min |
+| 04-data-model-storage | 5/5 | 16 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-06 (0 min), 04-01 (2 min), 04-02 (4 min), 04-03 (3 min), 04-04 (2 min)
+- Last 5 plans: 04-01 (2 min), 04-02 (4 min), 04-03 (3 min), 04-04 (2 min), 04-05 (5 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -78,6 +78,7 @@ Recent decisions affecting current work:
 - Merge schema and relations in drizzle config: { schema: { ...schema, ...relations } }.
 - Discriminated union on format field for type-safe validation branching.
 - Typed result pattern (success/error) instead of throwing for validation.
+- Use RETURNING clause with upsert to get actual IDs for downstream inserts (seed script).
 
 ### Pending Todos
 
@@ -93,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T17:42:38Z
-Stopped at: Completed 04-04-PLAN.md (Skill Format Validation)
+Last session: 2026-01-31T18:00:00Z
+Stopped at: Completed Phase 4 (Data Model & Storage)
 Resume file: None
