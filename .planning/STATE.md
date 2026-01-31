@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 4 of 8 (Data Model & Storage)
-Plan: 3 of 5
+Plan: 4 of 5
 Status: In progress
-Last activity: 2026-01-31 - Completed 04-03-PLAN.md (Drizzle Relations)
+Last activity: 2026-01-31 - Completed 04-04-PLAN.md (Skill Format Validation)
 
-Progress: [################] 59% (16 of 27 total plans)
+Progress: [################] 63% (17 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
+- Total plans completed: 17
 - Average duration: 4 min
-- Total execution time: 58 min
+- Total execution time: 60 min
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [################] 59% (16 of 27 total plans)
 | 01-project-foundation | 4/4 | 16 min | 4 min |
 | 02-authentication | 3/3 | 15 min | 5 min |
 | 03-mcp-integration | 6/6 | 18 min | 3 min |
-| 04-data-model-storage | 3/5 | 9 min | 3 min |
+| 04-data-model-storage | 4/5 | 11 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-05 (1 min), 03-06 (0 min), 04-01 (2 min), 04-02 (4 min), 04-03 (3 min)
+- Last 5 plans: 03-06 (0 min), 04-01 (2 min), 04-02 (4 min), 04-03 (3 min), 04-04 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -76,6 +76,8 @@ Recent decisions affecting current work:
 - Object key pattern for R2: skills/{skillId}/v{version}/content.
 - Named relations for multiple FK to same table (publishedVersion, draftVersion).
 - Merge schema and relations in drizzle config: { schema: { ...schema, ...relations } }.
+- Discriminated union on format field for type-safe validation branching.
+- Typed result pattern (success/error) instead of throwing for validation.
 
 ### Pending Todos
 
@@ -91,6 +93,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T17:43:00Z
-Stopped at: Completed 04-03-PLAN.md (Drizzle Relations)
+Last session: 2026-01-31T17:42:38Z
+Stopped at: Completed 04-04-PLAN.md (Skill Format Validation)
 Resume file: None
