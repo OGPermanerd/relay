@@ -89,9 +89,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFR-01 | Phase 1 | Pending |
-| AUTH-01 | Phase 2 | Pending |
-| AUTH-02 | Phase 2 | Pending |
+| INFR-01 | Phase 1 | Complete |
+| AUTH-01 | Phase 2 | Complete |
+| AUTH-02 | Phase 2 | Complete |
 | AUTH-03 | Phase 8 | Complete |
 | DISC-01 | Phase 6 | Complete |
 | DISC-02 | Phase 6 | Complete |
@@ -104,9 +104,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RATE-02 | Phase 7 | Complete |
 | RATE-03 | Phase 8 | Complete |
 | RATE-04 | Phase 8 | Complete |
-| MCP-01 | Phase 3 | Pending |
-| MCP-02 | Phase 3 | Pending |
-| MCP-03 | Phase 3 | Pending |
+| MCP-01 | Phase 3 | Complete |
+| MCP-02 | Phase 3 | Complete |
+| MCP-03 | Phase 3 | Partial* |
 
 **Coverage:**
 - v1 requirements: 18 total
