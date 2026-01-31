@@ -60,10 +60,13 @@ Plans:
   3. User can sort skills by quality score
   4. User can view quality breakdown (see what factors contributed to badge)
   5. New skills without enough data show "Unrated" state instead of misleading badge
-**Plans:** TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 10-01: [TBD during planning]
+- [ ] 10-01-PLAN.md — TDD quality score calculation utility
+- [ ] 10-02-PLAN.md — QualityBadge component and SkillCard integration
+- [ ] 10-03-PLAN.md — Quality badge and breakdown on detail page
+- [ ] 10-04-PLAN.md — Quality filter and sort on browse page
 
 ### Phase 11: E2E Test Coverage
 **Goal:** Authenticated user flows are validated through automated browser tests
@@ -89,7 +92,7 @@ Phases execute in numeric order: 9 → 10 → 11
 |-------|-----------|----------------|--------|-----------|
 | 1-8 | v1.0 | 33/33 | Complete | 2026-01-31 |
 | 9. Tag Filtering | v1.1 | 1/1 | Complete | 2026-01-31 |
-| 10. Quality Scorecards | v1.1 | 0/? | Not started | - |
+| 10. Quality Scorecards | v1.1 | 0/4 | Not started | - |
 | 11. E2E Test Coverage | v1.1 | 0/? | Not started | - |
 
 ---
