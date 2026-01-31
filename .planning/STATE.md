@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 
 ## Current Position
 
-Phase: 10 of 11 (Quality Scorecards) - COMPLETE
-Plan: All plans complete
-Status: Ready for Phase 11
-Last activity: 2026-01-31 - Verified Phase 10 (8/8 must-haves)
+Phase: 11 of 11 (E2E Test Coverage)
+Plan: 1 of 4
+Status: In progress
+Last activity: 2026-01-31 - Completed 11-01-PLAN.md (Playwright auth setup)
 
-Progress: [██████████████████░░░░░░░░] 38/39 (v1.0 complete, 5/? v1.1)
+Progress: [███████████████████░░░░░░░] 39/42 (v1.0 complete, 6/9 v1.1)
 
 ## Performance Metrics
 
@@ -24,9 +24,9 @@ Progress: [██████████████████░░░░░
 - Average duration: 3.6 min/plan
 
 **v1.1 Velocity:**
-- Total plans completed: 5
-- Total execution time: 19 min
-- Average duration: 3.8 min/plan
+- Total plans completed: 6
+- Total execution time: 25 min
+- Average duration: 4.2 min/plan
 
 ## Accumulated Context
 
@@ -46,6 +46,7 @@ All v1.0 decisions logged in PROJECT.md Key Decisions table.
 | 10-02 | Scalar subquery for totalRatings | Efficient for typical search result sizes |
 | 10-04 | nuqs for URL state | Consistent with existing CategoryFilter/TagFilter patterns |
 | 10-04 | Inline SQL quality computation | Avoids denormalized column; acceptable for v1.1 scale |
+| 11-01 | Use @relay/db instead of direct postgres | Type-safe, uses existing shared client |
 
 ### Pending Todos
 
@@ -55,14 +56,14 @@ None.
 
 **Known Tech Debt (addressed in v1.1):**
 - ~~Tag filtering UI exists but backend returns empty array~~ - FIXED in Phase 9
-- Limited E2E test coverage (login page only) - Phase 11
+- Limited E2E test coverage (login page only) - Phase 11 IN PROGRESS
 
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Phase 10 verified (8/8 must-haves)
+Stopped at: Completed 11-01-PLAN.md (Playwright auth setup)
 Resume file: None
 
 ## Next Steps
 
-Run `/gsd:plan-phase 11` to plan E2E Test Coverage phase.
+Continue with 11-02-PLAN.md (E2E tests for skill browsing).
