@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-31)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 3 - MCP Integration (Gap Closure)
+**Current focus:** Phase 4 - Data Model & Storage
 
 ## Current Position
 
-Phase: 3 of 8 (MCP Integration)
-Plan: 5 of 6 (gap closure plans)
-Status: Gap closure in progress
-Last activity: 2026-01-31 - Completed 03-05-PLAN.md (MCP Documentation)
+Phase: 4 of 8 (Data Model & Storage)
+Plan: 1 of 5
+Status: In progress
+Last activity: 2026-01-31 - Completed 04-01-PLAN.md (Versioned Data Model)
 
-Progress: [############] 44% (12 of 27 total plans)
+Progress: [##############..] 52% (14 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 4.1 min
-- Total execution time: 49 min
+- Total plans completed: 14
+- Average duration: 4 min
+- Total execution time: 51 min
 
 **By Phase:**
 
@@ -29,11 +29,12 @@ Progress: [############] 44% (12 of 27 total plans)
 |-------|-------|-------|----------|
 | 01-project-foundation | 4/4 | 16 min | 4 min |
 | 02-authentication | 3/3 | 15 min | 5 min |
-| 03-mcp-integration | 5/6 | 18 min | 4 min |
+| 03-mcp-integration | 6/6 | 18 min | 3 min |
+| 04-data-model-storage | 1/5 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (4 min), 03-02 (8 min), 03-03 (2 min), 03-04 (3 min), 03-05 (1 min)
-- Trend: stable
+- Last 5 plans: 03-03 (2 min), 03-04 (3 min), 03-05 (1 min), 03-06 (0 min), 04-01 (2 min)
+- Trend: improving
 
 *Updated after each plan completion*
 
@@ -67,6 +68,9 @@ Recent decisions affecting current work:
 - Return skill content + instructions from deploy_skill (Claude Code handles file ops).
 - Use skill.slug for deploy filename (filesystem-safe).
 - Mock @relay/db at module level for isolated MCP tool testing.
+- No FK from skills to skillVersions due to circular reference - enforce in app layer.
+- Keep existing content field on skills for backward compatibility with MCP tools.
+- Use integer * 100 for averageRating to preserve decimal precision without floats.
 
 ### Pending Todos
 
@@ -81,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T16:58:48Z
-Stopped at: Completed 03-05-PLAN.md (MCP Documentation)
+Last session: 2026-01-31T17:36:23Z
+Stopped at: Completed 04-01-PLAN.md (Versioned Data Model)
 Resume file: None
