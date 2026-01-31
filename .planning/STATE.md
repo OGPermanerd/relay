@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 
 ## Current Position
 
-Phase: 5 of 8 (Skill Publishing) - COMPLETE
-Plan: 3 of 3
-Status: Complete
-Last activity: 2026-01-31 - Completed Phase 5
+Phase: 6 of 8 (Discovery & Search)
+Plan: 1 of 3
+Status: In progress
+Last activity: 2026-01-31 - Completed 06-01-PLAN.md
 
-Progress: [####################] 78% (21 of 27 total plans)
+Progress: [#####################] 81% (22 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
+- Total plans completed: 22
 - Average duration: 4 min
-- Total execution time: 82 min
+- Total execution time: 85 min
 
 **By Phase:**
 
@@ -32,9 +32,10 @@ Progress: [####################] 78% (21 of 27 total plans)
 | 03-mcp-integration | 6/6 | 18 min | 3 min |
 | 04-data-model-storage | 5/5 | 16 min | 3 min |
 | 05-skill-publishing | 3/3 | 18 min | 6 min |
+| 06-discovery | 1/3 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-04 (2 min), 04-05 (5 min), 05-01 (7 min), 05-02 (7 min), 05-03 (3 min)
+- Last 5 plans: 04-05 (5 min), 05-01 (7 min), 05-02 (7 min), 05-03 (3 min), 06-01 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -87,6 +88,10 @@ Recent decisions affecting current work:
 - Store R2 objectKey (not full URL) in skillVersions.contentUrl.
 - Insert skill → version → update skill pattern to avoid circular FK constraint.
 - Keep content in both skills.content (MCP backward compat) and R2 (versioning).
+- Custom tsvector type via customType - drizzle-orm doesn't export tsvector directly.
+- Weight A for name, Weight B for description - name matches rank higher in FTS.
+- websearch_to_tsquery over plainto_tsquery - supports quotes and boolean operators.
+- Fallback to totalUses ordering when no query - optimized browse mode.
 
 ### Pending Todos
 
@@ -102,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T19:00:00Z
-Stopped at: Completed Phase 5 (Skill Publishing)
+Last session: 2026-01-31T18:51:50Z
+Stopped at: Completed 06-01-PLAN.md (Full-Text Search Infrastructure)
 Resume file: None
