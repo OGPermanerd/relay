@@ -93,9 +93,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-01 | Phase 2 | Pending |
 | AUTH-02 | Phase 2 | Pending |
 | AUTH-03 | Phase 8 | Pending |
-| DISC-01 | Phase 6 | Pending |
-| DISC-02 | Phase 6 | Pending |
-| DISC-03 | Phase 6 | Pending |
+| DISC-01 | Phase 6 | Complete |
+| DISC-02 | Phase 6 | Complete |
+| DISC-03 | Phase 6 | Complete |
 | DISC-04 | Phase 8 | Pending |
 | SKIL-01 | Phase 5 | Complete |
 | SKIL-02 | Phase 4 | Complete |
@@ -115,4 +115,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-31*
-*Last updated: 2026-01-31 - SKIL-01, SKIL-03 complete (Phase 5)*
+*Last updated: 2026-01-31 - DISC-01, DISC-02, DISC-03 complete (Phase 6)*

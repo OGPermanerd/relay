@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: MCP Integration** - Claude Code deployment and usage tracking (early for metrics)
 - [x] **Phase 4: Data Model & Storage** - Core schema and multi-format skill support (informed by MCP)
 - [x] **Phase 5: Skill Publishing** - Upload skills with metadata and view details
-- [ ] **Phase 6: Discovery** - Search, browse, and skill cards
+- [x] **Phase 6: Discovery** - Search, browse, and skill cards
 - [ ] **Phase 7: Ratings & Reviews** - User feedback with time-saved estimates
 - [ ] **Phase 8: Metrics & Analytics** - FTE Days Saved, dashboard, trending, leaderboard (with real data)
 
@@ -127,10 +127,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 06-01-PLAN.md - PostgreSQL full-text search with generated tsvector column and searchSkills function
-- [ ] 06-02-PLAN.md - Skill card components with react-sparklines for FTE Days Saved trends
-- [ ] 06-03-PLAN.md - nuqs URL state management with SearchInput, CategoryFilter, TagFilter components
-- [ ] 06-04-PLAN.md - Skills browse page with empty states and home page navigation update
+- [x] 06-01-PLAN.md - PostgreSQL full-text search with generated tsvector column and searchSkills function
+- [x] 06-02-PLAN.md - Skill card components with react-sparklines for FTE Days Saved trends
+- [x] 06-03-PLAN.md - nuqs URL state management with SearchInput, CategoryFilter, TagFilter components
+- [x] 06-04-PLAN.md - Skills browse page with empty states and home page navigation update
 
 ### Phase 7: Ratings & Reviews
 **Goal**: Users can rate skills and provide time-saved feedback
@@ -180,10 +180,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 3. MCP Integration | 6/6 | Complete | 2026-01-31 |
 | 4. Data Model & Storage | 5/5 | Complete | 2026-01-31 |
 | 5. Skill Publishing | 3/3 | Complete | 2026-01-31 |
-| 6. Discovery | 0/4 | Not started | - |
+| 6. Discovery | 4/4 | Complete | 2026-01-31 |
 | 7. Ratings & Reviews | 0/3 | Not started | - |
 | 8. Metrics & Analytics | 0/5 | Not started | - |
 
 ---
 *Created: 2026-01-31*
-*Last updated: 2026-01-31 - Phase 5 complete*
+*Last updated: 2026-01-31 - Phase 6 complete*
