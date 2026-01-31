@@ -5,7 +5,13 @@ import nextPlugin from "@next/eslint-plugin-next";
 export default tseslint.config(
   // Global ignores
   {
-    ignores: ["**/node_modules/**", "**/.next/**", "**/dist/**", "**/.turbo/**"],
+    ignores: [
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/dist/**",
+      "**/.turbo/**",
+      "**/next-env.d.ts",
+    ],
   },
 
   // Base ESLint recommended rules
@@ -33,6 +39,11 @@ export default tseslint.config(
     files: ["apps/web/**/*.ts", "apps/web/**/*.tsx"],
     plugins: {
       "@next/next": nextPlugin,
+    },
+    settings: {
+      next: {
+        rootDir: "apps/web",
+      },
     },
     rules: {
       ...nextPlugin.configs.recommended.rules,
