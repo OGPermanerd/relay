@@ -34,3 +34,4 @@ drizzle/meta/
 
 # Vercel
 .vercel/
+*.tsbuildinfo
