@@ -1,15 +1,20 @@
 import { StatCard } from "./stat-card";
 import Image from "next/image";
 import type { SkillStats } from "@/lib/skill-stats";
+import { calculateQualityScore } from "@/lib/quality-score";
+import { QualityBadge } from "./quality-badge";
+import { QualityBreakdown } from "./quality-breakdown";
 
 interface SkillWithAuthor {
   id: string;
   name: string;
   slug: string;
-  description: string;
-  category: string;
+  description: string | null;
+  category: string | null;
   content: string;
   hoursSaved: number | null;
+  totalUses: number;
+  averageRating: number | null;
   createdAt: Date;
   author: {
     id: string;
@@ -30,18 +35,31 @@ export function SkillDetail({ skill, stats }: SkillDetailProps) {
     year: "numeric",
   });
 
+  // Calculate quality score for badge and breakdown
+  const { score, tier, breakdown } = calculateQualityScore({
+    totalUses: skill.totalUses,
+    averageRating: skill.averageRating,
+    totalRatings: stats.totalRatings,
+    hasDescription: Boolean(skill.description),
+    hasCategory: Boolean(skill.category),
+  });
+
   return (
     <div>
       {/* Header section */}
       <div className="mb-6">
         <div className="mb-3">
           <span className="rounded-full bg-blue-100 px-3 py-1 text-sm uppercase text-blue-800">
-            {skill.category}
+            {skill.category || "Uncategorized"}
           </span>
         </div>
-        <h1 className="mb-4 text-3xl font-bold">{skill.name}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold">{skill.name}</h1>
+          <QualityBadge tier={tier} size="md" />
+        </div>
+        <QualityBreakdown breakdown={breakdown} tier={tier} score={score} />
         {skill.author && (
-          <div className="flex items-center gap-3">
+          <div className="mt-4 flex items-center gap-3">
             {skill.author.image ? (
               <Image
                 src={skill.author.image}
@@ -78,7 +96,7 @@ export function SkillDetail({ skill, stats }: SkillDetailProps) {
       {/* Description section */}
       <div className="mt-8">
         <h2 className="mb-2 text-xl font-semibold">Description</h2>
-        <p className="text-gray-700">{skill.description}</p>
+        <p className="text-gray-700">{skill.description || "No description provided."}</p>
       </div>
 
       {/* Usage section */}
