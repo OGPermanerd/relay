@@ -159,14 +159,14 @@ Plans:
   3. Trending section surfaces skills with high recent usage velocity (from MCP tracking)
   4. Leaderboard shows top contributors by skills shared, ratings, FTE Days Saved
   5. User profile displays complete contribution statistics
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 08-01: FTE Days Saved calculation service
-- [ ] 08-02: Platform dashboard
-- [ ] 08-03: Trending algorithm and section
-- [ ] 08-04: Contributor leaderboard
-- [ ] 08-05: Profile statistics completion
+- [ ] 08-01-PLAN.md - Platform statistics service with aggregation queries
+- [ ] 08-02-PLAN.md - Platform dashboard with stats, trending, and leaderboard
+- [ ] 08-03-PLAN.md - Trending algorithm with time-decay formula
+- [ ] 08-04-PLAN.md - Contributor leaderboard with RANK() window function
+- [ ] 08-05-PLAN.md - Profile statistics with real user data
 
 ## Progress
 
