@@ -34,9 +34,25 @@ export default async function HomePage() {
       ),
     },
     {
+      title: "Share a Skill",
+      description: "Upload your prompts, workflows, and agent configurations",
+      href: "/skills/new",
+      icon: (
+        <svg
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+      ),
+    },
+    {
       title: "Browse Skills",
       description: "Discover skills shared by your colleagues",
-      href: "#", // Placeholder - to be implemented in Phase 4
+      href: "#", // Placeholder - to be implemented in Phase 6
       icon: (
         <svg
           className="h-6 w-6"
