@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 Phase: 6 of 8 (Discovery & Search)
 Plan: 3 of 3
 Status: Phase complete
-Last activity: 2026-01-31 - Completed 06-04-PLAN.md
+Last activity: 2026-01-31 - Completed 06-03-PLAN.md
 
 Progress: [#######################] 89% (24 of 27 total plans)
 
@@ -21,7 +21,7 @@ Progress: [#######################] 89% (24 of 27 total plans)
 **Velocity:**
 - Total plans completed: 24
 - Average duration: 4 min
-- Total execution time: 95 min
+- Total execution time: 98 min
 
 **By Phase:**
 
@@ -32,10 +32,10 @@ Progress: [#######################] 89% (24 of 27 total plans)
 | 03-mcp-integration | 6/6 | 18 min | 3 min |
 | 04-data-model-storage | 5/5 | 16 min | 3 min |
 | 05-skill-publishing | 3/3 | 18 min | 6 min |
-| 06-discovery | 3/3 | 13 min | 4 min |
+| 06-discovery | 3/3 | 16 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-02 (7 min), 05-03 (3 min), 06-01 (3 min), 06-02 (6 min), 06-04 (4 min)
+- Last 5 plans: 05-03 (3 min), 06-01 (3 min), 06-02 (6 min), 06-03 (7 min), 06-04 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -101,6 +101,9 @@ Recent decisions affecting current work:
 - EmptyState type determined server-side based on query/category/tags context.
 - getAvailableTags returns empty array stub until tags are implemented.
 - ClearFiltersButton navigates to /skills (no params) to reset all filters.
+- Use nuqs over Next.js useRouter/useSearchParams for cleaner URL state management.
+- nuqs parsers: parseAsString for query, parseAsStringEnum for category, parseAsArrayOf for tags.
+- Tag filtering implemented as placeholder until metadata JSONB column added to skills table.
 
 ### Pending Todos
 
@@ -116,6 +119,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T19:00:00Z
-Stopped at: Completed 06-04-PLAN.md (Skills Browse Page)
+Last session: 2026-01-31T19:04:09Z
+Stopped at: Completed 06-03-PLAN.md (URL-Synced Filters)
 Resume file: None
