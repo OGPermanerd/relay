@@ -8,34 +8,39 @@ Relay is an internal skill marketplace where Claude skills, prompts, workflows, 
 
 Skills get better as they pass through more hands, with real metrics proving that value.
 
+## Current State
+
+**v1.0 shipped 2026-01-31** — Full internal skill marketplace with MCP integration.
+
+Tech stack: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK
+LOC: 4,667 TypeScript across 200 files
+
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ E2E browser automation testing with Playwright — v1.0
+- ✓ Google Workspace SSO authentication with domain restriction — v1.0
+- ✓ User profile with name, avatar, contribution statistics — v1.0
+- ✓ Contributor leaderboard by skills shared, ratings, FTE Days Saved — v1.0
+- ✓ Full-text search across skill names, descriptions, tags — v1.0
+- ✓ Skill cards with rating, uses, FTE Days Saved sparkline — v1.0
+- ✓ Category browsing and tag filtering — v1.0
+- ✓ Trending skills with usage velocity — v1.0
+- ✓ Skill upload with metadata (name, description, category, tags, instructions, time saved) — v1.0
+- ✓ Multi-format skill support (Claude Code skills, prompts, workflows, agent configs) — v1.0
+- ✓ Skill detail page with full metadata and usage statistics — v1.0
+- ✓ Star ratings (1-5) with optional comments — v1.0
+- ✓ User time-saved estimates override creator estimates — v1.0
+- ✓ FTE Days Saved at skill and platform level — v1.0
+- ✓ Dashboard with contributors, downloads, uses, FTE Days Saved — v1.0
+- ✓ MCP search/list skill operations — v1.0
+- ✓ MCP one-click skill deployment — v1.0
+- ✓ MCP automatic usage tracking — v1.0
 
 ### Active
 
-**Web Application**
-- [ ] Browse and search skills with category filtering
-- [ ] Skill cards showing: total uses, ratings, FTE Days Saved (sparkline), contributor count
-- [ ] Skill detail page with full version history (version, author, date, uses, hours saved per version)
-- [ ] Publish flow: upload skill with metadata (name, description, category tags, usage instructions, estimated hours saved, commit comment)
-- [ ] Rating and review system with optional time-saved estimate from reviewers
-- [ ] Dashboard showing: total contributors, total downloads, total uses, total FTE Days Saved
-- [ ] Google Workspace SSO authentication restricted to company domain
-
-**MCP Server**
-- [ ] List and search skills from Relay catalog
-- [ ] Deploy skills to local Claude environment (one-click)
-- [ ] Track skill usage automatically when deployed skills are run
-
-**Data Model**
-- [ ] Support multiple skill formats: Claude Code skills, prompts, workflows, agent configs
-- [ ] Wiki-style versioning where anyone can add a new version to any skill
-- [ ] Per-version metrics tracking (uses, hours saved)
-- [ ] FTE Days Saved calculation: uses × estimated_hours_per_use
-- [ ] User-submitted time estimates override creator estimates once available
+(None yet — define for next milestone)
 
 ### Out of Scope
 
@@ -59,7 +64,7 @@ Skills get better as they pass through more hands, with real metrics proving tha
 
 ## Constraints
 
-- **Tech stack**: Modern web (React/Next.js frontend, Node or Python backend, PostgreSQL) — standard choices for this scale
+- **Tech stack**: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5 — established in v1.0
 - **Authentication**: Google Workspace SSO only, restricted to company domain — no public access
 - **MCP compatibility**: Must work with Claude Code's MCP server architecture
 - **Skill format flexibility**: System must handle heterogeneous skill types without forcing a single format
@@ -68,11 +73,15 @@ Skills get better as they pass through more hands, with real metrics proving tha
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Wiki-style versioning over fork model | Keeps skills as single evolving artifacts rather than fragmenting into forks; simpler mental model | — Pending |
-| MCP-only tracking | Provides accurate usage data; creates natural incentive for MCP adoption | — Pending |
-| No approval gates | Reduces friction for contributors; lets metrics surface quality organically | — Pending |
-| User estimates override creator | Real-world usage data more reliable than creator's guess | — Pending |
-| Defer similarity detection to v2 | Simplifies v1 scope; basic search sufficient to start | — Pending |
+| Wiki-style versioning over fork model | Keeps skills as single evolving artifacts rather than fragmenting into forks; simpler mental model | ✓ Good |
+| MCP-only tracking | Provides accurate usage data; creates natural incentive for MCP adoption | ✓ Good |
+| No approval gates | Reduces friction for contributors; lets metrics surface quality organically | ✓ Good |
+| User estimates override creator | Real-world usage data more reliable than creator's guess | ✓ Good |
+| Defer similarity detection to v2 | Simplifies v1 scope; basic search sufficient to start | ✓ Good |
+| MCP Integration in Phase 3 | Enable usage tracking from day one; core metric needs real data | ✓ Good |
+| JWT session strategy | Required for Edge middleware compatibility with Auth.js | ✓ Good |
+| Denormalized totalUses counter | Display performance over query complexity | ✓ Good |
+| Hacker News trending formula | Proven time-decay algorithm; simple to implement | ✓ Good |
 
 ---
-*Last updated: 2025-01-31 after initialization*
+*Last updated: 2026-01-31 after v1.0 milestone*
