@@ -17,6 +17,7 @@
     "@relay/core": "workspace:*",
     "@relay/db": "workspace:*",
     "@relay/ui": "workspace:*",
+    "drizzle-orm": "^0.38.0",
     "next": "^15.1.0",
     "next-auth": "5.0.0-beta.30",
     "react": "^19.0.0",
