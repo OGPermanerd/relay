@@ -1,22 +1,41 @@
 import Image from "next/image";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { getUserStats } from "@/lib/user-stats";
 
 export default async function ProfilePage() {
   const session = await auth();
 
-  if (!session?.user) {
+  if (!session?.user?.id) {
     redirect("/login");
   }
 
   const { user } = session;
 
-  // Placeholder statistics (to be populated from database in later phases)
+  // Fetch real user statistics from database
+  const userStats = await getUserStats(session.user.id);
+
   const stats = [
-    { label: "Skills Shared", value: "0", description: "Skills you've contributed" },
-    { label: "Total Uses", value: "0", description: "Times your skills were used" },
-    { label: "Avg Rating", value: "-", description: "Average rating received" },
-    { label: "FTE Days Saved", value: "0", description: "Days saved for the org" },
+    {
+      label: "Skills Shared",
+      value: userStats.skillsShared.toString(),
+      description: "Skills you've contributed",
+    },
+    {
+      label: "Total Uses",
+      value: userStats.totalUses.toString(),
+      description: "Times your skills were used",
+    },
+    {
+      label: "Avg Rating",
+      value: userStats.avgRating ?? "-",
+      description: "Average rating received",
+    },
+    {
+      label: "FTE Days Saved",
+      value: userStats.fteDaysSaved.toString(),
+      description: "Days saved for the org",
+    },
   ];
 
   return (
