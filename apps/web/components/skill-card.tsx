@@ -2,6 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatRating } from "@relay/db";
 import { Sparkline } from "./sparkline";
+import { QualityBadge } from "./quality-badge";
+import { calculateQualityScore } from "../lib/quality-score";
 
 export interface SkillCardData {
   id: string;
@@ -38,14 +40,26 @@ export function SkillCard({ skill, usageTrend }: SkillCardProps) {
   // Calculate FTE Days Saved: (totalUses * hoursSaved) / 8
   const fteDaysSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / 8).toFixed(1);
 
+  // Calculate quality tier for badge
+  const { tier } = calculateQualityScore({
+    totalUses: skill.totalUses,
+    averageRating: skill.averageRating,
+    totalRatings: skill.totalRatings,
+    hasDescription: Boolean(skill.description),
+    hasCategory: Boolean(skill.category),
+  });
+
   return (
     <Link
       href={`/skills/${skill.slug}`}
       className="group block rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition hover:border-blue-300 hover:shadow-md"
     >
       {/* Header */}
-      <div className="mb-3">
+      <div className="relative mb-3">
         <span className="text-xs font-medium uppercase text-blue-600">{skill.category}</span>
+        <div className="absolute right-0 top-0">
+          <QualityBadge tier={tier} size="sm" />
+        </div>
         <h3 className="mt-1 font-semibold text-gray-900 group-hover:text-blue-600">{skill.name}</h3>
         <p className="mt-1 line-clamp-2 text-sm text-gray-600">{skill.description}</p>
       </div>
