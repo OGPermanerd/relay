@@ -1,23 +1,24 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Home Page", () => {
-  test("should load and display Relay heading", async ({ page }) => {
+test.describe("Authentication Flow", () => {
+  test("should redirect unauthenticated users to login", async ({ page }) => {
+    // Visiting home page should redirect to login
     await page.goto("/");
+    await expect(page).toHaveURL(/\/login/);
+  });
 
-    // Check that the main heading is visible
-    const heading = page.locator("h1");
-    await expect(heading).toBeVisible();
-    await expect(heading).toHaveText("Relay");
+  test("should display login page with sign-in option", async ({ page }) => {
+    await page.goto("/login");
 
-    // Check subtitle content
-    await expect(page.getByText("Internal Skill Marketplace")).toBeVisible();
-    await expect(
-      page.getByText("Connect with colleagues who have the skills you need")
-    ).toBeVisible();
+    // Check that the page loads
+    await expect(page.locator("body")).toBeVisible();
+
+    // Check for sign-in button
+    await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
   });
 
   test("should have valid HTML structure", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/login");
 
     // Verify html element has lang attribute
     const html = page.locator("html");
@@ -26,9 +27,5 @@ test.describe("Home Page", () => {
     // Verify body exists
     const body = page.locator("body");
     await expect(body).toBeVisible();
-
-    // Verify main content area exists
-    const main = page.locator("main");
-    await expect(main).toBeVisible();
   });
 });
