@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Project Foundation** - Development infrastructure, tooling, and CI/CD
 - [x] **Phase 2: Authentication** - Google Workspace SSO and user profiles
-- [ ] **Phase 3: MCP Integration** - Claude Code deployment and usage tracking (early for metrics)
+- [x] **Phase 3: MCP Integration** - Claude Code deployment and usage tracking (early for metrics)
 - [ ] **Phase 4: Data Model & Storage** - Core schema and multi-format skill support (informed by MCP)
 - [ ] **Phase 5: Skill Publishing** - Upload skills with metadata and view details
 - [ ] **Phase 6: Discovery** - Search, browse, and skill cards
@@ -75,8 +75,8 @@ Plans:
 - [x] 03-02-PLAN.md - Skills schema and search/list tools with usage tracking
 - [x] 03-03-PLAN.md - Deploy skill tool with usage tracking
 - [x] 03-04-PLAN.md - MCP tools unit testing with Vitest
-- [ ] 03-05-PLAN.md - MCP integration documentation and Claude Desktop configuration (gap closure)
-- [ ] 03-06-PLAN.md - Database seed script and setup verification (gap closure)
+- [x] 03-05-PLAN.md - MCP integration documentation and Claude Desktop configuration (gap closure)
+- [x] 03-06-PLAN.md - Database seed script and setup verification (gap closure) [checkpoint: Docker required]
 
 ### Phase 4: Data Model & Storage
 **Goal**: Database schema supports all skill types with immutable versioning
@@ -88,13 +88,14 @@ Plans:
   3. System accepts Claude Code skills, prompts, workflows, agent configs
   4. Version model is immutable (new versions create records, never modify)
   5. Usage tracking from MCP Phase 3 integrated into skill metrics
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 04-01: Core schema design and migrations
-- [ ] 04-02: Object storage integration
-- [ ] 04-03: Multi-format skill validation
-- [ ] 04-04: Usage event schema integration
+- [ ] 04-01-PLAN.md - Versioned schema (skillVersions + ratings tables, skills extensions)
+- [ ] 04-02-PLAN.md - R2 storage package with presigned URL helpers
+- [ ] 04-03-PLAN.md - Drizzle relations for type-safe nested queries
+- [ ] 04-04-PLAN.md - Multi-format skill validation with Zod schemas
+- [ ] 04-05-PLAN.md - Skill metrics service and database push [checkpoint: Docker required]
 
 ### Phase 5: Skill Publishing
 **Goal**: Users can upload skills and view skill details
@@ -176,8 +177,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 |-------|----------------|--------|-----------|
 | 1. Project Foundation | 4/4 | Complete | 2026-01-31 |
 | 2. Authentication | 3/3 | Complete | 2026-01-31 |
-| 3. MCP Integration | 4/6 | Gap closure in progress | - |
-| 4. Data Model & Storage | 0/4 | Not started | - |
+| 3. MCP Integration | 6/6 | Complete | 2026-01-31 |
+| 4. Data Model & Storage | 0/5 | Planning | - |
 | 5. Skill Publishing | 0/3 | Not started | - |
 | 6. Discovery | 0/4 | Not started | - |
 | 7. Ratings & Reviews | 0/3 | Not started | - |
@@ -185,4 +186,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 ---
 *Created: 2026-01-31*
-*Last updated: 2026-01-31 - Phase 3 gap closure plans added (03-05, 03-06)*
+*Last updated: 2026-01-31 - Phase 4 plans created*
