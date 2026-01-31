@@ -142,12 +142,12 @@ Plans:
   3. User can submit time-saved estimate as part of review
   4. User-submitted time estimates display and override creator estimates
   5. Skill cards and detail pages reflect aggregated ratings
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 07-01: Rating submission UI and API
-- [ ] 07-02: Time-saved estimate capture
-- [ ] 07-03: Rating aggregation and display
+- [ ] 07-01-PLAN.md - Rating Server Action and form components (star input, rating form)
+- [ ] 07-02-PLAN.md - Reviews list component and skill detail page integration
+- [ ] 07-03-PLAN.md - User time estimate override for FTE calculation and display
 
 ### Phase 8: Metrics & Analytics
 **Goal**: Platform shows value through FTE Days Saved and surfaces quality content
