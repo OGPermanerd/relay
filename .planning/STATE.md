@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 4 of 8 (Data Model & Storage)
-Plan: 2 of 5
+Plan: 3 of 5
 Status: In progress
-Last activity: 2026-01-31 - Completed 04-02-PLAN.md (R2 Storage Package)
+Last activity: 2026-01-31 - Completed 04-03-PLAN.md (Drizzle Relations)
 
-Progress: [###############.] 56% (15 of 27 total plans)
+Progress: [################] 59% (16 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
+- Total plans completed: 16
 - Average duration: 4 min
-- Total execution time: 55 min
+- Total execution time: 58 min
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [###############.] 56% (15 of 27 total plans)
 | 01-project-foundation | 4/4 | 16 min | 4 min |
 | 02-authentication | 3/3 | 15 min | 5 min |
 | 03-mcp-integration | 6/6 | 18 min | 3 min |
-| 04-data-model-storage | 2/5 | 6 min | 3 min |
+| 04-data-model-storage | 3/5 | 9 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-04 (3 min), 03-05 (1 min), 03-06 (0 min), 04-01 (2 min), 04-02 (4 min)
+- Last 5 plans: 03-05 (1 min), 03-06 (0 min), 04-01 (2 min), 04-02 (4 min), 04-03 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -74,6 +74,8 @@ Recent decisions affecting current work:
 - Graceful null-handling for @relay/storage - functions return null when R2 not configured.
 - Lazy-initialized S3Client singleton for R2 - created on first use, reused thereafter.
 - Object key pattern for R2: skills/{skillId}/v{version}/content.
+- Named relations for multiple FK to same table (publishedVersion, draftVersion).
+- Merge schema and relations in drizzle config: { schema: { ...schema, ...relations } }.
 
 ### Pending Todos
 
@@ -89,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T17:39:00Z
-Stopped at: Completed 04-02-PLAN.md (R2 Storage Package)
+Last session: 2026-01-31T17:43:00Z
+Stopped at: Completed 04-03-PLAN.md (Drizzle Relations)
 Resume file: None
