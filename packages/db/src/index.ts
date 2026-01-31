@@ -3,7 +3,7 @@
  */
 
 // Re-export client
-export { db } from "./client";
+export { db, isDatabaseConfigured } from "./client";
 
-// Placeholder exports - schema will be defined in Plan 02
-export const dbReady = true;
+// Re-export all schema tables and types
+export * from "./schema";
