@@ -70,7 +70,15 @@ export async function createSkill(
     };
   }
 
-  const { name, description, category, hoursSaved, content } = parsed.data;
+  const {
+    name,
+    description,
+    category,
+    hoursSaved,
+    content,
+    tags: _tags,
+    usageInstructions: _usageInstructions,
+  } = parsed.data;
 
   // Generate unique slug
   const slug = await generateUniqueSlug(name, db);
