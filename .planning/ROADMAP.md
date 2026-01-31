@@ -107,12 +107,12 @@ Plans:
   3. Skill detail page displays full metadata
   4. Skill detail page shows real usage statistics from MCP tracking
   5. Uploaded skill content persists in object storage
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: Skill upload form and API
-- [ ] 05-02: Skill detail page
-- [ ] 05-03: Content storage workflow
+- [ ] 05-01-PLAN.md - Skill upload form with Server Action and slug utility
+- [ ] 05-02-PLAN.md - Skill detail page with usage statistics
+- [ ] 05-03-PLAN.md - R2 content storage integration with versioning
 
 ### Phase 6: Discovery
 **Goal**: Users can find relevant skills through search and browse
