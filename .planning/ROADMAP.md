@@ -13,7 +13,7 @@ Relay is an internal skill marketplace delivering Claude skills, prompts, workfl
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Project Foundation** - Development infrastructure, tooling, and CI/CD
-- [ ] **Phase 2: Authentication** - Google Workspace SSO and user profiles
+- [x] **Phase 2: Authentication** - Google Workspace SSO and user profiles
 - [ ] **Phase 3: MCP Integration** - Claude Code deployment and usage tracking (early for metrics)
 - [ ] **Phase 4: Data Model & Storage** - Core schema and multi-format skill support (informed by MCP)
 - [ ] **Phase 5: Skill Publishing** - Upload skills with metadata and view details
@@ -174,7 +174,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Project Foundation | 4/4 | Complete | 2026-01-31 |
-| 2. Authentication | 0/3 | Planned | - |
+| 2. Authentication | 3/3 | Complete | 2026-01-31 |
 | 3. MCP Integration | 0/5 | Not started | - |
 | 4. Data Model & Storage | 0/4 | Not started | - |
 | 5. Skill Publishing | 0/3 | Not started | - |
