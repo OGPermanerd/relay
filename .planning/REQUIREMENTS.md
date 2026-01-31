@@ -97,9 +97,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DISC-02 | Phase 6 | Pending |
 | DISC-03 | Phase 6 | Pending |
 | DISC-04 | Phase 8 | Pending |
-| SKIL-01 | Phase 5 | Pending |
+| SKIL-01 | Phase 5 | Complete |
 | SKIL-02 | Phase 4 | Complete |
-| SKIL-03 | Phase 5 | Pending |
+| SKIL-03 | Phase 5 | Complete |
 | RATE-01 | Phase 7 | Pending |
 | RATE-02 | Phase 7 | Pending |
 | RATE-03 | Phase 8 | Pending |
@@ -115,4 +115,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-31*
-*Last updated: 2026-01-31 - Added INFR-01 (E2E testing with Playwright) for Phase 1*
+*Last updated: 2026-01-31 - SKIL-01, SKIL-03 complete (Phase 5)*

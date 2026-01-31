@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Authentication** - Google Workspace SSO and user profiles
 - [x] **Phase 3: MCP Integration** - Claude Code deployment and usage tracking (early for metrics)
 - [x] **Phase 4: Data Model & Storage** - Core schema and multi-format skill support (informed by MCP)
-- [ ] **Phase 5: Skill Publishing** - Upload skills with metadata and view details
+- [x] **Phase 5: Skill Publishing** - Upload skills with metadata and view details
 - [ ] **Phase 6: Discovery** - Search, browse, and skill cards
 - [ ] **Phase 7: Ratings & Reviews** - User feedback with time-saved estimates
 - [ ] **Phase 8: Metrics & Analytics** - FTE Days Saved, dashboard, trending, leaderboard (with real data)
@@ -110,9 +110,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05-01-PLAN.md - Skill upload form with Server Action and slug utility
-- [ ] 05-02-PLAN.md - Skill detail page with usage statistics
-- [ ] 05-03-PLAN.md - R2 content storage integration with versioning
+- [x] 05-01-PLAN.md - Skill upload form with Server Action and slug utility
+- [x] 05-02-PLAN.md - Skill detail page with usage statistics
+- [x] 05-03-PLAN.md - R2 content storage integration with versioning
 
 ### Phase 6: Discovery
 **Goal**: Users can find relevant skills through search and browse
@@ -179,11 +179,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. Authentication | 3/3 | Complete | 2026-01-31 |
 | 3. MCP Integration | 6/6 | Complete | 2026-01-31 |
 | 4. Data Model & Storage | 5/5 | Complete | 2026-01-31 |
-| 5. Skill Publishing | 0/3 | Not started | - |
+| 5. Skill Publishing | 3/3 | Complete | 2026-01-31 |
 | 6. Discovery | 0/4 | Not started | - |
 | 7. Ratings & Reviews | 0/3 | Not started | - |
 | 8. Metrics & Analytics | 0/5 | Not started | - |
 
 ---
 *Created: 2026-01-31*
-*Last updated: 2026-01-31 - Phase 4 complete*
+*Last updated: 2026-01-31 - Phase 5 complete*
