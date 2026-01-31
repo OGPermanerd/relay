@@ -1,37 +1,33 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryState, parseAsArrayOf, parseAsString } from "nuqs";
+import { useTransition } from "react";
 
 interface TagFilterProps {
   availableTags: string[];
 }
 
 /**
- * Tag filter chips
+ * Tag filter chips with URL synchronization
  *
- * Updates URL ?tags= parameter (comma-separated) when user selects tags.
- * Shows available tags based on current skills in the system.
+ * Shows available tags as toggleable chips.
+ * Uses nuqs to sync selected tags to URL 'tags' parameter as comma-separated values.
  */
 export function TagFilter({ availableTags }: TagFilterProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const selectedTags = searchParams.get("tags")?.split(",").filter(Boolean) || [];
+  const [selectedTags, setSelectedTags] = useQueryState(
+    "tags",
+    parseAsArrayOf(parseAsString, ",").withDefault([])
+  );
+  const [isPending, startTransition] = useTransition();
 
-  const handleTagToggle = (tag: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const currentTags = params.get("tags")?.split(",").filter(Boolean) || [];
+  const toggleTag = (tag: string) => {
+    startTransition(() => {
+      const newTags = selectedTags.includes(tag)
+        ? selectedTags.filter((t) => t !== tag)
+        : [...selectedTags, tag];
 
-    const newTags = currentTags.includes(tag)
-      ? currentTags.filter((t) => t !== tag)
-      : [...currentTags, tag];
-
-    if (newTags.length > 0) {
-      params.set("tags", newTags.join(","));
-    } else {
-      params.delete("tags");
-    }
-
-    router.push(`/skills?${params.toString()}`);
+      setSelectedTags(newTags.length > 0 ? newTags : null);
+    });
   };
 
   if (availableTags.length === 0) {
@@ -47,12 +43,13 @@ export function TagFilter({ availableTags }: TagFilterProps) {
           return (
             <button
               key={tag}
-              onClick={() => handleTagToggle(tag)}
+              onClick={() => toggleTag(tag)}
               className={`rounded-full px-3 py-1 text-sm font-medium transition ${
                 isSelected
                   ? "bg-blue-600 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
+              disabled={isPending}
             >
               {tag}
             </button>

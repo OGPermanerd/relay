@@ -1,55 +1,63 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryState, parseAsStringEnum } from "nuqs";
+import { useTransition } from "react";
 
+// Category values matching the skills schema
 const CATEGORIES = ["prompt", "workflow", "agent", "mcp"] as const;
+type Category = (typeof CATEGORIES)[number];
+
+const CATEGORY_LABELS: Record<Category, string> = {
+  prompt: "Prompt",
+  workflow: "Workflow",
+  agent: "Agent",
+  mcp: "MCP",
+};
 
 /**
- * Category filter tabs
+ * Category filter tabs with URL synchronization
  *
- * Updates URL ?category= parameter when user selects a category.
- * Shows "All" option to clear category filter.
+ * Shows "All" plus each category as clickable tabs.
+ * Uses nuqs to sync to URL 'category' parameter.
  */
 export function CategoryFilter() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const currentCategory = searchParams.get("category");
+  const [category, setCategory] = useQueryState(
+    "category",
+    parseAsStringEnum(CATEGORIES as unknown as string[]).withDefault(null as unknown as Category)
+  );
+  const [isPending, startTransition] = useTransition();
 
-  const handleCategoryChange = (category: string | null) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (category) {
-      params.set("category", category);
-    } else {
-      params.delete("category");
-    }
-
-    router.push(`/skills?${params.toString()}`);
+  const handleSelect = (value: Category | null) => {
+    startTransition(() => {
+      setCategory(value);
+    });
   };
 
   return (
     <div className="flex gap-2 overflow-x-auto pb-2">
       <button
-        onClick={() => handleCategoryChange(null)}
+        onClick={() => handleSelect(null)}
         className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition ${
-          !currentCategory
+          category === null
             ? "bg-blue-600 text-white"
             : "bg-gray-100 text-gray-700 hover:bg-gray-200"
         }`}
+        disabled={isPending}
       >
         All
       </button>
-      {CATEGORIES.map((category) => (
+      {CATEGORIES.map((cat) => (
         <button
-          key={category}
-          onClick={() => handleCategoryChange(category)}
+          key={cat}
+          onClick={() => handleSelect(cat)}
           className={`whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium capitalize transition ${
-            currentCategory === category
+            category === cat
               ? "bg-blue-600 text-white"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
+          disabled={isPending}
         >
-          {category}
+          {CATEGORY_LABELS[cat]}
         </button>
       ))}
     </div>
