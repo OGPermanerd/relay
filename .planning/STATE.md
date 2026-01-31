@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-31)
 ## Current Position
 
 Phase: 5 of 8 (Skill Publishing) - IN PROGRESS
-Plan: 2 of 2
+Plan: 3 of 4
 Status: In progress
-Last activity: 2026-01-31 - Completed 05-02-PLAN.md
+Last activity: 2026-01-31 - Completed 05-03-PLAN.md
 
-Progress: [###################] 74% (20 of 27 total plans)
+Progress: [####################] 78% (21 of 27 total plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20
+- Total plans completed: 21
 - Average duration: 4 min
-- Total execution time: 79 min
+- Total execution time: 82 min
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [###################] 74% (20 of 27 total plans)
 | 02-authentication | 3/3 | 15 min | 5 min |
 | 03-mcp-integration | 6/6 | 18 min | 3 min |
 | 04-data-model-storage | 5/5 | 16 min | 3 min |
-| 05-skill-publishing | 2/2 | 14 min | 7 min |
+| 05-skill-publishing | 3/4 | 17 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-03 (3 min), 04-04 (2 min), 04-05 (5 min), 05-01 (7 min), 05-02 (7 min)
+- Last 5 plans: 04-04 (2 min), 04-05 (5 min), 05-01 (7 min), 05-02 (7 min), 05-03 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -83,6 +83,10 @@ Recent decisions affecting current work:
 - Use denormalized totalUses for display performance - query skill.totalUses rather than counting usageEvents.
 - FTE Days Saved formula: (totalUses * hoursSaved) / 8, rounded to 1 decimal.
 - Statistics services return default values (zeros/nulls) when db is null for graceful degradation.
+- Web Crypto API for SHA-256 hashing - compatible with both Node.js and Edge runtime.
+- Store R2 objectKey (not full URL) in skillVersions.contentUrl.
+- Insert skill → version → update skill pattern to avoid circular FK constraint.
+- Keep content in both skills.content (MCP backward compat) and R2 (versioning).
 
 ### Pending Todos
 
@@ -98,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-31T18:24:58Z
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-01-31T18:30:44Z
+Stopped at: Completed 05-03-PLAN.md
 Resume file: None
