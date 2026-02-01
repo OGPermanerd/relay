@@ -91,11 +91,14 @@ Plans:
   2. User can navigate entire table using only keyboard (Tab, Enter, Arrow keys)
   3. Accordion rows announce expanded/collapsed state to screen readers
   4. Sort indicators are announced to screen readers (aria-sort on columns)
-**Plans**: TBD
+**Plans:** 5 plans
 
 Plans:
-- [ ] 14-01: TBD
-- [ ] 14-02: TBD
+- [ ] 14-01-PLAN.md - Responsive layout (sm: breakpoint, horizontal scroll)
+- [ ] 14-02-PLAN.md - Accessibility infrastructure (roving tabindex hook, live region announcer)
+- [ ] 14-03-PLAN.md - Sort column accessibility (aria-sort, sort announcements)
+- [ ] 14-04-PLAN.md - Collapsible leaderboard (login count tracking, onboarding behavior)
+- [ ] 14-05-PLAN.md - Table row accessibility & gestures (keyboard nav, ARIA, swipe-to-install)
 
 ## Progress
 
@@ -107,7 +110,7 @@ Plans:
 | 11. E2E Test Coverage | v1.1 | 4/4 | Complete | 2026-02-01 |
 | 12. Two-Panel Layout | v1.2 | 3/3 | Complete | 2026-02-01 |
 | 13. Interactive Sorting & Accordion | v1.2 | 4/4 | Complete | 2026-02-01 |
-| 14. Mobile & Accessibility | v1.2 | 0/TBD | Not started | - |
+| 14. Mobile & Accessibility | v1.2 | 0/5 | Planned | - |
 
 ---
 
@@ -118,3 +121,4 @@ Plans:
 *Phase 12 completed: 2026-02-01*
 *Phase 13 planned: 2026-02-01*
 *Phase 13 completed: 2026-02-01*
+*Phase 14 planned: 2026-02-01*
