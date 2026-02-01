@@ -1,6 +1,9 @@
 import { searchSkills, getAvailableTags } from "@/lib/search-skills";
 import { getUsageTrends } from "@/lib/usage-trends";
-import { SkillList } from "@/components/skill-list";
+import { getLeaderboard } from "@/lib/leaderboard";
+import { TwoPanelLayout } from "@/components/two-panel-layout";
+import { SkillsTable } from "@/components/skills-table";
+import { LeaderboardTable } from "@/components/leaderboard-table";
 import { SearchInput } from "@/components/search-input";
 import { CategoryFilter } from "@/components/category-filter";
 import { TagFilter } from "@/components/tag-filter";
@@ -27,12 +30,13 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   const category = params.category || undefined;
   const tags = params.tags ? params.tags.split(",") : [];
   const qualityTier = params.qualityTier as "gold" | "silver" | "bronze" | undefined;
-  const sortBy = params.sortBy as "uses" | "quality" | "rating" | undefined;
+  const sortBy = params.sortBy as "uses" | "quality" | "rating" | "days_saved" | undefined;
 
-  // Fetch skills and available tags
-  const [skills, availableTags] = await Promise.all([
+  // Fetch skills, available tags, and leaderboard
+  const [skills, availableTags, contributors] = await Promise.all([
     searchSkills({ query, category, tags, qualityTier, sortBy }),
     getAvailableTags(),
+    getLeaderboard(10),
   ]);
 
   // Fetch usage trends for sparklines (batched query)
@@ -51,40 +55,55 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
       : null;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Browse Skills</h1>
-        <p className="mt-1 text-gray-600">Discover skills shared by your colleagues</p>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="mb-6 space-y-4">
-        <SearchInput />
-        <div className="flex flex-wrap items-center gap-4">
-          <CategoryFilter />
-          <QualityFilter />
-          <SortDropdown />
+    <>
+      {/* Header and Filters - outside TwoPanelLayout for full-width appearance */}
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Browse Skills</h1>
+          <p className="mt-1 text-gray-600">Discover skills shared by your colleagues</p>
         </div>
-        {availableTags.length > 0 && <TagFilter availableTags={availableTags} />}
+
+        {/* Search and Filters */}
+        <div className="mb-6 space-y-4">
+          <SearchInput />
+          <div className="flex flex-wrap items-center gap-4">
+            <CategoryFilter />
+            <QualityFilter />
+            <SortDropdown />
+          </div>
+          {availableTags.length > 0 && <TagFilter availableTags={availableTags} />}
+        </div>
       </div>
 
-      {/* Results count */}
-      {skills.length > 0 && (
-        <p className="mb-4 text-sm text-gray-500">
-          {skills.length} skill{skills.length !== 1 ? "s" : ""} found
-        </p>
-      )}
+      {/* Two-panel layout with skills table and leaderboard */}
+      <TwoPanelLayout
+        left={
+          <>
+            {/* Results count */}
+            {skills.length > 0 && (
+              <p className="mb-4 text-sm text-gray-500">
+                {skills.length} skill{skills.length !== 1 ? "s" : ""} found
+              </p>
+            )}
 
-      {/* Skills grid or empty state */}
-      {emptyStateType ? (
-        <EmptyState type={emptyStateType} query={query} category={category} />
-      ) : (
-        <SkillList skills={skills} usageTrends={usageTrends} />
-      )}
+            {emptyStateType ? (
+              <EmptyState type={emptyStateType} query={query} category={category} />
+            ) : (
+              <SkillsTable skills={skills} usageTrends={usageTrends} />
+            )}
 
-      {/* Clear filters (client component) */}
-      {hasFilters && skills.length === 0 && <ClearFiltersButton />}
-    </div>
+            {/* Clear filters (client component) */}
+            {hasFilters && skills.length === 0 && <ClearFiltersButton />}
+          </>
+        }
+        right={
+          <div>
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">Top Contributors</h2>
+            <LeaderboardTable contributors={contributors} />
+          </div>
+        }
+      />
+    </>
   );
 }
