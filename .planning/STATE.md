@@ -50,6 +50,7 @@ Recent decisions affecting v1.2:
 - No TanStack Table: Overkill for single-column sort; Server Components handle data transformations
 - Keep totalUses/avgRating in LeaderboardEntry for backward compatibility (12-03)
 - Date format "MMM D" for compact contribution date display (12-03)
+- Plain HTML table for SkillsTable (shadcn/ui Table not in codebase, follow existing pattern) (12-01)
 
 ### Pending Todos
 
@@ -62,9 +63,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 12-03-PLAN.md
+Stopped at: Completed 12-01-PLAN.md (UI Components Foundation)
 Resume file: None
 
 ## Next Steps
 
-Continue Phase 12 execution or proceed to Phase 13 (Skill Listing Layout).
+Execute 12-02-PLAN.md (Page Integration) to integrate TwoPanelLayout and SkillsTable into the browse page.
