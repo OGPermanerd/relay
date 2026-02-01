@@ -25,6 +25,7 @@ export interface SearchParams {
   tags?: string[];
   qualityTier?: "gold" | "silver" | "bronze";
   sortBy?: "uses" | "quality" | "rating" | "days_saved";
+  authorId?: string;
 }
 
 // Quality tier thresholds
@@ -70,6 +71,11 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
     // Format as PostgreSQL array literal: {tag1,tag2,tag3}
     const tagsArrayLiteral = `{${params.tags.join(",")}}`;
     conditions.push(sql`${skills.tags} && ${tagsArrayLiteral}::text[]`);
+  }
+
+  // Author filter
+  if (params.authorId) {
+    conditions.push(eq(skills.authorId, params.authorId));
   }
 
   // Quality score computation as SQL expression

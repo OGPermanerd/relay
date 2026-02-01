@@ -11,6 +11,7 @@ import { QualityFilter } from "@/components/quality-filter";
 import { SortDropdown } from "@/components/sort-dropdown";
 import { EmptyState } from "@/components/empty-state";
 import { ClearFiltersButton } from "./clear-filters-button";
+import { AuthorFilterChip } from "@/components/author-filter-chip";
 
 interface SkillsPageProps {
   searchParams: Promise<{
@@ -19,6 +20,7 @@ interface SkillsPageProps {
     tags?: string;
     qualityTier?: string;
     sortBy?: string;
+    author?: string;
   }>;
 }
 
@@ -31,20 +33,26 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   const tags = params.tags ? params.tags.split(",") : [];
   const qualityTier = params.qualityTier as "gold" | "silver" | "bronze" | undefined;
   const sortBy = params.sortBy as "uses" | "quality" | "rating" | "days_saved" | undefined;
+  const authorId = params.author || undefined;
 
   // Fetch skills, available tags, and leaderboard
   const [skills, availableTags, contributors] = await Promise.all([
-    searchSkills({ query, category, tags, qualityTier, sortBy }),
+    searchSkills({ query, category, tags, qualityTier, sortBy, authorId }),
     getAvailableTags(),
     getLeaderboard(10),
   ]);
+
+  // Find author name for chip display
+  const activeAuthorName = authorId
+    ? contributors.find((c) => c.userId === authorId)?.name || "Unknown"
+    : null;
 
   // Fetch usage trends for sparklines (batched query)
   const skillIds = skills.map((s) => s.id);
   const usageTrends = await getUsageTrends(skillIds);
 
   // Determine empty state type
-  const hasFilters = query || category || tags.length > 0 || qualityTier;
+  const hasFilters = query || category || tags.length > 0 || qualityTier || authorId;
   const emptyStateType =
     skills.length === 0
       ? hasFilters
@@ -73,6 +81,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
             <SortDropdown />
           </div>
           {availableTags.length > 0 && <TagFilter availableTags={availableTags} />}
+          {authorId && activeAuthorName && <AuthorFilterChip authorName={activeAuthorName} />}
         </div>
       </div>
 
