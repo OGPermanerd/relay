@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 12 of 14 (Two-Panel Layout Foundation)
-Plan: 3 completed in current phase
+Plan: 4 completed in current phase (12-01, 12-02, 12-03)
 Status: In progress
-Last activity: 2026-02-01 - Completed 12-03-PLAN.md (Leaderboard Columns)
+Last activity: 2026-02-01 - Completed 12-02-PLAN.md (Page Integration)
 
-Progress: [██████████████████████████░░░░] 45/~50 plans (v1.0 + v1.1 complete, v1.2 in progress)
+Progress: [██████████████████████████░░░░] 46/~50 plans (v1.0 + v1.1 complete, v1.2 in progress)
 
 ## Milestones
 
@@ -35,8 +35,8 @@ Progress: [███████████████████████
 - Average duration: 5.0 min/plan
 
 **v1.2 Velocity (in progress):**
-- Plans completed: 3
-- Total execution time: ~6 min
+- Plans completed: 4
+- Total execution time: ~8 min
 - Average duration: ~2 min/plan
 
 ## Accumulated Context
@@ -51,6 +51,8 @@ Recent decisions affecting v1.2:
 - Keep totalUses/avgRating in LeaderboardEntry for backward compatibility (12-03)
 - Date format "MMM D" for compact contribution date display (12-03)
 - Plain HTML table for SkillsTable (shadcn/ui Table not in codebase, follow existing pattern) (12-01)
+- Header/filters outside TwoPanelLayout for full-width styling (12-02)
+- days_saved as default sort order (12-02)
 
 ### Pending Todos
 
@@ -63,9 +65,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 12-01-PLAN.md (UI Components Foundation)
+Stopped at: Completed 12-02-PLAN.md (Page Integration)
 Resume file: None
 
 ## Next Steps
 
-Execute 12-02-PLAN.md (Page Integration) to integrate TwoPanelLayout and SkillsTable into the browse page.
+Phase 12 complete. Ready to proceed to Phase 13: Sortable Table Controls.
