@@ -17,7 +17,29 @@ export function useExpandedRows() {
     });
   }, []);
 
+  const expandRow = useCallback((skillId: string) => {
+    setExpandedIds((prev) => {
+      if (prev.has(skillId)) {
+        return prev; // No-op if already expanded
+      }
+      const next = new Set(prev);
+      next.add(skillId);
+      return next;
+    });
+  }, []);
+
+  const collapseRow = useCallback((skillId: string) => {
+    setExpandedIds((prev) => {
+      if (!prev.has(skillId)) {
+        return prev; // No-op if already collapsed
+      }
+      const next = new Set(prev);
+      next.delete(skillId);
+      return next;
+    });
+  }, []);
+
   const isExpanded = useCallback((skillId: string) => expandedIds.has(skillId), [expandedIds]);
 
-  return { toggleRow, isExpanded };
+  return { toggleRow, expandRow, collapseRow, isExpanded };
 }
