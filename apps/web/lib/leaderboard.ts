@@ -13,6 +13,7 @@ export interface LeaderboardEntry {
   totalUses: number;
   avgRating: string | null; // Formatted "4.5" or null
   fteDaysSaved: number;
+  latestContributionDate: Date | null; // Date of most recent skill publication
 }
 
 /**
@@ -49,7 +50,8 @@ export async function getLeaderboard(limit: number = 10): Promise<LeaderboardEnt
         COUNT(DISTINCT s.id) as skills_shared,
         COALESCE(SUM(s.total_uses), 0) as total_uses,
         COALESCE(AVG(s.average_rating), 0) as avg_rating,
-        COALESCE(SUM(s.total_uses * s.hours_saved) / 8.0, 0) as fte_days_saved
+        COALESCE(SUM(s.total_uses * s.hours_saved) / 8.0, 0) as fte_days_saved,
+        MAX(s.created_at) as latest_contribution_date
       FROM users u
       LEFT JOIN skills s ON s.author_id = u.id
         AND s.published_version_id IS NOT NULL
@@ -66,7 +68,8 @@ export async function getLeaderboard(limit: number = 10): Promise<LeaderboardEnt
         WHEN avg_rating > 0 THEN (avg_rating / 100)::numeric(3,1)::text
         ELSE NULL
       END as avg_rating,
-      ROUND(fte_days_saved::numeric, 1)::double precision as fte_days_saved
+      ROUND(fte_days_saved::numeric, 1)::double precision as fte_days_saved,
+      latest_contribution_date::date as latest_contribution_date
     FROM contributor_stats
     WHERE skills_shared > 0
     ORDER BY rank
@@ -84,5 +87,8 @@ export async function getLeaderboard(limit: number = 10): Promise<LeaderboardEnt
     totalUses: Number(row.total_uses),
     avgRating: row.avg_rating ? String(row.avg_rating) : null,
     fteDaysSaved: Number(row.fte_days_saved),
+    latestContributionDate: row.latest_contribution_date
+      ? new Date(String(row.latest_contribution_date))
+      : null,
   }));
 }
