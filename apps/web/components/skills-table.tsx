@@ -1,10 +1,20 @@
-import Link from "next/link";
-import { Sparkline } from "./sparkline";
+"use client";
+
+import { useMemo } from "react";
+import { useSortState } from "@/hooks/use-sort-state";
+import { useExpandedRows } from "@/hooks/use-expanded-rows";
+import { useClipboardCopy } from "@/hooks/use-clipboard-copy";
+import { generateMcpConfig } from "@/lib/mcp-config";
+import { SortableColumnHeader } from "./sortable-column-header";
+import { SkillsTableRow } from "./skills-table-row";
 
 export interface SkillTableRow {
   id: string;
   name: string;
   slug: string;
+  description: string;
+  category: string;
+  tags?: string[] | null;
   totalUses: number;
   hoursSaved: number | null;
   createdAt: Date;
@@ -20,19 +30,55 @@ export interface SkillsTableProps {
 }
 
 /**
- * Skills table with 6-column structure for two-panel layout
+ * Interactive skills table with sorting and accordion rows
  *
  * Columns:
- * 1. Skill Name - left aligned
- * 2. Days Saved - right aligned (totalUses * hoursSaved / 8)
- * 3. Installs - right aligned (totalUses)
- * 4. Date Added - right aligned (MMM D, YYYY format)
- * 5. Author - left aligned
- * 6. Sparkline - center aligned
+ * 1. Skill Name - left aligned, sortable
+ * 2. Days Saved - right aligned, sortable (totalUses * hoursSaved / 8)
+ * 3. Installs - right aligned, sortable (totalUses)
+ * 4. Date Added - right aligned, sortable (MMM D, YYYY format)
+ * 5. Author - left aligned, sortable
+ * 6. Sparkline - center aligned (not sortable)
+ * 7. Install - center aligned (quick install button)
  *
- * Server Component - no interactivity (sorting added in Phase 13)
+ * Client Component with:
+ * - URL-persisted sort state via nuqs
+ * - Expandable rows with accordion content
+ * - One-click install with clipboard copy
  */
 export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
+  const { sortBy, sortDir, toggleSort } = useSortState();
+  const { toggleRow, isExpanded } = useExpandedRows();
+  const { copyToClipboard, isCopied } = useClipboardCopy();
+
+  // Client-side sort
+  const sortedSkills = useMemo(() => {
+    return [...skills].sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case "name":
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case "days_saved": {
+          const aDays = (a.totalUses * (a.hoursSaved ?? 1)) / 8;
+          const bDays = (b.totalUses * (b.hoursSaved ?? 1)) / 8;
+          comparison = aDays - bDays;
+          break;
+        }
+        case "installs":
+          comparison = a.totalUses - b.totalUses;
+          break;
+        case "date":
+          comparison = a.createdAt.getTime() - b.createdAt.getTime();
+          break;
+        case "author":
+          comparison = (a.author?.name ?? "").localeCompare(b.author?.name ?? "");
+          break;
+      }
+      return sortDir === "desc" ? -comparison : comparison;
+    });
+  }, [skills, sortBy, sortDir]);
+
   if (skills.length === 0) {
     return <p className="text-gray-500">No skills found.</p>;
   }
@@ -42,92 +88,73 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th
-              scope="col"
-              className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-            >
-              Skill Name
-            </th>
-            <th
-              scope="col"
-              className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
-            >
-              Days Saved
-            </th>
-            <th
-              scope="col"
-              className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
-            >
-              Installs
-            </th>
-            <th
-              scope="col"
-              className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
-            >
-              Date Added
-            </th>
-            <th
-              scope="col"
-              className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-            >
-              Author
-            </th>
+            <SortableColumnHeader
+              column="name"
+              label="Skill Name"
+              currentSort={sortBy}
+              direction={sortDir}
+              onSort={toggleSort}
+              align="left"
+            />
+            <SortableColumnHeader
+              column="days_saved"
+              label="Days Saved"
+              currentSort={sortBy}
+              direction={sortDir}
+              onSort={toggleSort}
+              align="right"
+            />
+            <SortableColumnHeader
+              column="installs"
+              label="Installs"
+              currentSort={sortBy}
+              direction={sortDir}
+              onSort={toggleSort}
+              align="right"
+            />
+            <SortableColumnHeader
+              column="date"
+              label="Date Added"
+              currentSort={sortBy}
+              direction={sortDir}
+              onSort={toggleSort}
+              align="right"
+            />
+            <SortableColumnHeader
+              column="author"
+              label="Author"
+              currentSort={sortBy}
+              direction={sortDir}
+              onSort={toggleSort}
+              align="left"
+            />
             <th
               scope="col"
               className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500"
             >
               Sparkline
             </th>
+            <th
+              scope="col"
+              className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500"
+            >
+              Install
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200 bg-white">
-          {skills.map((skill, index) => {
-            // Calculate FTE Days Saved: (totalUses * hoursSaved) / 8
-            const daysSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / 8).toFixed(1);
-
-            // Format date as "MMM D, YYYY" (e.g., "Jan 15, 2026")
-            const dateAdded = skill.createdAt.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            });
-
-            // Get usage trend for sparkline
-            const trend = usageTrends.get(skill.id) || [];
-
-            return (
-              <tr
-                key={skill.id}
-                className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} transition-colors hover:bg-blue-50`}
-              >
-                <td className="whitespace-nowrap px-4 py-3">
-                  <Link
-                    href={`/skills/${skill.slug}`}
-                    className="text-sm font-medium text-gray-900 hover:text-blue-600"
-                  >
-                    {skill.name}
-                  </Link>
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">
-                  {daysSaved}
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">
-                  {skill.totalUses.toLocaleString()}
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">
-                  {dateAdded}
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                  {skill.author?.name || "Anonymous"}
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-center">
-                  <div className="inline-block">
-                    <Sparkline data={trend} />
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
+          {sortedSkills.map((skill, index) => (
+            <SkillsTableRow
+              key={skill.id}
+              skill={skill}
+              trend={usageTrends.get(skill.id) || []}
+              isExpanded={isExpanded(skill.id)}
+              onToggle={() => toggleRow(skill.id)}
+              isCopied={isCopied(skill.id)}
+              onInstall={() => copyToClipboard(skill.id, generateMcpConfig(skill))}
+              rowIndex={index}
+            />
+          ))}
         </tbody>
       </table>
     </div>
