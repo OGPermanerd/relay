@@ -29,13 +29,13 @@ Requirements for UI redesign focused on simplicity, gamification, and performanc
 ### Layout
 
 - [x] **LAYT-01**: Two-panel layout with responsive behavior
-- [ ] **LAYT-02**: Mobile view stacks panels vertically (skills above leaderboard)
+- [x] **LAYT-02**: Mobile view stacks panels vertically (skills above leaderboard)
 
 ### Accessibility
 
-- [ ] **A11Y-01**: Table is keyboard navigable (Tab, Enter, Arrow keys)
-- [ ] **A11Y-02**: Accordion rows have proper ARIA attributes (aria-expanded, hidden)
-- [ ] **A11Y-03**: Sort indicators are screen reader accessible (aria-sort)
+- [x] **A11Y-01**: Table is keyboard navigable (Tab, Enter, Arrow keys)
+- [x] **A11Y-02**: Accordion rows have proper ARIA attributes (aria-expanded, hidden)
+- [x] **A11Y-03**: Sort indicators are screen reader accessible (aria-sort)
 
 ## Future Requirements
 
@@ -80,10 +80,10 @@ Deferred to later milestones.
 | LEAD-02 | Phase 12 | Complete |
 | LEAD-03 | Phase 13 | Complete |
 | LAYT-01 | Phase 12 | Complete |
-| LAYT-02 | Phase 14 | Pending |
-| A11Y-01 | Phase 14 | Pending |
-| A11Y-02 | Phase 14 | Pending |
-| A11Y-03 | Phase 14 | Pending |
+| LAYT-02 | Phase 14 | Complete |
+| A11Y-01 | Phase 14 | Complete |
+| A11Y-02 | Phase 14 | Complete |
+| A11Y-03 | Phase 14 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 18 total

@@ -94,11 +94,11 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 14-01-PLAN.md - Responsive layout (sm: breakpoint, horizontal scroll)
-- [ ] 14-02-PLAN.md - Accessibility infrastructure (roving tabindex hook, live region announcer)
-- [ ] 14-03-PLAN.md - Sort column accessibility (aria-sort, sort announcements)
-- [ ] 14-04-PLAN.md - Collapsible leaderboard (login count tracking, onboarding behavior)
-- [ ] 14-05-PLAN.md - Table row accessibility & gestures (keyboard nav, ARIA, swipe-to-install)
+- [x] 14-01-PLAN.md - Responsive layout (sm: breakpoint, horizontal scroll)
+- [x] 14-02-PLAN.md - Accessibility infrastructure (roving tabindex hook, live region announcer)
+- [x] 14-03-PLAN.md - Sort column accessibility (aria-sort, sort announcements)
+- [x] 14-04-PLAN.md - Collapsible leaderboard (login count tracking, onboarding behavior)
+- [x] 14-05-PLAN.md - Table row accessibility & gestures (keyboard nav, ARIA, swipe-to-install)
 
 ## Progress
 
@@ -110,7 +110,7 @@ Plans:
 | 11. E2E Test Coverage | v1.1 | 4/4 | Complete | 2026-02-01 |
 | 12. Two-Panel Layout | v1.2 | 3/3 | Complete | 2026-02-01 |
 | 13. Interactive Sorting & Accordion | v1.2 | 4/4 | Complete | 2026-02-01 |
-| 14. Mobile & Accessibility | v1.2 | 0/5 | Planned | - |
+| 14. Mobile & Accessibility | v1.2 | 5/5 | Complete | 2026-02-01 |
 
 ---
 
@@ -122,3 +122,4 @@ Plans:
 *Phase 13 planned: 2026-02-01*
 *Phase 13 completed: 2026-02-01*
 *Phase 14 planned: 2026-02-01*
+*Phase 14 completed: 2026-02-01*
