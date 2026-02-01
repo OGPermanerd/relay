@@ -3,6 +3,7 @@
 import { InstallButton } from "./install-button";
 
 interface SkillAccordionContentProps {
+  id: string;
   skill: {
     id: string;
     name: string;
@@ -26,9 +27,14 @@ interface SkillAccordionContentProps {
  *
  * Uses preview card style with blue-50 background for expanded state
  */
-export function SkillAccordionContent({ skill, onInstall, isCopied }: SkillAccordionContentProps) {
+export function SkillAccordionContent({
+  id,
+  skill,
+  onInstall,
+  isCopied,
+}: SkillAccordionContentProps) {
   return (
-    <tr className="bg-blue-50">
+    <tr id={id} className="bg-blue-50">
       <td colSpan={7} className="px-4 py-3">
         <div className="rounded-lg border border-blue-100 bg-white p-4">
           {/* Category badge */}
