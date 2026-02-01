@@ -1,5 +1,8 @@
 import { test, expect } from "@playwright/test";
 
+// These tests run without authentication to test unauthenticated flows
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe("Authentication Flow", () => {
   test("should redirect unauthenticated users to login", async ({ page }) => {
     // Visiting home page should redirect to login
@@ -13,8 +16,11 @@ test.describe("Authentication Flow", () => {
     // Check that the page loads
     await expect(page.locator("body")).toBeVisible();
 
-    // Check for sign-in button
-    await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
+    // Check for sign-in button or link
+    const signInButton = page.getByRole("button", { name: /sign in/i });
+    const signInLink = page.getByRole("link", { name: /sign in/i });
+    const anySignIn = signInButton.or(signInLink);
+    await expect(anySignIn).toBeVisible();
   });
 
   test("should have valid HTML structure", async ({ page }) => {
