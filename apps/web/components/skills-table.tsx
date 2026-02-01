@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { announceToScreenReader } from "@/lib/accessibility";
 import { useSortState } from "@/hooks/use-sort-state";
 import { useExpandedRows } from "@/hooks/use-expanded-rows";
 import { useClipboardCopy } from "@/hooks/use-clipboard-copy";
+import { useRovingTabindex } from "@/hooks/use-roving-tabindex";
 import { generateMcpConfig } from "@/lib/mcp-config";
 import { SortableColumnHeader } from "./sortable-column-header";
 import { SkillsTableRow } from "./skills-table-row";
@@ -57,9 +59,46 @@ const COLUMN_LABELS: Record<string, string> = {
 };
 
 export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
+  const router = useRouter();
   const { sortBy, sortDir, toggleSort } = useSortState();
-  const { toggleRow, isExpanded } = useExpandedRows();
+  const { toggleRow, expandRow, collapseRow, isExpanded } = useExpandedRows();
   const { copyToClipboard, isCopied } = useClipboardCopy();
+
+  // Roving tabindex for keyboard navigation (single column: row focus only)
+  const { getTabIndex, handleKeyDown, registerCell } = useRovingTabindex({
+    rowCount: skills.length,
+    colCount: 1,
+    onFocusChange: (rowIndex) => {
+      // Expand row when focus changes to it
+      const skill = sortedSkills[rowIndex];
+      if (skill) {
+        expandRow(skill.id);
+      }
+    },
+  });
+
+  // Handle row focus - expands accordion
+  const handleRowFocus = useCallback(
+    (skillId: string) => {
+      expandRow(skillId);
+    },
+    [expandRow]
+  );
+
+  // Handle Enter key on row - navigate to skill detail
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent, slug: string) => {
+      // Let roving tabindex handle arrow keys
+      handleKeyDown(e);
+
+      // Handle Enter for navigation
+      if (e.key === "Enter") {
+        e.preventDefault();
+        router.push(`/skills/${slug}`);
+      }
+    },
+    [handleKeyDown, router]
+  );
 
   // Track if this is the initial render to avoid announcing on page load
   const isInitialMount = useRef(true);
@@ -110,7 +149,7 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
 
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200">
+      <table role="grid" className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
             <SortableColumnHeader
@@ -175,6 +214,11 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
               trend={usageTrends.get(skill.id) || []}
               isExpanded={isExpanded(skill.id)}
               onToggle={() => toggleRow(skill.id)}
+              onCollapse={() => collapseRow(skill.id)}
+              onFocus={() => handleRowFocus(skill.id)}
+              tabIndex={getTabIndex(index, 0)}
+              onKeyDown={(e: React.KeyboardEvent) => handleRowKeyDown(e, skill.slug)}
+              registerRef={(el: HTMLTableRowElement | null) => registerCell(index, 0, el)}
               isCopied={isCopied(skill.id)}
               onInstall={() => copyToClipboard(skill.id, generateMcpConfig(skill))}
               rowIndex={index}
