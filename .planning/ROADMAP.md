@@ -2,14 +2,14 @@
 
 ## Milestones
 
-- ✅ **v1.0 MVP** - Phases 1-8 (shipped 2026-01-31)
-- ✅ **v1.1 Quality & Polish** - Phases 9-11 (shipped 2026-02-01)
-- 🚧 **v1.2 UI Redesign** - Phases 12-14 (in progress)
+- **v1.0 MVP** - Phases 1-8 (shipped 2026-01-31)
+- **v1.1 Quality & Polish** - Phases 9-11 (shipped 2026-02-01)
+- **v1.2 UI Redesign** - Phases 12-14 (in progress)
 
 ## Phases
 
 <details>
-<summary>✅ v1.0 MVP (Phases 1-8) - SHIPPED 2026-01-31</summary>
+<summary>v1.0 MVP (Phases 1-8) - SHIPPED 2026-01-31</summary>
 
 See archived roadmap: .planning/milestones/v1.0-ROADMAP.md
 
@@ -28,7 +28,7 @@ Total: 33 plans completed in 120 minutes.
 </details>
 
 <details>
-<summary>✅ v1.1 Quality & Polish (Phases 9-11) - SHIPPED 2026-02-01</summary>
+<summary>v1.1 Quality & Polish (Phases 9-11) - SHIPPED 2026-02-01</summary>
 
 See archived roadmap: .planning/milestones/v1.1-ROADMAP.md
 
@@ -41,7 +41,7 @@ Total: 9 plans completed in 45 minutes.
 
 </details>
 
-### 🚧 v1.2 UI Redesign (In Progress)
+### v1.2 UI Redesign (In Progress)
 
 **Milestone Goal:** Redesign the UI with a two-panel sortable table layout featuring inline expansion, one-click install, and full accessibility support.
 
@@ -58,9 +58,9 @@ Total: 9 plans completed in 45 minutes.
 **Plans:** 3 plans
 
 Plans:
-- [x] 12-01-PLAN.md — Two-panel layout and skills table components
-- [x] 12-02-PLAN.md — Data layer extension and page wiring
-- [x] 12-03-PLAN.md — Leaderboard column updates
+- [x] 12-01-PLAN.md - Two-panel layout and skills table components
+- [x] 12-02-PLAN.md - Data layer extension and page wiring
+- [x] 12-03-PLAN.md - Leaderboard column updates
 
 #### Phase 13: Interactive Sorting & Accordion
 **Goal**: Users can interactively sort the table and expand rows to see skill details and install
@@ -74,12 +74,13 @@ Plans:
   5. User can click Install button in expanded row to copy skill to clipboard
   6. Sort state persists in URL (user can share sorted view via link)
   7. User can click a contributor in leaderboard to filter table to that author's skills
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 13-01: TBD
-- [ ] 13-02: TBD
-- [ ] 13-03: TBD
+- [ ] 13-01-PLAN.md - Sorting infrastructure (URL state hook, sortable column headers)
+- [ ] 13-02-PLAN.md - Accordion and install infrastructure (expansion hooks, install button, accordion content)
+- [ ] 13-03-PLAN.md - SkillsTable integration (client conversion, sorting, accordion rows)
+- [ ] 13-04-PLAN.md - Author filtering (leaderboard click, filter chip, URL persistence)
 
 #### Phase 14: Mobile & Accessibility Polish
 **Goal**: Users can access all features via keyboard and mobile devices with full screen reader support
@@ -105,7 +106,7 @@ Plans:
 | 10. Quality Scorecards | v1.1 | 4/4 | Complete | 2026-01-31 |
 | 11. E2E Test Coverage | v1.1 | 4/4 | Complete | 2026-02-01 |
 | 12. Two-Panel Layout | v1.2 | 3/3 | Complete | 2026-02-01 |
-| 13. Interactive Sorting & Accordion | v1.2 | 0/TBD | Ready | - |
+| 13. Interactive Sorting & Accordion | v1.2 | 0/4 | Planned | - |
 | 14. Mobile & Accessibility | v1.2 | 0/TBD | Not started | - |
 
 ---
@@ -115,3 +116,4 @@ Plans:
 *v1.2 phases added: 2026-02-01*
 *Phase 12 planned: 2026-02-01*
 *Phase 12 completed: 2026-02-01*
+*Phase 13 planned: 2026-02-01*
