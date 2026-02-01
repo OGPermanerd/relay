@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v1.2 UI Redesign - Phase 13 Complete
+**Current focus:** v1.2 UI Redesign - Phase 14 in progress
 
 ## Current Position
 
 Phase: 14 of 14 (Mobile & Accessibility Polish)
-Plan: 0 of TBD in current phase
-Status: Phase 13 complete, Phase 14 ready for planning
-Last activity: 2026-02-01 - Completed Phase 13 (all 4 plans verified)
+Plan: 1 of 5 in current phase
+Status: Phase 14 in progress
+Last activity: 2026-02-01 - Completed 14-01-PLAN.md (Mobile Layout & Scroll)
 
-Progress: [██████████████████████████████░] 49/~50 plans (v1.0 + v1.1 complete, v1.2 in progress)
+Progress: [██████████████████████████████░] 50/~54 plans (v1.0 + v1.1 complete, v1.2 in progress)
 
 ## Milestones
 
@@ -35,9 +35,9 @@ Progress: [███████████████████████
 - Average duration: 5.0 min/plan
 
 **v1.2 Velocity (in progress):**
-- Plans completed: 7 (Phase 12: 3, Phase 13: 4)
-- Total execution time: ~19 min
-- Average duration: ~2.7 min/plan
+- Plans completed: 8 (Phase 12: 3, Phase 13: 4, Phase 14: 1)
+- Total execution time: ~21 min
+- Average duration: ~2.6 min/plan
 
 ## Accumulated Context
 
@@ -55,6 +55,7 @@ Recent decisions affecting v1.2:
 - days_saved as default sort order (12-02)
 - Toggle pattern for author filter: clicking same author clears filter (13-04)
 - Tags added to SearchSkillResult for accordion display (13-03)
+- sm: breakpoint (640px) for mobile panel stacking (14-01)
 
 ### Pending Todos
 
@@ -67,9 +68,13 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Phase 13 complete
+Stopped at: Completed 14-01-PLAN.md
 Resume file: None
 
 ## Next Steps
 
-Continue with Phase 14 (Mobile & Accessibility Polish) to complete v1.2 UI Redesign milestone.
+Continue with Phase 14 plans 02-05 to complete v1.2 UI Redesign milestone:
+- 14-02: Touch target sizing
+- 14-03: Focus states
+- 14-04: Reduced motion
+- 14-05: Semantic HTML/ARIA
