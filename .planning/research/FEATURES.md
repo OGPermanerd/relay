@@ -1,240 +1,293 @@
-# Feature Research
+# Feature Landscape: Sortable Table UI with Inline Expansion
 
-**Domain:** Internal Skill Marketplace for Claude Skills, Prompts, Workflows, and Agent Configurations
-**Researched:** 2026-01-31
-**Confidence:** HIGH
+**Domain:** Developer tools dashboard - sortable data tables with accordion rows
+**Researched:** 2026-02-01
+**Confidence:** HIGH (based on established UX patterns, W3C guidelines, and current React ecosystem)
 
-## Feature Landscape
+## Context
 
-### Table Stakes (Users Expect These)
+Relay v1.2 redesigns from card-based skill display to a two-panel sortable table layout:
+- Skills table with columns: days_saved, installs, date added, handle, sparkline
+- Click column header to toggle sort ascending/descending
+- Click row to expand inline showing description/instructions (accordion)
+- One-click install button per row
+- Leaderboard table showing contributors
 
-Features users assume exist. Missing these = product feels incomplete.
+This research focuses on UI patterns and behaviors expected for sortable data tables with inline expansion in developer tools.
+
+---
+
+## Table Stakes
+
+Features users expect. Missing these = product feels incomplete or broken.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| **Search & Discovery** | Users need to find skills quickly; 47% of workers struggle to find information (Gartner) | MEDIUM | Full-text search across names, descriptions, tags. Faceted filtering by category, author, rating. Critical path feature. |
-| **Skill Cards with Metadata** | Every marketplace shows items with key info at a glance | LOW | Name, description, author, rating, usage count, last updated. Standard pattern from PromptBase, SkillsMP. |
-| **One-Click Install/Deploy** | DigitalOcean, Backstage, SkillsMP all provide instant deployment | LOW | Copy to ~/.claude/skills/ or project .claude/skills/. Must be frictionless. |
-| **Version History** | Git/wiki mental model; users expect to see changes over time | MEDIUM | Track all versions, show diffs, allow rollback. SemVer-style (Major.Minor.Patch). |
-| **User Authentication (SSO)** | Enterprise users expect existing identity; RBAC is table stakes for IDPs | LOW | Google Workspace SSO as specified. No separate account creation. |
-| **User Profiles** | Attribution, accountability, ownership tracking | LOW | Display name, avatar (from Google), contributions, usage stats. |
-| **Basic Ratings (1-5 stars)** | PromptBase, app stores, all marketplaces have ratings | LOW | Post-use rating with aggregate display. Builds trust signals. |
-| **Usage Instructions** | Users need to know how to use what they install | LOW | Markdown documentation per skill. README equivalent. |
-| **Categories/Tags** | Users browse by category; SkillsMP has 71,000+ skills organized this way | LOW | Hierarchical categories, user-defined tags, standard taxonomy. |
-| **Mobile-Responsive UI** | Modern web expectation | LOW | Not mobile-first, but must work on tablets/phones. |
+| **Column header sort** | Standard interaction pattern; users click headers to sort | Low | Toggle ascending/descending on click. All sortable columns must be clickable. |
+| **Sort direction indicator** | Users need to know current sort state | Low | Use chevron/triangle: up (ascending), down (descending). Show on active column only. |
+| **Unsorted column affordance** | Users need to know which columns are sortable | Low | Show muted up-down arrows on hover, or always show them in a subtle state. |
+| **Row expansion trigger** | Users need clear affordance to expand rows | Low | Chevron icon at row start (right-facing when collapsed, down when expanded). Entire row clickable is optional enhancement. |
+| **Smooth expand/collapse animation** | Jarring transitions feel broken | Low | 150-200ms transition for height change. Content should not jump. |
+| **Keyboard navigation** | Accessibility requirement (WCAG 2.1 AA) | Medium | Tab to navigate headers/rows, Enter/Space to sort/expand, Arrow keys within table. |
+| **Visible focus states** | Accessibility requirement | Low | Clear focus ring on interactive elements (headers, rows, buttons). |
+| **Responsive behavior** | Mobile users exist | Medium | Table must work on smaller screens (stacked cards, horizontal scroll, or priority columns). |
+| **URL-persisted sort state** | Users share links, use back button | Low | Sort parameters in URL query string. Already using nuqs - extend pattern. |
+| **Loading states** | Network requests take time | Low | Skeleton or spinner when sort triggers data fetch. |
 
-### Differentiators (Competitive Advantage)
+### Sort Behavior Specifications
 
-Features that set the product apart. Not required, but valuable.
+Based on established patterns from [Shadcn/ui](https://www.shadcn.io/blocks/tables-sortable) and [Material React Table](https://mui.com/material-ui/react-table/):
+
+| Data Type | Ascending | Descending | Default |
+|-----------|-----------|------------|---------|
+| Numbers (days_saved, installs) | 1 to 100 | 100 to 1 | Descending (show highest first) |
+| Dates (date_added) | Oldest first | Newest first | Descending (newest first) |
+| Strings (handle) | A to Z | Z to A | Ascending |
+
+### Expansion Behavior Specifications
+
+Based on [Nielsen Norman Group](https://www.nngroup.com/articles/accordions-on-desktop/) and [UX Patterns](https://uxpatterns.dev/patterns/content-management/accordion) research:
+
+| Behavior | Recommendation | Rationale |
+|----------|---------------|-----------|
+| Multiple expanded | YES - allow multiple rows expanded | Users may want to compare skills. Auto-collapse is disorienting. |
+| Persist expanded state | YES - within session | Scrolling away and back should preserve state. |
+| Expand animation | 150-200ms ease-out | Feels responsive but not jarring. |
+| Expanded content height | Auto/measured | Do not use fixed height - content length varies. |
+
+---
+
+## Differentiators
+
+Features that set product apart. Not expected, but valued by power users.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **FTE Days Saved Metric** | Unique ROI visualization; McKinsey: 20% of day spent searching for info. Quantifies value in business terms. | MEDIUM | User-reported time estimate + aggregation. Main differentiator from generic marketplaces. Addresses $31.5B knowledge sharing loss (Fortune 500). |
-| **Fork & Improve Workflow** | Wiki-style contribution model is rare in skill marketplaces. GitHub-inspired but simplified. | MEDIUM | Fork existing skill, modify, submit improvement. Creates improvement flywheel. |
-| **Quality Scorecards** | Cortex, Port, Harness IDP use scorecards for standards. Apply to skills: documentation quality, usage rate, rating. | MEDIUM | Auto-calculated maturity score (Gold/Silver/Bronze). Gamifies quality. |
-| **Commit Comments on Versions** | Wiki-style changelog explanation. Most skill marketplaces lack version narratives. | LOW | Required on publish. Builds institutional knowledge. |
-| **Smart Search with AI** | Context-aware search beyond keyword matching. SkillsMP uses semantic search. | HIGH | Understand intent, suggest related skills. Requires embedding/vector search. |
-| **Usage Analytics Dashboard** | Pendo-style adoption tracking. See which skills are used, by whom, when. | MEDIUM | Track installs, active usage, time saved aggregate. Platform teams need this data. |
-| **Trending/Popular Sections** | Surface high-value content. Reduce discovery friction. | LOW | Based on usage velocity, not just total usage. |
-| **Team/Org Collections** | Group skills for specific teams or use cases. Like Spotify playlists for skills. | LOW | Curated bundles. Onboarding packages. |
-| **Skill Dependencies** | Show what other skills are needed. Backstage templates have this. | MEDIUM | Dependency graph, auto-install dependencies. |
-| **Preview Before Install** | See skill content before committing. Reduces friction. | LOW | Read-only view of SKILL.md, supporting files. |
-| **Notification Subscriptions** | Follow skills for update alerts. Standard in software catalogs. | MEDIUM | Subscribe to skills/authors, get notified on new versions. |
-| **Contribution Leaderboards** | Gamification of contributions. Drives engagement. | LOW | Top contributors by skills shared, ratings received, time saved generated. |
-| **Related Skills Recommendations** | "Users who installed X also installed Y". Amazon-style discovery. | HIGH | Collaborative filtering or content-based similarity. |
+| **Sticky column headers** | Headers visible during scroll | Low | Critical for long lists. Standard in modern data tables. |
+| **Multi-column sort** | Sort by primary, then secondary column | Medium | Power user feature. Show sort priority badges (1, 2). Click + Shift/Cmd pattern. |
+| **Column resize** | Adjust column widths | Medium | Nice for wide content. Can defer to post-MVP. |
+| **Keyboard shortcuts** | Fast navigation for power users | Medium | j/k for row navigation, Enter to expand, i for install. Show in tooltip/help. |
+| **Inline install feedback** | Visual confirmation of install action | Low | Button state change, brief success toast. No page navigation. |
+| **"Expand all" / "Collapse all"** | Batch operation | Low | Useful for scanning all descriptions quickly. |
+| **Remember sort preference** | Persist user's preferred sort across sessions | Low | localStorage or user preferences table. |
+| **Virtualized rendering** | Smooth performance with 1000+ rows | High | Only if performance becomes issue. Libraries: react-virtual, tanstack-virtual. |
+| **Row selection** | Select multiple for batch operations | Medium | Future: batch install, compare selected. Checkbox column. |
+| **Density toggle** | Compact vs comfortable row height | Low | Power users often prefer dense; casual users prefer spacious. |
+| **Column visibility toggle** | Hide/show columns | Medium | Useful when screen space limited or columns irrelevant. |
+| **Sparkline tooltip** | Hover shows detailed trend data | Low | "Last 30 days: 45, 52, 38, 61..." - adds context to the mini chart. |
 
-### Anti-Features (Commonly Requested, Often Problematic)
+### Leaderboard-Specific Differentiators
 
-Features that seem good but create problems.
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| **Segmented views** | Weekly/monthly/all-time tabs | Low | Prevents stagnant all-time leaders discouraging new contributors. |
+| **"Your position" highlight** | Show logged-in user's rank prominently | Low | Even if not in top 10, show "You are #47". Motivating. |
+| **Relative ranking** | Show users immediately above/below | Low | "You're 2 skills behind #46" - creates achievable goals. |
+| **Movement indicators** | Show rank changes from previous period | Medium | Up/down arrows with delta. Gamification element. |
 
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| **Paid Skills/Monetization** | PromptBase model; creators want income | Adds payment complexity, splits community, creates gatekeeping, legal/tax overhead | Free internal marketplace. Value measured in FTE Days Saved, not revenue. Recognition through leaderboards. |
-| **Real-Time Collaboration** | "Google Docs for skills" sounds good | Complexity explosion; skills are versioned artifacts, not live documents; merge conflicts | Wiki-style: one person edits, submits version. Fork for parallel work. |
-| **Complex Permission Hierarchies** | "Different teams need different access" | Creates admin burden, reduces sharing culture, defeats open marketplace purpose | Simple model: all skills visible to all authenticated users. Edit requires account. |
-| **Approval Workflows** | "Skills need review before publishing" | Creates bottlenecks, kills contribution velocity, requires reviewers (who?) | Post-publish community moderation via ratings. Flag problematic skills. Quality surfaces organically. |
-| **AI-Generated Skills** | "Let AI create skills automatically" | Quality control nightmare; floods marketplace with low-value content | Support AI-assisted editing, but human must own and submit. |
-| **Skill Execution Environment** | "Run skills directly in the platform" | Security risks, scope creep, maintenance burden | Skills execute in Claude Code/claude.ai. Marketplace is discovery + distribution only. |
-| **Complex Analytics** | "We need 50 metrics and custom dashboards" | Over-engineering; most metrics won't be used | Focus on ONE core metric (FTE Days Saved) + basic usage stats. Add more only when proven need. |
-| **Comments/Discussion Threads** | "Let users discuss skills" | Becomes noise, moderation burden, better venues exist (Slack, Teams) | Link to external discussion (Slack channel). Keep marketplace focused on discovery. |
-| **Private Skills** | "Some skills are team-only" | Fragments discovery, creates "haves and have-nots", admin complexity | All skills public within org. Use separate repos for truly sensitive content. |
-| **Skill Certification** | "Official stamp of approval" | Who certifies? Creates politics, bottleneck, false sense of security | Quality signals from usage and ratings. Community-driven trust. |
+---
+
+## Anti-Features
+
+Features to explicitly NOT build. Common mistakes in this domain.
+
+| Anti-Feature | Why Requested | Why Problematic | What to Do Instead |
+|--------------|---------------|-----------------|-------------------|
+| **Auto-collapse on expand** | "Keeps UI tidy" | Disorienting; users lose context; can't compare rows; [NN/g research](https://www.nngroup.com/articles/accordions-on-desktop/) explicitly advises against | Allow multiple expanded rows |
+| **Hover-to-expand** | "Faster than clicking" | Accidental triggers while scrolling; accessibility nightmare; no mobile equivalent | Click/tap to expand only |
+| **Sort on hover** | "Discoverable" | Accidental sort changes are frustrating; requires click intent | Sort on click only |
+| **Pagination** | "Standard for large tables" | Breaks mental model; users lose place; can't search within page | Infinite scroll or virtual scrolling. Show all rows, virtualize rendering. |
+| **Modal for details** | "More space for content" | Context switch; loses table state; can't compare multiple items | Inline expansion or side panel |
+| **Right-click context menu** | "Advanced options" | Undiscoverable; no mobile equivalent; conflicts with browser menu | Visible action buttons or kebab menu |
+| **Editable cells inline** | "Quick editing" | Scope creep; tables for reading, forms for editing; accidental edits | Edit in dedicated view/modal |
+| **Drag-to-reorder columns** | "Customization" | Rarely used; implementation complexity; state management overhead | Fixed sensible column order |
+| **Sticky first column** | "Always see row identifier" | Adds scroll complexity; rarely needed if columns well-chosen | Make first column narrow (rank/handle) so visible without stickiness |
+| **Color-coded rows** | "Visual hierarchy" | Often inaccessible; information should not rely on color alone | Use icons, badges, or position to convey meaning |
+
+---
+
+## Keyboard Accessibility (WCAG 2.1 AA Required)
+
+Based on [W3C ARIA APG Table Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/table/examples/sortable-table/) and [Carbon Design System](https://carbondesignsystem.com/components/data-table/accessibility/):
+
+### Required Interactions
+
+| Key | Action |
+|-----|--------|
+| Tab | Move focus between interactive elements (headers, expand triggers, action buttons) |
+| Shift+Tab | Move focus backwards |
+| Enter/Space | Activate sort (on header), toggle expand (on row), trigger action (on button) |
+| Arrow Up/Down | Move between rows (when row is focused) |
+| Arrow Left/Right | Move between columns (within row) |
+| Home/End | Jump to first/last row |
+| Escape | Close expanded row (optional, nice to have) |
+
+### ARIA Requirements
+
+| Element | ARIA Attribute | Value |
+|---------|---------------|-------|
+| Sortable header | `aria-sort` | `ascending`, `descending`, or `none` |
+| Sort button | `aria-label` | "Sort by [column name], currently [sorted/unsorted] [ascending/descending]" |
+| Expandable row | `aria-expanded` | `true` or `false` |
+| Expanded content | `aria-hidden` | `false` when visible, `true` when collapsed |
+| Table | `role` | `grid` (if fully keyboard navigable) or `table` |
+
+### Screen Reader Announcements
+
+- On sort: "Sorted by [column], [ascending/descending]"
+- On expand: "[Row name] expanded" / "[Row name] collapsed"
+- On install: "[Skill name] installed successfully" or error message
+
+---
+
+## Mobile/Responsive Considerations
+
+Based on [UX Movement](https://uxmovement.medium.com/stacked-list-the-best-way-to-fit-tables-on-mobile-screens-79f7789e079b) and current patterns:
+
+### Recommended Approach: Stacked Cards on Mobile
+
+| Breakpoint | Layout |
+|------------|--------|
+| Desktop (1024px+) | Full table with all columns |
+| Tablet (768-1023px) | Table with priority columns (hide sparkline, combine metrics) |
+| Mobile (<768px) | Stacked cards - each row becomes a card |
+
+### Mobile Card Layout
+
+```
++----------------------------------+
+| [Handle] [Quality Badge]    [>]  |  <- Tap to expand
+| 1,234 installs  |  45.2 days     |
+| Added Jan 15, 2026               |
++----------------------------------+
+```
+
+Expanded state adds description/instructions below.
+
+### Alternative: Horizontal Scroll
+
+If stacked cards feel too different from desktop:
+- First column sticky (handle)
+- Horizontal scroll for other columns
+- Swipe affordance indicator
+
+**Recommendation:** Stacked cards for Relay. The expanded description content needs vertical space that horizontal scroll doesn't provide gracefully.
+
+---
 
 ## Feature Dependencies
 
 ```
-[Authentication (SSO)]
-    |
-    v
-[User Profiles]
-    |
-    +---> [Basic Ratings] ---> [Quality Scorecards]
-    |           |
-    |           v
-    |     [FTE Days Saved Metric] ---> [Usage Analytics Dashboard]
-    |
-    +---> [Skill Cards with Metadata]
-    |           |
-    |           +---> [Search & Discovery] ---> [Smart Search with AI]
-    |           |           |
-    |           |           v
-    |           |     [Related Skills Recommendations]
-    |           |
-    |           +---> [One-Click Install/Deploy]
-    |           |
-    |           +---> [Preview Before Install]
-    |
-    +---> [Version History]
-    |           |
-    |           v
-    |     [Commit Comments] ---> [Fork & Improve Workflow]
-    |
-    +---> [Categories/Tags] ---> [Team/Org Collections]
-    |
-    +---> [Notification Subscriptions]
-    |
-    +---> [Contribution Leaderboards]
-
-[Skill Dependencies] --enhances--> [One-Click Install/Deploy]
-
-[Trending/Popular] --requires--> [Usage Analytics Dashboard]
+[Sortable Headers] -----> [URL State Sync] (sort persisted)
+      |
+      v
+[Sort Indicators] -----> [Accessibility Announcements]
+      |
+      v
+[Row Expansion] -----> [Keyboard Navigation]
+      |                      |
+      v                      v
+[Install Button] <---- [Focus Management]
+      |
+      v
+[Success Feedback]
 ```
 
-### Dependency Notes
+### Implementation Order
 
-- **Authentication is foundational:** All personalization, contribution, and rating features require authenticated users
-- **Version History enables Fork & Improve:** Can't fork without version tracking
-- **Usage tracking enables advanced features:** Trending, recommendations, analytics all need usage data
-- **Search is the primary UX:** Must work before other discovery features matter
-- **Scorecards build on ratings:** Need rating data before calculating quality scores
-- **FTE Days Saved needs ratings flow:** Time-saved estimate comes from post-use rating
+1. **Base table structure** - Headers, rows, basic styling
+2. **Sort on column click** - Core interaction
+3. **Sort indicators** - Visual feedback
+4. **URL state sync** - Shareability
+5. **Row expansion** - Accordion behavior
+6. **Keyboard navigation** - Accessibility
+7. **Mobile responsive** - Stacked cards
+8. **Leaderboard enhancement** - Time segments, user highlighting
 
-## MVP Definition
+---
 
-### Launch With (v1)
+## MVP Recommendation
 
-Minimum viable product - what's needed to validate the concept.
+### Phase 1: Table Stakes (Must Have)
 
-- [x] **Google Workspace SSO** - Non-negotiable for internal tool
-- [x] **User Profiles (basic)** - Name, avatar from Google, list of contributions
-- [x] **Skill Upload with Metadata** - Name, description, tags, usage instructions, time estimate
-- [x] **Search & Discovery** - Full-text search, category filtering
-- [x] **Skill Cards** - Display all metadata, rating, usage count
-- [x] **One-Click Install** - Copy command or direct file placement
-- [x] **Version History** - List of versions with commit comments, ability to view old versions
-- [x] **Basic Ratings (1-5)** - Post-use rating with optional comment and time-saved estimate
-- [x] **FTE Days Saved Display** - Aggregate and display at skill and platform level
+- [ ] Sortable column headers with click toggle
+- [ ] Sort direction indicators (chevron up/down)
+- [ ] Unsorted columns show sortable affordance
+- [ ] Single-click row expansion with chevron
+- [ ] Smooth expand/collapse animation
+- [ ] Multiple rows expandable simultaneously
+- [ ] URL-persisted sort state
+- [ ] Basic keyboard navigation (Tab, Enter)
+- [ ] Visible focus states
+- [ ] Loading state on sort
 
-**MVP Rationale:** This covers the core user journeys (Creating, Publishing, Finding, Rating) and establishes the unique value proposition (FTE Days Saved). Everything else can wait for validation.
+### Phase 2: Polish (Should Have)
 
-### Add After Validation (v1.x)
+- [ ] Sticky headers on scroll
+- [ ] Mobile stacked card layout
+- [ ] Full ARIA implementation
+- [ ] Sparkline tooltips
+- [ ] Install button with inline feedback
+- [ ] Leaderboard time segment tabs
 
-Features to add once core is working.
+### Phase 3: Delight (Nice to Have)
 
-- [ ] **Fork & Improve Workflow** - When contribution velocity is proven; trigger: 50+ skills in marketplace
-- [ ] **Quality Scorecards** - When rating data is meaningful; trigger: 100+ ratings
-- [ ] **Trending/Popular Sections** - When enough usage data exists; trigger: 1000+ installs
-- [ ] **Team/Org Collections** - When teams request curation; trigger: user feedback
-- [ ] **Notification Subscriptions** - When users ask "how do I know when X updates"; trigger: user feedback
-- [ ] **Usage Analytics Dashboard** - When platform team needs adoption metrics; trigger: 6 months post-launch
-- [ ] **Preview Before Install** - Low effort, add when one-click install is stable
+- [ ] Keyboard shortcuts (j/k navigation)
+- [ ] Remember sort preference
+- [ ] "Your position" in leaderboard
+- [ ] Movement indicators in leaderboard
+- [ ] Expand all / Collapse all
+- [ ] Density toggle
 
-### Future Consideration (v2+)
+### Defer (Out of Scope for v1.2)
 
-Features to defer until product-market fit is established.
+- Multi-column sort
+- Column resize
+- Row selection / batch operations
+- Virtualized rendering (unless performance issue emerges)
+- Column visibility toggle
 
-- [ ] **Smart Search with AI** - Requires vector DB, significant complexity; defer until search is proven pain point
-- [ ] **Related Skills Recommendations** - Requires substantial usage data and ML infrastructure
-- [ ] **Skill Dependencies** - Adds complexity; most skills are standalone; wait for demand
-- [ ] **Contribution Leaderboards** - Gamification can wait; culture-building feature
-- [ ] **Advanced Analytics** - Build on request from leadership/platform team
-
-## Feature Prioritization Matrix
-
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| Search & Discovery | HIGH | MEDIUM | P1 |
-| One-Click Install | HIGH | LOW | P1 |
-| SSO Authentication | HIGH | LOW | P1 |
-| Skill Cards | HIGH | LOW | P1 |
-| Basic Ratings | HIGH | LOW | P1 |
-| Version History | HIGH | MEDIUM | P1 |
-| FTE Days Saved | HIGH | MEDIUM | P1 |
-| User Profiles | MEDIUM | LOW | P1 |
-| Categories/Tags | MEDIUM | LOW | P1 |
-| Fork & Improve | HIGH | MEDIUM | P2 |
-| Quality Scorecards | MEDIUM | MEDIUM | P2 |
-| Trending/Popular | MEDIUM | LOW | P2 |
-| Team Collections | MEDIUM | LOW | P2 |
-| Notifications | MEDIUM | MEDIUM | P2 |
-| Preview Install | LOW | LOW | P2 |
-| Usage Analytics | MEDIUM | MEDIUM | P2 |
-| Smart Search | MEDIUM | HIGH | P3 |
-| Recommendations | MEDIUM | HIGH | P3 |
-| Skill Dependencies | LOW | MEDIUM | P3 |
-| Leaderboards | LOW | LOW | P3 |
-
-**Priority key:**
-- P1: Must have for launch (MVP)
-- P2: Should have, add after validation
-- P3: Nice to have, future consideration
-
-## Competitor Feature Analysis
-
-| Feature | SkillsMP | Backstage | PromptBase | Relay Approach |
-|---------|----------|-----------|------------|----------------|
-| Discovery | Semantic search, categories, 71K+ skills | Software catalog, search | Category browse, search | Search + categories + FTE Days Saved surfacing |
-| Install | One-command via marketplace.json | Templates scaffold new projects | Download prompt file | One-click copy/install to Claude skills |
-| Versioning | Git-based (inherits from GitHub repos) | Entity tracking | None | Wiki-style with commit comments |
-| Quality Signals | Star threshold (2+), badges | Scorecards (configurable) | Price + reviews | Ratings + FTE Days Saved + Scorecards |
-| Contribution | Link to GitHub | PR-based templates | Upload via form | Fork & Improve workflow |
-| Metrics | None visible | DORA, custom scorecards | None | FTE Days Saved (unique differentiator) |
-| Auth | None (public catalog) | SSO/RBAC | Account-based | Google Workspace SSO |
-| Monetization | Free (community) | N/A (self-hosted) | Paid prompts ($1.99-$9.99) | Free (internal, value via metrics) |
-
-## Implications for Relay
-
-### Unique Positioning
-Relay differentiates through:
-1. **FTE Days Saved as core metric** - No other skill marketplace quantifies value in business terms
-2. **Wiki-style contribution model** - Fork & Improve is more accessible than PR-based contribution
-3. **Internal/authenticated** - Trust and accountability that public marketplaces lack
-4. **Claude-specific** - Focused on one ecosystem vs. multi-model fragmentation
-
-### Critical Success Factors
-1. **Search must be fast and accurate** - Primary UX; if search fails, platform fails
-2. **Install friction must be zero** - One click or users won't adopt
-3. **Time-saved capture must be frictionless** - Core metric depends on user input
-4. **Initial content seeding** - Empty marketplace = no adoption; need 20-50 quality skills at launch
-
-### Risk Mitigation
-- **70% of platform engineering initiatives fail within 18 months** - Focus on developer experience, treat as product
-- **Tool fatigue is real** - Integration with existing Claude workflow, not separate destination
-- **Adoption needs incentives** - FTE Days Saved leaderboards, recognition, not just metrics
+---
 
 ## Sources
 
-### Primary Research
-- [Gartner Internal Developer Portals Reviews 2026](https://www.gartner.com/reviews/market/internal-developer-portals)
-- [SkillsMP Agent Skills Marketplace](https://skillsmp.com/)
-- [Backstage Software Templates Documentation](https://backstage.io/docs/features/software-templates/)
-- [Port Scorecards and Initiatives](https://www.port.io/product/scorecards-and-initiatives)
-- [Cortex Scorecards](https://www.cortex.io/post/why-scorecards-are-critical-to-your-developer-portal)
-- [Claude Agent Skills Documentation](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
+### UX Patterns & Best Practices
+- [Pencil & Paper: Data Table UX Patterns](https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-data-tables) - Enterprise table patterns
+- [Eleken: Table Design UX Guide](https://www.eleken.co/blog-posts/table-design-ux) - SaaS table usability
+- [LogRocket: Data Table Design Best Practices](https://blog.logrocket.com/ux-design/data-table-design-best-practices/) - General best practices
+- [Nielsen Norman Group: Accordions on Desktop](https://www.nngroup.com/articles/accordions-on-desktop/) - Accordion behavior research
+- [Andrew Coyle: Design Better Accordions](https://coyleandrew.medium.com/design-better-accordions-c67ae38e6713) - Accordion UX patterns
 
-### Market & Adoption Data
-- [Platform Engineering 80% Adoption, 70% Fail](https://byteiota.com/platform-engineering-80-adoption-70-fail-within-18-months/)
-- [6 Things Developer Tools Must Have in 2026](https://evilmartians.com/chronicles/six-things-developer-tools-must-have-to-earn-trust-and-adoption)
-- [Knowledge Sharing ROI Metrics](https://bloomfire.com/blog/roi-knowledge-management/)
-- [How to Measure Developer Productivity and Platform ROI](https://platformengineering.org/blog/how-to-measure-developer-productivity-and-platform-roi-a-complete-framework-for-platform-engineers)
+### Accessibility
+- [W3C WAI: Tables Tutorial](https://www.w3.org/WAI/tutorials/tables/) - Accessibility fundamentals
+- [W3C ARIA APG: Sortable Table Example](https://www.w3.org/WAI/ARIA/apg/patterns/table/examples/sortable-table/) - ARIA implementation
+- [Carbon Design System: Data Table Accessibility](https://carbondesignsystem.com/components/data-table/accessibility/) - Enterprise accessibility patterns
+- [USWDS: Table Accessibility Tests](https://designsystem.digital.gov/components/table/accessibility-tests/) - Testing checklist
 
-### Feature References
-- [PromptBase Marketplace Review](https://www.godofprompt.ai/blog/review-popular-ai-prompt-library-platforms)
-- [Harness IDP Governance Guide](https://www.harness.io/harness-devops-academy/internal-developer-portal-governance-guide)
-- [OpsLevel Guide to Developer Portals](https://www.opslevel.com/resources/2025-ultimate-guide-to-building-a-high-performance-developer-portal)
-- [DigitalOcean Marketplace One-Click Apps](https://www.digitalocean.com/products/marketplace)
+### Sort Icons & Indicators
+- [Rimsha: Sorting Icons in UI](https://medium.com/design-bootcamp/sorting-icons-in-ui-what-works-best-for-table-design-and-user-experience-ux-e1a1d1b58fa7) - Icon comparison
+- [Arnaud Jaegers: Sorting Arrow Confusion](https://medium.com/hackernoon/sorting-arrow-confusion-in-data-tables-5a3117698fdf) - Common mistakes
+
+### Mobile Patterns
+- [UX Movement: Stacked List for Mobile Tables](https://uxmovement.medium.com/stacked-list-the-best-way-to-fit-tables-on-mobile-screens-79f7789e079b) - Card view pattern
+- [Medium: Responsive Data Tables Solutions](https://medium.com/appnroll-publication/5-practical-solutions-to-make-responsive-data-tables-ff031c48b122) - Multiple approaches
+- [Medium: User-Friendly Mobile Data Tables](https://medium.com/design-bootcamp/designing-user-friendly-data-tables-for-mobile-devices-c470c82403ad) - Mobile UX
+
+### Sparklines
+- [FusionCharts: Sparklines Complete Guide](https://www.fusioncharts.com/resources/chart-primers/spark-charts) - Design principles
+- [LinkedIn: Sparkline Best Practices](https://www.linkedin.com/advice/0/what-best-practices-using-sparklines-your-data-hyquc) - Usage guidelines
+
+### Leaderboards
+- [UI Patterns: Leaderboard](https://ui-patterns.com/patterns/leaderboard) - Design pattern
+- [Yu-kai Chou: How to Design Effective Leaderboards](https://yukaichou.com/advanced-gamification/how-to-design-effective-leaderboards-boosting-motivation-and-engagement/) - Gamification psychology
+
+### React Libraries
+- [Shadcn/ui: Sortable Tables](https://www.shadcn.io/blocks/tables-sortable) - Implementation reference
+- [Material React Table](https://mui.com/material-ui/react-table/) - Full-featured table component
+- [TanStack Table](https://tanstack.com/table) - Headless table library
 
 ---
-*Feature research for: Internal Skill Marketplace (Relay)*
-*Researched: 2026-01-31*
-*Confidence: HIGH - Based on current market analysis, competitor review, and established patterns from IDPs and skill marketplaces*
+
+*Feature research for: Relay v1.2 Sortable Table UI*
+*Researched: 2026-02-01*
+*Confidence: HIGH - Based on established UX patterns, W3C guidelines, and current React ecosystem*

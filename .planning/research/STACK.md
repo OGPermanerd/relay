@@ -1,247 +1,275 @@
-# Stack Research
+# Technology Stack: UI Redesign - Sortable Tables
 
-**Domain:** Internal Skill Marketplace / Developer Tools Catalog
-**Researched:** 2026-01-31
-**Confidence:** HIGH (verified via official docs and multiple 2025-2026 sources)
+**Project:** Relay v1.2 - Two-Panel UI with Sortable Tables
+**Researched:** 2026-02-01
+**Scope:** Stack additions for sortable data tables, accordion rows, and performance optimization
+**Confidence:** HIGH (verified via official docs, shadcn patterns, and current npm versions)
+
+---
 
 ## Executive Summary
 
-For an internal skill marketplace at enterprise scale (500+ users) with Google Workspace SSO, MCP server integration, wiki-style versioning, and real-time usage metrics, the recommended stack is:
+For the v1.2 two-panel UI redesign with sortable tables and accordion rows, the recommendation is:
 
-**Next.js 15+ / React 19 + TypeScript + PostgreSQL + Drizzle ORM + Auth.js + shadcn/ui + TanStack Query + Zustand**
+**Use TanStack Table v8 + shadcn/ui Table + Collapsible + existing nuqs for URL state**
 
-This stack prioritizes:
-- Type safety end-to-end (TypeScript everywhere)
-- Server-first rendering (React Server Components)
-- Developer velocity (shadcn/ui, Drizzle, tRPC patterns)
-- Enterprise-ready auth (Auth.js with Google Workspace SSO)
-- Proven scalability (PostgreSQL, established patterns)
+This approach:
+- Leverages the existing stack (shadcn/ui, nuqs) rather than adding new dependencies
+- Uses TanStack Table for headless table logic (sorting, expansion) - industry standard
+- Keeps bundle size minimal (~5-14kb for TanStack Table)
+- Avoids virtualization (not needed for <50 rows)
 
----
-
-## Recommended Stack
-
-### Core Framework
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **Next.js** | 15.5+ (or 16) | Full-stack React framework | Industry standard for enterprise React apps. App Router provides RSC, Server Actions, caching. Next.js 16 adds cache components and Turbopack as default. Used by OpenAI, Vercel, Linear. | HIGH |
-| **React** | 19.x | UI library | Stable since Dec 2024. Server Components, Suspense, use() hook, Actions API all production-ready. Next.js 15+ requires React 19. | HIGH |
-| **TypeScript** | 5.6+ | Type safety | Non-negotiable for enterprise. End-to-end type safety with Zod schemas, Drizzle ORM, and tRPC-style patterns. | HIGH |
-
-### Database Layer
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **PostgreSQL** | 16+ (or 17) | Primary database | The "most desired and admired database" per surveys. Handles relational data, full-text search, JSONB for flexible skill metadata, and temporal tables for version history. Enterprise proven. | HIGH |
-| **Drizzle ORM** | 0.40+ | Database ORM | Faster cold starts than Prisma (~7kb vs Prisma's engine binary), SQL-transparent queries, excellent serverless/edge support. 14x lower latency on complex joins. Ideal for real-time analytics dashboards. | HIGH |
-| **PostgreSQL FTS** | Built-in | Full-text search | Start with PostgreSQL's native tsvector/tsquery. For 100k documents, queries run 5-10ms with GIN index. Avoids Elasticsearch operational overhead. Can upgrade to pg_search (ParadeDB) later if needed. | HIGH |
-
-### Authentication
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **Auth.js (NextAuth v5)** | 5.x | Authentication | Native Next.js integration, Google provider built-in. Supports domain restriction (`profile.email.endsWith("@company.com")`), JWT sessions without database, and enterprise SSO patterns. | HIGH |
-| **Google Workspace OAuth** | - | SSO provider | Internal OAuth consent screen (user type = "Internal") restricts to organization. Native MFA support through Google. | HIGH |
-
-### UI Layer
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **shadcn/ui** | Latest | Component library | Copy-paste components built on Radix UI primitives. Full ownership of code, Tailwind CSS styling, accessible by default. Industry standard for Next.js apps in 2025. | HIGH |
-| **Tailwind CSS** | 4.x | Styling | Utility-first CSS, excellent DX with VS Code extensions. shadcn/ui built on it. Zero runtime overhead. | HIGH |
-| **Radix UI** | Latest | Accessible primitives | Foundation for shadcn/ui. WAI-ARIA compliant, keyboard navigation, focus management built-in. | HIGH |
-
-### State & Data Fetching
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **TanStack Query** | 5.90+ | Server state | Caching, background refetching, stale-while-revalidate. Suspense support stable. ~20% smaller than v4. Pairs with Server Actions for mutations. | HIGH |
-| **Zustand** | 5.x | Client state | ~3kb bundle, no providers needed, simple API. Best for UI state (modals, filters, sidebar). Redux DevTools compatible. Better than Context for shared state. | HIGH |
-| **Server Actions** | Next.js native | Mutations | Form submissions, data mutations without API routes. Type-safe with Zod validation. Eliminates boilerplate. | HIGH |
-
-### Form Handling & Validation
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **Zod** | 3.24+ | Schema validation | TypeScript-first, zero dependencies, single source of truth for types + validation. 17.7kb but superior DX and community support. | HIGH |
-| **React Hook Form** | 7.54+ | Form state | Uncontrolled components, minimal re-renders. Native Zod integration via `@hookform/resolvers`. | HIGH |
-
-### File Storage
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **Cloudflare R2** | - | Object storage | S3-compatible, zero egress fees, global CDN. Presigned URLs for direct uploads. Cost-effective for skill assets, prompts, configs. | HIGH |
-| **UploadThing** | 7.x | Upload management | Alternative if R2 setup is complex. Handles presigned URLs, progress, validation. Good DX but adds vendor dependency. | MEDIUM |
-
-### API Design
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **tRPC** | 11.x | Internal API | End-to-end type safety for TypeScript monorepo. "Feels like calling local functions." Perfect for internal tools. | HIGH |
-| **REST** | - | MCP server integration | MCP servers expect standard HTTP. Use REST for MCP tool endpoints, tRPC for internal UI. | HIGH |
-
-### MCP Integration
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **MCP TypeScript SDK** | Latest | MCP server | Official Anthropic SDK. Define tools, resources, prompts. November 2025 spec adds parallel tool calls, tasks API. | HIGH |
-| **Custom MCP Server** | - | Skill deployment | Build MCP server that exposes skills from catalog. Track usage via tool invocations. | HIGH |
-
-### Real-Time & Analytics
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **PostgreSQL + Drizzle** | - | Usage tracking | Store usage events in PostgreSQL. Drizzle's SQL transparency enables efficient aggregations. Avoid premature optimization to ClickHouse. | HIGH |
-| **PostHog** | - | Product analytics | Open-source, self-hostable. Track feature adoption, user flows. Alternative: Plausible for simpler analytics. | MEDIUM |
-
-### Testing
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| **Vitest** | 2.1+ | Unit/integration tests | 10-20x faster than Jest in watch mode. Native ESM, TypeScript support. Jest-compatible API (95% migration). | HIGH |
-| **Testing Library** | 16.x | Component testing | `@testing-library/react` for component tests. Best practices for accessible testing. | HIGH |
-| **Playwright** | 1.50+ | E2E testing | Cross-browser E2E. Required for async Server Components (Vitest doesn't support). | HIGH |
-
-### Development Tools
-
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| **pnpm** | Package manager | Faster than npm, strict dependency resolution, monorepo support |
-| **Biome** | Linting/formatting | Replaces ESLint + Prettier. 10x faster. Single config. |
-| **Turbopack** | Bundler | Default in Next.js 16. 10x faster than Webpack for dev. |
-| **Docker** | Containerization | Local dev parity with production. Required for PostgreSQL. |
+**DO NOT add:** react-window, react-virtual, AG Grid, or other virtualization libraries. The skill catalog will have <100 rows visible at once, well below the 50+ row threshold where virtualization provides benefits.
 
 ---
 
-## Installation
+## Stack Additions
+
+### Required New Dependencies
+
+| Library | Version | Purpose | Bundle Size | Why |
+|---------|---------|---------|-------------|-----|
+| **@tanstack/react-table** | ^8.21.3 | Headless table logic | ~5-14kb | Industry standard for sortable, expandable tables. Provides sorting state, row expansion, column definitions. Zero UI opinions - pairs perfectly with shadcn/ui. Used by shadcn's own data-table pattern. |
+| **lucide-react** | ^0.469.0 | Sort icons | Tree-shakeable | ArrowUp, ArrowDown, ChevronsUpDown for sort indicators. Already likely in use if shadcn/ui is installed. |
+
+### Required shadcn/ui Components
+
+| Component | Installation | Purpose |
+|-----------|--------------|---------|
+| **Table** | `npx shadcn@latest add table` | Base table styling (TableHeader, TableBody, TableRow, TableCell) |
+| **Collapsible** | `npx shadcn@latest add collapsible` | Accordion row expansion without TanStack's subRows complexity |
+| **Button** | Already installed | Sort toggle triggers, Install button |
+| **Badge** | `npx shadcn@latest add badge` | Tags, categories in expanded rows |
+
+### Installation Commands
 
 ```bash
-# Initialize Next.js 15+ with TypeScript
-npx create-next-app@latest relay --typescript --tailwind --eslint --app --src-dir
+# In apps/web directory
+pnpm add @tanstack/react-table
 
-# Core dependencies
-pnpm add drizzle-orm postgres zod @auth/nextjs @auth/drizzle-adapter
-pnpm add @tanstack/react-query zustand react-hook-form @hookform/resolvers
-pnpm add @trpc/server @trpc/client @trpc/react-query @trpc/next
-
-# UI
-pnpm dlx shadcn@latest init
-pnpm dlx shadcn@latest add button card dialog form input table tabs
-
-# Development
-pnpm add -D drizzle-kit vitest @vitejs/plugin-react @testing-library/react
-pnpm add -D @playwright/test typescript @types/node @types/react
-
-# MCP SDK
-pnpm add @modelcontextprotocol/sdk
+# shadcn components (run from apps/web)
+npx shadcn@latest add table
+npx shadcn@latest add collapsible
+npx shadcn@latest add badge
 ```
 
 ---
 
-## Alternatives Considered
+## Stack Recommendations by Feature
 
-| Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| **Next.js** | Remix | If you need nested routing patterns, progressive enhancement, or dislike Vercel lock-in. Remix has stronger form handling. |
-| **Drizzle ORM** | Prisma | If team is already proficient with Prisma, prefer its migrations UI, or need MongoDB/SQL Server support. Prisma's DX is excellent despite performance gap. |
-| **PostgreSQL FTS** | Elasticsearch | Only if you need fuzzy matching, synonyms, faceted search, or >1M documents. Adds significant operational complexity and data sync challenges. |
-| **PostgreSQL FTS** | pg_search (ParadeDB) | If you need BM25 ranking, hybrid search. Still PostgreSQL, no sync issues. Consider at scale. |
-| **Auth.js** | Clerk | If you want managed auth with prebuilt UI components, enterprise SSO dashboard, and don't mind SaaS dependency. Excellent DX. |
-| **Zustand** | Jotai | If you need atomic state with Suspense integration or React Server Component compatibility. Better for fine-grained reactivity. |
-| **Zustand** | Redux Toolkit | Only for very large teams needing strict patterns, time-travel debugging, or audit logs. Overkill for most projects. |
-| **tRPC** | GraphQL | If you need to expose API to non-TypeScript clients or aggregate multiple backend services. More flexible but more boilerplate. |
-| **Cloudflare R2** | AWS S3 | If already invested in AWS ecosystem. S3 is battle-tested but egress fees add up. |
-| **Vitest** | Jest | Only for React Native projects or legacy codebases. Jest is slower but has larger ecosystem. |
+### 1. Sortable Column Headers
+
+**Approach:** TanStack Table `getSortedRowModel()` + nuqs URL state
+
+| Aspect | Recommendation | Rationale |
+|--------|----------------|-----------|
+| Sort logic | TanStack Table | Built-in `getSortedRowModel()`, handles ascending/descending/none cycling |
+| State persistence | nuqs | Already in stack. Use `parseAsStringLiteral(['asc', 'desc', 'none'])` for sort direction, `parseAsString` for sort column |
+| Header UI | shadcn Button variant="ghost" | Click-to-toggle pattern, accessible |
+| Sort indicators | lucide-react icons | ArrowUp, ArrowDown, ChevronsUpDown (unsorted) |
+
+**Pattern:**
+```typescript
+// Using nuqs for URL-persisted sort state
+const [sortState, setSortState] = useQueryStates({
+  sortBy: parseAsString.withDefault('days_saved'),
+  sortDir: parseAsStringLiteral(['asc', 'desc']).withDefault('desc')
+})
+
+// TanStack Table integration
+const table = useReactTable({
+  data,
+  columns,
+  state: { sorting: [{ id: sortState.sortBy, desc: sortState.sortDir === 'desc' }] },
+  onSortingChange: (updater) => {
+    // Sync to nuqs
+  },
+  getCoreRowModel: getCoreRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+})
+```
+
+### 2. Accordion Row Expansion
+
+**Approach:** shadcn Collapsible component (NOT TanStack subRows)
+
+| Aspect | Recommendation | Rationale |
+|--------|----------------|-----------|
+| Expansion logic | Collapsible from shadcn/ui | Simpler than TanStack's `getExpandedRowModel()` for non-hierarchical data. No need for subRows data structure. |
+| Expansion trigger | ChevronRight/ChevronDown icon in first column | Standard UX pattern |
+| Expanded content | Full-width TableCell with colSpan | Shows description, install button, metadata |
+
+**Why NOT TanStack expanding:**
+- TanStack's expanding feature is designed for hierarchical data (parent-child rows)
+- Our use case is inline detail panels (accordion), not nested rows
+- Collapsible component is simpler, already styled, and doesn't require restructuring data
+
+**Pattern:**
+```tsx
+<Collapsible asChild>
+  <>
+    <CollapsibleTrigger asChild>
+      <TableRow className="cursor-pointer hover:bg-muted/50">
+        {/* Main row cells */}
+      </TableRow>
+    </CollapsibleTrigger>
+    <CollapsibleContent asChild>
+      <TableRow>
+        <TableCell colSpan={columns.length} className="bg-muted/30 p-4">
+          {/* Expanded detail panel */}
+        </TableCell>
+      </TableRow>
+    </CollapsibleContent>
+  </>
+</Collapsible>
+```
+
+### 3. Performance Optimization
+
+**Approach:** No virtualization needed
+
+| Row Count | Recommendation | Applied to Relay |
+|-----------|----------------|------------------|
+| < 50 rows | No virtualization | Skills table - paginated to 25-50 |
+| 50-100 rows | Consider if issues | Leaderboard - unlikely to exceed 50 |
+| 100+ rows | Virtualization recommended | N/A - not our use case |
+| 1000+ rows | Virtualization required | N/A |
+
+**Rationale:**
+- Skills table is paginated (25-50 rows per page)
+- Leaderboard shows top contributors (10-25 rows)
+- Virtualization adds ~10-15kb bundle and complexity
+- React 19's concurrent features handle normal table rendering efficiently
+
+**If virtualization ever needed:**
+```bash
+# Only add if >100 rows AND performance issues observed
+pnpm add @tanstack/react-virtual  # v3.13.18, ~10-15kb
+```
+
+### 4. One-Click Install Button
+
+**Approach:** Server Action + optimistic UI
+
+| Aspect | Recommendation | Rationale |
+|--------|----------------|-----------|
+| UI | shadcn Button with loading state | Consistent with existing patterns |
+| Action | Server Action in actions.ts | Type-safe, no API route needed |
+| Feedback | Toast notification | Confirm success/failure |
+| Copy mechanic | `navigator.clipboard.writeText()` | Copy MCP config to clipboard |
+
+**No new dependencies needed** - use existing shadcn Button + Server Actions pattern.
 
 ---
 
-## What NOT to Use
+## What NOT to Add
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| **Create React App (CRA)** | Deprecated, no longer maintained. No SSR, no Server Components. | Next.js 15+ |
-| **Express.js backend** | Unnecessary complexity. Next.js API routes and Server Actions handle everything. Adds deployment overhead. | Next.js Server Actions + tRPC |
-| **MongoDB** | Schema-less is wrong fit for structured skill catalog with versions, relationships. PostgreSQL JSONB gives flexibility where needed. | PostgreSQL |
-| **Sequelize / TypeORM** | Older ORMs with worse TypeScript support, heavier abstractions, more bugs. | Drizzle ORM |
-| **Redux (without Toolkit)** | Massive boilerplate, outdated patterns. Redux Toolkit is acceptable but usually overkill. | Zustand |
-| **Yup validation** | Older, worse TypeScript inference than Zod. Less ecosystem support in 2025. | Zod |
-| **Chakra UI / MUI** | Heavier bundle, opinionated styling harder to customize. Less Next.js ecosystem momentum. | shadcn/ui |
-| **Firebase Auth** | Google-specific, harder to migrate, less control. oAuth tokens work differently. | Auth.js with Google provider |
-| **Elasticsearch (premature)** | Operational nightmare for <100k documents. PostgreSQL FTS handles most use cases. Data sync is a constant headache. | PostgreSQL full-text search |
-| **Separate backend service** | For an internal tool, monolith is simpler. Microservices add latency, deployment complexity, team coordination overhead. | Next.js full-stack |
+| Library | Why NOT to Add |
+|---------|----------------|
+| **@tanstack/react-virtual** | <50 visible rows - virtualization adds overhead without benefit |
+| **react-window** | Same as above - older virtualization library |
+| **react-virtualized** | Deprecated in favor of react-window and TanStack Virtual |
+| **AG Grid** | Enterprise-grade overkill. 500kb+ bundle. For 10k+ rows with complex features. |
+| **MUI X Data Grid** | Heavy MUI dependency. We use shadcn/ui. |
+| **react-data-table-component** | Opinionated styling conflicts with shadcn/ui |
+| **Zustand for table state** | nuqs already in stack and handles URL persistence |
 
 ---
 
-## Stack Patterns by Variant
+## Integration with Existing Stack
 
-**If deploying to Vercel:**
-- Use Vercel Blob or Cloudflare R2 for files
-- Leverage Edge Runtime for auth checks
-- Use Vercel Analytics + Speed Insights
-- Consider Neon (serverless PostgreSQL) for auto-scaling
+### nuqs Integration
 
-**If self-hosting:**
-- Docker Compose for local dev (PostgreSQL, Redis optional)
-- Kubernetes or Docker Swarm for production
-- Consider Coolify or Dokploy for simple deployments
-- Set up PostgreSQL with connection pooling (PgBouncer)
+Already installed (`nuqs@^2.8.7`). Use for:
+- Sort column (`?sortBy=days_saved`)
+- Sort direction (`?sortDir=desc`)
+- Search query (`?q=search-term`) - already exists
+- Pagination (`?page=1`) - if implementing
 
-**If MCP is primary interface (vs. web UI):**
-- Prioritize MCP server robustness and observability
-- Consider event sourcing for audit trail
-- Build web UI as "admin panel" secondary to MCP usage
-- Track usage via MCP tool invocations, not page views
+**TanStack Table has community parsers for nuqs** - though sorting/filtering parsers are community-contributed, the pattern is well-established.
 
----
+### shadcn/ui Integration
 
-## Version Compatibility
+TanStack Table is headless - no UI opinions. The official shadcn/ui documentation recommends this exact approach:
 
-| Package A | Compatible With | Notes |
-|-----------|-----------------|-------|
-| Next.js 15.5+ | React 19.x | React 19 required for App Router features |
-| Next.js 15.x | React 18.x | Only Pages Router, not recommended for new projects |
-| Drizzle 0.40+ | PostgreSQL 14+ | Supports PostgreSQL-specific features like arrays, JSON |
-| Auth.js 5.x | Next.js 15+ | v5 is App Router native, v4 is Pages Router |
-| shadcn/ui | Tailwind 4.x | Latest shadcn components require Tailwind v4 |
-| TanStack Query 5.x | React 19 | Full Suspense support |
-| tRPC 11.x | TanStack Query 5.x | Integrated adapter |
+> "It doesn't make sense to combine all of these variations into a single component. If we do that, we'll lose the flexibility that headless UI provides."
+
+Pattern: TanStack Table for logic + shadcn Table for styling.
+
+### React 19 Compatibility
+
+TanStack Table v8.21.3 works with React 19 (verified via npm). Note from docs:
+> "Even though the react adapter works with React 19, it may not work with the new React Compiler that's coming out along-side React 19."
+
+This is fine - React Compiler is opt-in and not yet stable.
 
 ---
 
-## Deployment Recommendation
+## File Structure Recommendation
 
-For an internal enterprise tool:
+Based on shadcn patterns:
 
-1. **Start simple:** Deploy to Vercel (free tier supports 500+ users for internal tool)
-2. **Database:** Use Neon (serverless PostgreSQL) or Supabase
-3. **File storage:** Cloudflare R2 (S3-compatible, free egress)
-4. **Observability:** Vercel Analytics + Sentry for errors
+```
+apps/web/
+├── components/
+│   └── skills-table/
+│       ├── columns.tsx              # Column definitions with TanStack
+│       ├── data-table.tsx           # Main table component
+│       ├── data-table-header.tsx    # Sortable header component
+│       ├── data-table-row.tsx       # Expandable row with Collapsible
+│       └── install-button.tsx       # One-click install action
+├── app/(protected)/
+│   └── page.tsx                     # Two-panel layout
+└── lib/
+    └── table-state.ts               # nuqs hooks for table state
+```
 
-If compliance requires self-hosting:
-- Docker + Railway/Render/Fly.io
-- Or Kubernetes if DevOps capacity exists
+---
+
+## Version Compatibility Matrix
+
+| Package | Version | Requires | Notes |
+|---------|---------|----------|-------|
+| @tanstack/react-table | ^8.21.3 | React 16.8+ | Works with React 19 |
+| nuqs | ^2.8.7 | React 18+ / Next.js 13+ | Already in stack |
+| shadcn/ui table | Latest | Tailwind CSS 4.x | Already in stack |
+| lucide-react | ^0.469.0 | React 16.8+ | Tree-shakeable icons |
+
+---
+
+## Bundle Impact Assessment
+
+| Addition | Size | Total Impact |
+|----------|------|--------------|
+| @tanstack/react-table | ~5-14kb gzipped | Minimal |
+| shadcn Table component | ~1kb (compiled) | Minimal |
+| shadcn Collapsible | ~2kb (compiled) | Minimal |
+| lucide-react icons (tree-shaken) | ~200b per icon | Negligible |
+| **Total** | **~10-18kb** | **Acceptable** |
+
+Compare to alternatives:
+- AG Grid Community: ~500kb
+- MUI X Data Grid: ~300kb
+- react-data-table-component: ~50kb
 
 ---
 
 ## Sources
 
-**Verified via official documentation (HIGH confidence):**
-- [Next.js 15 Blog](https://nextjs.org/blog/next-15) - Framework features, React 19 support
-- [TanStack Query Docs](https://tanstack.com/query/v5/docs/framework/react/overview) - v5 features, Suspense support
-- [Drizzle ORM Docs](https://orm.drizzle.team/) - Performance, serverless optimization
-- [Auth.js Docs](https://authjs.dev/) - Google provider, Next.js integration
-- [MCP Specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools) - Tools API, November 2025 updates
-- [shadcn/ui](https://ui.shadcn.com/) - Component patterns, React 19 support
+**HIGH Confidence (Official Documentation):**
+- [shadcn/ui Data Table](https://ui.shadcn.com/docs/components/data-table) - Official TanStack Table integration pattern
+- [TanStack Table Docs](https://tanstack.com/table/latest) - v8 features, sorting, expanding APIs
+- [TanStack Table Sorting](https://tanstack.com/table/v8/docs/guide/sorting) - Sorting implementation
+- [TanStack Table Expanding](https://tanstack.com/table/v8/docs/guide/expanding) - Row expansion
+- [nuqs TanStack Table Parsers](https://nuqs.dev/docs/parsers/community/tanstack-table) - URL state integration
+- [npm @tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table) - v8.21.3, last publish info
 
-**Verified via multiple sources (MEDIUM-HIGH confidence):**
-- [Drizzle vs Prisma comparison](https://www.bytebase.com/blog/drizzle-vs-prisma/) - Performance benchmarks
-- [Vitest vs Jest](https://betterstack.com/community/guides/scaling-nodejs/vitest-vs-jest/) - Speed comparisons
-- [PostgreSQL FTS vs Elasticsearch](https://neon.com/blog/postgres-full-text-search-vs-elasticsearch) - When to use each
-- [React State Management 2025](https://dev.to/hijazi313/state-management-in-2025-when-to-use-context-redux-zustand-or-jotai-2d2k) - Zustand recommendation
-- [tRPC vs GraphQL vs REST](https://betterstack.com/community/guides/scaling-nodejs/trpc-vs-graphql/) - API design patterns
+**MEDIUM Confidence (Community Best Practices):**
+- [Virtualization Thresholds](https://www.material-react-table.com/docs/guides/virtualization) - 50+ row guidance
+- [Expandable shadcn Table Pattern](https://dev.to/mfts/build-an-expandable-data-table-with-2-shadcnui-components-4nge) - Collapsible approach
+- [OpenStatus Data Table](https://github.com/openstatusHQ/data-table-filters) - TanStack + shadcn + nuqs reference implementation
 
 ---
 
-*Stack research for: Internal Skill Marketplace / Developer Tools Catalog*
-*Researched: 2026-01-31*
+*Stack research for: Relay v1.2 UI Redesign - Sortable Tables*
+*Researched: 2026-02-01*

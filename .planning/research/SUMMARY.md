@@ -1,293 +1,283 @@
 # Project Research Summary
 
-**Project:** Relay - Internal Skill Marketplace
-**Domain:** Developer Tool Catalog / Internal Developer Portal
-**Researched:** 2026-01-31
+**Project:** Relay v1.2 UI Redesign
+**Domain:** Two-panel sortable table layout with accordion rows, one-click MCP install
+**Researched:** 2026-02-01
 **Confidence:** HIGH
 
 ## Executive Summary
 
-Relay is an internal skill marketplace for Claude-specific developer tools (skills, prompts, workflows, agent configurations) designed to maximize knowledge sharing and quantify productivity impact through FTE Days Saved metrics. Based on comprehensive research across 15+ sources including Backstage, SkillsMP, and internal developer portal patterns, the recommended approach is a **Next.js 15+ full-stack application with PostgreSQL, Auth.js SSO, and MCP integration**, prioritizing developer velocity and type safety over microservice complexity.
+This v1.2 milestone adds a two-panel UI redesign to an existing Next.js 15 internal skill marketplace app. The recommended approach is to **extend the existing hybrid Server/Client Component architecture** using shadcn/ui Table + Collapsible components with nuqs for URL-persisted sort state. Do NOT add TanStack Table - the use case (single-column sort, row expansion, <100 visible rows) doesn't justify the complexity or bundle size.
 
-The product differentiates through three unique elements: (1) FTE Days Saved as a core metric that quantifies value in business terms unlike generic marketplaces, (2) wiki-style fork-and-improve contribution model that's more accessible than PR-based workflows, and (3) authenticated internal catalog that provides trust and accountability. The architecture should follow an immutable version model with separated metadata (PostgreSQL) and content storage (object storage), enabling both web browsing and MCP-based deployment while maintaining comprehensive usage tracking.
+The key technical decision is maintaining the existing pattern: Server Components handle data fetching and table structure, while targeted Client Components manage interactive elements (sort controls via nuqs, accordion expansion via local state, install button). This aligns with established patterns already in the codebase (SearchInput, CategoryFilter using nuqs) and leverages Next.js 15's streaming/concurrent features for performance.
 
-Critical risks center on **catalog staleness** (outdated skills erode trust), **metrics gaming** (self-reported time savings are inherently gameable), and **cold start failure** (empty marketplace prevents adoption). Mitigation requires automated health checks built into the data model from day one, multiple complementary metrics to prevent gaming, and seeding 50+ quality skills before public launch. The research strongly recommends avoiding approval workflows (kills contribution velocity), paid monetization (adds unnecessary complexity), and premature optimization to distributed systems (500 users don't need Elasticsearch).
+**Critical risks:** (1) Performance degradation if virtualization is added prematurely (<100 rows don't need it), (2) Unstable data references causing infinite re-renders if useMemo is skipped, (3) Accessibility failures if accordion doesn't properly hide collapsed content from screen readers, (4) Event propagation breaking row actions if stopPropagation is forgotten. All four risks are preventable with disciplined implementation following the researched patterns.
 
 ## Key Findings
 
 ### Recommended Stack
 
-**Core Framework:** Next.js 15+ with React 19 and TypeScript provides server-first rendering, type safety end-to-end, and proven enterprise scalability. The App Router enables React Server Components and Server Actions that eliminate the need for a separate backend service.
-
-**Database Layer:** PostgreSQL 16+ with Drizzle ORM offers relational data handling, built-in full-text search (avoiding Elasticsearch complexity at launch scale), JSONB for flexible skill metadata, and temporal tables for version history. Drizzle provides 14x lower latency than Prisma on complex joins and superior serverless performance.
+The stack additions are minimal because the existing infrastructure already provides what's needed. Research initially evaluated TanStack Table, but deeper analysis reveals the existing nuqs + Server Component pattern is superior for this specific use case.
 
 **Core technologies:**
-- **Next.js 15+ / React 19**: Full-stack framework with server components — eliminates backend service complexity
-- **PostgreSQL + Drizzle ORM**: Primary database with FTS — handles 500+ users without dedicated search infrastructure
-- **Auth.js (NextAuth v5)**: Google Workspace SSO — native Next.js integration with domain restriction
-- **shadcn/ui + Tailwind CSS**: Component library — copy-paste components with full ownership and accessibility
-- **TanStack Query + Zustand**: State management — server state caching and client state without Redux overhead
-- **MCP TypeScript SDK**: Claude integration — official Anthropic SDK for skill deployment and tracking
-- **Cloudflare R2**: Object storage — S3-compatible with zero egress fees for skill content
+- **shadcn/ui Table + Collapsible**: Already in stack - provides styled table structure and accordion components without bundle overhead
+- **nuqs v2.8.7**: Already in stack - extends for sortBy/sortDir URL params following existing CategoryFilter/QualityFilter patterns
+- **lucide-react icons**: Already in stack - ArrowUp/ArrowDown/ChevronsUpDown for sort indicators (200 bytes per icon, tree-shaken)
+- **Server Actions**: Already in stack - getInstallContent action provides clipboard copy for MCP-style installs
 
-**Critical version requirements:**
-- Next.js 15.5+ requires React 19.x (App Router features)
-- Auth.js v5 is App Router native (v4 is Pages Router only)
-- TanStack Query 5.x has full Suspense support with React 19
+**What NOT to add:**
+- **@tanstack/react-table**: Overkill for single-column sort, adds 5-14kb for features we won't use (multi-column sort, pagination, column resize). The "headless" benefit doesn't matter when Server Components already handle data transformations.
+- **@tanstack/react-virtual**: No virtualization needed for <100 visible rows. Adds 10-15kb + complexity, provides zero performance benefit until 100+ rows are rendered.
+
+**Bundle impact:** Effectively zero bytes (all components already installed).
 
 ### Expected Features
 
 **Must have (table stakes):**
-- **Search & Discovery**: Full-text search across names, descriptions, tags with faceted filtering — primary UX, if search fails the platform fails
-- **One-Click Install**: Copy to ~/.claude/skills/ or direct file placement — friction kills adoption
-- **Version History**: Track all versions with commit comments, show diffs, allow rollback — wiki mental model users expect
-- **Basic Ratings (1-5 stars)**: Post-use rating with aggregate display — builds trust signals
-- **Google Workspace SSO**: Enterprise users expect existing identity — no separate account creation
-- **User Profiles**: Display name, avatar, contributions, usage stats — attribution and accountability
-- **Skill Cards**: Name, description, author, rating, usage count, last updated — standard marketplace pattern
-- **Categories/Tags**: Hierarchical categories and user-defined tags — discovery breaks without organization
+- **Column header sort** - Toggle ascending/descending on click with visual indicators (chevron up/down)
+- **URL-persisted sort state** - Shareable/bookmarkable views via nuqs (consistent with existing filters)
+- **Row expansion (accordion)** - Click row to show inline detail panel with description, install button, metadata
+- **Smooth expand/collapse animation** - 150-200ms transition to avoid jarring jumps
+- **Multiple simultaneous expansions** - Users should be able to compare skills (auto-collapse is disorienting per NN/g research)
+- **Keyboard navigation** - Tab to navigate, Enter/Space to sort/expand (WCAG 2.1 AA requirement)
+- **Visible focus states** - Clear focus ring on interactive elements for accessibility
 
-**Should have (competitive advantage):**
-- **FTE Days Saved Metric**: User-reported time estimate aggregated across organization — unique ROI visualization addressing $31.5B knowledge sharing loss
-- **Fork & Improve Workflow**: Clone existing skill, modify, submit improvement — creates improvement flywheel rare in skill marketplaces
-- **Quality Scorecards**: Auto-calculated maturity score (Gold/Silver/Bronze) based on documentation quality, usage rate, rating — gamifies quality like Cortex/Port IDPs
-- **Usage Analytics Dashboard**: Track installs, active usage, time saved aggregate — platform teams need adoption data
-- **Trending/Popular Sections**: Surface high-value content based on usage velocity — reduces discovery friction
+**Should have (competitive):**
+- **Sticky column headers** - Headers visible during scroll (standard in modern data tables)
+- **Mobile stacked card layout** - Transform table to cards on mobile (<768px breakpoint)
+- **Sparkline tooltips** - Hover shows detailed trend data ("Last 30 days: 45, 52, 38...")
+- **Leaderboard time segments** - Weekly/monthly/all-time tabs to prevent stagnation
+- **"Your position" highlight** - Show logged-in user's rank even if not in top 10
 
 **Defer (v2+):**
-- **Smart Search with AI**: Semantic search with embeddings — requires vector DB, defer until keyword search proves insufficient
-- **Related Skills Recommendations**: Collaborative filtering — requires substantial usage data and ML infrastructure
-- **Skill Dependencies**: Dependency graph with auto-install — adds complexity, most skills standalone
-- **Contribution Leaderboards**: Gamification feature — culture-building but not critical for validation
-
-**Anti-features to avoid:**
-- **Paid Skills/Monetization**: Creates payment complexity, splits community, legal/tax overhead — keep internal marketplace free
-- **Approval Workflows**: Creates bottlenecks, kills contribution velocity — rely on post-publish community moderation
-- **Real-Time Collaboration**: Complexity explosion for versioned artifacts — use wiki-style one-person-edits model
-- **Skill Execution Environment**: Security risks and scope creep — skills execute in Claude, marketplace is discovery only
+- Multi-column sort (complexity overkill for v1.2)
+- Column resize (nice-to-have, not essential)
+- Row selection/batch operations (future: batch install)
+- Virtualized rendering (only if 100+ rows becomes a problem)
+- Column visibility toggle (screen space not constrained yet)
 
 ### Architecture Approach
 
-The system follows a **layered architecture with immutable version model**: presentation layer (Web App + MCP Server), service layer (Skill/Metrics/Search/Auth services), and data layer (PostgreSQL + Object Storage + Cache). This enables both web-based browsing and MCP-based deployment while maintaining a single source of truth for skill metadata.
+Use the **hybrid Server Component + Client Component pattern** already established in the codebase. The page.tsx Server Component fetches data via searchSkills() with extended sortBy/sortDir parameters, then passes pre-sorted data to presentation components. Interactive elements (TableSortControls, SkillTableRow, InstallButton) are Client Components managing their own local state or nuqs URL state.
 
 **Major components:**
-1. **Web Application (Next.js)**: Browse, search, publish skills; view metrics; user dashboard — serves as primary interface for discovery and contribution
-2. **MCP Server (TypeScript SDK)**: Deploy skills to Claude, track usage events, query catalog — enables Claude Code integration with usage attribution
-3. **Skill Service**: CRUD for skills/versions, validation, format handling — domain service supporting multiple skill formats (Claude Code, prompts, workflows, agent configs)
-4. **Metrics Service**: Ingest usage events, aggregate FTE Days Saved, compute rankings — event-driven with async processing to avoid blocking user actions
-5. **PostgreSQL**: Skills, versions, users, reviews, metrics (primary store) — relational with JSONB for flexible skill metadata
-6. **Object Storage (R2/S3)**: Skill content files — separated from metadata to avoid database bloat and enable efficient versioning
+1. **page.tsx (Server)** - Fetches sorted skills data, orchestrates two-panel layout (2/3 + 1/3 width)
+2. **TableSortControls (Client)** - Column header sort buttons using nuqs for URL state, triggers server re-render
+3. **SkillTableRow (Client)** - Individual row with Collapsible managing local isOpen state for accordion expansion
+4. **InstallButton (Client)** - Triggers Server Action to copy skill content to clipboard with MCP usage instructions
+5. **LeaderboardPanel (Server)** - Existing component, minor modifications for two-panel integration
 
-**Critical patterns:**
-- **Immutable versions**: Each skill version is immutable once published; new contributions create new versions, never modify existing — enables audit trail and per-version metrics
-- **Separated content storage**: Metadata (searchable, frequently accessed) in PostgreSQL, content (large files) in object storage — fast queries and cheap storage
-- **Event-driven metrics**: MCP server emits usage events to queue, metrics service consumes asynchronously — non-blocking tracking with replay capability
-- **Progressive MCP loading**: Return skill summaries first, full content only on deployment — efficient context usage within Claude's limits
+**Key pattern decisions:**
+- **NOT using TanStack Table**: Server Components already handle sorting/filtering logic. Client-side table state management adds complexity without benefit.
+- **Local state for accordion**: Each row manages its own expansion independently. Avoids prop drilling and unnecessary re-renders.
+- **Server Action for install**: Web app can't directly invoke MCP (runs in Claude Code), so best approach is clipboard copy + instructions.
 
 ### Critical Pitfalls
 
-1. **Catalog Staleness Death Spiral**: Content becomes outdated, users lose trust, adoption collapses — **AVOID by:** building automated health checks into core data model from day one, implementing "last verified working" timestamps, auto-flagging skills unused for 90 days, and surfacing freshness signals prominently ("Last updated 6 months ago" warnings)
+Research identified 18 table-specific pitfalls across critical/moderate/minor severity. Top 5 for this milestone:
 
-2. **Metrics Gaming and Inflated Value Claims**: Self-reported time savings become meaningless noise due to Goodhart's Law — **AVOID by:** using multiple complementary metrics instead of single north star, tracking behavioral signals harder to game (repeat usage, cross-team adoption), implementing peer validation prompts, and surfacing distribution anomalies (flag estimates 3x above median)
+1. **Unstable data/column references causing infinite re-renders** - ALWAYS wrap data/columns in useMemo. Inline arrays create new references each render, triggering infinite loops. This is the #1 cause of table crashes.
 
-3. **MCP Lock-in Creates Invisible Usage**: Skills used outside MCP go untracked, product decisions based on incomplete data — **AVOID by:** designing multi-channel tracking architecture from start, providing easy export/copy with usage capture, accepting some usage will be untracked, and not over-indexing on perfect measurement
+2. **Event propagation breaking row actions** - Clicking "Install" button also triggers row onClick (accordion toggle) unless stopPropagation() is called. Test EVERY interactive element in rows.
 
-4. **Cold Start Content Desert**: Marketplace launches empty, users never return, chicken-and-egg collapse — **AVOID by:** curating 50+ high-quality skills before public announcement, identifying 3-5 "atomic networks" (specific teams) and densely populating those first, recruiting power users as founding contributors, and converting existing team prompts into catalog entries
+3. **Accordion content accessible when collapsed** - CSS-only hiding leaves content in accessibility tree. Use `hidden` attribute + `aria-expanded` to properly hide from screen readers.
 
-5. **Quality Collapse Without Gates**: Low-quality content floods catalog, high-quality contributors disengage — **AVOID by:** implementing lightweight quality gates (required fields, minimum documentation), creating "verified/featured" tiers for editorially-reviewed content, enabling community flagging for broken skills, and using reputation systems that weight by contributor track record
+4. **Client-only table in Next.js** - Adding "use client" at page level loses SSR benefits. Keep page as Server Component, only mark interactive components as client.
 
-6. **Version Sprawl Without Cleanup**: 47 versions of similar skills, users can't determine which to use — **AVOID by:** implementing duplicate detection at creation time, building version consolidation workflows, creating archival triggers (zero usage after 90 days), and surfacing canonical versions prominently
+5. **Rendering all rows without virtualization** - Only a risk if catalog exceeds 100 rows. For v1.2 (likely <50 visible rows), virtualization adds overhead without benefit. Monitor performance and add if needed.
+
+**Additional table UI pitfalls to watch:**
+- Sorting state conflicts (initialState vs state in TanStack) - not applicable since we're not using TanStack Table
+- Missing sort direction indicators - users need visual feedback (chevron up/down)
+- Accordion state lost on sort - key expansion by stable row ID, not array index
+- Focus management lost on expand/collapse - return focus to trigger button
+- Missing mobile responsive strategy - design stacked card layout for <768px
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure emphasizes **foundation before features, web before MCP, and scale last**:
+Based on research, the v1.2 UI redesign should be implemented in 3 focused phases that build incrementally while avoiding the critical pitfalls.
 
-### Phase 1: Foundation & Core Web Experience
-**Rationale:** Database schema and auth are foundational dependencies; all other components depend on data model and identity. Web app validates data model and UX before MCP consumes same patterns. Schema changes are expensive later, so getting the version model and quality signals right from day one is critical.
-
-**Delivers:**
-- Database schema (skills, versions, users, ratings) with immutable version model
-- Google Workspace SSO with domain restriction
-- Basic Skill Service (CRUD operations)
-- Web application (browse, search with PostgreSQL FTS, publish)
-- Object storage integration for skill content
-- Freshness tracking infrastructure (last_verified, health_status fields)
-
-**Addresses (from FEATURES.md):**
-- Search & Discovery (P1)
-- Skill Cards with Metadata (P1)
-- User Authentication SSO (P1)
-- User Profiles basic (P1)
-- Categories/Tags (P1)
-- Version History (P1)
-- One-Click Install (P1)
-
-**Avoids (from PITFALLS.md):**
-- **Catalog Staleness**: Freshness tracking in core data model prevents retrofit pain
-- **MCP Lock-in**: Multi-channel tracking architecture designed from start
-- **Quality Collapse**: Quality signal fields in schema enable tiered visibility later
-
-**Research needed:** SKIP - Well-documented patterns (Next.js App Router, Auth.js, PostgreSQL schema design all have extensive official documentation)
-
-### Phase 2: Metrics & Community Features
-**Rationale:** Need usage events before metrics aggregation makes sense. Ratings system provides data for quality scorecards. This phase establishes the unique value proposition (FTE Days Saved) and community dynamics (fork & improve) that differentiate Relay from generic marketplaces.
+### Phase 1: Two-Panel Layout Foundation
+**Rationale:** Establish the layout structure and non-interactive table before adding complex interactions. This allows verification that existing data fetching patterns work correctly and provides a stable base for interactivity.
 
 **Delivers:**
-- Basic Ratings system (1-5 stars with optional comment)
-- FTE Days Saved capture and display (skill-level and platform-level aggregation)
-- Metrics service with event ingestion and aggregation
-- Fork & Improve workflow for collaborative contribution
-- Quality Scorecards (Gold/Silver/Bronze based on ratings, usage, documentation)
-- Trending/Popular sections based on usage velocity
-- Anti-gaming safeguards (anomaly detection, peer validation prompts)
+- TwoPanelLayout component (2/3 + 1/3 grid with responsive breakpoints)
+- SkillsTable Server Component (renders table structure with pre-sorted data)
+- Extended searchSkills() to accept sortBy/sortDir params with server-side SQL sorting
+- Basic table styling using shadcn/ui Table components
+- Leaderboard integrated into right panel
 
-**Addresses (from FEATURES.md):**
-- Basic Ratings (P1)
-- FTE Days Saved Metric (P1)
-- Fork & Improve Workflow (P2)
-- Quality Scorecards (P2)
-- Trending/Popular Sections (P2)
+**Addresses features:**
+- Table structure (prerequisite for all other features)
+- Server-side data flow pattern
 
-**Avoids (from PITFALLS.md):**
-- **Metrics Gaming**: Multiple complementary metrics and safeguards designed before public dashboard
-- **Version Sprawl**: Usage-based cleanup triggers enable archival of unused versions
-- **Quality Collapse**: Scorecards enable tiered visibility (featured vs. standard)
+**Avoids pitfalls:**
+- #13 (Client-only table) - established Server Component pattern from start
+- #7 (Virtualization) - explicitly defer until proven needed
 
-**Research needed:** YES - Phase 2 (Anti-gaming strategies and metrics aggregation patterns need deeper research; limited prior art on FTE Days Saved implementation)
+**Research flag:** Standard patterns, no deep research needed. Follow existing page.tsx + nuqs patterns.
 
-### Phase 3: MCP Integration & Deployment
-**Rationale:** MCP consumes patterns validated by web app. Need working metrics service before implementing usage event emission. This phase enables Claude Code integration while avoiding the MCP lock-in pitfall through continued support for web-based workflows.
+---
+
+### Phase 2: Interactive Sorting & Accordion Rows
+**Rationale:** Add the two core interactions (sorting and expansion) together because they share state management concerns. Sorting must not break accordion state, so implementing together ensures proper integration.
 
 **Delivers:**
-- MCP Server implementing tools API (list_skills, deploy_skill)
-- Progressive loading for efficient context usage
-- REST API for MCP backend access
-- Usage event emission from MCP tool invocations
-- Tracking attribution for MCP-based skill usage
-- Multi-channel usage capture (web + MCP)
+- TableSortControls Client Component (column headers with sort toggle via nuqs)
+- Sort indicators (lucide-react ArrowUp/ArrowDown/ChevronsUpDown icons)
+- SkillTableRow Client Component with Collapsible accordion
+- Smooth expand/collapse animation (150-200ms ease-out)
+- Multiple simultaneous row expansions
+- Expansion state keyed by stable row ID (survives sorting)
 
-**Uses (from STACK.md):**
-- MCP TypeScript SDK (official Anthropic SDK)
-- Server Actions for mutations
-- TanStack Query for caching
+**Addresses features:**
+- Column header sort (table stakes)
+- URL-persisted sort state (table stakes)
+- Row expansion accordion (table stakes)
+- Smooth animation (table stakes)
+- Multiple expansions (best practice from FEATURES research)
 
-**Implements (from ARCHITECTURE.md):**
-- MCP Server component with client/handlers/tracking
-- Progressive MCP loading pattern
-- Event-driven metrics ingestion
+**Avoids pitfalls:**
+- #8 (Unstable references) - useMemo on data/columns from day one
+- #11 (Sorting state conflicts) - use nuqs controlled pattern, not TanStack initialState
+- #18 (Accordion state lost on sort) - key by stable ID, not index
+- #9 (Event propagation) - stopPropagation on all interactive elements inside rows
 
-**Avoids (from PITFALLS.md):**
-- **MCP Lock-in**: Non-MCP usage channels remain first-class; web-based copy/install continues to work
-- **Tight MCP-Backend Coupling**: MCP server calls REST API, doesn't directly access database
+**Research flag:** Moderate complexity. Patterns are well-documented (nuqs + Collapsible), but integration testing critical to catch propagation issues.
 
-**Research needed:** YES - Phase 3 (MCP specification details, tool invocation patterns, and usage event attribution strategies need validation)
+---
 
-### Phase 4: Analytics & Optimization
-**Rationale:** Platform is validated and in active use. Now optimize based on real usage patterns. Add advanced features requested by users. Scale infrastructure based on actual bottlenecks, not premature optimization.
-
-**Delivers:**
-- Usage Analytics Dashboard for platform teams
-- Team/Org Collections for curated skill bundles
-- Notification Subscriptions for skill updates
-- Preview Before Install feature
-- Performance optimization based on real usage patterns
-- Scaling adjustments (CDN for content, read replicas, dedicated search if needed)
-
-**Addresses (from FEATURES.md):**
-- Usage Analytics Dashboard (P2)
-- Team/Org Collections (P2)
-- Notification Subscriptions (P2)
-- Preview Before Install (P2)
-
-**Avoids (from PITFALLS.md):**
-- **Version Sprawl**: Consolidation and archival workflows at scale
-- **Performance Traps**: Scale based on actual bottlenecks, not assumptions
-
-**Research needed:** SKIP - Standard analytics patterns; optimization based on profiling data available during implementation
-
-### Phase 5: Advanced Discovery (Future/v2+)
-**Rationale:** Defer until keyword search proves insufficient and sufficient usage data exists. Requires substantial infrastructure (vector DB, ML models) that isn't justified until proven need.
+### Phase 3: Install Action & Accessibility Polish
+**Rationale:** Install button depends on accordion being functional (displayed in expanded content). Accessibility testing should happen after all interactive elements are in place to verify complete keyboard/screen reader flows.
 
 **Delivers:**
-- Smart Search with AI (semantic search with embeddings)
-- Related Skills Recommendations (collaborative filtering)
-- Skill Dependencies with auto-install
-- Contribution Leaderboards
-- Advanced quality signals
+- InstallButton Client Component (clipboard copy via Server Action)
+- getInstallContent Server Action (fetches skill content, tracks install intent)
+- Toast notification for install feedback
+- Full keyboard navigation (Tab, Enter, Space, Arrow keys)
+- ARIA attributes (aria-sort, aria-expanded, aria-controls)
+- Focus management (return to trigger on collapse)
+- Screen reader announcements for state changes
+- Mobile stacked card layout for <768px breakpoint
 
-**Addresses (from FEATURES.md):**
-- Smart Search with AI (P3)
-- Related Skills Recommendations (P3)
-- Skill Dependencies (P3)
-- Contribution Leaderboards (P3)
+**Addresses features:**
+- One-click install (table stakes)
+- Keyboard navigation (table stakes - WCAG requirement)
+- Visible focus states (table stakes - WCAG requirement)
+- Mobile responsive (table stakes from FEATURES)
+- Inline install feedback (differentiator)
 
-**Research needed:** YES - Phase 5 (Vector search implementation, recommendation algorithms, dependency resolution all need dedicated research)
+**Avoids pitfalls:**
+- #10 (Accordion a11y) - proper hidden attribute + aria-expanded
+- #14 (Focus management) - focus returns to trigger button after collapse
+- #16 (Mobile responsive) - stacked card layout tested on actual devices
+
+**Research flag:** Low complexity for install action (standard Server Action pattern), but high priority for accessibility testing. Requires manual screen reader testing (VoiceOver/NVDA) and keyboard-only navigation verification.
+
+---
+
+### Phase 4: Leaderboard Enhancement (Optional Polish)
+**Rationale:** Leaderboard improvements are independent of table work and can be done in parallel or deferred. Not blocking for core two-panel table experience.
+
+**Delivers:**
+- Time segment tabs (weekly/monthly/all-time)
+- "Your position" highlight for logged-in user
+- Movement indicators (rank changes from previous period)
+
+**Addresses features:**
+- Leaderboard segmented views (differentiator)
+- User position highlight (differentiator)
+- Movement indicators (differentiator)
+
+**Research flag:** Standard patterns, can be deferred if timeline is tight.
+
+---
 
 ### Phase Ordering Rationale
 
-- **Foundation first (Phase 1)**: Schema changes are expensive; version model and quality signals must be correct from day one. Auth is prerequisite for all personalization features.
-- **Web before MCP (Phases 1-2 before 3)**: Web validates UX and data patterns; MCP consumes same API. Building MCP first creates blind spots on user behavior.
-- **Metrics before MCP (Phase 2 before 3)**: Need metrics infrastructure in place before MCP starts emitting usage events; retrofitting event handling is painful.
-- **Scale last (Phase 4)**: 500 users don't need Elasticsearch, Kafka, or distributed systems. Premature optimization wastes effort and creates unnecessary complexity.
-- **Content seeding before Phase 1 launch (Phase 0)**: Empty marketplace kills adoption. Requires 50+ skills from power users before public announcement.
+- **Foundation first (Phase 1):** Server Component architecture must be proven before adding Client interactivity. Changing this pattern later is expensive.
+- **Sorting + accordion together (Phase 2):** State interactions between these features make sequential implementation risky. Better to handle conflicts once.
+- **Accessibility last (Phase 3):** Can only test complete keyboard/screen reader flows after all interactive elements exist. Trying earlier leads to retesting.
+- **Leaderboard optional (Phase 4):** Independent feature, doesn't block core value delivery.
+
+**Dependency chain:** Phase 1 → Phase 2 → Phase 3 (linear). Phase 4 can happen anytime after Phase 1.
 
 ### Research Flags
 
-**Phases needing deeper research during planning:**
-- **Phase 2 (Metrics)**: Anti-gaming strategies and FTE Days Saved aggregation patterns have limited prior art; need dedicated research on detection heuristics
-- **Phase 3 (MCP)**: MCP specification November 2025 updates (parallel tool calls, tasks API) need validation; usage event attribution in multi-channel environment needs design
-- **Phase 5 (Advanced Discovery)**: Vector search implementation, embedding models, and recommendation algorithms all require substantial research
+Phases likely needing deeper research during planning:
+- **Phase 2 (Sorting + Accordion integration):** State management interaction between sorting and expansion needs careful testing. Recommend prototype to verify nuqs + local state interaction.
+- **Phase 3 (Mobile responsive):** Stacked card layout for mobile is well-documented pattern, but table-to-card transformation needs design iteration. May need UX research with actual mobile users.
 
-**Phases with standard patterns (skip research-phase):**
-- **Phase 1 (Foundation)**: Next.js App Router, Auth.js Google provider, PostgreSQL schema design, and shadcn/ui all have extensive official documentation and established patterns
-- **Phase 4 (Analytics)**: Analytics dashboard patterns and CDN configuration are well-documented; optimization based on profiling is implementation-specific
+Phases with standard patterns (skip research-phase):
+- **Phase 1 (Layout foundation):** Follows existing page.tsx + searchSkills patterns. CSS Grid for two-panel layout is standard.
+- **Phase 3 (Server Action install):** Standard Next.js pattern already used elsewhere in codebase for form submissions.
+- **Phase 4 (Leaderboard):** Simple data display with tabs, standard UI patterns.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | **HIGH** | All recommendations verified via official documentation (Next.js blog, Auth.js docs, Drizzle docs, MCP specification). Version compatibility matrix validated. |
-| Features | **HIGH** | Based on current market analysis of SkillsMP (71K+ skills), Backstage (primary IDP reference), PromptBase, and 2026 Gartner IDP reviews. Feature prioritization validated against competitor analysis. |
-| Architecture | **HIGH** | Standard patterns from Backstage architecture, NPM registry design, and IDP reference architectures. Component responsibilities well-established in domain. |
-| Pitfalls | **HIGH** | Multiple sources corroborate patterns (Platform Engineering failure research, Backstage backlash articles, gaming expertise metrics studies, cold start problem research). Pitfall-to-phase mapping is actionable. |
+| Stack | HIGH | All technologies already in use. No new dependencies needed. shadcn/ui, nuqs, Server Actions verified in existing codebase. |
+| Features | HIGH | UX patterns based on W3C guidelines, Nielsen Norman Group research, and established data table best practices. Table stakes features well-documented across multiple sources. |
+| Architecture | HIGH | Extends existing Next.js 15 patterns. Server/Client Component split matches current page.tsx structure. nuqs usage mirrors existing SearchInput/CategoryFilter implementations. |
+| Pitfalls | HIGH | Table UI pitfalls verified via TanStack Table docs, Material React Table guides, GitHub issues with real-world problems. Accessibility patterns from W3C ARIA APG. |
 
-**Overall confidence:** **HIGH**
-
-All four research areas produced actionable recommendations with verification from official sources or multiple corroborating secondary sources. The domain (internal developer portals / skill marketplaces) has substantial prior art from Backstage, SkillsMP, and enterprise IDP implementations.
+**Overall confidence:** HIGH
 
 ### Gaps to Address
 
-**Multi-format skill support:** Research focused primarily on Claude Code skill format. During Phase 1 implementation, need to validate parsing strategies for prompts, workflows, and agent configurations. The `packages/skill-formats/` monorepo structure accommodates this, but format-specific validation schemas need design.
+**Install UX limitation:** Web app cannot directly invoke MCP tools (they run in Claude Code/Desktop, not browser). Current approach is clipboard copy + instructions. This is functional but not true "one-click install." Consider future enhancement: browser extension or deeplink protocol to trigger MCP deploy_skill from web interface.
 
-**Seeding strategy execution:** Research identifies need for 50+ skills before launch but doesn't prescribe specific seeding tactics. During Phase 0 (pre-launch), need to identify power users, conversion process for existing team prompts, and quality baseline for seed content.
+**Virtualization threshold unknown:** Research indicates 50-100 rows as the threshold where virtualization becomes beneficial, but this varies by device and content complexity. Recommendation: Implement without virtualization initially, add performance monitoring, and virtualize only if metrics show >500ms render time or user complaints about lag.
 
-**Non-MCP attribution mechanisms:** Research acknowledges some usage will be untracked when users copy-paste prompts. During Phase 1-3, need to design optional attribution mechanisms (watermarking, follow-up surveys, browser extensions) without creating friction.
+**Mobile card layout needs design iteration:** Research shows stacked cards are the standard mobile pattern for complex tables, but the specific layout (which fields visible, how accordion works on cards) needs design exploration with actual mobile users. Allocate time for mobile UX testing in Phase 3.
 
-**Metrics aggregation performance:** Research recommends PostgreSQL with Drizzle for metrics but doesn't validate specific aggregation query patterns at scale. During Phase 2, need to profile query performance and determine if materialized views or pre-computed aggregations are required.
-
-**Version consolidation workflows:** Research identifies version sprawl as a pitfall with consolidation as mitigation, but doesn't specify merge/consolidation UX. During Phase 4, need to design workflows for identifying duplicate skills and community-driven consolidation.
+**Leaderboard gamification psychology:** Research references Yu-kai Chou's work on leaderboard design psychology (time segments prevent stagnation, relative ranking motivates). These patterns are well-documented but may need tuning based on actual user behavior after launch. Monitor for demotivation signals.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- **Stack Research**: Next.js 15 Blog, TanStack Query v5 Docs, Drizzle ORM Docs, Auth.js Docs, MCP Specification (2025-06-18), shadcn/ui official site
-- **Feature Research**: Gartner Internal Developer Portals Reviews 2026, SkillsMP Agent Skills Marketplace, Backstage Software Templates Documentation, Claude Agent Skills Documentation
-- **Architecture Research**: Backstage Architecture Overview, Model Context Protocol Specification, Internal Developer Platform Reference, NPM Registry Architecture
-- **Pitfalls Research**: Platform Engineering 80% Adoption/70% Fail study, Gaming Expertise Metrics on Knowledge Platforms (Springer), Backstage Backlash articles, How to Solve Cold Start Problem (Andrew Chen), Goodhart's Law in Software Engineering (Jellyfish)
+
+**Stack research:**
+- [shadcn/ui Data Table](https://ui.shadcn.com/docs/components/data-table) - Official TanStack Table integration pattern
+- [TanStack Table v8 Docs](https://tanstack.com/table/latest) - API reference, evaluated but decided against
+- [nuqs Documentation](https://nuqs.dev/) - URL state management, already in use
+- [Next.js Server/Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components) - Architecture patterns
+
+**Features research:**
+- [W3C WAI: Tables Tutorial](https://www.w3.org/WAI/tutorials/tables/) - Accessibility fundamentals
+- [W3C ARIA APG: Sortable Table](https://www.w3.org/WAI/ARIA/apg/patterns/table/examples/sortable-table/) - ARIA implementation
+- [Nielsen Norman Group: Accordions on Desktop](https://www.nngroup.com/articles/accordions-on-desktop/) - Multi-expansion behavior
+- [Carbon Design System: Data Table Accessibility](https://carbondesignsystem.com/components/data-table/accessibility/) - Enterprise patterns
+
+**Architecture research:**
+- Existing codebase patterns in `/apps/web/components/` - SearchInput, CategoryFilter, SortDropdown using nuqs
+- `/apps/web/app/(protected)/skills/page.tsx` - Server Component data fetching pattern
+- `/lib/search-skills.ts` - Server-side query building with Drizzle
+
+**Pitfalls research:**
+- [Material React Table Memoization Guide](https://www.material-react-table.com/docs/guides/memoization) - useMemo requirements
+- [React docs: Responding to Events](https://react.dev/learn/responding-to-events) - Event propagation
+- [Aditus Accessible Accordion Patterns](https://www.aditus.io/patterns/accordion/) - Screen reader considerations
+- [TanStack Table GitHub Issues](https://github.com/TanStack/table/issues) - Real-world problems (#4227 memo, #4289 undefined sorting, #5091 state conflicts)
 
 ### Secondary (MEDIUM confidence)
-- Drizzle vs Prisma performance benchmarks (Bytebase comparison)
-- Vitest vs Jest speed comparisons (BetterStack)
-- PostgreSQL FTS vs Elasticsearch (Neon blog)
-- React State Management 2025 trends (dev.to)
-- tRPC vs GraphQL vs REST patterns (BetterStack)
-- Port Scorecards and Initiatives, Cortex Scorecards, Harness IDP Governance Guide
 
-### Tertiary (LOW confidence, needs validation)
-- TikTok Component Library adoption challenges (used for cold start analogy)
-- Knowledge Sharing ROI metrics (Bloomfire) - $31.5B figure
-- Developer productivity measurement frameworks (platformengineering.org)
+**Features research:**
+- [Pencil & Paper: Data Table UX Patterns](https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-data-tables) - Enterprise table patterns
+- [UX Movement: Stacked List Mobile Tables](https://uxmovement.medium.com/stacked-list-the-best-way-to-fit-tables-on-mobile-screens-79f7789e079b) - Mobile responsive patterns
+- [Yu-kai Chou: Effective Leaderboards](https://yukaichou.com/advanced-gamification/how-to-design-effective-leaderboards-boosting-motivation-and-engagement/) - Gamification psychology
+
+**Pitfalls research:**
+- [Syncfusion: Render Large Datasets in React](https://www.syncfusion.com/blogs/post/render-large-datasets-in-react) - Virtualization thresholds
+- [freeCodeCamp: Keyboard Accessibility](https://www.freecodecamp.org/news/designing-keyboard-accessibility-for-complex-react-experiences/) - Focus management patterns
+- [Medium: Next.js Table Hybrid Approach](https://medium.com/@divyanshsharma0631/the-next-js-table-tango-mastering-dynamic-data-tables-with-server-side-performance-client-side-a71ee0ec2c63) - Server/Client split pattern
+
+### Tertiary (LOW confidence)
+
+**None** - All findings corroborated by multiple sources or verified against existing codebase patterns.
 
 ---
-*Research completed: 2026-01-31*
+
+*Research completed: 2026-02-01*
 *Ready for roadmap: yes*

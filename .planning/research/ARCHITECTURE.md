@@ -9,33 +9,33 @@
 ### System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           PRESENTATION LAYER                                 │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │  Web App    │  │ MCP Server  │  │  REST API   │  │  CLI (v2)   │        │
-│  │  (Browse,   │  │  (Deploy,   │  │  (External  │  │  (Future)   │        │
-│  │  Publish)   │  │  Track)     │  │  Integrations)│ │             │        │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘        │
-│         │                │                │                │               │
-├─────────┴────────────────┴────────────────┴────────────────┴───────────────┤
-│                            SERVICE LAYER                                    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌─────────────┐  │
-│  │ Skill Service │  │ Metrics       │  │ Search        │  │ Auth        │  │
-│  │ (CRUD,        │  │ Service       │  │ Service       │  │ Service     │  │
-│  │  Versions)    │  │ (Track, Agg)  │  │ (FTS, Filter) │  │ (SSO)       │  │
-│  └───────┬───────┘  └───────┬───────┘  └───────┬───────┘  └──────┬──────┘  │
-│          │                  │                  │                 │         │
-├──────────┴──────────────────┴──────────────────┴─────────────────┴─────────┤
-│                           DATA LAYER                                        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │  PostgreSQL  │  │ Object Store │  │ Search Index │  │ Cache        │    │
-│  │  (Skills,    │  │ (Skill       │  │ (Optional)   │  │ (Redis)      │    │
-│  │  Metrics)    │  │ Content)     │  │              │  │              │    │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘    │
-└─────────────────────────────────────────────────────────────────────────────┘
++-----------------------------------------------------------------------------+
+|                           PRESENTATION LAYER                                 |
++-----------------------------------------------------------------------------+
+|  +-------------+  +-------------+  +-------------+  +-------------+        |
+|  |  Web App    |  | MCP Server  |  |  REST API   |  |  CLI (v2)   |        |
+|  |  (Browse,   |  |  (Deploy,   |  |  (External  |  |  (Future)   |        |
+|  |  Publish)   |  |  Track)     |  |  Integrations)| |             |        |
+|  +------+------+  +------+------+  +------+------+  +------+------+        |
+|         |                |                |                |               |
++---------|----------------|----------------|----------------|---------------+
+|                            SERVICE LAYER                                    |
++-----------------------------------------------------------------------------+
+|  +---------------+  +---------------+  +---------------+  +-------------+  |
+|  | Skill Service |  | Metrics       |  | Search        |  | Auth        |  |
+|  | (CRUD,        |  | Service       |  | Service       |  | Service     |  |
+|  |  Versions)    |  | (Track, Agg)  |  | (FTS, Filter) |  | (SSO)       |  |
+|  +-------+-------+  +-------+-------+  +-------+-------+  +------+------+  |
+|          |                  |                  |                 |         |
++----------|------------------|------------------|-----------------|----------+
+|                           DATA LAYER                                        |
++-----------------------------------------------------------------------------+
+|  +--------------+  +--------------+  +--------------+  +--------------+    |
+|  |  PostgreSQL  |  | Object Store |  | Search Index |  | Cache        |    |
+|  |  (Skills,    |  | (Skill       |  | (Optional)   |  | (Redis)      |    |
+|  |  Metrics)    |  | Content)     |  |              |  |              |    |
+|  +--------------+  +--------------+  +--------------+  +--------------+    |
++-----------------------------------------------------------------------------+
 ```
 
 ### Component Responsibilities
@@ -58,37 +58,37 @@
 
 ```
 relay/
-├── apps/
-│   ├── web/                    # Next.js web application
-│   │   ├── app/                # App router pages
-│   │   ├── components/         # React components
-│   │   ├── lib/                # Client utilities
-│   │   └── styles/             # CSS/Tailwind
-│   ├── mcp-server/             # MCP server for Claude integration
-│   │   ├── src/
-│   │   │   ├── handlers/       # MCP tool handlers
-│   │   │   ├── client/         # API client to backend
-│   │   │   └── tracking/       # Usage event collection
-│   │   └── package.json
-│   └── api/                    # REST API (if separate from web)
-│       └── src/
-├── packages/
-│   ├── db/                     # Database schema, migrations, client
-│   │   ├── prisma/             # Prisma schema
-│   │   ├── migrations/         # SQL migrations
-│   │   └── src/                # Database client
-│   ├── shared/                 # Shared types, utilities
-│   │   ├── types/              # TypeScript interfaces
-│   │   └── validation/         # Zod schemas
-│   └── skill-formats/          # Skill format parsers/validators
-│       ├── claude-code/        # Claude Code skill format
-│       ├── prompt/             # Prompt format
-│       ├── workflow/           # Workflow format
-│       └── agent-config/       # Agent config format
-├── infrastructure/
-│   ├── docker/                 # Docker configs
-│   └── terraform/              # IaC (optional)
-└── docs/                       # Documentation
++-- apps/
+|   +-- web/                    # Next.js web application
+|   |   +-- app/                # App router pages
+|   |   +-- components/         # React components
+|   |   +-- lib/                # Client utilities
+|   |   +-- styles/             # CSS/Tailwind
+|   +-- mcp-server/             # MCP server for Claude integration
+|   |   +-- src/
+|   |   |   +-- handlers/       # MCP tool handlers
+|   |   |   +-- client/         # API client to backend
+|   |   |   +-- tracking/       # Usage event collection
+|   |   +-- package.json
+|   +-- api/                    # REST API (if separate from web)
+|       +-- src/
++-- packages/
+|   +-- db/                     # Database schema, migrations, client
+|   |   +-- prisma/             # Prisma schema
+|   |   +-- migrations/         # SQL migrations
+|   |   +-- src/                # Database client
+|   +-- shared/                 # Shared types, utilities
+|   |   +-- types/              # TypeScript interfaces
+|   |   +-- validation/         # Zod schemas
+|   +-- skill-formats/          # Skill format parsers/validators
+|       +-- claude-code/        # Claude Code skill format
+|       +-- prompt/             # Prompt format
+|       +-- workflow/           # Workflow format
+|       +-- agent-config/       # Agent config format
++-- infrastructure/
+|   +-- docker/                 # Docker configs
+|   +-- terraform/              # IaC (optional)
++-- docs/                       # Documentation
 ```
 
 ### Structure Rationale
@@ -215,27 +215,27 @@ interface SkillVersion {
 ### Request Flow: Publish New Version
 
 ```
-User → Web App → Auth (verify SSO) → Skill Service → Validate Format
-                                          ↓
-                    Content Storage ← Upload Content → PostgreSQL
-                                          ↓
-                           Search Service → Update Index
-                                          ↓
-                           Response ← New Version Created
+User -> Web App -> Auth (verify SSO) -> Skill Service -> Validate Format
+                                          |
+                    Content Storage <- Upload Content -> PostgreSQL
+                                          |
+                           Search Service -> Update Index
+                                          |
+                           Response <- New Version Created
 ```
 
 ### Request Flow: Deploy Skill via MCP
 
 ```
-Claude User → MCP Server → Auth (verify token) → Skill Service
-                                                      ↓
-                         Content Storage ← Fetch Content
-                                                      ↓
-                         MCP Server ← Return Skill
-                                                      ↓
+Claude User -> MCP Server -> Auth (verify token) -> Skill Service
+                                                      |
+                         Content Storage <- Fetch Content
+                                                      |
+                         MCP Server <- Return Skill
+                                                      |
                          Claude Loads Skill
-                                                      ↓
-                         [Later: Usage Event] → Metrics Queue → Metrics Service
+                                                      |
+                         [Later: Usage Event] -> Metrics Queue -> Metrics Service
 ```
 
 ### Key Data Flows
@@ -307,13 +307,13 @@ Claude User → MCP Server → Auth (verify token) → Skill Service
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| Web App ↔ Backend API | REST/GraphQL over HTTPS | API Gateway pattern; JWT auth |
-| MCP Server ↔ Backend API | REST over HTTPS | API key or JWT; rate limiting per user |
-| Backend ↔ Database | Prisma Client (type-safe) | Connection pooling; read replicas if needed |
-| Backend ↔ Object Storage | S3 SDK | Presigned URLs for browser upload; server-side for MCP |
-| Backend ↔ Search Index | REST API | Webhook for updates; REST for queries |
-| Backend ↔ Cache | Redis Client | Session storage; hot data caching |
-| Backend ↔ Metrics Queue | Producer/Consumer | Redis Streams, SQS, or Kafka (scale-dependent) |
+| Web App to Backend API | REST/GraphQL over HTTPS | API Gateway pattern; JWT auth |
+| MCP Server to Backend API | REST over HTTPS | API key or JWT; rate limiting per user |
+| Backend to Database | Prisma Client (type-safe) | Connection pooling; read replicas if needed |
+| Backend to Object Storage | S3 SDK | Presigned URLs for browser upload; server-side for MCP |
+| Backend to Search Index | REST API | Webhook for updates; REST for queries |
+| Backend to Cache | Redis Client | Session storage; hot data caching |
+| Backend to Metrics Queue | Producer/Consumer | Redis Streams, SQS, or Kafka (scale-dependent) |
 
 ## Build Order Implications
 
@@ -321,29 +321,29 @@ Based on component dependencies, recommended build sequence:
 
 ```
 Phase 1: Foundation
-├── Database schema (skills, versions, users)
-├── Auth service (Google SSO)
-└── Basic Skill Service (CRUD)
++-- Database schema (skills, versions, users)
++-- Auth service (Google SSO)
++-- Basic Skill Service (CRUD)
 
 Phase 2: Core Web Experience
-├── Web app (browse, publish)
-├── Search (PostgreSQL FTS initially)
-└── Content storage integration
++-- Web app (browse, publish)
++-- Search (PostgreSQL FTS initially)
++-- Content storage integration
 
 Phase 3: MCP Integration
-├── MCP Server (list, deploy)
-├── REST API for MCP access
-└── Usage event emission
++-- MCP Server (list, deploy)
++-- REST API for MCP access
++-- Usage event emission
 
 Phase 4: Metrics & Polish
-├── Metrics service (aggregation)
-├── Dashboard views
-└── Rating/review system
++-- Metrics service (aggregation)
++-- Dashboard views
++-- Rating/review system
 
 Phase 5: Scale (as needed)
-├── Dedicated search index
-├── CDN for content
-└── Event streaming for metrics
++-- Dedicated search index
++-- CDN for content
++-- Event streaming for metrics
 ```
 
 **Why this order:**
@@ -366,5 +366,438 @@ Phase 5: Scale (as needed)
 - [Real-time Streaming Architecture Patterns](https://www.confluent.io/learn/real-time-streaming-architecture-examples/)
 
 ---
+
+# v1.2 UI Redesign: Two-Panel Table Architecture
+
+**Milestone:** v1.2 UI Redesign
+**Researched:** 2026-02-01
+**Confidence:** HIGH (based on existing codebase patterns and verified Next.js 15 documentation)
+
+## Executive Summary
+
+The two-panel sortable table UI should integrate with the existing Next.js 15 App Router architecture using a **hybrid Server Component + Client Component pattern**. The core data fetching and table structure remain Server Components, while interactive elements (sort controls, accordion expansion, install button) become targeted Client Components. This matches the established patterns in the codebase (SearchInput, CategoryFilter, SortDropdown already use nuqs).
+
+**Key Recommendation:** Use nuqs for all sort/filter state (already adopted), keep data fetching in Server Components, and create a thin Client Component wrapper for table interactions. Avoid TanStack Table - the use case is simple enough that native components with shadcn/ui Table suffice.
+
+## Recommended Architecture
+
+### Component Hierarchy
+
+```
+/app/(protected)/skills/page.tsx  (Server Component - existing, modified)
++-- SearchInput                   (Client - existing, reuse)
++-- TwoPanelLayout               (Server - NEW wrapper)
+    +-- SkillsTablePanel          (Server - NEW, 2/3 width)
+    |   +-- TableSortControls     (Client - NEW, nuqs-based)
+    |   +-- SkillsTable           (Server - data table structure)
+    |       +-- SkillTableRow     (Client - expandable accordion)
+    |           +-- RowSummary    (Server child - visible by default)
+    |           +-- RowDetails    (Client child - expanded content)
+    |           +-- InstallButton (Client - MCP integration)
+    +-- LeaderboardPanel          (Server - 1/3 width)
+        +-- LeaderboardTable      (Server - existing, minor mods)
+```
+
+### Component Boundaries
+
+| Component | Type | Responsibility | Communicates With |
+|-----------|------|----------------|-------------------|
+| `page.tsx` | Server | Data fetching, layout orchestration | All child components via props |
+| `TwoPanelLayout` | Server | Grid layout (2/3 + 1/3), responsive | Children as slots |
+| `TableSortControls` | Client | Sort column selection, direction toggle | URL (nuqs), triggers re-render |
+| `SkillsTable` | Server | Renders table headers and rows | Receives sorted data from page |
+| `SkillTableRow` | Client | Accordion open/close state | Local state only |
+| `InstallButton` | Client | Triggers MCP deploy_skill | Server Action for tracking |
+| `LeaderboardTable` | Server | Renders leaderboard (existing) | Props only |
+
+### Data Flow
+
+```
+URL params (nuqs: sortBy, sortDir, q, category, tags, qualityTier)
+    |
+    v
+page.tsx (Server Component)
+    |
+    +-> searchSkills({ ...params, sortBy, sortDir })  -> PostgreSQL
+    |                                                        |
+    |<----------------------- skills[] <---------------------+
+    |
+    +-> getLeaderboard(limit)  -> PostgreSQL
+    |                                 |
+    |<------------ leaderboard[] <----+
+    |
+    v
+Render: TwoPanelLayout
+    +-> SkillsTablePanel(skills, sortBy, sortDir)
+    |       +-> TableSortControls (nuqs state)
+    |       +-> SkillsTable (receives pre-sorted data)
+    |               +-> SkillTableRow[] (client for accordion)
+    |                       +-> InstallButton (MCP action)
+    +-> LeaderboardPanel(leaderboard)
+```
+
+## Patterns to Follow
+
+### Pattern 1: nuqs for Sort State
+
+**What:** Store sort column and direction in URL using nuqs (already adopted in codebase).
+
+**Why:**
+- Consistent with existing CategoryFilter, QualityFilter, SortDropdown patterns
+- Enables shareable/bookmarkable views
+- Server Components re-render with new data on URL change
+- Already in package.json (nuqs@2.8.7)
+
+**Example:**
+```typescript
+// components/table-sort-controls.tsx
+"use client";
+
+import { useQueryState, parseAsStringEnum } from "nuqs";
+import { useTransition } from "react";
+
+const SORT_COLUMNS = ["name", "uses", "rating", "quality", "fteDays"] as const;
+const SORT_DIRS = ["asc", "desc"] as const;
+
+export function TableSortControls() {
+  const [sortBy, setSortBy] = useQueryState(
+    "sortBy",
+    parseAsStringEnum(SORT_COLUMNS).withDefault("uses")
+  );
+  const [sortDir, setSortDir] = useQueryState(
+    "sortDir",
+    parseAsStringEnum(SORT_DIRS).withDefault("desc")
+  );
+  const [isPending, startTransition] = useTransition();
+
+  const handleSort = (column: typeof SORT_COLUMNS[number]) => {
+    startTransition(() => {
+      if (sortBy === column) {
+        // Toggle direction
+        setSortDir(sortDir === "asc" ? "desc" : "asc");
+      } else {
+        // New column, default to desc
+        setSortBy(column);
+        setSortDir("desc");
+      }
+    });
+  };
+
+  return (
+    // ... column header buttons with sort indicators
+  );
+}
+```
+
+### Pattern 2: Server Component Data Fetching with Sort
+
+**What:** Extend existing `searchSkills()` to accept sortBy column and direction, do sorting in SQL.
+
+**Why:**
+- Matches existing pattern in `/app/(protected)/skills/page.tsx`
+- Server-side sorting is fast and reduces client bundle
+- PostgreSQL handles sort efficiently
+
+**Example:**
+```typescript
+// lib/search-skills.ts (extend existing)
+export interface SearchParams {
+  query?: string;
+  category?: string;
+  tags?: string[];
+  qualityTier?: "gold" | "silver" | "bronze";
+  sortBy?: "name" | "uses" | "rating" | "quality" | "fteDays";
+  sortDir?: "asc" | "desc";
+}
+
+// In the query builder:
+const orderByColumn = {
+  name: skills.name,
+  uses: skills.totalUses,
+  rating: skills.averageRating,
+  quality: qualityScoreSql,
+  fteDays: sql`(${skills.totalUses} * ${skills.hoursSaved} / 8.0)`,
+}[params.sortBy || "uses"];
+
+const orderFn = params.sortDir === "asc" ? asc : desc;
+return filteredQuery.orderBy(orderFn(orderByColumn));
+```
+
+### Pattern 3: Client Component Accordion Rows
+
+**What:** Each table row is a Client Component managing its own open/close state.
+
+**Why:**
+- Expansion is purely local UI state - no URL sync needed
+- Each row independently manages expansion
+- Avoids prop drilling through Server Component
+
+**Example:**
+```typescript
+// components/skill-table-row.tsx
+"use client";
+
+import { useState } from "react";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+
+interface SkillTableRowProps {
+  skill: SkillRowData;
+}
+
+export function SkillTableRow({ skill }: SkillTableRowProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <tr className="border-b hover:bg-gray-50">
+        <CollapsibleTrigger asChild>
+          <td className="cursor-pointer">
+            <ChevronIcon className={isOpen ? "rotate-90" : ""} />
+          </td>
+        </CollapsibleTrigger>
+        <td>{skill.name}</td>
+        <td>{skill.totalUses}</td>
+        <td>{skill.averageRating}</td>
+        <td><InstallButton skillId={skill.id} /></td>
+      </tr>
+      <CollapsibleContent asChild>
+        <tr className="bg-gray-50">
+          <td colSpan={5}>
+            <SkillRowDetails skill={skill} />
+          </td>
+        </tr>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+```
+
+### Pattern 4: MCP Install via Server Action
+
+**What:** Install button triggers a Server Action that returns skill content for clipboard/download.
+
+**Why:**
+- MCP servers run in Claude Code/Claude Desktop, not in browser
+- Web app cannot directly invoke MCP tools
+- Best we can do: copy skill content or provide download, with instructions
+
+**Limitation:** True one-click install requires the user to have the Relay MCP server configured in their Claude environment. The web app can:
+1. Copy skill content to clipboard
+2. Provide download link
+3. Show MCP command to run
+
+**Example:**
+```typescript
+// app/actions/install.ts
+"use server";
+
+import { auth } from "@/auth";
+import { db, skills } from "@relay/db";
+import { eq } from "drizzle-orm";
+import { trackInstall } from "@/lib/tracking";
+
+export async function getInstallContent(skillId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+
+  const skill = await db.query.skills.findFirst({
+    where: eq(skills.id, skillId),
+    columns: { id: true, name: true, slug: true, content: true },
+  });
+
+  if (!skill) {
+    return { error: "Skill not found" };
+  }
+
+  // Track web-initiated install intent (different from MCP deploy)
+  await trackInstall(skill.id, session.user.id, "web");
+
+  return {
+    content: skill.content,
+    filename: `${skill.slug}.md`,
+    instructions: [
+      `1. Copy the content below to your clipboard`,
+      `2. Save to: .claude/skills/${skill.slug}.md`,
+      `3. Or use MCP: deploy_skill with skillId="${skill.id}"`,
+    ],
+  };
+}
+```
+
+```typescript
+// components/install-button.tsx
+"use client";
+
+import { useState, useTransition } from "react";
+import { getInstallContent } from "@/app/actions/install";
+
+export function InstallButton({ skillId }: { skillId: string }) {
+  const [isPending, startTransition] = useTransition();
+  const [copied, setCopied] = useState(false);
+
+  const handleInstall = () => {
+    startTransition(async () => {
+      const result = await getInstallContent(skillId);
+      if (result.content) {
+        await navigator.clipboard.writeText(result.content);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    });
+  };
+
+  return (
+    <button
+      onClick={handleInstall}
+      disabled={isPending}
+      className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+    >
+      {isPending ? "..." : copied ? "Copied!" : "Install"}
+    </button>
+  );
+}
+```
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern 1: TanStack Table for Simple Use Case
+
+**What:** Importing @tanstack/react-table for the skills table.
+
+**Why bad:**
+- Adds 30-50KB to client bundle
+- Complexity overkill for a single-column-sort, no-pagination table
+- Existing patterns (nuqs + Server Component) already solve this
+
+**Instead:** Use shadcn/ui Table component with manual column headers that trigger nuqs updates. The server does the sorting.
+
+### Anti-Pattern 2: Client-Side Data Fetching
+
+**What:** Fetching skills data in useEffect or React Query on the client.
+
+**Why bad:**
+- Loses SEO benefits of Server Components
+- Adds loading states and waterfalls
+- Existing page.tsx already fetches server-side
+
+**Instead:** Keep data fetching in page.tsx Server Component. Let nuqs URL changes trigger full server re-render with new data.
+
+### Anti-Pattern 3: Global Accordion State
+
+**What:** Managing all row expansion states in a single parent state object.
+
+**Why bad:**
+- Unnecessary prop drilling
+- Re-renders entire table when one row expands
+- More complex than needed
+
+**Instead:** Each SkillTableRow manages its own `isOpen` state locally.
+
+### Anti-Pattern 4: URL State for Row Expansion
+
+**What:** Storing which rows are expanded in URL params.
+
+**Why bad:**
+- Makes URLs ugly and unbookmarkable
+- Expansion is ephemeral UI state, not application state
+- Complicates nuqs usage
+
+**Instead:** Local useState per row.
+
+## Integration Points
+
+### 1. Existing nuqs Setup
+
+The app already has nuqs configured:
+- `nuqs@2.8.7` in package.json
+- Used in SearchInput, CategoryFilter, QualityFilter, SortDropdown
+- Pattern: `useQueryState` with parser and `startTransition`
+
+**Integration:** Add `sortBy` and `sortDir` params following same pattern.
+
+### 2. Existing Data Fetching
+
+`searchSkills()` in `/lib/search-skills.ts` already:
+- Accepts SearchParams including sortBy
+- Does server-side ordering with Drizzle
+- Returns full skill data with author
+
+**Integration:** Extend to accept sortDir and support column-specific sorting.
+
+### 3. Existing Table Component
+
+`LeaderboardTable` in `/components/leaderboard-table.tsx`:
+- Uses shadcn/ui-style table markup
+- Purely presentational Server Component
+- No sorting controls (just displays ranked data)
+
+**Integration:** New SkillsTable follows similar structure but with sortable headers.
+
+### 4. MCP Server
+
+`deploy_skill` tool in `/apps/mcp/src/tools/deploy.ts`:
+- Takes skillId, returns skill content
+- Tracks usage via `trackUsage()`
+- Used from Claude Code MCP integration
+
+**Integration:** Web InstallButton provides alternative path - copy to clipboard with instructions to use MCP or save manually.
+
+## Suggested Build Order
+
+Based on dependencies and integration points:
+
+### Phase 1: Layout Foundation
+1. Create `TwoPanelLayout` component (Server, simple grid wrapper)
+2. Update `/app/(protected)/skills/page.tsx` to use two-panel layout
+3. Move existing LeaderboardTable into right panel
+4. Verify existing functionality still works
+
+### Phase 2: Table Structure
+1. Create `SkillsTable` Server Component (table structure, no sorting yet)
+2. Create `SkillTableRow` Client Component with Collapsible
+3. Replace SkillList/SkillCard grid with table
+4. Add row expansion with existing skill data
+
+### Phase 3: Sortable Columns
+1. Add `sortBy` and `sortDir` to nuqs params in page.tsx
+2. Extend `searchSkills()` for column-specific sorting
+3. Create `TableSortControls` Client Component
+4. Add sort indicators to column headers
+
+### Phase 4: Install Button
+1. Create `getInstallContent` Server Action
+2. Create `InstallButton` Client Component
+3. Add install column to table
+4. Add tracking for web installs
+
+### Phase 5: Polish
+1. Responsive breakpoints for two-panel layout
+2. Loading states during sort transitions
+3. Empty states for table
+4. Keyboard navigation for accordion
+
+## Confidence Assessment
+
+| Decision | Confidence | Rationale |
+|----------|------------|-----------|
+| nuqs for sort state | HIGH | Already adopted, pattern verified in codebase |
+| Server Component data fetch | HIGH | Matches existing page.tsx pattern, Next.js 15 best practice |
+| Local state for accordion | HIGH | Standard React pattern, avoids complexity |
+| shadcn Table over TanStack | HIGH | Simpler, bundle-efficient, sufficient for use case |
+| Server Action for install | MEDIUM | Best available pattern for web-to-MCP bridge |
+| Collapsible for accordion | HIGH | shadcn/ui component, verified in search results |
+
+## Sources
+
+- [Next.js Server and Client Components Documentation](https://nextjs.org/docs/app/getting-started/server-and-client-components) - HIGH confidence
+- [nuqs Official Documentation](https://nuqs.dev/) - HIGH confidence
+- [shadcn/ui Data Table](https://ui.shadcn.com/docs/components/data-table) - HIGH confidence
+- [TanStack Table Sorting Guide](https://tanstack.com/table/v8/docs/guide/sorting) - HIGH confidence (for reference)
+- [Build Expandable Data Table with shadcn/ui](https://dev.to/mfts/build-an-expandable-data-table-with-2-shadcnui-components-4nge) - MEDIUM confidence
+- Existing codebase patterns in `/apps/web/components/` - HIGH confidence
+
+---
 *Architecture research for: Relay Internal Skill Marketplace*
-*Researched: 2026-01-31*
+*Updated: 2026-02-01 for v1.2 UI Redesign*
