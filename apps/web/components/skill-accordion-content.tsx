@@ -29,7 +29,7 @@ interface SkillAccordionContentProps {
 export function SkillAccordionContent({ skill, onInstall, isCopied }: SkillAccordionContentProps) {
   return (
     <tr className="bg-blue-50">
-      <td colSpan={6} className="px-4 py-3">
+      <td colSpan={7} className="px-4 py-3">
         <div className="rounded-lg border border-blue-100 bg-white p-4">
           {/* Category badge */}
           <span className="text-xs font-medium uppercase text-blue-600">{skill.category}</span>

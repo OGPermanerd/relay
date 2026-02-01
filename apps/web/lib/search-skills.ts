@@ -7,6 +7,7 @@ export interface SearchSkillResult {
   slug: string;
   description: string;
   category: string;
+  tags: string[] | null;
   totalUses: number;
   averageRating: number | null;
   totalRatings: number;
@@ -124,6 +125,7 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
       slug: skills.slug,
       description: skills.description,
       category: skills.category,
+      tags: skills.tags,
       totalUses: skills.totalUses,
       averageRating: skills.averageRating,
       totalRatings: sql<number>`(SELECT count(*) FROM ratings WHERE skill_id = ${skills.id})`.as(
