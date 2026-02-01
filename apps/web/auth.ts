@@ -18,6 +18,7 @@ function createAuthConfig(): NextAuthConfig {
 
   return {
     ...authConfig,
+    trustHost: true,
     adapter: DrizzleAdapter(db, {
       usersTable: users,
       accountsTable: accounts,

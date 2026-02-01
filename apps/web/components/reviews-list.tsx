@@ -46,10 +46,10 @@ export function ReviewsList({ reviews }: ReviewsListProps) {
             <div>
               <p className="font-medium">{review.user.name || "Anonymous"}</p>
               <div className="flex items-center gap-2">
-                {/* Star rating */}
+                {/* Star rating - rating stored as 100-500, convert to 1-5 */}
                 <span className="text-yellow-500">
-                  {"★".repeat(review.rating)}
-                  {"☆".repeat(5 - review.rating)}
+                  {"★".repeat(Math.round(review.rating / 100))}
+                  {"☆".repeat(5 - Math.round(review.rating / 100))}
                 </span>
                 {/* Date */}
                 <span className="text-sm text-gray-500">

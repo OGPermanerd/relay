@@ -66,7 +66,9 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
 
   // Tag filtering - match skills containing ANY of the selected tags
   if (params.tags && params.tags.length > 0) {
-    conditions.push(sql`${skills.tags} && ${params.tags}::text[]`);
+    // Format as PostgreSQL array literal: {tag1,tag2,tag3}
+    const tagsArrayLiteral = `{${params.tags.join(",")}}`;
+    conditions.push(sql`${skills.tags} && ${tagsArrayLiteral}::text[]`);
   }
 
   // Quality score computation as SQL expression
@@ -83,10 +85,28 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
     END
   `;
 
-  // Quality tier filter
+  // Quality tier filter - inline the score calculation to avoid nesting issues
   if (params.qualityTier) {
     const { min, max } = TIER_THRESHOLDS[params.qualityTier];
-    conditions.push(sql`(${qualityScoreSql}) >= ${min} AND (${qualityScoreSql}) <= ${max}`);
+    conditions.push(sql`(
+      CASE
+        WHEN (SELECT count(*) FROM ratings WHERE ratings.skill_id = ${skills.id}) < 3 THEN -1
+        ELSE (
+          LEAST(${skills.totalUses}::float / 100.0, 1) * 50 +
+          COALESCE(${skills.averageRating}::float / 500.0, 0) * 35 +
+          CASE WHEN ${skills.description} != '' AND ${skills.category} != '' THEN 15 ELSE 0 END
+        )
+      END
+    ) >= ${min} AND (
+      CASE
+        WHEN (SELECT count(*) FROM ratings WHERE ratings.skill_id = ${skills.id}) < 3 THEN -1
+        ELSE (
+          LEAST(${skills.totalUses}::float / 100.0, 1) * 50 +
+          COALESCE(${skills.averageRating}::float / 500.0, 0) * 35 +
+          CASE WHEN ${skills.description} != '' AND ${skills.category} != '' THEN 15 ELSE 0 END
+        )
+      END
+    ) <= ${max}`);
   }
 
   // Build query with rating count subquery

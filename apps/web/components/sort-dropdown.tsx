@@ -23,7 +23,9 @@ const SORT_LABELS: Record<SortOption, string> = {
 export function SortDropdown() {
   const [sortBy, setSortBy] = useQueryState(
     "sortBy",
-    parseAsStringEnum(SORT_OPTIONS as unknown as string[]).withDefault("uses" as SortOption)
+    parseAsStringEnum(SORT_OPTIONS as unknown as string[])
+      .withDefault("uses" as SortOption)
+      .withOptions({ shallow: false })
   );
   const [isPending, startTransition] = useTransition();
 

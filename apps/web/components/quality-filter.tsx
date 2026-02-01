@@ -22,9 +22,9 @@ const QUALITY_LABELS: Record<QualityTier, string> = {
 export function QualityFilter() {
   const [qualityTier, setQualityTier] = useQueryState(
     "qualityTier",
-    parseAsStringEnum(QUALITY_TIERS as unknown as string[]).withDefault(
-      null as unknown as QualityTier
-    )
+    parseAsStringEnum(QUALITY_TIERS as unknown as string[])
+      .withDefault(null as unknown as QualityTier)
+      .withOptions({ shallow: false })
   );
   const [isPending, startTransition] = useTransition();
 
