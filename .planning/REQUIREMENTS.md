@@ -67,14 +67,14 @@ Deferred to later milestones.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | TABL-01 | Phase 12 | Pending |
-| TABL-02 | Phase 12 | Pending |
-| TABL-03 | Phase 12 | Pending |
+| TABL-02 | Phase 13 | Pending |
+| TABL-03 | Phase 13 | Pending |
 | TABL-04 | Phase 12 | Pending |
 | TABL-05 | Phase 12 | Pending |
-| TABL-06 | Phase 12 | Pending |
-| TABL-07 | Phase 12 | Pending |
+| TABL-06 | Phase 13 | Pending |
+| TABL-07 | Phase 13 | Pending |
 | TABL-08 | Phase 13 | Pending |
-| TABL-09 | Phase 12 | Pending |
+| TABL-09 | Phase 13 | Pending |
 | TABL-10 | Phase 12 | Pending |
 | LEAD-01 | Phase 12 | Pending |
 | LEAD-02 | Phase 12 | Pending |
@@ -88,7 +88,8 @@ Deferred to later milestones.
 **Coverage:**
 - v1.2 requirements: 18 total
 - Mapped to phases: 18
-- Unmapped: 0 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-01*
+*Traceability updated: 2026-02-01*
