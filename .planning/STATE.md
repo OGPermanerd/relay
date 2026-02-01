@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 12 of 14 (Two-Panel Layout Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-01 — Roadmap created for v1.2 milestone
+Plan: 3 completed in current phase
+Status: In progress
+Last activity: 2026-02-01 - Completed 12-03-PLAN.md (Leaderboard Columns)
 
-Progress: [██████████████████████████░░░░] 42/~50 plans (v1.0 + v1.1 complete, v1.2 TBD)
+Progress: [██████████████████████████░░░░] 45/~50 plans (v1.0 + v1.1 complete, v1.2 in progress)
 
 ## Milestones
 
@@ -34,6 +34,11 @@ Progress: [███████████████████████
 - Total execution time: 45 min
 - Average duration: 5.0 min/plan
 
+**v1.2 Velocity (in progress):**
+- Plans completed: 3
+- Total execution time: ~6 min
+- Average duration: ~2 min/plan
+
 ## Accumulated Context
 
 ### Decisions
@@ -43,6 +48,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 Recent decisions affecting v1.2:
 - nuqs for URL state: Consistent with existing CategoryFilter/TagFilter patterns
 - No TanStack Table: Overkill for single-column sort; Server Components handle data transformations
+- Keep totalUses/avgRating in LeaderboardEntry for backward compatibility (12-03)
+- Date format "MMM D" for compact contribution date display (12-03)
 
 ### Pending Todos
 
@@ -55,9 +62,9 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: v1.2 roadmap created
+Stopped at: Completed 12-03-PLAN.md
 Resume file: None
 
 ## Next Steps
 
-Run `/gsd:plan-phase 12` to create detailed plans for Two-Panel Layout Foundation.
+Continue Phase 12 execution or proceed to Phase 13 (Skill Listing Layout).
