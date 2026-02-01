@@ -11,6 +11,7 @@ export interface SearchSkillResult {
   averageRating: number | null;
   totalRatings: number;
   hoursSaved: number | null;
+  createdAt: Date;
   author: {
     id: string;
     name: string | null;
@@ -23,7 +24,7 @@ export interface SearchParams {
   category?: string;
   tags?: string[];
   qualityTier?: "gold" | "silver" | "bronze";
-  sortBy?: "uses" | "quality" | "rating";
+  sortBy?: "uses" | "quality" | "rating" | "days_saved";
 }
 
 // Quality tier thresholds
@@ -123,6 +124,7 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
         "totalRatings"
       ),
       hoursSaved: skills.hoursSaved,
+      createdAt: skills.createdAt,
       author: {
         id: users.id,
         name: users.name,
@@ -135,12 +137,19 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
   // Apply conditions if any
   const filteredQuery = conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
 
+  // Days saved calculation: (totalUses * COALESCE(hoursSaved, 1)) / 8
+  const daysSavedSql = sql`(${skills.totalUses} * COALESCE(${skills.hoursSaved}, 1)) / 8.0`;
+
   // Determine sort order
   if (params.sortBy === "quality") {
     // Sort by quality score descending, unranked (-1) at the end
     return filteredQuery.orderBy(sql`(${qualityScoreSql}) DESC NULLS LAST`);
   } else if (params.sortBy === "rating") {
     return filteredQuery.orderBy(desc(skills.averageRating));
+  } else if (params.sortBy === "uses") {
+    return filteredQuery.orderBy(desc(skills.totalUses));
+  } else if (params.sortBy === "days_saved") {
+    return filteredQuery.orderBy(sql`${daysSavedSql} DESC`);
   } else if (params.query && params.query.trim()) {
     // Order by relevance when searching
     return filteredQuery.orderBy(
@@ -148,8 +157,8 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
     );
   }
 
-  // Default: order by totalUses
-  return filteredQuery.orderBy(desc(skills.totalUses));
+  // Default: order by days_saved (totalUses * hoursSaved / 8)
+  return filteredQuery.orderBy(sql`${daysSavedSql} DESC`);
 }
 
 /**
