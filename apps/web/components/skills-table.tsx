@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { announceToScreenReader } from "@/lib/accessibility";
 import { useSortState } from "@/hooks/use-sort-state";
 import { useExpandedRows } from "@/hooks/use-expanded-rows";
 import { useClipboardCopy } from "@/hooks/use-clipboard-copy";
@@ -46,10 +47,34 @@ export interface SkillsTableProps {
  * - Expandable rows with accordion content
  * - One-click install with clipboard copy
  */
+// Human-readable column names for screen reader announcements
+const COLUMN_LABELS: Record<string, string> = {
+  name: "Skill Name",
+  days_saved: "Days Saved",
+  installs: "Installs",
+  date: "Date Added",
+  author: "Author",
+};
+
 export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
   const { sortBy, sortDir, toggleSort } = useSortState();
   const { toggleRow, isExpanded } = useExpandedRows();
   const { copyToClipboard, isCopied } = useClipboardCopy();
+
+  // Track if this is the initial render to avoid announcing on page load
+  const isInitialMount = useRef(true);
+
+  // Announce sort changes to screen readers (not on initial load)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    const columnLabel = COLUMN_LABELS[sortBy] || sortBy;
+    const direction = sortDir === "asc" ? "ascending" : "descending";
+    announceToScreenReader(`Table sorted by ${columnLabel}, ${direction}`);
+  }, [sortBy, sortDir]);
 
   // Client-side sort
   const sortedSkills = useMemo(() => {
