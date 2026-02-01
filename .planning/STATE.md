@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v1.1 shipped, ready for v1.2 planning
+**Current focus:** v1.2 UI Redesign
 
 ## Current Position
 
-Phase: 11 of 11 complete
-Plan: All complete
-Status: MILESTONE SHIPPED
-Last activity: 2026-02-01 - v1.1 milestone archived
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-01 — Milestone v1.2 started
 
 Progress: [██████████████████████████] 42/42 plans (v1.0 + v1.1 complete)
 
@@ -55,4 +55,4 @@ Resume file: None
 
 ## Next Steps
 
-Run `/gsd:new-milestone` to start v1.2 planning.
+Define requirements and create roadmap for v1.2 UI Redesign.

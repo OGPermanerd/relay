@@ -18,6 +18,17 @@ LOC: 5,942 TypeScript across 230 files
 Previous:
 - v1.0 shipped 2026-01-31 — Full internal skill marketplace with MCP integration
 
+## Current Milestone: v1.2 UI Redesign
+
+**Goal:** Redesign the UI for simplicity, gamification, and performance with a two-panel sortable table layout.
+
+**Target features:**
+- Two-panel layout: skills table (2/3) + contributor leaderboard (1/3)
+- Sortable columns with click-to-toggle ascending/descending
+- Inline row expansion (accordion) for skill details
+- One-click install via MCP (directly loads skill into Claude)
+- Search bar for filtering skills
+
 ## Requirements
 
 ### Validated
@@ -48,7 +59,11 @@ Previous:
 
 ### Active
 
-(None — ready for v1.2 planning)
+- [ ] Two-panel layout with skills table (2/3) and leaderboard (1/3)
+- [ ] Sortable table columns with ascending/descending toggle
+- [ ] Inline row expansion for skill details (accordion)
+- [ ] One-click MCP install button that loads skill into Claude
+- [ ] Search bar for filtering skills table
 
 ### Out of Scope
 
@@ -99,4 +114,4 @@ Previous:
 | JWT injection for E2E auth | Bypasses OAuth flow, enables fast authenticated testing | ✓ Good |
 
 ---
-*Last updated: 2026-02-01 after v1.1 milestone completion*
+*Last updated: 2026-02-01 after v1.2 milestone start*
