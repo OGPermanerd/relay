@@ -44,24 +44,16 @@ export function useRovingTabindex({
 
       switch (e.key) {
         case "ArrowDown":
-          newRow = wrap
-            ? (activeRow + 1) % rowCount
-            : Math.min(activeRow + 1, rowCount - 1);
+          newRow = wrap ? (activeRow + 1) % rowCount : Math.min(activeRow + 1, rowCount - 1);
           break;
         case "ArrowUp":
-          newRow = wrap
-            ? (activeRow - 1 + rowCount) % rowCount
-            : Math.max(activeRow - 1, 0);
+          newRow = wrap ? (activeRow - 1 + rowCount) % rowCount : Math.max(activeRow - 1, 0);
           break;
         case "ArrowRight":
-          newCol = wrap
-            ? (activeCol + 1) % colCount
-            : Math.min(activeCol + 1, colCount - 1);
+          newCol = wrap ? (activeCol + 1) % colCount : Math.min(activeCol + 1, colCount - 1);
           break;
         case "ArrowLeft":
-          newCol = wrap
-            ? (activeCol - 1 + colCount) % colCount
-            : Math.max(activeCol - 1, 0);
+          newCol = wrap ? (activeCol - 1 + colCount) % colCount : Math.max(activeCol - 1, 0);
           break;
         case "Home":
           if (e.ctrlKey) {
@@ -95,22 +87,18 @@ export function useRovingTabindex({
   );
 
   const getTabIndex = useCallback(
-    (row: number, col: number): 0 | -1 =>
-      row === activeRow && col === activeCol ? 0 : -1,
+    (row: number, col: number): 0 | -1 => (row === activeRow && col === activeCol ? 0 : -1),
     [activeRow, activeCol]
   );
 
-  const registerCell = useCallback(
-    (row: number, col: number, element: HTMLElement | null) => {
-      const key = `${row}-${col}`;
-      if (element) {
-        cellRefs.current.set(key, element);
-      } else {
-        cellRefs.current.delete(key);
-      }
-    },
-    []
-  );
+  const registerCell = useCallback((row: number, col: number, element: HTMLElement | null) => {
+    const key = `${row}-${col}`;
+    if (element) {
+      cellRefs.current.set(key, element);
+    } else {
+      cellRefs.current.delete(key);
+    }
+  }, []);
 
   const setActiveCell = useCallback((row: number, col: number) => {
     setActiveRow(row);
