@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-31)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 11 - E2E Test Coverage
+**Current focus:** v1.1 COMPLETE
 
 ## Current Position
 
 Phase: 11 of 11 (E2E Test Coverage)
-Plan: 3 of 4
-Status: In progress
-Last activity: 2026-01-31 - Completed 11-02-PLAN.md (Skill upload and rating E2E tests)
+Plan: 4 of 4
+Status: COMPLETE
+Last activity: 2026-02-01 - Completed 11-04-PLAN.md (CI E2E Integration)
 
-Progress: [█████████████████████░░░░░] 41/42 (v1.0 complete, 8/9 v1.1)
+Progress: [██████████████████████████] 42/42 (v1.0 complete, v1.1 complete)
 
 ## Performance Metrics
 
@@ -24,8 +24,8 @@ Progress: [█████████████████████░░
 - Average duration: 3.6 min/plan
 
 **v1.1 Velocity:**
-- Total plans completed: 8
-- Total execution time: 40 min
+- Total plans completed: 9
+- Total execution time: 45 min
 - Average duration: 5.0 min/plan
 
 ## Accumulated Context
@@ -50,6 +50,7 @@ All v1.0 decisions logged in PROJECT.md Key Decisions table.
 | 11-03 | Use exact: true for ambiguous button selectors | Avoids strict mode violations with partial matches |
 | 11-02 | Use timestamp for unique skill names | Avoids slug conflicts between test runs |
 | 11-02 | Create skills from different author for rating | Ensures rating form shown (users may not rate own skills) |
+| 11-04 | Empty storageState for unauthenticated tests | Tests must clear auth cookies to test login redirect |
 
 ### Pending Todos
 
@@ -59,14 +60,14 @@ None.
 
 **Known Tech Debt (addressed in v1.1):**
 - ~~Tag filtering UI exists but backend returns empty array~~ - FIXED in Phase 9
-- ~~Limited E2E test coverage (login page only)~~ - Phase 11 IN PROGRESS (skill search, profile, upload, rating done)
+- ~~Limited E2E test coverage (login page only)~~ - FIXED in Phase 11 (22 E2E tests)
 
 ## Session Continuity
 
-Last session: 2026-01-31
-Stopped at: Completed 11-02-PLAN.md (Skill upload and rating E2E tests)
+Last session: 2026-02-01
+Stopped at: Completed 11-04-PLAN.md (CI E2E Integration)
 Resume file: None
 
 ## Next Steps
 
-Continue with 11-04-PLAN.md (Additional E2E test coverage).
+v1.1 complete. Ready for v1.2 planning or production deployment.
