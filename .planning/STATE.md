@@ -5,22 +5,22 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v1.2 UI Redesign - Phase 14 in progress
+**Current focus:** v1.2 UI Redesign - Phase 14 complete
 
 ## Current Position
 
 Phase: 14 of 14 (Mobile & Accessibility Polish)
-Plan: 4 of 5 in current phase (14-01, 14-02, 14-03, 14-04 complete)
-Status: Phase 14 in progress
-Last activity: 2026-02-01 - Completed 14-03-PLAN.md (Screen Reader Sort Indicators)
+Plan: 5 of 5 in current phase (all complete)
+Status: Phase 14 complete - v1.2 UI Redesign milestone ready for audit
+Last activity: 2026-02-01 - Completed 14-05-PLAN.md (Keyboard Navigation & Accessibility)
 
-Progress: [██████████████████████████████░] 53/~54 plans (v1.0 + v1.1 complete, v1.2 in progress)
+Progress: [████████████████████████████████] 54/54 plans (v1.0 + v1.1 + v1.2 complete)
 
 ## Milestones
 
 - v1.0 MVP - 33 plans - shipped 2026-01-31
 - v1.1 Quality & Polish - 9 plans - shipped 2026-02-01
-- v1.2 UI Redesign - 3 phases (12-14) - in progress
+- v1.2 UI Redesign - 3 phases (12-14) - complete, ready for audit
 
 ## Performance Metrics
 
@@ -34,10 +34,10 @@ Progress: [███████████████████████
 - Total execution time: 45 min
 - Average duration: 5.0 min/plan
 
-**v1.2 Velocity (in progress):**
-- Plans completed: 11 (Phase 12: 3, Phase 13: 4, Phase 14: 4)
-- Total execution time: ~29 min
-- Average duration: ~2.6 min/plan
+**v1.2 Velocity:**
+- Plans completed: 12 (Phase 12: 3, Phase 13: 4, Phase 14: 5)
+- Total execution time: ~38 min
+- Average duration: ~3.2 min/plan
 
 ## Accumulated Context
 
@@ -62,6 +62,8 @@ Recent decisions affecting v1.2:
 - 5-second auto-collapse during onboarding for progressive disclosure (14-04)
 - Omit aria-sort on non-sorted columns per WCAG guidance (14-03)
 - Skip initial mount for screen reader announcements via useRef (14-03)
+- 80px delta threshold for swipe gesture activation (14-05)
+- Spread swipeHandlers before ref to prevent ref overwrite (14-05)
 
 ### Pending Todos
 
@@ -73,11 +75,10 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01 15:47 UTC
-Stopped at: Completed 14-03-PLAN.md
+Last session: 2026-02-01 15:58 UTC
+Stopped at: Completed 14-05-PLAN.md
 Resume file: None
 
 ## Next Steps
 
-Continue with Phase 14 plan 05 to complete v1.2 UI Redesign milestone:
-- 14-05: Final A11Y Polish
+v1.2 UI Redesign milestone complete. Run `/gsd:audit-milestone` to verify completion.
