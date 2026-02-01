@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 14 of 14 (Mobile & Accessibility Polish)
-Plan: 2 of 5 in current phase
+Plan: 4 of 5 in current phase
 Status: Phase 14 in progress
-Last activity: 2026-02-01 - Completed 14-02-PLAN.md (Accessibility Infrastructure)
+Last activity: 2026-02-01 - Completed 14-04-PLAN.md (Collapsible Leaderboard)
 
-Progress: [██████████████████████████████░] 51/~54 plans (v1.0 + v1.1 complete, v1.2 in progress)
+Progress: [██████████████████████████████░] 53/~54 plans (v1.0 + v1.1 complete, v1.2 in progress)
 
 ## Milestones
 
@@ -35,9 +35,9 @@ Progress: [███████████████████████
 - Average duration: 5.0 min/plan
 
 **v1.2 Velocity (in progress):**
-- Plans completed: 9 (Phase 12: 3, Phase 13: 4, Phase 14: 2)
-- Total execution time: ~25 min
-- Average duration: ~2.8 min/plan
+- Plans completed: 11 (Phase 12: 3, Phase 13: 4, Phase 14: 4)
+- Total execution time: ~29 min
+- Average duration: ~2.6 min/plan
 
 ## Accumulated Context
 
@@ -58,6 +58,8 @@ Recent decisions affecting v1.2:
 - sm: breakpoint (640px) for mobile panel stacking (14-01)
 - W3C APG Grid Pattern for keyboard navigation (14-02)
 - aria-live="polite" for non-interruptive screen reader announcements (14-02)
+- 5 sessions as onboarding threshold for collapsible leaderboard (14-04)
+- 5-second auto-collapse during onboarding for progressive disclosure (14-04)
 
 ### Pending Todos
 
@@ -70,12 +72,10 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 14-02-PLAN.md
+Stopped at: Completed 14-04-PLAN.md
 Resume file: None
 
 ## Next Steps
 
-Continue with Phase 14 plans 03-05 to complete v1.2 UI Redesign milestone:
-- 14-03: Keyboard Navigation (uses useRovingTabindex)
-- 14-04: Sort Announcements (uses announceToScreenReader)
+Continue with Phase 14 plan 05 to complete v1.2 UI Redesign milestone:
 - 14-05: Final A11Y Polish
