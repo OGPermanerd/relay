@@ -55,12 +55,12 @@ Total: 9 plans completed in 45 minutes.
   3. Table is sorted by days_saved descending by default
   4. User can type in search bar and see filtered results
   5. Leaderboard shows contributors with handle, total days_saved, contribution count, and latest date
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 12-01: TBD
-- [ ] 12-02: TBD
-- [ ] 12-03: TBD
+- [ ] 12-01-PLAN.md — Two-panel layout and skills table components
+- [ ] 12-02-PLAN.md — Data layer extension and page wiring
+- [ ] 12-03-PLAN.md — Leaderboard column updates
 
 #### Phase 13: Interactive Sorting & Accordion
 **Goal**: Users can interactively sort the table and expand rows to see skill details and install
@@ -104,7 +104,7 @@ Plans:
 | 9. Tag Filtering | v1.1 | 1/1 | Complete | 2026-01-31 |
 | 10. Quality Scorecards | v1.1 | 4/4 | Complete | 2026-01-31 |
 | 11. E2E Test Coverage | v1.1 | 4/4 | Complete | 2026-02-01 |
-| 12. Two-Panel Layout | v1.2 | 0/TBD | Not started | - |
+| 12. Two-Panel Layout | v1.2 | 0/3 | Ready | - |
 | 13. Interactive Sorting & Accordion | v1.2 | 0/TBD | Not started | - |
 | 14. Mobile & Accessibility | v1.2 | 0/TBD | Not started | - |
 
@@ -113,3 +113,4 @@ Plans:
 *Roadmap created: 2026-01-31*
 *v1.1 completed: 2026-02-01*
 *v1.2 phases added: 2026-02-01*
+*Phase 12 planned: 2026-02-01*
