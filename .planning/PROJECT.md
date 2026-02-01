@@ -10,19 +10,13 @@ Skills get better as they pass through more hands, with real metrics proving tha
 
 ## Current State
 
-**v1.0 shipped 2026-01-31** — Full internal skill marketplace with MCP integration.
+**v1.1 shipped 2026-02-01** — Quality scorecards and comprehensive E2E test coverage.
 
-Tech stack: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK
-LOC: 4,667 TypeScript across 200 files
+Tech stack: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, Playwright, vitest
+LOC: 5,942 TypeScript across 230 files
 
-## Current Milestone: v1.1 Quality & Polish
-
-**Goal:** Fix tech debt from v1.0 and add quality scorecards to surface high-value skills.
-
-**Target features:**
-- Tag filtering backend (complete the UI that already exists)
-- E2E test coverage for authenticated flows
-- Quality scorecards (Gold/Silver/Bronze) based on ratings, usage, documentation
+Previous:
+- v1.0 shipped 2026-01-31 — Full internal skill marketplace with MCP integration
 
 ## Requirements
 
@@ -46,12 +40,15 @@ LOC: 4,667 TypeScript across 200 files
 - ✓ MCP search/list skill operations — v1.0
 - ✓ MCP one-click skill deployment — v1.0
 - ✓ MCP automatic usage tracking — v1.0
+- ✓ Tag filtering backend with getAvailableTags implementation — v1.1
+- ✓ E2E tests for skill upload, rating, search, and profile flows (22 tests) — v1.1
+- ✓ Quality scorecards (Gold/Silver/Bronze/Unrated) with auto-calculation — v1.1
+- ✓ Quality tier filtering and sorting on browse page — v1.1
+- ✓ "Why this badge?" breakdown showing score components — v1.1
 
 ### Active
 
-- [ ] Tag filtering backend with getAvailableTags implementation
-- [ ] E2E tests for skill upload, rating, and authenticated flows
-- [ ] Quality scorecards (Gold/Silver/Bronze) with auto-calculation
+(None — ready for v1.2 planning)
 
 ### Out of Scope
 
@@ -93,6 +90,13 @@ LOC: 4,667 TypeScript across 200 files
 | JWT session strategy | Required for Edge middleware compatibility with Auth.js | ✓ Good |
 | Denormalized totalUses counter | Display performance over query complexity | ✓ Good |
 | Hacker News trending formula | Proven time-decay algorithm; simple to implement | ✓ Good |
+| TEXT[] for tags over JSONB | Simpler type inference, direct PostgreSQL array operators | ✓ Good |
+| vitest for unit testing | Fast startup, native ESM, simple Next.js config | ✓ Good |
+| Rating stored as integer * 100 | Avoids floating point precision issues in DB and calcs | ✓ Good |
+| Minimum 3 ratings for quality tier | Prevents gaming, ensures meaningful quality signals | ✓ Good |
+| nuqs for URL state | Consistent with existing CategoryFilter/TagFilter patterns | ✓ Good |
+| Inline SQL quality computation | Avoids denormalized column; acceptable at v1.1 scale | ✓ Good |
+| JWT injection for E2E auth | Bypasses OAuth flow, enables fast authenticated testing | ✓ Good |
 
 ---
-*Last updated: 2026-01-31 after v1.1 milestone start*
+*Last updated: 2026-02-01 after v1.1 milestone completion*
