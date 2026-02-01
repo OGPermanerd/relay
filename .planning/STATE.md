@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 14 of 14 (Mobile & Accessibility Polish)
-Plan: 4 of 5 in current phase
+Plan: 4 of 5 in current phase (14-01, 14-02, 14-03, 14-04 complete)
 Status: Phase 14 in progress
-Last activity: 2026-02-01 - Completed 14-04-PLAN.md (Collapsible Leaderboard)
+Last activity: 2026-02-01 - Completed 14-03-PLAN.md (Screen Reader Sort Indicators)
 
 Progress: [██████████████████████████████░] 53/~54 plans (v1.0 + v1.1 complete, v1.2 in progress)
 
@@ -60,6 +60,8 @@ Recent decisions affecting v1.2:
 - aria-live="polite" for non-interruptive screen reader announcements (14-02)
 - 5 sessions as onboarding threshold for collapsible leaderboard (14-04)
 - 5-second auto-collapse during onboarding for progressive disclosure (14-04)
+- Omit aria-sort on non-sorted columns per WCAG guidance (14-03)
+- Skip initial mount for screen reader announcements via useRef (14-03)
 
 ### Pending Todos
 
@@ -71,8 +73,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-01
-Stopped at: Completed 14-04-PLAN.md
+Last session: 2026-02-01 15:47 UTC
+Stopped at: Completed 14-03-PLAN.md
 Resume file: None
 
 ## Next Steps
