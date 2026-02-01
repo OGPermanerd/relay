@@ -9,26 +9,26 @@ Requirements for UI redesign focused on simplicity, gamification, and performanc
 
 ### Skills Table
 
-- [ ] **TABL-01**: User sees skills in a sortable table occupying left 2/3 of screen
+- [x] **TABL-01**: User sees skills in a sortable table occupying left 2/3 of screen
 - [ ] **TABL-02**: User can click column header to sort ascending, click again to sort descending
 - [ ] **TABL-03**: Table shows sort direction indicator (chevron) on active column
-- [ ] **TABL-04**: Table displays columns: skill name, days_saved, installs, date added, author handle, sparkline
-- [ ] **TABL-05**: Default sort is days_saved descending
+- [x] **TABL-04**: Table displays columns: skill name, days_saved, installs, date added, author handle, sparkline
+- [x] **TABL-05**: Default sort is days_saved descending
 - [ ] **TABL-06**: User can click row to expand inline accordion showing description and usage instructions
 - [ ] **TABL-07**: Multiple rows can be expanded simultaneously
 - [ ] **TABL-08**: User can click "Install" button to copy skill to clipboard with MCP config
 - [ ] **TABL-09**: Sort state persists in URL (shareable links)
-- [ ] **TABL-10**: User can search skills via search bar above table
+- [x] **TABL-10**: User can search skills via search bar above table
 
 ### Leaderboard
 
-- [ ] **LEAD-01**: User sees contributor leaderboard in right 1/3 of screen
-- [ ] **LEAD-02**: Leaderboard shows: handle, total days_saved, # contributions, latest contribution date
+- [x] **LEAD-01**: User sees contributor leaderboard in right 1/3 of screen
+- [x] **LEAD-02**: Leaderboard shows: handle, total days_saved, # contributions, latest contribution date
 - [ ] **LEAD-03**: User can click contributor to filter skills table to that author
 
 ### Layout
 
-- [ ] **LAYT-01**: Two-panel layout with responsive behavior
+- [x] **LAYT-01**: Two-panel layout with responsive behavior
 - [ ] **LAYT-02**: Mobile view stacks panels vertically (skills above leaderboard)
 
 ### Accessibility
@@ -66,20 +66,20 @@ Deferred to later milestones.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TABL-01 | Phase 12 | Pending |
+| TABL-01 | Phase 12 | Complete |
 | TABL-02 | Phase 13 | Pending |
 | TABL-03 | Phase 13 | Pending |
-| TABL-04 | Phase 12 | Pending |
-| TABL-05 | Phase 12 | Pending |
+| TABL-04 | Phase 12 | Complete |
+| TABL-05 | Phase 12 | Complete |
 | TABL-06 | Phase 13 | Pending |
 | TABL-07 | Phase 13 | Pending |
 | TABL-08 | Phase 13 | Pending |
 | TABL-09 | Phase 13 | Pending |
-| TABL-10 | Phase 12 | Pending |
-| LEAD-01 | Phase 12 | Pending |
-| LEAD-02 | Phase 12 | Pending |
+| TABL-10 | Phase 12 | Complete |
+| LEAD-01 | Phase 12 | Complete |
+| LEAD-02 | Phase 12 | Complete |
 | LEAD-03 | Phase 13 | Pending |
-| LAYT-01 | Phase 12 | Pending |
+| LAYT-01 | Phase 12 | Complete |
 | LAYT-02 | Phase 14 | Pending |
 | A11Y-01 | Phase 14 | Pending |
 | A11Y-02 | Phase 14 | Pending |
