@@ -10,21 +10,21 @@ Requirements for UI redesign focused on simplicity, gamification, and performanc
 ### Skills Table
 
 - [x] **TABL-01**: User sees skills in a sortable table occupying left 2/3 of screen
-- [ ] **TABL-02**: User can click column header to sort ascending, click again to sort descending
-- [ ] **TABL-03**: Table shows sort direction indicator (chevron) on active column
+- [x] **TABL-02**: User can click column header to sort ascending, click again to sort descending
+- [x] **TABL-03**: Table shows sort direction indicator (chevron) on active column
 - [x] **TABL-04**: Table displays columns: skill name, days_saved, installs, date added, author handle, sparkline
 - [x] **TABL-05**: Default sort is days_saved descending
-- [ ] **TABL-06**: User can click row to expand inline accordion showing description and usage instructions
-- [ ] **TABL-07**: Multiple rows can be expanded simultaneously
-- [ ] **TABL-08**: User can click "Install" button to copy skill to clipboard with MCP config
-- [ ] **TABL-09**: Sort state persists in URL (shareable links)
+- [x] **TABL-06**: User can click row to expand inline accordion showing description and usage instructions
+- [x] **TABL-07**: Multiple rows can be expanded simultaneously
+- [x] **TABL-08**: User can click "Install" button to copy skill to clipboard with MCP config
+- [x] **TABL-09**: Sort state persists in URL (shareable links)
 - [x] **TABL-10**: User can search skills via search bar above table
 
 ### Leaderboard
 
 - [x] **LEAD-01**: User sees contributor leaderboard in right 1/3 of screen
 - [x] **LEAD-02**: Leaderboard shows: handle, total days_saved, # contributions, latest contribution date
-- [ ] **LEAD-03**: User can click contributor to filter skills table to that author
+- [x] **LEAD-03**: User can click contributor to filter skills table to that author
 
 ### Layout
 
@@ -67,18 +67,18 @@ Deferred to later milestones.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | TABL-01 | Phase 12 | Complete |
-| TABL-02 | Phase 13 | Pending |
-| TABL-03 | Phase 13 | Pending |
+| TABL-02 | Phase 13 | Complete |
+| TABL-03 | Phase 13 | Complete |
 | TABL-04 | Phase 12 | Complete |
 | TABL-05 | Phase 12 | Complete |
-| TABL-06 | Phase 13 | Pending |
-| TABL-07 | Phase 13 | Pending |
-| TABL-08 | Phase 13 | Pending |
-| TABL-09 | Phase 13 | Pending |
+| TABL-06 | Phase 13 | Complete |
+| TABL-07 | Phase 13 | Complete |
+| TABL-08 | Phase 13 | Complete |
+| TABL-09 | Phase 13 | Complete |
 | TABL-10 | Phase 12 | Complete |
 | LEAD-01 | Phase 12 | Complete |
 | LEAD-02 | Phase 12 | Complete |
-| LEAD-03 | Phase 13 | Pending |
+| LEAD-03 | Phase 13 | Complete |
 | LAYT-01 | Phase 12 | Complete |
 | LAYT-02 | Phase 14 | Pending |
 | A11Y-01 | Phase 14 | Pending |

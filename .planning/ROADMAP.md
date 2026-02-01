@@ -77,10 +77,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 13-01-PLAN.md - Sorting infrastructure (URL state hook, sortable column headers)
-- [ ] 13-02-PLAN.md - Accordion and install infrastructure (expansion hooks, install button, accordion content)
-- [ ] 13-03-PLAN.md - SkillsTable integration (client conversion, sorting, accordion rows)
-- [ ] 13-04-PLAN.md - Author filtering (leaderboard click, filter chip, URL persistence)
+- [x] 13-01-PLAN.md - Sorting infrastructure (URL state hook, sortable column headers)
+- [x] 13-02-PLAN.md - Accordion and install infrastructure (expansion hooks, install button, accordion content)
+- [x] 13-03-PLAN.md - SkillsTable integration (client conversion, sorting, accordion rows)
+- [x] 13-04-PLAN.md - Author filtering (leaderboard click, filter chip, URL persistence)
 
 #### Phase 14: Mobile & Accessibility Polish
 **Goal**: Users can access all features via keyboard and mobile devices with full screen reader support
@@ -106,7 +106,7 @@ Plans:
 | 10. Quality Scorecards | v1.1 | 4/4 | Complete | 2026-01-31 |
 | 11. E2E Test Coverage | v1.1 | 4/4 | Complete | 2026-02-01 |
 | 12. Two-Panel Layout | v1.2 | 3/3 | Complete | 2026-02-01 |
-| 13. Interactive Sorting & Accordion | v1.2 | 0/4 | Planned | - |
+| 13. Interactive Sorting & Accordion | v1.2 | 4/4 | Complete | 2026-02-01 |
 | 14. Mobile & Accessibility | v1.2 | 0/TBD | Not started | - |
 
 ---
@@ -117,3 +117,4 @@ Plans:
 *Phase 12 planned: 2026-02-01*
 *Phase 12 completed: 2026-02-01*
 *Phase 13 planned: 2026-02-01*
+*Phase 13 completed: 2026-02-01*
