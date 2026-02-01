@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { LeaderboardEntry } from "@/lib/leaderboard";
+import { useAuthorFilter } from "@/hooks/use-author-filter";
 
 interface LeaderboardTableProps {
   contributors: LeaderboardEntry[];
@@ -14,6 +17,8 @@ function formatLatestDate(date: Date | null): string {
 }
 
 export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
+  const { author, filterByAuthor } = useAuthorFilter();
+
   if (contributors.length === 0) {
     return <p className="text-gray-500">No contributors yet. Be the first to share a skill!</p>;
   }
@@ -53,7 +58,8 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
           {contributors.map((contributor, index) => (
             <tr
               key={contributor.userId}
-              className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition-colors`}
+              onClick={() => filterByAuthor(contributor.userId)}
+              className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} ${author === contributor.userId ? "ring-2 ring-blue-500 bg-blue-50" : ""} hover:bg-blue-50 transition-colors cursor-pointer`}
             >
               <td className="whitespace-nowrap px-4 py-3">
                 <div className="flex items-center gap-3">
