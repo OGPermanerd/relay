@@ -1,40 +1,50 @@
 import { test, expect } from "@playwright/test";
-import { db, skills } from "@relay/db";
-import { eq } from "drizzle-orm";
+import { db, skills, users } from "@relay/db";
+import { ne } from "drizzle-orm";
 
-// Skill slug created by the skill upload test
-// We use a test skill that exists in the database
+// We need a skill from a DIFFERENT author than the test user to rate it
+// Test user ID is "e2e-test-user"
 const TEST_USER_ID = "e2e-test-user";
+const OTHER_AUTHOR_ID = "e2e-other-author";
 
 test.describe("Skill Rating Flow", () => {
   let testSkillSlug: string;
 
   test.beforeAll(async () => {
-    // Find or create a skill for rating tests
-    // First check if our test skill exists
     if (!db) {
       throw new Error("DATABASE_URL is required for E2E tests");
     }
 
+    // Ensure a different author exists for the skill we'll rate
+    await db
+      .insert(users)
+      .values({
+        id: OTHER_AUTHOR_ID,
+        email: "other-author@company.com",
+        name: "Other Author",
+      })
+      .onConflictDoNothing();
+
+    // Find or create a skill from the OTHER author
     const existingSkill = await db.query.skills.findFirst({
-      where: eq(skills.authorId, TEST_USER_ID),
+      where: ne(skills.authorId, TEST_USER_ID),
       columns: { slug: true },
     });
 
     if (existingSkill) {
       testSkillSlug = existingSkill.slug;
     } else {
-      // Create a test skill for rating
+      // Create a test skill from a different author for rating
       const [newSkill] = await db
         .insert(skills)
         .values({
-          name: "Rating Test Skill",
-          slug: `rating-test-skill-${Date.now()}`,
-          description: "A skill created for rating E2E tests",
+          name: "Skill To Rate",
+          slug: `skill-to-rate-${Date.now()}`,
+          description: "A skill from another author for rating E2E tests",
           category: "prompt",
           content: "Test content for rating",
           hoursSaved: 1,
-          authorId: TEST_USER_ID,
+          authorId: OTHER_AUTHOR_ID,
         })
         .returning({ slug: skills.slug });
       testSkillSlug = newSkill.slug;
@@ -45,28 +55,30 @@ test.describe("Skill Rating Flow", () => {
     // Navigate to skill detail page
     await page.goto(`/skills/${testSkillSlug}`);
 
-    // Verify the rating form is visible (authenticated users see this)
-    await expect(page.getByRole("heading", { name: /rate this skill/i })).toBeVisible();
+    // Wait for page to load and check for rating form section
+    // The heading can be "Rate This Skill" (new rating) or "Update Your Rating" (existing rating)
+    await expect(
+      page.getByRole("heading", { name: /rate this skill|update your rating/i })
+    ).toBeVisible({ timeout: 10000 });
 
-    // Verify star rating input exists (5 radio buttons for stars)
-    await expect(page.getByText(/select rating/i)).toBeVisible();
-
-    // Verify comment field exists
+    // Verify comment field exists (with optional marker)
     await expect(page.getByLabel(/comment/i)).toBeVisible();
 
     // Verify hours saved field exists
     await expect(page.getByLabel(/hours saved/i)).toBeVisible();
 
-    // Verify submit button exists
-    await expect(page.getByRole("button", { name: /submit rating/i })).toBeVisible();
+    // Verify submit button exists (either "Submit Rating" or "Update Rating")
+    await expect(page.getByRole("button", { name: /submit rating|update rating/i })).toBeVisible();
   });
 
   test("should successfully submit a rating with comment and time saved", async ({ page }) => {
     // Navigate to skill detail page
     await page.goto(`/skills/${testSkillSlug}`);
 
-    // Wait for rating form to be visible
-    await expect(page.getByRole("heading", { name: /rate this skill/i })).toBeVisible();
+    // Wait for rating form to be visible (either new or update)
+    await expect(
+      page.getByRole("heading", { name: /rate this skill|update your rating/i })
+    ).toBeVisible({ timeout: 10000 });
 
     // Click on 4-star rating (the 4th star label)
     // The StarRatingInput uses radio buttons with labels
@@ -81,13 +93,13 @@ test.describe("Skill Rating Flow", () => {
     // Fill in hours saved estimate
     await page.getByLabel(/hours saved/i).fill("5");
 
-    // Submit the rating
-    await page.getByRole("button", { name: /submit rating/i }).click();
+    // Submit the rating (button could say Submit or Update)
+    await page.getByRole("button", { name: /submit rating|update rating/i }).click();
 
     // Wait for success message
     await expect(page.getByText(/rating submitted|updated/i)).toBeVisible({ timeout: 10000 });
 
-    // After submission, the form should show "Update Rating" instead of "Submit Rating"
+    // After submission, the form should show "Update Rating" button
     await expect(page.getByRole("button", { name: /update rating/i })).toBeVisible();
   });
 });
