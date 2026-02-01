@@ -44,10 +44,14 @@ export function SortableColumnHeader({
   // Show up chevron only when active and ascending
   const showUpChevron = isActive && direction === "asc";
 
+  // Only set aria-sort on active sorted column (omit entirely for non-sorted per WCAG)
+  const ariaSortValue = isActive ? (direction === "asc" ? "ascending" : "descending") : undefined;
+
   return (
     <th
       scope="col"
       className={`px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 ${alignmentClass}`}
+      aria-sort={ariaSortValue}
     >
       <button
         type="button"
@@ -61,6 +65,7 @@ export function SortableColumnHeader({
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
+          aria-hidden="true"
         >
           {showUpChevron ? (
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
