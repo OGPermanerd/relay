@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** - Phases 1-8 (shipped 2026-01-31)
-- 🚧 **v1.1 Quality & Polish** - Phases 9-11 (in progress)
+- ✅ **v1.1 Quality & Polish** - Phases 9-11 (shipped 2026-01-31)
 
 ## Phases
 
@@ -26,13 +26,13 @@ Total: 33 plans completed in 120 minutes.
 
 </details>
 
-### 🚧 v1.1 Quality & Polish (In Progress)
+### ✅ v1.1 Quality & Polish (Complete)
 
 **Milestone Goal:** Fix tech debt from v1.0 and add quality scorecards to surface high-value skills.
 
 - [x] **Phase 9: Tag Filtering** - Complete backend for existing tag UI
 - [x] **Phase 10: Quality Scorecards** - Calculate and display quality badges
-- [ ] **Phase 11: E2E Test Coverage** - Validate authenticated user flows
+- [x] **Phase 11: E2E Test Coverage** - Validate authenticated user flows
 
 ## Phase Details
 
@@ -81,10 +81,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 11-01-PLAN.md — Playwright auth setup infrastructure
-- [ ] 11-02-PLAN.md — Skill upload and rating E2E tests (TEST-01, TEST-02)
-- [ ] 11-03-PLAN.md — Skill search and profile E2E tests (TEST-03, TEST-04)
-- [ ] 11-04-PLAN.md — CI pipeline integration
+- [x] 11-01-PLAN.md — Playwright auth setup infrastructure
+- [x] 11-02-PLAN.md — Skill upload and rating E2E tests (TEST-01, TEST-02)
+- [x] 11-03-PLAN.md — Skill search and profile E2E tests (TEST-03, TEST-04)
+- [x] 11-04-PLAN.md — CI pipeline integration
 
 ## Progress
 
@@ -96,7 +96,7 @@ Phases execute in numeric order: 9 → 10 → 11
 | 1-8 | v1.0 | 33/33 | Complete | 2026-01-31 |
 | 9. Tag Filtering | v1.1 | 1/1 | Complete | 2026-01-31 |
 | 10. Quality Scorecards | v1.1 | 4/4 | Complete | 2026-01-31 |
-| 11. E2E Test Coverage | v1.1 | 0/4 | In progress | - |
+| 11. E2E Test Coverage | v1.1 | 4/4 | Complete | 2026-01-31 |
 
 ---
 

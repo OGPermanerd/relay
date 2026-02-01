@@ -15,10 +15,10 @@ Requirements for quality & polish release. Fixes tech debt and adds quality scor
 
 ### E2E Testing
 
-- [ ] **TEST-01**: E2E test validates skill upload flow (authenticated)
-- [ ] **TEST-02**: E2E test validates skill rating flow
-- [ ] **TEST-03**: E2E test validates skill browsing and search
-- [ ] **TEST-04**: E2E test validates user profile page
+- [x] **TEST-01**: E2E test validates skill upload flow (authenticated)
+- [x] **TEST-02**: E2E test validates skill rating flow
+- [x] **TEST-03**: E2E test validates skill browsing and search
+- [x] **TEST-04**: E2E test validates user profile page
 
 ### Quality Scorecards
 
@@ -74,10 +74,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TAG-01 | Phase 9 | Complete |
 | TAG-02 | Phase 9 | Complete |
 | TAG-03 | Phase 9 | Complete |
-| TEST-01 | Phase 11 | Pending |
-| TEST-02 | Phase 11 | Pending |
-| TEST-03 | Phase 11 | Pending |
-| TEST-04 | Phase 11 | Pending |
+| TEST-01 | Phase 11 | Complete |
+| TEST-02 | Phase 11 | Complete |
+| TEST-03 | Phase 11 | Complete |
+| TEST-04 | Phase 11 | Complete |
 | QUAL-01 | Phase 10 | Complete |
 | QUAL-02 | Phase 10 | Complete |
 | QUAL-03 | Phase 10 | Complete |
@@ -90,4 +90,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-31*
-*Last updated: 2026-01-31 - QUAL-01, QUAL-02, QUAL-03, QUAL-04 complete (Phase 10)*
+*Last updated: 2026-01-31 - All v1.1 requirements complete (Phase 11)*
