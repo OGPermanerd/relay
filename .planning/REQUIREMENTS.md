@@ -89,31 +89,31 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EMB-01 | TBD | Pending |
-| EMB-02 | TBD | Pending |
-| EMB-03 | TBD | Pending |
-| EMB-04 | TBD | Pending |
-| REV-01 | TBD | Pending |
-| REV-02 | TBD | Pending |
-| REV-03 | TBD | Pending |
-| SIM-01 | TBD | Pending |
-| SIM-02 | TBD | Pending |
-| SIM-03 | TBD | Pending |
-| SIM-04 | TBD | Pending |
-| FORK-01 | TBD | Pending |
-| FORK-02 | TBD | Pending |
-| FORK-03 | TBD | Pending |
-| FORK-04 | TBD | Pending |
-| INST-01 | TBD | Pending |
-| INST-02 | TBD | Pending |
-| INST-03 | TBD | Pending |
-| INST-04 | TBD | Pending |
+| EMB-01 | Phase 15 | Pending |
+| EMB-02 | Phase 15 | Pending |
+| EMB-03 | Phase 15 | Pending |
+| EMB-04 | Phase 15 | Pending |
+| REV-01 | Phase 17 | Pending |
+| REV-02 | Phase 17 | Pending |
+| REV-03 | Phase 17 | Pending |
+| SIM-01 | Phase 16 | Pending |
+| SIM-02 | Phase 16 | Pending |
+| SIM-03 | Phase 16 | Pending |
+| SIM-04 | Phase 16 | Pending |
+| FORK-01 | Phase 18 | Pending |
+| FORK-02 | Phase 18 | Pending |
+| FORK-03 | Phase 18 | Pending |
+| FORK-04 | Phase 18 | Pending |
+| INST-01 | Phase 19 | Pending |
+| INST-02 | Phase 19 | Pending |
+| INST-03 | Phase 19 | Pending |
+| INST-04 | Phase 19 | Pending |
 
 **Coverage:**
 - v1.3 requirements: 19 total
-- Mapped to phases: 0
-- Unmapped: 19 ⚠️
+- Mapped to phases: 19
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 after initial definition*
+*Last updated: 2026-02-02 after roadmap creation*
