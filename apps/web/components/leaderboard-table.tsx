@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { LeaderboardEntry } from "@/lib/leaderboard";
 import { useAuthorFilter } from "@/hooks/use-author-filter";
-import { useLoginCount } from "@/hooks/use-login-count";
 
 interface LeaderboardTableProps {
   contributors: LeaderboardEntry[];
@@ -20,33 +19,7 @@ function formatLatestDate(date: Date | null): string {
 
 export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
   const { author, filterByAuthor } = useAuthorFilter();
-  const { isOnboarding } = useLoginCount();
-
-  // Start expanded during onboarding, collapsed after
   const [isExpanded, setIsExpanded] = useState(true);
-  const autoCollapseRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Auto-collapse after 5 seconds during onboarding
-  useEffect(() => {
-    if (isOnboarding && isExpanded) {
-      autoCollapseRef.current = setTimeout(() => {
-        setIsExpanded(false);
-      }, 5000);
-    }
-
-    return () => {
-      if (autoCollapseRef.current) {
-        clearTimeout(autoCollapseRef.current);
-      }
-    };
-  }, [isOnboarding, isExpanded]);
-
-  // After onboarding period, start collapsed
-  useEffect(() => {
-    if (!isOnboarding) {
-      setIsExpanded(false);
-    }
-  }, [isOnboarding]);
 
   if (contributors.length === 0) {
     return <p className="text-gray-500">No contributors yet. Be the first to share a skill!</p>;

@@ -14,6 +14,9 @@ interface SkillAccordionContentProps {
   };
   onInstall: () => void;
   isCopied: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  onClick?: () => void;
 }
 
 /**
@@ -32,10 +35,19 @@ export function SkillAccordionContent({
   skill,
   onInstall,
   isCopied,
+  onMouseEnter,
+  onMouseLeave,
+  onClick,
 }: SkillAccordionContentProps) {
   return (
-    <tr id={id} className="bg-blue-50">
-      <td colSpan={7} className="px-4 py-3">
+    <tr
+      id={id}
+      className="cursor-pointer bg-blue-50"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onClick={onClick}
+    >
+      <td colSpan={8} className="px-4 py-3">
         <div className="rounded-lg border border-blue-100 bg-white p-4">
           {/* Category badge */}
           <span className="text-xs font-medium uppercase text-blue-600">{skill.category}</span>
@@ -59,8 +71,8 @@ export function SkillAccordionContent({
             </div>
           )}
 
-          {/* Install button */}
-          <div className="mt-4">
+          {/* Install button - stopPropagation prevents navigation */}
+          <div className="mt-4" onClick={(e) => e.stopPropagation()}>
             <InstallButton
               skillName={skill.name}
               isCopied={isCopied}

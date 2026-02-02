@@ -19,6 +19,7 @@ export interface SkillTableRow {
   category: string;
   tags?: string[] | null;
   totalUses: number;
+  averageRating: number | null;
   hoursSaved: number | null;
   createdAt: Date;
   author: {
@@ -56,12 +57,13 @@ const COLUMN_LABELS: Record<string, string> = {
   installs: "Installs",
   date: "Date Added",
   author: "Author",
+  rating: "Rating",
 };
 
 export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
   const router = useRouter();
   const { sortBy, sortDir, toggleSort } = useSortState();
-  const { toggleRow, expandRow, collapseRow, isExpanded } = useExpandedRows();
+  const { expandRow, collapseRow, isExpanded } = useExpandedRows();
   const { copyToClipboard, isCopied } = useClipboardCopy();
 
   // Roving tabindex for keyboard navigation (single column: row focus only)
@@ -138,6 +140,9 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
         case "author":
           comparison = (a.author?.name ?? "").localeCompare(b.author?.name ?? "");
           break;
+        case "rating":
+          comparison = (a.averageRating ?? 0) - (b.averageRating ?? 0);
+          break;
       }
       return sortDir === "desc" ? -comparison : comparison;
     });
@@ -166,7 +171,7 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
               currentSort={sortBy}
               direction={sortDir}
               onSort={toggleSort}
-              align="right"
+              align="center"
             />
             <SortableColumnHeader
               column="installs"
@@ -174,7 +179,7 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
               currentSort={sortBy}
               direction={sortDir}
               onSort={toggleSort}
-              align="right"
+              align="center"
             />
             <SortableColumnHeader
               column="date"
@@ -182,7 +187,7 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
               currentSort={sortBy}
               direction={sortDir}
               onSort={toggleSort}
-              align="right"
+              align="center"
             />
             <SortableColumnHeader
               column="author"
@@ -191,6 +196,14 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
               direction={sortDir}
               onSort={toggleSort}
               align="left"
+            />
+            <SortableColumnHeader
+              column="rating"
+              label="Rating"
+              currentSort={sortBy}
+              direction={sortDir}
+              onSort={toggleSort}
+              align="center"
             />
             <th
               scope="col"
@@ -213,7 +226,7 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
               skill={skill}
               trend={usageTrends.get(skill.id) || []}
               isExpanded={isExpanded(skill.id)}
-              onToggle={() => toggleRow(skill.id)}
+              onExpand={() => expandRow(skill.id)}
               onCollapse={() => collapseRow(skill.id)}
               onFocus={() => handleRowFocus(skill.id)}
               tabIndex={getTabIndex(index, 0)}
