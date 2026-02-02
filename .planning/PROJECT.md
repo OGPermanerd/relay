@@ -8,6 +8,16 @@ Relay is an internal skill marketplace where Claude skills, prompts, workflows, 
 
 Skills get better as they pass through more hands, with real metrics proving that value.
 
+## Current Milestone: v1.3 AI Quality & Cross-Platform
+
+**Goal:** Add AI-driven skill review, semantic duplicate detection, fork-based versioning, and cross-platform install support.
+
+**Target features:**
+- AI skill review (functionality testing, security scanning, quality assessment, improvement suggestions)
+- Semantic similarity detection (advisory duplicate warnings on publish)
+- Fork-based versioning (users create variants of existing skills)
+- Cross-platform install (Claude Code, Claude Desktop, Claude.ai web, VS Code extension)
+
 ## Current State
 
 **v1.2 shipped 2026-02-02** — Two-panel UI redesign with sortable table, inline expansion, keyboard navigation, and mobile accessibility.
@@ -57,15 +67,15 @@ Previous:
 
 ### Active
 
-(No active requirements — run `/gsd:new-milestone` to define next milestone)
+(Defined in REQUIREMENTS.md for v1.3)
 
 ### Out of Scope
 
-- Review prompts in Claude after skill use — v2 feature, adds MCP complexity
-- Skill creation scaffolding via MCP — v2 feature, focus v1 on deploy/track
-- Similarity/duplicate detection on publish — v2 feature, start with basic search
-- AI-suggested improvement recommendations — v2 feature
+- Review prompts in Claude after skill use — adds MCP complexity, defer
+- Skill creation scaffolding via MCP — focus on deploy/track first
 - Approval gates or review process for new versions — metrics-driven quality model instead
+- Claude.ai web remote MCP — requires Anthropic partnership, defer to v1.4+
+- Auto-review on every publish — cost scaling issues, use on-demand instead
 
 ## Context
 
@@ -90,11 +100,11 @@ Previous:
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Wiki-style versioning over fork model | Keeps skills as single evolving artifacts rather than fragmenting into forks; simpler mental model | ✓ Good |
+| Wiki-style versioning over fork model | Keeps skills as single evolving artifacts rather than fragmenting into forks; simpler mental model | ⚠️ Revisit — adding fork model in v1.3 |
 | MCP-only tracking | Provides accurate usage data; creates natural incentive for MCP adoption | ✓ Good |
 | No approval gates | Reduces friction for contributors; lets metrics surface quality organically | ✓ Good |
 | User estimates override creator | Real-world usage data more reliable than creator's guess | ✓ Good |
-| Defer similarity detection to v2 | Simplifies v1 scope; basic search sufficient to start | ✓ Good |
+| Defer similarity detection to v2 | Simplifies v1 scope; basic search sufficient to start | ⚠️ Revisit — adding in v1.3 |
 | MCP Integration in Phase 3 | Enable usage tracking from day one; core metric needs real data | ✓ Good |
 | JWT session strategy | Required for Edge middleware compatibility with Auth.js | ✓ Good |
 | Denormalized totalUses counter | Display performance over query complexity | ✓ Good |
@@ -114,4 +124,4 @@ Previous:
 | 80px swipe delta threshold | Balances sensitivity with accidental activation prevention | ✓ Good |
 
 ---
-*Last updated: 2026-02-02 after v1.2 milestone complete*
+*Last updated: 2026-02-02 after v1.3 milestone started*
