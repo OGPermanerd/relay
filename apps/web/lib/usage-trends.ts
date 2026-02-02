@@ -8,16 +8,16 @@ interface DailyDaysSaved {
 }
 
 /**
- * Get days saved trends for multiple skills in a single query
+ * Get cumulative days saved trends for multiple skills in a single query
  *
- * Calculates daily "days saved" (uses * hoursSaved / 8) for the last N days.
- * Returns a map of skillId -> array of daily days saved values.
+ * Calculates cumulative "days saved" (uses * hoursSaved / 8) over the last N days.
+ * Returns a map of skillId -> array of cumulative days saved values (monotonically increasing).
  *
  * Uses batch query to avoid N+1 problem with skill cards.
  *
  * @param skillIds - Array of skill IDs to fetch trends for
  * @param days - Number of days to look back (default 14)
- * @returns Map of skillId to array of daily days saved (multiplied by 10 for sparkline visibility)
+ * @returns Map of skillId to array of cumulative days saved values
  */
 export async function getUsageTrends(
   skillIds: string[],
@@ -76,20 +76,27 @@ export async function getUsageTrends(
 }
 
 /**
- * Fill missing days with zero values
- * Multiplies by 10 for better sparkline visibility (small fractional values don't show well)
+ * Fill missing days and convert to cumulative values
+ * Returns monotonically increasing values representing total hours saved over time
  */
 function fillMissingDays(data: DailyDaysSaved[], days: number, referenceDate: Date): number[] {
-  const result: number[] = [];
+  const daily: number[] = [];
   const dataMap = new Map(data.map((d) => [d.date, d.daysSaved]));
 
   for (let i = days - 1; i >= 0; i--) {
     const date = new Date(referenceDate);
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split("T")[0];
-    // Multiply by 10 for sparkline visibility
-    result.push((dataMap.get(dateStr) || 0) * 10);
+    daily.push(dataMap.get(dateStr) || 0);
   }
 
-  return result;
+  // Convert to cumulative sum (monotonically increasing)
+  const cumulative: number[] = [];
+  let total = 0;
+  for (const value of daily) {
+    total += value;
+    cumulative.push(total);
+  }
+
+  return cumulative;
 }

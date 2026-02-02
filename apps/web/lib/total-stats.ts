@@ -8,9 +8,9 @@ export interface TotalStats {
 }
 
 /**
- * Get total days saved across all skills and the aggregated trend data
+ * Get total days saved across all skills and the aggregated cumulative trend data
  *
- * @returns Total days saved and 14-day trend data
+ * @returns Total days saved and 14-day cumulative trend data (monotonically increasing)
  */
 export async function getTotalStats(): Promise<TotalStats> {
   if (!db) {
@@ -44,16 +44,23 @@ export async function getTotalStats(): Promise<TotalStats> {
     .groupBy(sql`date_trunc('day', ${usageEvents.createdAt})`)
     .orderBy(sql`date_trunc('day', ${usageEvents.createdAt})`);
 
-  // Fill missing days with zeros
+  // Fill missing days and convert to cumulative
   const dataMap = new Map(dailyResults.map((d) => [d.date, d.daysSaved]));
-  const trendData: number[] = [];
+  const daily: number[] = [];
 
   for (let i = 13; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split("T")[0];
-    // Multiply by 10 for sparkline visibility
-    trendData.push((dataMap.get(dateStr) || 0) * 10);
+    daily.push(dataMap.get(dateStr) || 0);
+  }
+
+  // Convert to cumulative sum (monotonically increasing)
+  const trendData: number[] = [];
+  let total = 0;
+  for (const value of daily) {
+    total += value;
+    trendData.push(total);
   }
 
   return { totalDaysSaved, trendData };
