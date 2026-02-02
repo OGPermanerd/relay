@@ -77,11 +77,13 @@ Total: 12 plans completed.
   2. Existing skills have embeddings (backfill complete, verifiable via database query)
   3. System can query similar skills by vector similarity (internal function works)
   4. Embedding generation handles all skill formats (prompts, workflows, configs)
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 15-01: TBD
-- [ ] 15-02: TBD
+- [ ] 15-01-PLAN.md — Schema and pgvector infrastructure
+- [ ] 15-02-PLAN.md — Voyage AI embedding service
+- [ ] 15-03-PLAN.md — Hook embeddings into publish flow
+- [ ] 15-04-PLAN.md — Backfill existing skills
 
 ### Phase 16: Similarity Detection
 **Goal**: Users see advisory warnings about similar existing skills when publishing
@@ -158,7 +160,7 @@ Phases 18-19 can execute in parallel with 16-17 after Phase 15.
 | 12. Two-Panel Layout | v1.2 | 3/3 | Complete | 2026-02-01 |
 | 13. Interactive Sorting & Accordion | v1.2 | 4/4 | Complete | 2026-02-01 |
 | 14. Mobile & Accessibility | v1.2 | 5/5 | Complete | 2026-02-01 |
-| 15. Embeddings Foundation | v1.3 | 0/TBD | Not started | - |
+| 15. Embeddings Foundation | v1.3 | 0/4 | Ready | - |
 | 16. Similarity Detection | v1.3 | 0/TBD | Not started | - |
 | 17. AI Review Pipeline | v1.3 | 0/TBD | Not started | - |
 | 18. Fork-Based Versioning | v1.3 | 0/TBD | Not started | - |
