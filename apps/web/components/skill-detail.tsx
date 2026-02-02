@@ -1,6 +1,7 @@
 import { StatCard } from "./stat-card";
 import Image from "next/image";
 import type { SkillStats } from "@/lib/skill-stats";
+import type { SkillDetailTrends } from "@/lib/skill-detail-trends";
 import { calculateQualityScore } from "@/lib/quality-score";
 import { QualityBadge } from "./quality-badge";
 import { QualityBreakdown } from "./quality-breakdown";
@@ -26,9 +27,10 @@ interface SkillWithAuthor {
 interface SkillDetailProps {
   skill: SkillWithAuthor;
   stats: SkillStats;
+  trends: SkillDetailTrends;
 }
 
-export function SkillDetail({ skill, stats }: SkillDetailProps) {
+export function SkillDetail({ skill, stats, trends }: SkillDetailProps) {
   const formattedDate = skill.createdAt.toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
@@ -83,14 +85,29 @@ export function SkillDetail({ skill, stats }: SkillDetailProps) {
 
       {/* Stats grid */}
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Total Uses" value={stats.totalUses} />
-        <StatCard label="Unique Users" value={stats.uniqueUsers} />
+        <StatCard
+          label="FTE Days Saved"
+          value={stats.fteDaysSaved}
+          trendData={trends.daysSavedTrend}
+          trendColor="#10b981"
+        />
+        <StatCard
+          label="Total Uses"
+          value={stats.totalUses}
+          trendData={trends.usesTrend}
+          trendColor="#3b82f6"
+        />
+        <StatCard
+          label="Unique Users"
+          value={stats.uniqueUsers}
+          trendData={trends.usersTrend}
+          trendColor="#8b5cf6"
+        />
         <StatCard
           label="Avg Rating"
           value={stats.averageRating ?? "N/A"}
           suffix={stats.totalRatings ? `(${stats.totalRatings})` : undefined}
         />
-        <StatCard label="FTE Days Saved" value={stats.fteDaysSaved} />
       </div>
 
       {/* Description section */}

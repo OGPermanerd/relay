@@ -4,6 +4,7 @@ import { ratings } from "@relay/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { SkillDetail } from "@/components/skill-detail";
 import { getSkillStats } from "@/lib/skill-stats";
+import { getSkillDetailTrends } from "@/lib/skill-detail-trends";
 import { auth } from "@/auth";
 import { RatingForm } from "@/components/rating-form";
 import { ReviewsList } from "@/components/reviews-list";
@@ -38,8 +39,11 @@ export default async function SkillPage(props: SkillPageProps) {
     notFound();
   }
 
-  // Get usage statistics
-  const stats = await getSkillStats(skill.id);
+  // Get usage statistics and trends
+  const [stats, trends] = await Promise.all([
+    getSkillStats(skill.id),
+    getSkillDetailTrends(skill.id),
+  ]);
 
   // Get session for authenticated user
   const session = await auth();
@@ -75,7 +79,7 @@ export default async function SkillPage(props: SkillPageProps) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <SkillDetail skill={skill} stats={stats} />
+      <SkillDetail skill={skill} stats={stats} trends={trends} />
 
       {/* Rating form for authenticated users */}
       {session?.user && (
