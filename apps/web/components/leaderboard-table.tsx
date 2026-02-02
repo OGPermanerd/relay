@@ -11,10 +11,15 @@ interface LeaderboardTableProps {
 
 /**
  * Format date as "MMM D" (e.g., "Jan 15")
+ * Uses UTC to avoid hydration mismatches between server and client
  */
 function formatLatestDate(date: Date | null): string {
   if (!date) return "-";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
@@ -35,7 +40,7 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
         aria-controls="leaderboard-content"
         className="flex w-full items-center justify-between bg-gray-50 px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
       >
-        <span>Top Contributors</span>
+        <span>Leaderboard</span>
         <svg
           className={`h-5 w-5 text-gray-500 transition-transform ${isExpanded ? "rotate-180" : ""}`}
           fill="none"
@@ -106,7 +111,7 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
                     </div>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-blue-600">
-                    {contributor.fteDaysSaved.toLocaleString()}
+                    {Math.round(contributor.fteDaysSaved).toLocaleString()}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">
                     {contributor.skillsShared}

@@ -165,6 +165,13 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
               onSort={toggleSort}
               align="left"
             />
+            <th
+              scope="col"
+              className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500"
+              title="Days saved over last 14 days"
+            >
+              Trend
+            </th>
             <SortableColumnHeader
               column="days_saved"
               label="Days Saved"
@@ -205,12 +212,6 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
               onSort={toggleSort}
               align="center"
             />
-            <th
-              scope="col"
-              className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500"
-            >
-              Sparkline
-            </th>
             <th
               scope="col"
               className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500"

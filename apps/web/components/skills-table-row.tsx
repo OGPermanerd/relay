@@ -101,14 +101,16 @@ export function SkillsTableRow({
     (rowRef as React.MutableRefObject<HTMLTableRowElement | null>).current = el;
     registerRef(el);
   };
-  // Calculate FTE Days Saved: (totalUses * hoursSaved) / 8
-  const daysSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / 8).toFixed(1);
+  // Calculate FTE Days Saved: (totalUses * hoursSaved) / 8, rounded to whole number
+  const daysSaved = Math.round((skill.totalUses * (skill.hoursSaved ?? 1)) / 8);
 
   // Format date as "MMM D, YYYY" (e.g., "Jan 15, 2026")
+  // Uses UTC to avoid hydration mismatches between server and client
   const dateAdded = skill.createdAt.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   });
 
   // Row background: alternating + expanded state
@@ -144,6 +146,11 @@ export function SkillsTableRow({
             {skill.name}
           </Link>
         </td>
+        <td className="whitespace-nowrap px-4 py-3 text-center">
+          <div className="inline-block">
+            <Sparkline data={trend} />
+          </div>
+        </td>
         <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
           {daysSaved}
         </td>
@@ -172,11 +179,6 @@ export function SkillsTableRow({
           ) : (
             <span className="text-sm text-gray-400">-</span>
           )}
-        </td>
-        <td className="whitespace-nowrap px-4 py-3 text-center">
-          <div className="inline-block">
-            <Sparkline data={trend} />
-          </div>
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-center">
           <InstallButton

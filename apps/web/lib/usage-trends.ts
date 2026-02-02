@@ -1,23 +1,23 @@
 import { db } from "@relay/db";
-import { usageEvents } from "@relay/db/schema";
-import { sql, inArray, gte, and } from "drizzle-orm";
+import { usageEvents, skills } from "@relay/db/schema";
+import { sql, inArray, gte, and, eq } from "drizzle-orm";
 
-interface DailyUsage {
+interface DailyDaysSaved {
   date: string;
-  count: number;
+  daysSaved: number;
 }
 
 /**
- * Get usage trends for multiple skills in a single query
+ * Get days saved trends for multiple skills in a single query
  *
- * Aggregates usage events by day for the last N days.
- * Returns a map of skillId -> array of daily counts.
+ * Calculates daily "days saved" (uses * hoursSaved / 8) for the last N days.
+ * Returns a map of skillId -> array of daily days saved values.
  *
  * Uses batch query to avoid N+1 problem with skill cards.
  *
  * @param skillIds - Array of skill IDs to fetch trends for
  * @param days - Number of days to look back (default 14)
- * @returns Map of skillId to array of daily usage counts
+ * @returns Map of skillId to array of daily days saved (multiplied by 10 for sparkline visibility)
  */
 export async function getUsageTrends(
   skillIds: string[],
@@ -28,37 +28,47 @@ export async function getUsageTrends(
     return new Map();
   }
 
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
-  startDate.setHours(0, 0, 0, 0);
+  // Use a fixed reference date (start of today in UTC) to avoid hydration mismatches
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
+  const today = new Date(todayStr + "T00:00:00.000Z");
 
-  // Query all usage events for the skills in the date range
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - days);
+
+  // Query usage events joined with skills to calculate days saved per day
+  // Formula: count * hoursSaved / 8 = days saved
   const results = await db
     .select({
       skillId: usageEvents.skillId,
       date: sql<string>`date_trunc('day', ${usageEvents.createdAt})::date::text`,
-      count: sql<number>`cast(count(*) as integer)`,
+      daysSaved: sql<number>`cast(count(*) * coalesce(${skills.hoursSaved}, 1) / 8.0 as float)`,
     })
     .from(usageEvents)
+    .innerJoin(skills, eq(usageEvents.skillId, skills.id))
     .where(and(inArray(usageEvents.skillId, skillIds), gte(usageEvents.createdAt, startDate)))
-    .groupBy(usageEvents.skillId, sql`date_trunc('day', ${usageEvents.createdAt})`)
+    .groupBy(
+      usageEvents.skillId,
+      sql`date_trunc('day', ${usageEvents.createdAt})`,
+      skills.hoursSaved
+    )
     .orderBy(sql`date_trunc('day', ${usageEvents.createdAt})`);
 
   // Group by skillId
-  const bySkill = new Map<string, DailyUsage[]>();
+  const bySkill = new Map<string, DailyDaysSaved[]>();
   for (const row of results) {
     if (!row.skillId) continue;
     const existing = bySkill.get(row.skillId) || [];
-    existing.push({ date: row.date, count: row.count });
+    existing.push({ date: row.date, daysSaved: row.daysSaved });
     bySkill.set(row.skillId, existing);
   }
 
-  // Fill gaps and convert to number arrays
+  // Fill gaps and convert to number arrays using consistent date
   const trendMap = new Map<string, number[]>();
 
   for (const skillId of skillIds) {
     const dailyData = bySkill.get(skillId) || [];
-    const filled = fillMissingDays(dailyData, days);
+    const filled = fillMissingDays(dailyData, days, today);
     trendMap.set(skillId, filled);
   }
 
@@ -66,17 +76,19 @@ export async function getUsageTrends(
 }
 
 /**
- * Fill missing days with zero counts
+ * Fill missing days with zero values
+ * Multiplies by 10 for better sparkline visibility (small fractional values don't show well)
  */
-function fillMissingDays(data: DailyUsage[], days: number): number[] {
+function fillMissingDays(data: DailyDaysSaved[], days: number, referenceDate: Date): number[] {
   const result: number[] = [];
-  const dataMap = new Map(data.map((d) => [d.date, d.count]));
+  const dataMap = new Map(data.map((d) => [d.date, d.daysSaved]));
 
   for (let i = days - 1; i >= 0; i--) {
-    const date = new Date();
+    const date = new Date(referenceDate);
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split("T")[0];
-    result.push(dataMap.get(dateStr) || 0);
+    // Multiply by 10 for sparkline visibility
+    result.push((dataMap.get(dateStr) || 0) * 10);
   }
 
   return result;

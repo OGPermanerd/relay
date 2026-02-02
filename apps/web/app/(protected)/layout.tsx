@@ -3,6 +3,8 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { SignOutButton } from "@/components/sign-out-button";
+import { HeaderStats } from "@/components/header-stats";
+import { getTotalStats } from "@/lib/total-stats";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -13,17 +15,19 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   }
 
   const { user } = session;
+  const { totalDaysSaved, trendData } = await getTotalStats();
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo and Navigation */}
+          {/* Logo, Stats, and Navigation */}
           <div className="flex items-center gap-8">
             <Link href="/" className="text-xl font-bold text-gray-900">
               Relay
             </Link>
+            <HeaderStats totalDaysSaved={totalDaysSaved} trendData={trendData} />
             <nav className="hidden sm:flex sm:gap-6">
               <Link
                 href="/"

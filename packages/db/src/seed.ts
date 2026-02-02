@@ -11,6 +11,7 @@ import { eq } from "drizzle-orm";
 import { skills, type NewSkill } from "./schema/skills";
 import { skillVersions, type NewSkillVersion } from "./schema/skill-versions";
 import { ratings } from "./schema/ratings";
+import { usageEvents } from "./schema/usage-events";
 import { users, type NewUser } from "./schema/users";
 
 // Verify DATABASE_URL is set
@@ -260,20 +261,68 @@ async function seed() {
       }
     }
 
-    // 6. Update skill metrics based on ratings
+    // 6. Generate usage events for sparkline data (last 14 days)
     console.log("");
-    console.log("Updating skill metrics...");
-    const useCounts = [42, 28, 35]; // Sample use counts
+    console.log("Creating usage events for sparklines...");
+
+    // Different usage patterns per skill to create varied sparklines
+    const usagePatterns = [
+      // Code Review: steady growth with weekend dips
+      [3, 2, 4, 5, 6, 2, 1, 4, 5, 7, 8, 3, 2, 6],
+      // API Docs: spiky pattern (documentation sprints)
+      [1, 1, 8, 10, 2, 1, 0, 2, 12, 8, 3, 1, 1, 5],
+      // Test Writer: gradual increase
+      [2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 9],
+    ];
+
+    let totalEventsCreated = 0;
     for (let i = 0; i < insertedSkills.length; i++) {
       const skill = insertedSkills[i];
+      const pattern = usagePatterns[i];
+
+      // Clear existing events for this skill
+      await db.delete(usageEvents).where(eq(usageEvents.skillId, skill.id));
+
+      // Create events for each day
+      for (let day = 0; day < 14; day++) {
+        const eventCount = pattern[day];
+        const eventDate = new Date();
+        eventDate.setDate(eventDate.getDate() - (13 - day)); // Start from 13 days ago
+        eventDate.setHours(9, 0, 0, 0); // Set to 9 AM
+
+        for (let e = 0; e < eventCount; e++) {
+          // Spread events throughout the day
+          const eventTime = new Date(eventDate);
+          eventTime.setHours(9 + Math.floor(e * (10 / Math.max(eventCount, 1))));
+
+          await db.insert(usageEvents).values({
+            toolName: skill.slug,
+            skillId: skill.id,
+            userId: testUser.id,
+            metadata: { source: "seed" },
+            createdAt: eventTime,
+          });
+          totalEventsCreated++;
+        }
+      }
+      const totalForSkill = pattern.reduce((a, b) => a + b, 0);
+      console.log(`  [+] ${skill.name}: ${totalForSkill} events over 14 days`);
+    }
+
+    // 7. Update skill metrics based on ratings and actual usage
+    console.log("");
+    console.log("Updating skill metrics...");
+    for (let i = 0; i < insertedSkills.length; i++) {
+      const skill = insertedSkills[i];
+      const totalUses = usagePatterns[i].reduce((a, b) => a + b, 0);
       await db
         .update(skills)
         .set({
-          totalUses: useCounts[i],
+          totalUses: totalUses,
           averageRating: ratingValues[i] * 100,
         })
         .where(eq(skills.id, skill.id));
-      console.log(`  [+] ${skill.name}: ${useCounts[i]} uses`);
+      console.log(`  [+] ${skill.name}: ${totalUses} uses`);
     }
 
     console.log("");
@@ -281,6 +330,7 @@ async function seed() {
     console.log(`  - ${insertedSkills.length} skills`);
     console.log(`  - ${insertedVersions.length} skill versions`);
     console.log(`  - ${insertedSkills.length} ratings`);
+    console.log(`  - ${totalEventsCreated} usage events`);
   } catch (error) {
     console.error("Failed to seed database:", error);
     process.exit(1);
