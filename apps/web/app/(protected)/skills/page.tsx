@@ -5,7 +5,8 @@ import { TwoPanelLayout } from "@/components/two-panel-layout";
 import { SkillsTable } from "@/components/skills-table";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { SearchInput } from "@/components/search-input";
-import { SortDropdown } from "@/components/sort-dropdown";
+import { SkillTypeFilter } from "@/components/skill-type-filter";
+import { getCategoriesToFilter } from "@/lib/skill-type-utils";
 import { EmptyState } from "@/components/empty-state";
 import { ClearFiltersButton } from "./clear-filters-button";
 
@@ -14,6 +15,7 @@ interface SkillsPageProps {
     q?: string;
     sortBy?: string;
     author?: string;
+    type?: string;
   }>;
 }
 
@@ -24,10 +26,11 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   const query = params.q || "";
   const sortBy = params.sortBy as "uses" | "quality" | "rating" | "days_saved" | undefined;
   const authorId = params.author || undefined;
+  const categories = getCategoriesToFilter(params.type);
 
   // Fetch skills and leaderboard
   const [skills, contributors] = await Promise.all([
-    searchSkills({ query, sortBy, authorId }),
+    searchSkills({ query, sortBy, authorId, categories }),
     getLeaderboard(10),
   ]);
 
@@ -36,7 +39,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   const usageTrends = await getUsageTrends(skillIds);
 
   // Determine empty state type
-  const hasFilters = query || authorId;
+  const hasFilters = query || authorId || categories;
   const emptyStateType = skills.length === 0 ? (hasFilters ? "no-results" : "no-skills") : null;
 
   return (
@@ -47,7 +50,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
           <div className="flex-1">
             <SearchInput />
           </div>
-          <SortDropdown />
+          <SkillTypeFilter />
         </div>
       </div>
 

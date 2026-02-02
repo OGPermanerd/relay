@@ -23,6 +23,7 @@ export interface SearchSkillResult {
 export interface SearchParams {
   query?: string;
   category?: string;
+  categories?: string[]; // Multiple category filter (OR)
   tags?: string[];
   qualityTier?: "gold" | "silver" | "bronze";
   sortBy?: "uses" | "quality" | "rating" | "days_saved";
@@ -62,9 +63,15 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
     );
   }
 
-  // Category filter
+  // Category filter (single)
   if (params.category) {
     conditions.push(eq(skills.category, params.category));
+  }
+
+  // Categories filter (multiple, OR logic)
+  if (params.categories && params.categories.length > 0) {
+    const categoriesArrayLiteral = `{${params.categories.join(",")}}`;
+    conditions.push(sql`${skills.category} = ANY(${categoriesArrayLiteral}::text[])`);
   }
 
   // Tag filtering - match skills containing ANY of the selected tags

@@ -9,19 +9,6 @@ interface LeaderboardTableProps {
   contributors: LeaderboardEntry[];
 }
 
-/**
- * Format date as "MMM D" (e.g., "Jan 15")
- * Uses UTC to avoid hydration mismatches between server and client
- */
-function formatLatestDate(date: Date | null): string {
-  if (!date) return "-";
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
-
 export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
   const { author, filterByAuthor } = useAuthorFilter();
   const [isExpanded, setIsExpanded] = useState(true);
@@ -31,7 +18,7 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
+    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200">
       {/* Collapsible header */}
       <button
         type="button"
@@ -61,27 +48,15 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
               <tr>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                  className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
                 >
                   Contributor
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
+                  className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
                 >
-                  Days Saved
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
-                  Contributions
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
-                >
-                  Latest
+                  Days
                 </th>
               </tr>
             </thead>
@@ -92,32 +67,26 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
                   onClick={() => filterByAuthor(contributor.userId)}
                   className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} ${author === contributor.userId ? "ring-2 ring-blue-500 bg-blue-50" : ""} hover:bg-blue-50 transition-colors cursor-pointer`}
                 >
-                  <td className="whitespace-nowrap px-4 py-3">
-                    <div className="flex items-center gap-3">
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
                       {contributor.image ? (
                         <Image
                           src={contributor.image}
                           alt={contributor.name}
-                          width={32}
-                          height={32}
+                          width={24}
+                          height={24}
                           className="rounded-full"
                         />
                       ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-sm font-medium text-gray-600">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-gray-600">
                           {contributor.name.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      <span className="text-sm font-medium text-gray-900">{contributor.name}</span>
+                      <span className="truncate text-sm text-gray-900">{contributor.name}</span>
                     </div>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-blue-600">
+                  <td className="whitespace-nowrap px-3 py-2 text-right text-sm font-medium text-blue-600">
                     {Math.round(contributor.fteDaysSaved).toLocaleString()}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">
-                    {contributor.skillsShared}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">
-                    {formatLatestDate(contributor.latestContributionDate)}
                   </td>
                 </tr>
               ))}
