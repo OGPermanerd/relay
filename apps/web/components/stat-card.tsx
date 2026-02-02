@@ -25,7 +25,7 @@ export function StatCard({
     <div className="relative overflow-hidden rounded-lg bg-white p-6 shadow-sm">
       {/* Sparkline underlay */}
       {hasSparkline && (
-        <div className="absolute inset-0 flex items-end opacity-20">
+        <div className="absolute inset-0 flex items-end opacity-50">
           <Sparkline data={trendData} width={200} height={60} color={trendColor} />
         </div>
       )}
