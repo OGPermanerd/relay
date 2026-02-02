@@ -78,27 +78,29 @@ export default async function SkillPage(props: SkillPageProps) {
     : [];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <SkillDetail skill={skill} stats={stats} trends={trends} />
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-4xl">
+        <SkillDetail skill={skill} stats={stats} trends={trends} />
 
-      {/* Rating form for authenticated users */}
-      {session?.user && (
-        <div className="mt-8 rounded-lg border border-gray-200 p-6">
-          <h2 className="mb-4 text-xl font-semibold">
-            {existingRating ? "Update Your Rating" : "Rate This Skill"}
-          </h2>
-          <RatingForm
-            skillId={skill.id}
-            skillSlug={skill.slug}
-            existingRating={existingRating ?? undefined}
-          />
+        {/* Rating form for authenticated users */}
+        {session?.user && (
+          <div className="mt-8 rounded-lg border border-gray-200 p-6">
+            <h2 className="mb-4 text-xl font-semibold">
+              {existingRating ? "Update Your Rating" : "Rate This Skill"}
+            </h2>
+            <RatingForm
+              skillId={skill.id}
+              skillSlug={skill.slug}
+              existingRating={existingRating ?? undefined}
+            />
+          </div>
+        )}
+
+        {/* Reviews section */}
+        <div className="mt-8">
+          <h2 className="mb-4 text-xl font-semibold">Reviews ({reviews.length})</h2>
+          <ReviewsList reviews={reviews} />
         </div>
-      )}
-
-      {/* Reviews section */}
-      <div className="mt-8">
-        <h2 className="mb-4 text-xl font-semibold">Reviews ({reviews.length})</h2>
-        <ReviewsList reviews={reviews} />
       </div>
     </div>
   );
