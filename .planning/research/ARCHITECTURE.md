@@ -799,5 +799,781 @@ Based on dependencies and integration points:
 - Existing codebase patterns in `/apps/web/components/` - HIGH confidence
 
 ---
+
+# v1.3 Feature Integration Architecture
+
+**Milestone:** v1.3 AI Review, Similarity, Forks, Cross-Platform
+**Researched:** 2026-02-02
+**Confidence:** HIGH (Context7, official docs, existing codebase analysis)
+
+## Executive Summary
+
+v1.3 introduces four major capabilities to Relay's existing Next.js/PostgreSQL/MCP architecture. This document maps how each integrates with existing components, what new infrastructure is required, and the recommended build order.
+
+**Key finding:** All four features share a common dependency on vector embeddings. Implementing pgvector + embedding generation first enables both AI review context and similarity detection, reducing overall complexity.
+
+## Existing Architecture Reference
+
+```
++-------------------------------------------------------------------------+
+|                           CURRENT STATE                                  |
++-------------------------------------------------------------------------+
+|                                                                         |
+|  apps/web (Next.js 15)              apps/mcp (MCP Server)              |
+|  +-- app/                           +-- tools/                          |
+|  |   +-- (protected)/               |   +-- search.ts                   |
+|  |   |   +-- skills/                |   +-- list.ts                     |
+|  |   |       +-- page.tsx           |   +-- deploy.ts                   |
+|  |   |       +-- [slug]/page.tsx    +-- tracking/                       |
+|  |   |       +-- new/page.tsx           +-- events.ts                   |
+|  |   +-- actions/                                                       |
+|  |       +-- skills.ts                                                  |
+|  |       +-- ratings.ts                                                 |
+|  +-- lib/                                                               |
+|      +-- search-skills.ts                                               |
+|      +-- quality-score.ts                                               |
+|                                                                         |
+|  packages/db                                                            |
+|  +-- schema/                                                            |
+|  |   +-- skills.ts          (searchVector tsvector, publishedVersionId) |
+|  |   +-- skill-versions.ts  (contentUrl, contentHash, metadata jsonb)   |
+|  |   +-- ratings.ts                                                     |
+|  |   +-- users.ts                                                       |
+|  +-- relations/                                                         |
+|      +-- index.ts           (skills -> versions, author, ratings)       |
+|                                                                         |
++-------------------------------------------------------------------------+
+```
+
+## Feature 1: AI Skill Review Pipeline
+
+### Integration Points
+
+| Component | Integration Type | Notes |
+|-----------|------------------|-------|
+| `apps/web/app/actions/skills.ts` | MODIFY | Add review step after skill creation |
+| `packages/db/src/schema/skills.ts` | MODIFY | Add `reviewStatus`, `reviewFeedback` columns |
+| `apps/web/lib/` | NEW | `ai-review.ts` - Claude API integration |
+| Environment | MODIFY | Add `ANTHROPIC_API_KEY` |
+
+### Where Claude API Call Happens
+
+**Recommended:** Server Action in `apps/web/app/actions/skills.ts`
+
+```typescript
+// apps/web/lib/ai-review.ts
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic();
+
+export async function reviewSkill(
+  content: string,
+  metadata: { name: string; category: string; description: string },
+  similarSkills: { name: string; description: string }[]
+): Promise<ReviewResult> {
+  const response = await anthropic.messages.create({
+    model: "claude-haiku-4-20250514", // Cost-effective for review
+    max_tokens: 1024,
+    messages: [{
+      role: "user",
+      content: `Review this skill for quality, clarity, and potential issues:
+
+Name: ${metadata.name}
+Category: ${metadata.category}
+Description: ${metadata.description}
+
+Content:
+${content}
+
+Similar existing skills for reference:
+${similarSkills.map(s => `- ${s.name}: ${s.description}`).join('\n')}
+
+Provide:
+1. Quality score (1-10)
+2. Suggestions for improvement
+3. Potential issues or concerns
+4. Whether this seems like a duplicate`
+    }]
+  });
+
+  return parseReviewResponse(response);
+}
+```
+
+**Rationale:** Server Actions run server-side with full environment access, integrate naturally with form submission flow, and keep API key secure.
+
+### Schema Changes
+
+```sql
+-- Add to skills table
+ALTER TABLE skills ADD COLUMN review_status text DEFAULT 'pending';
+  -- Values: 'pending', 'passed', 'needs_improvement', 'flagged'
+ALTER TABLE skills ADD COLUMN review_feedback jsonb;
+  -- Structure: { score: number, suggestions: string[], issues: string[] }
+ALTER TABLE skills ADD COLUMN reviewed_at timestamp with time zone;
+```
+
+### Data Flow
+
+```
+User submits skill
+    |
+    v
+createSkill() Server Action
+    |
+    v
+Insert skill (review_status: 'pending')
+    |
+    v
+Generate embedding (see Feature 2)
+    |
+    v
+Find similar skills using embedding
+    |
+    v
+Call Claude API with skill content + similar skills context
+    |
+    v
+Parse review response
+    |
+    v
+Update skill with review_status, review_feedback
+    |
+    v
+Return to user (show feedback if needs_improvement)
+```
+
+### Cost Considerations
+
+| Model | Input (1M tokens) | Output (1M tokens) | Est. cost per review |
+|-------|-------------------|--------------------|-----------------------|
+| claude-sonnet-4-20250514 | $3 | $15 | ~$0.005 (avg 500 in / 800 out) |
+| claude-haiku-4-20250514 | $1 | $5 | ~$0.002 |
+
+**Recommendation:** Use Haiku for initial review, escalate to Sonnet if content flagged.
+
+## Feature 2: Semantic Similarity Detection
+
+### Integration Points
+
+| Component | Integration Type | Notes |
+|-----------|------------------|-------|
+| PostgreSQL | MODIFY | Enable pgvector extension |
+| `packages/db/src/schema/skills.ts` | MODIFY | Add `embedding` vector column |
+| `apps/web/lib/` | NEW | `embeddings.ts` - embedding generation |
+| `apps/web/lib/search-skills.ts` | MODIFY | Add semantic search option |
+| `apps/web/app/actions/skills.ts` | MODIFY | Generate embedding on create/update |
+
+### pgvector Integration with Drizzle
+
+Based on [Drizzle ORM documentation](https://orm.drizzle.team/docs/guides/vector-similarity-search):
+
+```typescript
+// packages/db/src/schema/skills.ts
+import { pgTable, text, vector, index } from "drizzle-orm/pg-core";
+
+export const skills = pgTable(
+  "skills",
+  {
+    // ... existing columns
+
+    // Semantic embedding for similarity search
+    // 1024 dimensions for Voyage-3-lite (Anthropic recommended)
+    embedding: vector("embedding", { dimensions: 1024 }),
+  },
+  (table) => [
+    // Existing full-text search index
+    index("skills_search_idx").using("gin", table.searchVector),
+
+    // Vector similarity index (HNSW for fast approximate search)
+    index("skills_embedding_idx").using(
+      "hnsw",
+      table.embedding.op("vector_cosine_ops")
+    ),
+  ]
+);
+```
+
+### Embedding Provider Choice
+
+| Provider | Model | Dimensions | Cost (1M tokens) | Notes |
+|----------|-------|------------|------------------|-------|
+| **Voyage AI** | voyage-3-lite | 1024 | $0.02 | Anthropic recommended |
+| Voyage AI | voyage-3 | 1024 | $0.06 | Higher quality |
+| OpenAI | text-embedding-3-small | 1536 | $0.02 | Widely used |
+| OpenAI | text-embedding-3-large | 3072 | $0.13 | Highest quality |
+
+**Recommendation:** Voyage-3-lite. Anthropic partnership ensures compatibility, 1024 dimensions balance quality/storage, lowest cost tier.
+
+### Embedding Generation
+
+```typescript
+// apps/web/lib/embeddings.ts
+
+// Voyage AI uses same SDK pattern as Anthropic
+export async function generateEmbedding(text: string): Promise<number[]> {
+  const response = await fetch("https://api.voyageai.com/v1/embeddings", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.VOYAGE_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "voyage-3-lite",
+      input: text,
+    }),
+  });
+
+  const data = await response.json();
+  return data.data[0].embedding;
+}
+
+export async function generateSkillEmbedding(skill: {
+  name: string;
+  description: string;
+  content: string;
+}): Promise<number[]> {
+  // Combine relevant text for embedding
+  const text = `${skill.name}\n\n${skill.description}\n\n${skill.content}`;
+  return generateEmbedding(text);
+}
+```
+
+### Similarity Search Query
+
+```typescript
+// apps/web/lib/search-skills.ts
+import { cosineDistance, desc, gt, sql } from "drizzle-orm";
+
+export async function findSimilarSkills(
+  embedding: number[],
+  threshold = 0.7,
+  limit = 10,
+  excludeId?: string
+): Promise<SimilarSkill[]> {
+  if (!db) return [];
+
+  const similarity = sql<number>`1 - (${cosineDistance(skills.embedding, embedding)})`;
+
+  const conditions = [gt(similarity, threshold)];
+  if (excludeId) {
+    conditions.push(sql`${skills.id} != ${excludeId}`);
+  }
+
+  return db
+    .select({
+      id: skills.id,
+      name: skills.name,
+      slug: skills.slug,
+      description: skills.description,
+      similarity,
+    })
+    .from(skills)
+    .where(and(...conditions))
+    .orderBy(desc(similarity))
+    .limit(limit);
+}
+```
+
+### Duplicate Detection Flow
+
+```
+User submits new skill
+    |
+    v
+generateSkillEmbedding(name, description, content)
+    |
+    v
+findSimilarSkills(embedding, threshold=0.85)
+    |
+    v
+if (similarSkills.length > 0)
+    |
+    v
+Show warning: "Similar skills exist: [links]"
+    |
+    v
+User chooses: Create anyway | Fork existing | Cancel
+```
+
+## Feature 3: Fork-Based Versioning
+
+### Current vs Proposed Schema
+
+**Current:** Wiki-style versioning (single skill, multiple versions)
+```
+skills (id, slug, publishedVersionId, draftVersionId)
+    |
+    v
+skill_versions (id, skillId, version, contentUrl)
+```
+
+**Proposed:** Add fork relationships
+```
+skills (id, slug, parentSkillId, forkReason, publishedVersionId)
+    |
+    v
+skill_versions (id, skillId, version, contentUrl)
+    |
+    v
+skill_forks (implicit via parentSkillId)
+```
+
+### Schema Changes
+
+```typescript
+// packages/db/src/schema/skills.ts - ADD columns
+export const skills = pgTable("skills", {
+  // ... existing columns
+
+  // Fork relationship
+  parentSkillId: text("parent_skill_id").references(() => skills.id),
+  forkReason: text("fork_reason"), // "improvement", "variant", "specialization"
+  isFork: boolean("is_fork").default(false), // Denormalized for query perf
+
+  // Fork tree metrics (denormalized)
+  forkCount: integer("fork_count").default(0),
+  rootSkillId: text("root_skill_id"), // Original ancestor for deep trees
+});
+```
+
+### Relations Update
+
+```typescript
+// packages/db/src/relations/index.ts - ADD
+export const skillsRelations = relations(skills, ({ one, many }) => ({
+  // ... existing relations
+
+  // Fork relationships
+  parent: one(skills, {
+    fields: [skills.parentSkillId],
+    references: [skills.id],
+    relationName: "forks",
+  }),
+  forks: many(skills, {
+    relationName: "forks",
+  }),
+}));
+```
+
+### Fork Creation Flow
+
+```
+User views skill
+    |
+    v
+Clicks "Fork this skill"
+    |
+    v
+Select fork reason: "Improvement" | "Variant" | "Specialization"
+    |
+    v
+createFork() Server Action
+    |
+    v
+Copy skill content to new skill with parentSkillId set
+    |
+    v
+Increment parent.forkCount
+    |
+    v
+User edits their fork
+    |
+    v
+Publish as new skill (linked to parent)
+```
+
+### UI Integration Points
+
+| Location | Change |
+|----------|--------|
+| Skill detail page | Add "Fork" button, show fork tree if has forks/parent |
+| Skill card | Badge showing "Fork of X" or "N forks" |
+| Create skill form | Option to "Fork from existing" |
+| Profile page | "My Forks" section |
+
+### Query Patterns
+
+```typescript
+// Get skill with fork context
+const skillWithForks = await db.query.skills.findFirst({
+  where: eq(skills.slug, slug),
+  with: {
+    parent: { columns: { id: true, name: true, slug: true } },
+    forks: {
+      columns: { id: true, name: true, slug: true },
+      limit: 5,
+      orderBy: desc(skills.totalUses),
+    },
+  },
+});
+
+// Get fork tree (for visualization)
+async function getForkTree(rootId: string): Promise<ForkNode[]> {
+  return db.query.skills.findMany({
+    where: or(
+      eq(skills.id, rootId),
+      eq(skills.rootSkillId, rootId)
+    ),
+    columns: { id: true, name: true, parentSkillId: true, totalUses: true },
+  });
+}
+```
+
+## Feature 4: Cross-Platform Install Configs
+
+### Platform Config Formats
+
+Based on research of Claude Code, Cursor, and Windsurf documentation:
+
+| Platform | Config Location | Format | Key Structure |
+|----------|-----------------|--------|---------------|
+| Claude Code | `.claude/skills/<name>/SKILL.md` | YAML frontmatter + Markdown | `name`, `description`, frontmatter |
+| Cursor | `.cursor/rules/<name>.mdc` | MDC (frontmatter + content) | `description`, `globs`, `alwaysApply` |
+| Windsurf | `.windsurf/rules/<name>.md` | Markdown | Simpler format, 6000 char limit |
+| MCP | `claude_desktop_config.json` | JSON | `mcpServers` object |
+
+### Config Generator Service
+
+```typescript
+// apps/web/lib/config-generators.ts
+
+interface SkillConfig {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  category: string;
+  content: string;
+  tags: string[];
+}
+
+// Claude Code SKILL.md format
+export function generateClaudeCodeConfig(skill: SkillConfig): string {
+  return `---
+name: ${skill.slug}
+description: ${skill.description}
+---
+
+${skill.content}`;
+}
+
+// Cursor .mdc format
+export function generateCursorConfig(skill: SkillConfig): string {
+  // Map skill category to appropriate glob patterns
+  const globs = getCursorGlobs(skill.category, skill.tags);
+
+  return `---
+description: ${skill.description}
+globs: ${globs}
+alwaysApply: false
+---
+
+# ${skill.name}
+
+${skill.content}`;
+}
+
+// Windsurf .md format
+export function generateWindsurfConfig(skill: SkillConfig): string {
+  // Windsurf has 6000 char limit per rule file
+  const truncatedContent = skill.content.slice(0, 5500);
+
+  return `# ${skill.name}
+
+${skill.description}
+
+${truncatedContent}`;
+}
+
+// Existing MCP config (enhanced)
+export function generateMcpConfig(skill: SkillConfig): string | null {
+  if (skill.category === "mcp") {
+    return JSON.stringify({
+      mcpServers: {
+        [skill.slug]: {
+          command: "npx",
+          args: ["-y", `@relay/${skill.slug}`],
+        },
+      },
+    }, null, 2);
+  }
+  return null; // Non-MCP skills don't get this config
+}
+```
+
+### Multi-Platform Install UI
+
+```typescript
+// apps/web/components/install-modal.tsx
+interface Platform {
+  id: string;
+  name: string;
+  icon: string;
+  configGenerator: (skill: SkillConfig) => string;
+  installPath: string;
+  instructions: string[];
+}
+
+const PLATFORMS: Platform[] = [
+  {
+    id: "claude-code",
+    name: "Claude Code",
+    icon: "/icons/claude.svg",
+    configGenerator: generateClaudeCodeConfig,
+    installPath: ".claude/skills/{slug}/SKILL.md",
+    instructions: [
+      "Create directory: mkdir -p .claude/skills/{slug}",
+      "Save content to: .claude/skills/{slug}/SKILL.md",
+      "Skill will be available as /{slug} command",
+    ],
+  },
+  {
+    id: "cursor",
+    name: "Cursor",
+    icon: "/icons/cursor.svg",
+    configGenerator: generateCursorConfig,
+    installPath: ".cursor/rules/{slug}.mdc",
+    instructions: [
+      "Create directory: mkdir -p .cursor/rules",
+      "Save content to: .cursor/rules/{slug}.mdc",
+      "Rule will auto-apply based on glob patterns",
+    ],
+  },
+  {
+    id: "windsurf",
+    name: "Windsurf",
+    icon: "/icons/windsurf.svg",
+    configGenerator: generateWindsurfConfig,
+    installPath: ".windsurf/rules/{slug}.md",
+    instructions: [
+      "Create directory: mkdir -p .windsurf/rules",
+      "Save content to: .windsurf/rules/{slug}.md",
+      "Rule will be available in Cascade",
+    ],
+  },
+];
+```
+
+### Install Button Enhancement
+
+```typescript
+// apps/web/components/install-button.tsx - ENHANCE
+interface InstallButtonProps {
+  skill: SkillConfig;
+  variant?: "full" | "icon";
+}
+
+export function InstallButton({ skill, variant = "full" }: InstallButtonProps) {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+
+  // On click, show platform selection modal
+  // After selection, generate config and copy to clipboard
+  // Show post-copy instructions specific to platform
+}
+```
+
+### MCP Tool Enhancement
+
+```typescript
+// apps/mcp/src/tools/deploy.ts - ENHANCE
+server.registerTool(
+  "deploy_skill",
+  {
+    inputSchema: {
+      skillId: z.string(),
+      platform: z.enum(["claude-code", "cursor", "windsurf", "mcp"]).default("claude-code"),
+    },
+  },
+  async ({ skillId, platform }) => {
+    const skill = await getSkill(skillId);
+    const config = generateConfigForPlatform(skill, platform);
+    const installPath = getInstallPath(platform, skill.slug);
+
+    return {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          success: true,
+          platform,
+          config,
+          installPath,
+          instructions: getInstructions(platform, skill),
+        }, null, 2),
+      }],
+    };
+  }
+);
+```
+
+## Component Summary
+
+### New Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `ai-review.ts` | `apps/web/lib/` | Claude API for skill review |
+| `embeddings.ts` | `apps/web/lib/` | Voyage AI embedding generation |
+| `config-generators.ts` | `apps/web/lib/` | Multi-platform config generation |
+| `install-modal.tsx` | `apps/web/components/` | Platform selection UI |
+| `fork-button.tsx` | `apps/web/components/` | Fork action button |
+| `fork-tree.tsx` | `apps/web/components/` | Fork relationship visualization |
+| `similar-skills.tsx` | `apps/web/components/` | Duplicate detection display |
+
+### Modified Components
+
+| Component | Changes |
+|-----------|---------|
+| `packages/db/src/schema/skills.ts` | Add `embedding`, `reviewStatus`, `parentSkillId`, `forkCount` |
+| `apps/web/app/actions/skills.ts` | Add review, embedding, fork logic |
+| `apps/web/lib/search-skills.ts` | Add semantic search function |
+| `apps/web/components/install-button.tsx` | Platform selection modal |
+| `apps/mcp/src/tools/deploy.ts` | Multi-platform support |
+
+## Recommended Build Order
+
+Based on dependency analysis:
+
+```
+Phase 1: Foundation (pgvector + embeddings)
++-- Enable pgvector extension
++-- Add embedding column to skills
++-- Create embeddings.ts service
++-- Backfill existing skill embeddings
++-- Add semantic search to search-skills.ts
+
+Phase 2: Similarity Detection
++-- findSimilarSkills() function
++-- similar-skills.tsx component
++-- Integrate with skill creation flow
++-- Add "Similar skills" to detail page
+
+Phase 3: AI Review Pipeline
++-- Add review columns to skills
++-- Create ai-review.ts service
++-- Integrate with createSkill() action
++-- Review feedback UI on detail page
++-- Admin view for flagged skills
+
+Phase 4: Fork Versioning
++-- Add parent/fork columns to skills
++-- Update relations
++-- Fork creation action
++-- fork-button.tsx component
++-- fork-tree.tsx visualization
++-- Update profile with "My Forks"
+
+Phase 5: Cross-Platform Install
++-- config-generators.ts service
++-- install-modal.tsx component
++-- Enhance install-button.tsx
++-- Update MCP deploy tool
++-- Add platform badges to skill cards
+```
+
+**Rationale for order:**
+1. **Embeddings first** - Both AI review (needs similar skills context) and similarity detection depend on embeddings
+2. **Similarity before review** - AI review benefits from showing similar skills in prompt
+3. **Fork after similarity** - "Fork existing" option uses similarity to suggest forkable skills
+4. **Cross-platform last** - Independent feature, no dependencies on others
+
+## Migration Strategy
+
+### Database Migrations
+
+```sql
+-- Migration 1: pgvector extension and embedding column
+CREATE EXTENSION IF NOT EXISTS vector;
+ALTER TABLE skills ADD COLUMN embedding vector(1024);
+CREATE INDEX skills_embedding_idx ON skills
+  USING hnsw (embedding vector_cosine_ops);
+
+-- Migration 2: AI review columns
+ALTER TABLE skills ADD COLUMN review_status text DEFAULT 'pending';
+ALTER TABLE skills ADD COLUMN review_feedback jsonb;
+ALTER TABLE skills ADD COLUMN reviewed_at timestamp with time zone;
+
+-- Migration 3: Fork relationship columns
+ALTER TABLE skills ADD COLUMN parent_skill_id text REFERENCES skills(id);
+ALTER TABLE skills ADD COLUMN fork_reason text;
+ALTER TABLE skills ADD COLUMN is_fork boolean DEFAULT false;
+ALTER TABLE skills ADD COLUMN fork_count integer DEFAULT 0;
+ALTER TABLE skills ADD COLUMN root_skill_id text;
+CREATE INDEX skills_parent_idx ON skills(parent_skill_id);
+```
+
+### Backfill Strategy
+
+```typescript
+// scripts/backfill-embeddings.ts
+async function backfillEmbeddings() {
+  const skillsWithoutEmbedding = await db.query.skills.findMany({
+    where: isNull(skills.embedding),
+  });
+
+  for (const skill of skillsWithoutEmbedding) {
+    const embedding = await generateSkillEmbedding(skill);
+    await db.update(skills)
+      .set({ embedding })
+      .where(eq(skills.id, skill.id));
+
+    // Rate limit to avoid API throttling
+    await sleep(100);
+  }
+}
+```
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern 1: Client-Side AI Calls
+
+**What people do:** Call Claude/Voyage API from React components
+**Why it's wrong:** Exposes API keys, no rate limiting, inconsistent results
+**Do this instead:** All AI calls through Server Actions or API routes
+
+### Anti-Pattern 2: Synchronous Review on Submit
+
+**What people do:** Block form submission until AI review completes
+**Why it's wrong:** 2-5 second delay, poor UX, timeouts
+**Do this instead:** Create skill immediately with `review_status: 'pending'`, review async
+
+### Anti-Pattern 3: Embedding Every Search Query
+
+**What people do:** Generate embedding for every search
+**Why it's wrong:** Adds latency, increases API costs
+**Do this instead:** Offer semantic search as explicit option, default to full-text
+
+### Anti-Pattern 4: Deep Fork Trees
+
+**What people do:** Allow unlimited fork depth
+**Why it's wrong:** Complex queries, confusing UI, attribution dilution
+**Do this instead:** Consider max 3 levels, or flatten to direct parent only
+
+### Anti-Pattern 5: Platform-Specific Content
+
+**What people do:** Store different content per platform
+**Why it's wrong:** Maintenance nightmare, content drift
+**Do this instead:** Single source content, generate platform configs on-demand
+
+## Sources
+
+### Context7 / Official Documentation
+- [Drizzle ORM pgvector guide](https://orm.drizzle.team/docs/guides/vector-similarity-search) - Schema and query patterns
+- [Claude Code Skills documentation](https://code.claude.com/docs/en/skills) - SKILL.md format specification
+- [Cursor Rules documentation](https://cursor.com/docs/context/rules) - .mdc format specification
+
+### WebSearch (Verified)
+- [pgvector GitHub](https://github.com/pgvector/pgvector) - Extension capabilities and index types
+- [Anthropic embeddings docs](https://docs.claude.com/en/docs/build-with-claude/embeddings) - Voyage AI partnership
+- [Windsurf rules docs](https://docs.windsurf.com/windsurf/cascade/memories) - Rule file format
+
+### Existing Codebase
+- `/home/dev/projects/relay/packages/db/src/schema/skills.ts` - Current schema
+- `/home/dev/projects/relay/apps/web/app/actions/skills.ts` - Skill creation flow
+- `/home/dev/projects/relay/apps/web/lib/search-skills.ts` - Full-text search implementation
+- `/home/dev/projects/relay/apps/mcp/src/tools/deploy.ts` - MCP deploy tool
+
+---
 *Architecture research for: Relay Internal Skill Marketplace*
-*Updated: 2026-02-01 for v1.2 UI Redesign*
+*Updated: 2026-02-02 for v1.3 Feature Integration*

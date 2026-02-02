@@ -1,89 +1,133 @@
-# Feature Landscape: Sortable Table UI with Inline Expansion
+# Feature Research: v1.3 AI Review, Duplicates, Forks, Cross-Platform Install
 
-**Domain:** Developer tools dashboard - sortable data tables with accordion rows
-**Researched:** 2026-02-01
-**Confidence:** HIGH (based on established UX patterns, W3C guidelines, and current React ecosystem)
+**Domain:** Internal skill marketplace (Claude skills, prompts, workflows)
+**Researched:** 2026-02-02
+**Confidence:** HIGH (verified with official docs and multiple sources)
 
 ## Context
 
-Relay v1.2 redesigns from card-based skill display to a two-panel sortable table layout:
-- Skills table with columns: days_saved, installs, date added, handle, sparkline
-- Click column header to toggle sort ascending/descending
-- Click row to expand inline showing description/instructions (accordion)
-- One-click install button per row
-- Leaderboard table showing contributors
+Relay v1.3 adds four new feature areas:
+1. **AI-driven skill review** - Claude analyzes skills for functionality, security, quality
+2. **Semantic similarity detection** - Advisory duplicate warning on publish
+3. **Fork-based versioning** - Users create variants of existing skills
+4. **Cross-platform installation** - Install on Claude Code, Claude Desktop, Claude.ai, VS Code
 
-This research focuses on UI patterns and behaviors expected for sortable data tables with inline expansion in developer tools.
+This research covers expected behaviors and feature landscape for each area.
 
 ---
 
 ## Table Stakes
 
-Features users expect. Missing these = product feels incomplete or broken.
+Features users expect for each capability area. Missing these = feature feels incomplete.
+
+### AI Review System
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| **Column header sort** | Standard interaction pattern; users click headers to sort | Low | Toggle ascending/descending on click. All sortable columns must be clickable. |
-| **Sort direction indicator** | Users need to know current sort state | Low | Use chevron/triangle: up (ascending), down (descending). Show on active column only. |
-| **Unsorted column affordance** | Users need to know which columns are sortable | Low | Show muted up-down arrows on hover, or always show them in a subtle state. |
-| **Row expansion trigger** | Users need clear affordance to expand rows | Low | Chevron icon at row start (right-facing when collapsed, down when expanded). Entire row clickable is optional enhancement. |
-| **Smooth expand/collapse animation** | Jarring transitions feel broken | Low | 150-200ms transition for height change. Content should not jump. |
-| **Keyboard navigation** | Accessibility requirement (WCAG 2.1 AA) | Medium | Tab to navigate headers/rows, Enter/Space to sort/expand, Arrow keys within table. |
-| **Visible focus states** | Accessibility requirement | Low | Clear focus ring on interactive elements (headers, rows, buttons). |
-| **Responsive behavior** | Mobile users exist | Medium | Table must work on smaller screens (stacked cards, horizontal scroll, or priority columns). |
-| **URL-persisted sort state** | Users share links, use back button | Low | Sort parameters in URL query string. Already using nuqs - extend pattern. |
-| **Loading states** | Network requests take time | Low | Skeleton or spinner when sort triggers data fetch. |
+| Review on demand | Users want control over when reviews run | LOW | Button trigger, not automatic |
+| Structured feedback categories | Clear buckets: functionality, security, quality, improvements | MEDIUM | Consistent review schema |
+| Actionable suggestions | "Change X to Y" not just "X is bad" | MEDIUM | Requires good prompt engineering |
+| Review history | See past reviews and track improvement | LOW | Store in DB with timestamps |
+| Confidence indicators | Show how certain the AI is | LOW | LLMs can output confidence levels |
+| Security vulnerability flags | Prompt injection risks, data leaks | HIGH | OWASP Top 10 for LLM apps |
 
-### Sort Behavior Specifications
+**Research findings:** AI code review in 2026 typically includes pattern recognition, issue detection, suggestion generation, and continuous learning. The key difference from static analysis: AI "understands systems" while static tools "check patterns." Reviews should flag security issues (prompt injection is #1 on OWASP LLM Top 10), assess functionality, and suggest specific improvements.
 
-Based on established patterns from [Shadcn/ui](https://www.shadcn.io/blocks/tables-sortable) and [Material React Table](https://mui.com/material-ui/react-table/):
+### Similarity Detection
 
-| Data Type | Ascending | Descending | Default |
-|-----------|-----------|------------|---------|
-| Numbers (days_saved, installs) | 1 to 100 | 100 to 1 | Descending (show highest first) |
-| Dates (date_added) | Oldest first | Newest first | Descending (newest first) |
-| Strings (handle) | A to Z | Z to A | Ascending |
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Similar skills shown on publish | Advisory warning before creating duplicates | MEDIUM | Embedding comparison at publish time |
+| Similarity percentage display | Show how similar (e.g., "87% similar to X") | LOW | Cosine similarity to percentage |
+| Links to similar skills | Navigate to potential duplicates | LOW | UI linkage |
+| Bypass option | Allow publishing anyway | LOW | User override with acknowledgment |
+| Top-N results only | Don't overwhelm with matches | LOW | Limit to 3-5 most similar |
 
-### Expansion Behavior Specifications
+**Research findings:** Cosine similarity thresholds for duplicate detection:
+- Above 0.85: Very similar (strong warning)
+- 0.70-0.85: Similar (advisory notice)
+- Below 0.70: Don't show
 
-Based on [Nielsen Norman Group](https://www.nngroup.com/articles/accordions-on-desktop/) and [UX Patterns](https://uxpatterns.dev/patterns/content-management/accordion) research:
+Best practice is multi-stage: high-confidence filtering followed by semantic analysis. Embedding models like OpenAI text-embedding-3-small or open-source Qwen3-Embedding work well for text similarity.
 
-| Behavior | Recommendation | Rationale |
-|----------|---------------|-----------|
-| Multiple expanded | YES - allow multiple rows expanded | Users may want to compare skills. Auto-collapse is disorienting. |
-| Persist expanded state | YES - within session | Scrolling away and back should preserve state. |
-| Expand animation | 150-200ms ease-out | Feels responsive but not jarring. |
-| Expanded content height | Auto/measured | Do not use fixed height - content length varies. |
+### Fork Model
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Fork button on skill detail | Create personal variant | LOW | Copy with attribution |
+| Attribution to parent | Show "Forked from X" | LOW | Foreign key reference |
+| Fork count display | Show how many forks exist | LOW | Denormalized counter |
+| View all forks list | See variants of a skill | LOW | Query by parentId |
+| Fork naming conventions | "Skill Name (Your Fork)" or custom | LOW | Default naming pattern |
+
+**Research findings:** GitHub fork model is the standard. Key behaviors:
+- Fork is a complete copy owned by the forker
+- Cannot directly affect original project
+- Attribution to upstream preserved
+- Syncing with upstream is optional and manual
+- Common versioning pattern: track upstream version with suffix (e.g., "1.0.0-your-org.1")
+
+### Cross-Platform Install
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Claude Code install | MCP deploy via existing server | LOW | Already have deploy_skill tool |
+| Claude Desktop config copy | JSON for claude_desktop_config.json | LOW | Have generateMcpConfig() |
+| Platform-specific instructions | Different paths per OS | LOW | Conditional text display |
+| One-click copy to clipboard | Copy config without manual selection | LOW | Already have useClipboardCopy hook |
+
+**Research findings:** MCP config locations:
+- Claude Desktop (macOS): `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Claude Desktop (Windows): `%APPDATA%\Claude\claude_desktop_config.json`
+- Claude Desktop (Linux): `~/.config/Claude/claude_desktop_config.json`
+- Claude Code: `~/.claude.json` or `.mcp.json`
+
+Config format is JSON with `mcpServers` object containing named server configs.
 
 ---
 
 ## Differentiators
 
-Features that set product apart. Not expected, but valued by power users.
+Features that set Relay apart. Not required, but valuable.
+
+### AI Review System
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **Sticky column headers** | Headers visible during scroll | Low | Critical for long lists. Standard in modern data tables. |
-| **Multi-column sort** | Sort by primary, then secondary column | Medium | Power user feature. Show sort priority badges (1, 2). Click + Shift/Cmd pattern. |
-| **Column resize** | Adjust column widths | Medium | Nice for wide content. Can defer to post-MVP. |
-| **Keyboard shortcuts** | Fast navigation for power users | Medium | j/k for row navigation, Enter to expand, i for install. Show in tooltip/help. |
-| **Inline install feedback** | Visual confirmation of install action | Low | Button state change, brief success toast. No page navigation. |
-| **"Expand all" / "Collapse all"** | Batch operation | Low | Useful for scanning all descriptions quickly. |
-| **Remember sort preference** | Persist user's preferred sort across sessions | Low | localStorage or user preferences table. |
-| **Virtualized rendering** | Smooth performance with 1000+ rows | High | Only if performance becomes issue. Libraries: react-virtual, tanstack-virtual. |
-| **Row selection** | Select multiple for batch operations | Medium | Future: batch install, compare selected. Checkbox column. |
-| **Density toggle** | Compact vs comfortable row height | Low | Power users often prefer dense; casual users prefer spacious. |
-| **Column visibility toggle** | Hide/show columns | Medium | Useful when screen space limited or columns irrelevant. |
-| **Sparkline tooltip** | Hover shows detailed trend data | Low | "Last 30 days: 45, 52, 38, 61..." - adds context to the mini chart. |
+| Skill-type-aware review | Different criteria for prompts vs agents vs workflows | MEDIUM | Type-specific prompts |
+| Improvement suggestions with diff | Show exact changes to make | HIGH | Generate modified content |
+| Review-triggered badge upgrade | Good review can upgrade quality tier | MEDIUM | Integration with existing scorecard |
+| Batch review for authors | Review all your skills at once | MEDIUM | Queue management |
+| Review comparison (before/after) | Show improvement over revisions | LOW | Version diff display |
 
-### Leaderboard-Specific Differentiators
+### Similarity Detection
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **Segmented views** | Weekly/monthly/all-time tabs | Low | Prevents stagnant all-time leaders discouraging new contributors. |
-| **"Your position" highlight** | Show logged-in user's rank prominently | Low | Even if not in top 10, show "You are #47". Motivating. |
-| **Relative ranking** | Show users immediately above/below | Low | "You're 2 skills behind #46" - creates achievable goals. |
-| **Movement indicators** | Show rank changes from previous period | Medium | Up/down arrows with delta. Gamification element. |
+| Semantic search, not just keyword | Find conceptually similar skills | HIGH | Requires embedding model |
+| Consolidation suggestions | "Consider adding to X instead" | MEDIUM | Threshold-based recommendations |
+| Similarity dashboard for admins | View duplicates platform-wide | MEDIUM | Admin tooling |
+| Category-scoped similarity | Only compare within same category | LOW | Filter before comparison |
+
+### Fork Model
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Upstream sync notifications | "Parent skill updated, review changes" | HIGH | Change tracking across forks |
+| Merge suggestions back to parent | Fork improvements can flow upstream | HIGH | PR-like workflow |
+| Fork comparison view | Side-by-side diff with parent | MEDIUM | Diff rendering |
+| Fork metrics aggregation | Show total usage across all forks | LOW | Sum queries |
+| "Best fork" highlighting | Surface highest-rated variants | LOW | Query with ratings |
+
+### Cross-Platform Install
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Claude.ai web integration | Remote MCP config for browser Claude | HIGH | Requires Anthropic remote MCP |
+| VS Code extension install | One-click extension marketplace | HIGH | Would need published extension |
+| Auto-detect installed platforms | Show only relevant install options | MEDIUM | Local detection challenging |
+| Installation verification | "Skill successfully installed" confirmation | MEDIUM | Callback/polling mechanism |
+| Install analytics per platform | Track which platforms users prefer | LOW | Event tracking |
 
 ---
 
@@ -91,203 +135,287 @@ Features that set product apart. Not expected, but valued by power users.
 
 Features to explicitly NOT build. Common mistakes in this domain.
 
-| Anti-Feature | Why Requested | Why Problematic | What to Do Instead |
-|--------------|---------------|-----------------|-------------------|
-| **Auto-collapse on expand** | "Keeps UI tidy" | Disorienting; users lose context; can't compare rows; [NN/g research](https://www.nngroup.com/articles/accordions-on-desktop/) explicitly advises against | Allow multiple expanded rows |
-| **Hover-to-expand** | "Faster than clicking" | Accidental triggers while scrolling; accessibility nightmare; no mobile equivalent | Click/tap to expand only |
-| **Sort on hover** | "Discoverable" | Accidental sort changes are frustrating; requires click intent | Sort on click only |
-| **Pagination** | "Standard for large tables" | Breaks mental model; users lose place; can't search within page | Infinite scroll or virtual scrolling. Show all rows, virtualize rendering. |
-| **Modal for details** | "More space for content" | Context switch; loses table state; can't compare multiple items | Inline expansion or side panel |
-| **Right-click context menu** | "Advanced options" | Undiscoverable; no mobile equivalent; conflicts with browser menu | Visible action buttons or kebab menu |
-| **Editable cells inline** | "Quick editing" | Scope creep; tables for reading, forms for editing; accidental edits | Edit in dedicated view/modal |
-| **Drag-to-reorder columns** | "Customization" | Rarely used; implementation complexity; state management overhead | Fixed sensible column order |
-| **Sticky first column** | "Always see row identifier" | Adds scroll complexity; rarely needed if columns well-chosen | Make first column narrow (rank/handle) so visible without stickiness |
-| **Color-coded rows** | "Visual hierarchy" | Often inaccessible; information should not rely on color alone | Use icons, badges, or position to convey meaning |
-
----
-
-## Keyboard Accessibility (WCAG 2.1 AA Required)
-
-Based on [W3C ARIA APG Table Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/table/examples/sortable-table/) and [Carbon Design System](https://carbondesignsystem.com/components/data-table/accessibility/):
-
-### Required Interactions
-
-| Key | Action |
-|-----|--------|
-| Tab | Move focus between interactive elements (headers, expand triggers, action buttons) |
-| Shift+Tab | Move focus backwards |
-| Enter/Space | Activate sort (on header), toggle expand (on row), trigger action (on button) |
-| Arrow Up/Down | Move between rows (when row is focused) |
-| Arrow Left/Right | Move between columns (within row) |
-| Home/End | Jump to first/last row |
-| Escape | Close expanded row (optional, nice to have) |
-
-### ARIA Requirements
-
-| Element | ARIA Attribute | Value |
-|---------|---------------|-------|
-| Sortable header | `aria-sort` | `ascending`, `descending`, or `none` |
-| Sort button | `aria-label` | "Sort by [column name], currently [sorted/unsorted] [ascending/descending]" |
-| Expandable row | `aria-expanded` | `true` or `false` |
-| Expanded content | `aria-hidden` | `false` when visible, `true` when collapsed |
-| Table | `role` | `grid` (if fully keyboard navigable) or `table` |
-
-### Screen Reader Announcements
-
-- On sort: "Sorted by [column], [ascending/descending]"
-- On expand: "[Row name] expanded" / "[Row name] collapsed"
-- On install: "[Skill name] installed successfully" or error message
-
----
-
-## Mobile/Responsive Considerations
-
-Based on [UX Movement](https://uxmovement.medium.com/stacked-list-the-best-way-to-fit-tables-on-mobile-screens-79f7789e079b) and current patterns:
-
-### Recommended Approach: Stacked Cards on Mobile
-
-| Breakpoint | Layout |
-|------------|--------|
-| Desktop (1024px+) | Full table with all columns |
-| Tablet (768-1023px) | Table with priority columns (hide sparkline, combine metrics) |
-| Mobile (<768px) | Stacked cards - each row becomes a card |
-
-### Mobile Card Layout
-
-```
-+----------------------------------+
-| [Handle] [Quality Badge]    [>]  |  <- Tap to expand
-| 1,234 installs  |  45.2 days     |
-| Added Jan 15, 2026               |
-+----------------------------------+
-```
-
-Expanded state adds description/instructions below.
-
-### Alternative: Horizontal Scroll
-
-If stacked cards feel too different from desktop:
-- First column sticky (handle)
-- Horizontal scroll for other columns
-- Swipe affordance indicator
-
-**Recommendation:** Stacked cards for Relay. The expanded description content needs vertical space that horizontal scroll doesn't provide gracefully.
+| Anti-Feature | Why Requested | Why Problematic | Alternative |
+|--------------|---------------|-----------------|-------------|
+| **Auto-review on every publish** | "Save time" | LLM costs scale poorly; bottleneck; may block legitimate skills | On-demand review button; periodic batch review |
+| **Blocking duplicate detection** | "Prevent clutter" | False positives frustrate users; semantic similarity imperfect; variants are legitimate | Advisory-only with bypass; let ratings surface quality |
+| **Auto-merge forks** | "Keep everything in sync" | Merge conflicts complex; breaks customizations; confusing | Notification of upstream changes; manual merge |
+| **Real-time similarity scoring** | "Immediate feedback" | Expensive embedding calls; distracting UX; premature optimization | Check on publish/preview only |
+| **Universal installer** | "One button for everything" | Platforms have different config formats; security implications; brittle | Per-platform install with clear instructions |
+| **Fork approval gates** | "Quality control" | Adds friction; kills organic iteration; contradicts wiki philosophy | Let metrics surface quality; highlight high-rated forks |
+| **AI auto-fix** | "Apply suggestions automatically" | Users lose understanding; may introduce bugs; removes human judgment | Show diff, let user apply manually |
+| **LLM-based similarity verification** | "Double-check duplicates" | LLM inherits same vulnerabilities; attackers can craft prompts to mislead both models | Use embeddings + cosine similarity only |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[Sortable Headers] -----> [URL State Sync] (sort persisted)
-      |
-      v
-[Sort Indicators] -----> [Accessibility Announcements]
-      |
-      v
-[Row Expansion] -----> [Keyboard Navigation]
-      |                      |
-      v                      v
-[Install Button] <---- [Focus Management]
-      |
-      v
-[Success Feedback]
+[AI Review]
+    |--requires--> [LLM API integration (Anthropic)]
+    |--enhances--> [Quality Scorecard] (existing)
+    |--enhances--> [Skill Versions] (existing)
+    |--stores in--> [reviews table] (new)
+
+[Similarity Detection]
+    |--requires--> [Embedding Model/API (OpenAI or open-source)]
+    |--requires--> [Vector Storage (pgvector or in-memory)]
+    |--uses------> [Full-text Search] (existing, but different approach)
+    |--stores in--> [skill_embeddings table] (new)
+
+[Fork Model]
+    |--requires--> [Skills Schema Update] (add parentSkillId)
+    |--enhances--> [Version History] (existing)
+    |--enhances--> [Attribution/Leaderboard] (existing)
+
+[Cross-Platform Install]
+    |--extends---> [MCP Config Generation] (existing)
+    |--requires--> [Platform Detection Logic] (new)
+
+[Claude.ai Install]
+    |--requires--> [Remote MCP Support] (Anthropic-dependent, paid plans)
+
+[VS Code Install]
+    |--requires--> [Published VS Code Extension] (separate project)
 ```
 
-### Implementation Order
+### Dependency Notes
 
-1. **Base table structure** - Headers, rows, basic styling
-2. **Sort on column click** - Core interaction
-3. **Sort indicators** - Visual feedback
-4. **URL state sync** - Shareability
-5. **Row expansion** - Accordion behavior
-6. **Keyboard navigation** - Accessibility
-7. **Mobile responsive** - Stacked cards
-8. **Leaderboard enhancement** - Time segments, user highlighting
+- **AI Review requires LLM API:** Anthropic Claude is natural choice. Cost estimate: ~$0.01-0.03 per review depending on skill length. At 500 users, 5 reviews/user/month = ~$50-75/month.
+
+- **Similarity Detection requires embeddings:** Anthropic doesn't offer embeddings. Options:
+  - OpenAI text-embedding-3-small ($0.02/1M tokens) - recommended for accuracy
+  - Voyage AI (specialized for retrieval)
+  - Open-source: Qwen3-Embedding-0.6B, E5-large-v2
+
+- **Fork Model requires schema change:** Add `parentSkillId` and `forkCount` to skills table. Straightforward migration.
+
+- **Claude.ai web install is platform-dependent:** Remote MCP connectors require paid plan (Pro/Max/Team/Enterprise) and specific API setup.
+
+- **VS Code extension is separate project:** Would need dedicated development beyond this milestone.
 
 ---
 
-## MVP Recommendation
+## MVP Definition
 
-### Phase 1: Table Stakes (Must Have)
+### Launch With (v1.3)
 
-- [ ] Sortable column headers with click toggle
-- [ ] Sort direction indicators (chevron up/down)
-- [ ] Unsorted columns show sortable affordance
-- [ ] Single-click row expansion with chevron
-- [ ] Smooth expand/collapse animation
-- [ ] Multiple rows expandable simultaneously
-- [ ] URL-persisted sort state
-- [ ] Basic keyboard navigation (Tab, Enter)
-- [ ] Visible focus states
-- [ ] Loading state on sort
+Minimum viable implementation of each feature.
 
-### Phase 2: Polish (Should Have)
+**AI Review:**
+- [ ] On-demand review button on skill detail page
+- [ ] Structured review output (functionality, security, quality, improvements)
+- [ ] Review history stored in database
+- [ ] Basic prompt injection detection
+- [ ] Confidence level display
 
-- [ ] Sticky headers on scroll
-- [ ] Mobile stacked card layout
-- [ ] Full ARIA implementation
-- [ ] Sparkline tooltips
-- [ ] Install button with inline feedback
-- [ ] Leaderboard time segment tabs
+**Similarity Detection:**
+- [ ] Similarity check triggered on publish (before submit)
+- [ ] Show top 3 similar skills with percentage
+- [ ] "Publish anyway" bypass option
+- [ ] Advisory only, never blocking
+- [ ] Category-scoped comparison
 
-### Phase 3: Delight (Nice to Have)
+**Fork Model:**
+- [ ] Fork button creates copy with attribution
+- [ ] "Forked from X" display on skill detail
+- [ ] Fork count on parent skill
+- [ ] Forks inherit parent's tags/category
+- [ ] View forks list on parent skill page
 
-- [ ] Keyboard shortcuts (j/k navigation)
-- [ ] Remember sort preference
-- [ ] "Your position" in leaderboard
-- [ ] Movement indicators in leaderboard
-- [ ] Expand all / Collapse all
-- [ ] Density toggle
+**Cross-Platform Install:**
+- [ ] Claude Code: enhance existing MCP deploy instructions
+- [ ] Claude Desktop: copy config JSON with platform-specific paths
+- [ ] OS detection for instruction customization (macOS/Windows/Linux)
 
-### Defer (Out of Scope for v1.2)
+### Add After Validation (v1.4+)
 
-- Multi-column sort
-- Column resize
-- Row selection / batch operations
-- Virtualized rendering (unless performance issue emerges)
-- Column visibility toggle
+- [ ] AI Review: Batch review for authors — when usage is high
+- [ ] AI Review: Auto-suggest quality tier based on review — when accuracy validated
+- [ ] Similarity: Admin dashboard for duplicate management — when duplication is observed problem
+- [ ] Forks: Upstream change notifications — when fork ecosystem grows
+- [ ] Forks: Fork comparison diff view — when users request
+- [ ] Install: Verification callbacks — when failure rate measured
+
+### Future Consideration (v2+)
+
+- [ ] Claude.ai web remote MCP integration — requires Anthropic partnership
+- [ ] VS Code extension marketplace — separate project
+- [ ] AI auto-fix with diff preview — risky UX
+- [ ] Merge fork improvements upstream — complex PR workflow
+- [ ] Real-time similarity as you type — premature optimization
+
+---
+
+## Feature Prioritization Matrix
+
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| AI review on-demand | HIGH | MEDIUM | P1 |
+| Security vulnerability detection | HIGH | MEDIUM | P1 |
+| Similar skills on publish | MEDIUM | MEDIUM | P1 |
+| Fork with attribution | HIGH | LOW | P1 |
+| Claude Desktop config copy | HIGH | LOW | P1 |
+| Review history | MEDIUM | LOW | P1 |
+| Fork count display | MEDIUM | LOW | P1 |
+| Structured review categories | MEDIUM | MEDIUM | P2 |
+| Similarity bypass option | MEDIUM | LOW | P2 |
+| View all forks list | MEDIUM | LOW | P2 |
+| Platform-specific instructions | LOW | LOW | P2 |
+| Batch review | LOW | MEDIUM | P3 |
+| Upstream sync notifications | MEDIUM | HIGH | P3 |
+| Fork comparison diff | LOW | MEDIUM | P3 |
+| Claude.ai install | HIGH | HIGH | P3 (blocked) |
+
+**Priority key:**
+- P1: Must have for v1.3 launch
+- P2: Should have, add when possible in v1.3
+- P3: Nice to have, consider for v1.4+
+
+---
+
+## Implementation Considerations
+
+### AI Review Schema
+
+```typescript
+interface SkillReview {
+  id: string;
+  skillId: string;
+  skillVersionId: string;
+  functionality: {
+    score: 1 | 2 | 3 | 4 | 5;
+    issues: string[];
+    suggestions: string[];
+  };
+  security: {
+    score: 1 | 2 | 3 | 4 | 5;
+    vulnerabilities: string[];
+    remediations: string[];
+  };
+  quality: {
+    score: 1 | 2 | 3 | 4 | 5;
+    improvements: string[];
+  };
+  overallScore: number; // 1-5
+  confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+  rawResponse: string; // Full LLM response for debugging
+  reviewedAt: Date;
+  reviewedBy: 'claude-3-opus' | 'claude-3-sonnet' | etc;
+}
+```
+
+### Embedding Storage
+
+Two options:
+
+**Option A: pgvector extension**
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+ALTER TABLE skills ADD COLUMN embedding vector(1536);
+CREATE INDEX ON skills USING ivfflat (embedding vector_cosine_ops);
+```
+
+**Option B: Separate embeddings table**
+```sql
+CREATE TABLE skill_embeddings (
+  skill_id TEXT PRIMARY KEY REFERENCES skills(id),
+  embedding vector(1536),
+  model TEXT, -- 'text-embedding-3-small'
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+Recommendation: Option B for flexibility (can re-embed with different models).
+
+### Fork Schema Addition
+
+```sql
+ALTER TABLE skills ADD COLUMN parent_skill_id TEXT REFERENCES skills(id);
+ALTER TABLE skills ADD COLUMN fork_count INTEGER DEFAULT 0;
+CREATE INDEX idx_skills_parent_id ON skills(parent_skill_id);
+```
+
+### Cross-Platform Config Generation
+
+Extend existing `generateMcpConfig()`:
+
+```typescript
+function generateMcpConfig(
+  skill: { name: string; slug: string },
+  platform: 'claude-code' | 'claude-desktop-mac' | 'claude-desktop-win' | 'claude-desktop-linux'
+): { config: string; instructions: string; configPath: string } {
+  const config = {
+    mcpServers: {
+      [skill.slug]: {
+        command: "npx",
+        args: ["-y", `@anthropic-ai/relay-${skill.slug}`],
+      },
+    },
+  };
+
+  const paths = {
+    'claude-code': '~/.claude.json or .mcp.json',
+    'claude-desktop-mac': '~/Library/Application Support/Claude/claude_desktop_config.json',
+    'claude-desktop-win': '%APPDATA%\\Claude\\claude_desktop_config.json',
+    'claude-desktop-linux': '~/.config/Claude/claude_desktop_config.json',
+  };
+
+  return {
+    config: JSON.stringify(config, null, 2),
+    configPath: paths[platform],
+    instructions: getInstructions(platform),
+  };
+}
+```
+
+---
+
+## Competitor/Domain Analysis
+
+| Feature | GitHub | VS Code Marketplace | npm Registry | Relay v1.3 Approach |
+|---------|--------|---------------------|--------------|---------------------|
+| Fork model | Full git fork | N/A | N/A | Simplified copy with attribution |
+| Similarity detection | Search only | "Similar extensions" | None | Proactive advisory on publish |
+| AI review | Copilot (separate) | None | None | Built-in, skill-aware |
+| Cross-platform | Clone works everywhere | Platform-specific | npm install | Platform-specific config copy |
+| Version control | Full git history | Semver releases | Semver | Wiki-style versions (existing) |
+
+### Key Differentiators for Relay
+
+1. **AI review is native:** Built into the platform, not a separate tool
+2. **Proactive similarity:** Surfaces duplicates automatically on publish
+3. **Simplified forking:** No git complexity, just copy-with-attribution
+4. **Skill-type awareness:** Review criteria tuned to prompts/workflows/agents
 
 ---
 
 ## Sources
 
-### UX Patterns & Best Practices
-- [Pencil & Paper: Data Table UX Patterns](https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-data-tables) - Enterprise table patterns
-- [Eleken: Table Design UX Guide](https://www.eleken.co/blog-posts/table-design-ux) - SaaS table usability
-- [LogRocket: Data Table Design Best Practices](https://blog.logrocket.com/ux-design/data-table-design-best-practices/) - General best practices
-- [Nielsen Norman Group: Accordions on Desktop](https://www.nngroup.com/articles/accordions-on-desktop/) - Accordion behavior research
-- [Andrew Coyle: Design Better Accordions](https://coyleandrew.medium.com/design-better-accordions-c67ae38e6713) - Accordion UX patterns
+### AI Code Review
+- [Qodo: AI Code Review Tools 2026](https://www.qodo.ai/blog/best-ai-code-review-tools-2026/) - Enterprise requirements and patterns
+- [Addy Osmani: Code Review in the Age of AI](https://addyo.substack.com/p/code-review-in-the-age-of-ai) - Best practices for AI-assisted review
+- [IBM: AI Code Review](https://www.ibm.com/think/insights/ai-code-review) - Architecture patterns
+- [OWASP LLM Top 10: Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/) - Security vulnerabilities
 
-### Accessibility
-- [W3C WAI: Tables Tutorial](https://www.w3.org/WAI/tutorials/tables/) - Accessibility fundamentals
-- [W3C ARIA APG: Sortable Table Example](https://www.w3.org/WAI/ARIA/apg/patterns/table/examples/sortable-table/) - ARIA implementation
-- [Carbon Design System: Data Table Accessibility](https://carbondesignsystem.com/components/data-table/accessibility/) - Enterprise accessibility patterns
-- [USWDS: Table Accessibility Tests](https://designsystem.digital.gov/components/table/accessibility-tests/) - Testing checklist
+### Semantic Similarity
+- [OpenAI Community: Cosine Similarity Thresholds](https://community.openai.com/t/rule-of-thumb-cosine-similarity-thresholds/693670) - Threshold guidance (0.79 threshold common)
+- [OpenXcell: Best Embedding Models 2026](https://www.openxcell.com/blog/best-embedding-models/) - Model comparison
+- [NewsCatcher: Text Similarity Guide](https://www.newscatcherapi.com/blog-posts/ultimate-guide-to-text-similarity-with-python) - Implementation patterns
 
-### Sort Icons & Indicators
-- [Rimsha: Sorting Icons in UI](https://medium.com/design-bootcamp/sorting-icons-in-ui-what-works-best-for-table-design-and-user-experience-ux-e1a1d1b58fa7) - Icon comparison
-- [Arnaud Jaegers: Sorting Arrow Confusion](https://medium.com/hackernoon/sorting-arrow-confusion-in-data-tables-5a3117698fdf) - Common mistakes
+### Fork Model
+- [GitHub Docs: Fork a Repo](https://docs.github.com/articles/fork-a-repo) - Standard fork behavior
+- [Atlassian: Forking Workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow) - Patterns and UX
+- [GitHub Blog: Friendly Fork Management](https://github.blog/2022-05-02-friend-zone-strategies-friendly-fork-management/) - Advanced strategies
 
-### Mobile Patterns
-- [UX Movement: Stacked List for Mobile Tables](https://uxmovement.medium.com/stacked-list-the-best-way-to-fit-tables-on-mobile-screens-79f7789e079b) - Card view pattern
-- [Medium: Responsive Data Tables Solutions](https://medium.com/appnroll-publication/5-practical-solutions-to-make-responsive-data-tables-ff031c48b122) - Multiple approaches
-- [Medium: User-Friendly Mobile Data Tables](https://medium.com/design-bootcamp/designing-user-friendly-data-tables-for-mobile-devices-c470c82403ad) - Mobile UX
-
-### Sparklines
-- [FusionCharts: Sparklines Complete Guide](https://www.fusioncharts.com/resources/chart-primers/spark-charts) - Design principles
-- [LinkedIn: Sparkline Best Practices](https://www.linkedin.com/advice/0/what-best-practices-using-sparklines-your-data-hyquc) - Usage guidelines
-
-### Leaderboards
-- [UI Patterns: Leaderboard](https://ui-patterns.com/patterns/leaderboard) - Design pattern
-- [Yu-kai Chou: How to Design Effective Leaderboards](https://yukaichou.com/advanced-gamification/how-to-design-effective-leaderboards-boosting-motivation-and-engagement/) - Gamification psychology
-
-### React Libraries
-- [Shadcn/ui: Sortable Tables](https://www.shadcn.io/blocks/tables-sortable) - Implementation reference
-- [Material React Table](https://mui.com/material-ui/react-table/) - Full-featured table component
-- [TanStack Table](https://tanstack.com/table) - Headless table library
+### Cross-Platform Install
+- [MCP Docs: Connect Local Servers](https://modelcontextprotocol.io/docs/develop/connect-local-servers) - Official config format
+- [Claude Code Docs: MCP](https://code.claude.com/docs/en/mcp) - Claude Code integration
+- [Anthropic: Desktop Extensions](https://www.anthropic.com/engineering/desktop-extensions) - One-click install (.mcpb format)
+- [Claude Help: Local MCP Servers](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) - Setup guide
 
 ---
 
-*Feature research for: Relay v1.2 Sortable Table UI*
-*Researched: 2026-02-01*
-*Confidence: HIGH - Based on established UX patterns, W3C guidelines, and current React ecosystem*
+*Feature research for: Relay v1.3 AI review, duplicates, forks, cross-platform install*
+*Researched: 2026-02-02*
+*Confidence: HIGH - Based on official documentation, OWASP guidelines, and established industry patterns*
