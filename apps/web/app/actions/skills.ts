@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { db, skills } from "@relay/db";
 import { skillVersions } from "@relay/db/schema/skill-versions";
+import { createSkillEmbedding } from "@relay/db/services";
 import { generateUploadUrl } from "@relay/storage";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -10,6 +11,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { generateUniqueSlug } from "@/lib/slug";
 import { hashContent } from "@/lib/content-hash";
+import { generateEmbedding, EMBEDDING_MODEL, EMBEDDING_VERSION } from "@/lib/embeddings";
 
 // Zod schema for form validation
 const createSkillSchema = z.object({
@@ -168,6 +170,32 @@ export async function createSkill(
   } else {
     // eslint-disable-next-line no-console
     console.warn("R2 not configured, skill created without version record");
+  }
+
+  // Generate and store embedding for the skill
+  // Combines name, description, content, and tags for semantic search
+  const embeddingInput = [name, description, content, ...(parsed.data.tags || [])].join(" ");
+
+  try {
+    const embedding = await generateEmbedding(embeddingInput);
+    const inputHash = await hashContent(embeddingInput);
+    await createSkillEmbedding({
+      skillId: newSkill.id,
+      embedding,
+      modelName: EMBEDDING_MODEL,
+      modelVersion: EMBEDDING_VERSION,
+      inputHash,
+    });
+  } catch (error) {
+    // Log error for debugging
+    // eslint-disable-next-line no-console
+    console.error("Failed to generate embedding:", error);
+    // Per CONTEXT.md: embedding failure should fail skill creation
+    // Delete the skill we just created to maintain consistency
+    await db.delete(skills).where(eq(skills.id, newSkill.id));
+    return {
+      message: "Failed to generate embedding for skill. Please try again.",
+    };
   }
 
   // Revalidate relevant paths
