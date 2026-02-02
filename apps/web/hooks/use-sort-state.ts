@@ -3,7 +3,7 @@
 import { useQueryState, parseAsStringEnum, parseAsStringLiteral } from "nuqs";
 import { useTransition } from "react";
 
-export const SORT_COLUMNS = ["name", "days_saved", "installs", "date", "author"] as const;
+export const SORT_COLUMNS = ["name", "days_saved", "installs", "date", "author", "rating"] as const;
 export type SortColumn = (typeof SORT_COLUMNS)[number];
 
 const SORT_DIRECTIONS = ["asc", "desc"] as const;

@@ -25,6 +25,10 @@ export async function GET() {
     return NextResponse.json({ error: "AUTH_SECRET not configured" }, { status: 500 });
   }
 
+  if (!db) {
+    return NextResponse.json({ error: "Database not configured" }, { status: 500 });
+  }
+
   try {
     // Ensure test user exists in database
     await db
