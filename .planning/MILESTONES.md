@@ -1,5 +1,31 @@
 # Project Milestones: Relay
 
+## v1.2 UI Redesign (Shipped: 2026-02-02)
+
+**Delivered:** Two-panel sortable table layout with inline expansion, one-click install, full keyboard navigation, and mobile accessibility.
+
+**Phases completed:** 12-14 (12 plans total)
+
+**Key accomplishments:**
+- Two-panel layout with skills table (2/3) and contributor leaderboard (1/3)
+- Sortable columns with URL state persistence via nuqs
+- Inline accordion expansion for skill details with one-click MCP install
+- Full keyboard navigation with roving tabindex and arrow key support
+- Screen reader support with aria-sort, live announcements, and ARIA attributes
+- Mobile responsive with vertical stacking, horizontal scroll, and swipe gestures
+
+**Stats:**
+- 20 files created/modified
+- 5,592 lines of TypeScript
+- 3 phases, 12 plans
+- 1 day from v1.1 to v1.2
+
+**Git range:** `8ea8da8` (feat(12-01)) → `1173641` (docs(14-05))
+
+**Archive:** [v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md) | [v1.2-REQUIREMENTS.md](milestones/v1.2-REQUIREMENTS.md)
+
+---
+
 ## v1.1 Quality & Polish (Shipped: 2026-02-01)
 
 **Delivered:** Quality scorecards for skill discovery, tag filtering backend, and comprehensive E2E test coverage.

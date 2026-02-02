@@ -10,24 +10,14 @@ Skills get better as they pass through more hands, with real metrics proving tha
 
 ## Current State
 
-**v1.1 shipped 2026-02-01** — Quality scorecards and comprehensive E2E test coverage.
+**v1.2 shipped 2026-02-02** — Two-panel UI redesign with sortable table, inline expansion, keyboard navigation, and mobile accessibility.
 
-Tech stack: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, Playwright, vitest
-LOC: 5,942 TypeScript across 230 files
+Tech stack: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, Playwright, vitest, nuqs, react-swipeable
+LOC: 5,592 TypeScript across 230 files
 
 Previous:
+- v1.1 shipped 2026-02-01 — Quality scorecards and comprehensive E2E test coverage
 - v1.0 shipped 2026-01-31 — Full internal skill marketplace with MCP integration
-
-## Current Milestone: v1.2 UI Redesign
-
-**Goal:** Redesign the UI for simplicity, gamification, and performance with a two-panel sortable table layout.
-
-**Target features:**
-- Two-panel layout: skills table (2/3) + contributor leaderboard (1/3)
-- Sortable columns with click-to-toggle ascending/descending
-- Inline row expansion (accordion) for skill details
-- One-click install via MCP (directly loads skill into Claude)
-- Search bar for filtering skills
 
 ## Requirements
 
@@ -56,14 +46,18 @@ Previous:
 - ✓ Quality scorecards (Gold/Silver/Bronze/Unrated) with auto-calculation — v1.1
 - ✓ Quality tier filtering and sorting on browse page — v1.1
 - ✓ "Why this badge?" breakdown showing score components — v1.1
+- ✓ Two-panel layout with skills table (2/3) and leaderboard (1/3) — v1.2
+- ✓ Sortable table columns with ascending/descending toggle — v1.2
+- ✓ Inline row expansion for skill details (accordion) — v1.2
+- ✓ One-click MCP install button that copies skill config — v1.2
+- ✓ Search bar for filtering skills table — v1.2
+- ✓ Full keyboard navigation (Tab, Enter, Arrow keys) — v1.2
+- ✓ Screen reader accessibility (aria-sort, live announcements, ARIA attributes) — v1.2
+- ✓ Mobile responsive layout with swipe gestures — v1.2
 
 ### Active
 
-- [ ] Two-panel layout with skills table (2/3) and leaderboard (1/3)
-- [ ] Sortable table columns with ascending/descending toggle
-- [ ] Inline row expansion for skill details (accordion)
-- [ ] One-click MCP install button that loads skill into Claude
-- [ ] Search bar for filtering skills table
+(No active requirements — run `/gsd:new-milestone` to define next milestone)
 
 ### Out of Scope
 
@@ -112,6 +106,12 @@ Previous:
 | nuqs for URL state | Consistent with existing CategoryFilter/TagFilter patterns | ✓ Good |
 | Inline SQL quality computation | Avoids denormalized column; acceptable at v1.1 scale | ✓ Good |
 | JWT injection for E2E auth | Bypasses OAuth flow, enables fast authenticated testing | ✓ Good |
+| Plain HTML table over shadcn/ui | shadcn/ui Table not installed; follow existing leaderboard pattern | ✓ Good |
+| nuqs for sort URL state | Consistent with existing CategoryFilter/TagFilter patterns | ✓ Good |
+| sm: breakpoint (640px) for mobile | Phones stack vertically, tablets+ show side-by-side | ✓ Good |
+| W3C APG Grid Pattern for keyboard | Standard pattern for accessible data grids | ✓ Good |
+| 5 sessions as onboarding threshold | Balances feature discovery with mobile UX | ✓ Good |
+| 80px swipe delta threshold | Balances sensitivity with accidental activation prevention | ✓ Good |
 
 ---
-*Last updated: 2026-02-01 after v1.2 milestone start*
+*Last updated: 2026-02-02 after v1.2 milestone complete*
