@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-03)
 ## Current Position
 
 Phase: 17 of 19 (AI Review Pipeline)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-03 - Completed 17-01-PLAN.md (schema, service layer, SDK)
+Last activity: 2026-02-03 - Completed 17-02-PLAN.md (server action + AI review logic)
 
-Progress: [█████████████████████████████████████░░░] 61/~67 plans (v1.0-v1.2 complete, v1.3 in progress)
+Progress: [██████████████████████████████████████░░░] 62/~67 plans (v1.0-v1.2 complete, v1.3 in progress)
 
 ## Milestones
 
@@ -31,7 +31,7 @@ Progress: [███████████████████████
 - Average: 3.8 min/plan
 
 **v1.3:**
-- Plans completed: 7 (4 in phase 15, 2 in phase 16, 1 in phase 17)
+- Plans completed: 8 (4 in phase 15, 2 in phase 16, 2 in phase 17)
 - Phases 15-16 implemented via bulk commits
 
 ## Accumulated Context
@@ -52,6 +52,8 @@ Recent decisions affecting current work:
 - [UI]: Homepage search bar, ThankYouButton component, hours saved rounding fix
 - [17-01]: Raw SQL for upsert/toggle due to Drizzle type inference limitation with boolean/timestamp default columns
 - [17-01]: UpsertSkillReviewParams interface instead of NewSkillReview for clearer service API
+- [17-02]: Manual JSON schema for output_config.format (zodOutputFormat requires Zod v4, project uses v3)
+- [17-02]: Categories destructured from summary before persisting to match service layer interface
 
 ### Pending Todos
 
@@ -67,5 +69,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 17-01-PLAN.md, ready for 17-02-PLAN.md (server action + AI review logic)
+Stopped at: Completed 17-02-PLAN.md, ready for 17-03-PLAN.md (UI components)
 Resume file: None
