@@ -109,11 +109,12 @@ Plans:
   2. Review displays structured feedback (functionality score, quality score, improvement suggestions)
   3. Review results are persisted and visible on subsequent visits
   4. Review clearly marked as advisory (not blocking)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 17-01: TBD
-- [ ] 17-02: TBD
+- [ ] 17-01-PLAN.md — Schema, service layer, and SDK installation
+- [ ] 17-02-PLAN.md — AI review generation library and server action
+- [ ] 17-03-PLAN.md — Tab UI, score display, and review trigger flow
 
 ### Phase 18: Fork-Based Versioning
 **Goal**: Users can create attributed variants of existing skills
@@ -162,7 +163,7 @@ Phases 18-19 can execute in parallel with 16-17 after Phase 15.
 | 14. Mobile & Accessibility | v1.2 | 5/5 | Complete | 2026-02-01 |
 | 15. Embeddings Foundation | v1.3 | 4/4 | Complete | 2026-02-02 |
 | 16. Similarity Detection | v1.3 | 2/2 | Complete | 2026-02-03 |
-| 17. AI Review Pipeline | v1.3 | 0/TBD | Not started | - |
+| 17. AI Review Pipeline | v1.3 | 0/3 | Not started | - |
 | 18. Fork-Based Versioning | v1.3 | 0/TBD | Not started | - |
 | 19. Cross-Platform Install | v1.3 | 0/TBD | Not started | - |
 
