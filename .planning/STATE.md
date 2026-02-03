@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-03)
 ## Current Position
 
 Phase: 17 of 19 (AI Review Pipeline)
-Plan: 0 of TBD in current phase
-Status: Not started — needs planning
-Last activity: 2026-02-03 — Committed UI improvements (user profiles, homepage search, thank-you button)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-03 - Completed 17-01-PLAN.md (schema, service layer, SDK)
 
-Progress: [████████████████████████████████████░░░░] 60/~64 plans (v1.0-v1.2 complete, v1.3 phases 15-16 done)
+Progress: [█████████████████████████████████████░░░] 61/~67 plans (v1.0-v1.2 complete, v1.3 in progress)
 
 ## Milestones
 
 - v1.0 MVP - 33 plans - shipped 2026-01-31
 - v1.1 Quality & Polish - 9 plans - shipped 2026-02-01
 - v1.2 UI Redesign - 12 plans - shipped 2026-02-02
-- v1.3 AI Quality & Cross-Platform - 5 phases, TBD plans - in progress (2/5 phases complete)
+- v1.3 AI Quality & Cross-Platform - 5 phases, TBD plans - in progress (2/5 phases complete, phase 17 started)
 
 ## Performance Metrics
 
@@ -31,7 +31,7 @@ Progress: [███████████████████████
 - Average: 3.8 min/plan
 
 **v1.3:**
-- Plans completed: 6 (4 in phase 15, 2 in phase 16)
+- Plans completed: 7 (4 in phase 15, 2 in phase 16, 1 in phase 17)
 - Phases 15-16 implemented via bulk commits
 
 ## Accumulated Context
@@ -50,6 +50,8 @@ Recent decisions affecting current work:
 - [16]: SimilarSkillsWarning component, two-step upload flow, Similar Skills section on detail page
 - [UI]: User profile pages at /users/[id] with linked navigation from leaderboard, skill detail, and skills table
 - [UI]: Homepage search bar, ThankYouButton component, hours saved rounding fix
+- [17-01]: Raw SQL for upsert/toggle due to Drizzle type inference limitation with boolean/timestamp default columns
+- [17-01]: UpsertSkillReviewParams interface instead of NewSkillReview for clearer service API
 
 ### Pending Todos
 
@@ -60,9 +62,10 @@ None.
 - [Research]: AI review prompt engineering may require iteration
 - [Research]: Similarity threshold needs empirical tuning (start at 0.85)
 - [Research]: Voyage AI is relatively new — store model version for future migration
+- [17-01]: ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
 
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Phases 15-16 complete, UI improvements committed, ready for Phase 17
+Stopped at: Completed 17-01-PLAN.md, ready for 17-02-PLAN.md (server action + AI review logic)
 Resume file: None
