@@ -60,8 +60,8 @@ Total: 12 plans completed.
 
 **Milestone Goal:** Add AI-driven skill review, semantic duplicate detection, fork-based versioning, and cross-platform install support.
 
-- [ ] **Phase 15: Embeddings Foundation** - Vector embeddings infrastructure for semantic search
-- [ ] **Phase 16: Similarity Detection** - Advisory duplicate warnings on publish
+- [x] **Phase 15: Embeddings Foundation** - Vector embeddings infrastructure for semantic search
+- [x] **Phase 16: Similarity Detection** - Advisory duplicate warnings on publish
 - [ ] **Phase 17: AI Review Pipeline** - On-demand AI quality reviews
 - [ ] **Phase 18: Fork-Based Versioning** - Create attributed skill variants
 - [ ] **Phase 19: Cross-Platform Install** - Multi-platform MCP config generation
@@ -80,10 +80,10 @@ Total: 12 plans completed.
 **Plans**: 4 plans
 
 Plans:
-- [ ] 15-01-PLAN.md — Schema and pgvector infrastructure
-- [ ] 15-02-PLAN.md — Voyage AI embedding service
-- [ ] 15-03-PLAN.md — Hook embeddings into publish flow
-- [ ] 15-04-PLAN.md — Backfill existing skills
+- [x] 15-01-PLAN.md — Schema and pgvector infrastructure
+- [x] 15-02-PLAN.md — Voyage AI embedding service
+- [x] 15-03-PLAN.md — Hook embeddings into publish flow
+- [x] 15-04-PLAN.md — Backfill existing skills
 
 ### Phase 16: Similarity Detection
 **Goal**: Users see advisory warnings about similar existing skills when publishing
@@ -97,8 +97,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 16-01-PLAN.md — Similar skills on publish flow (SIM-01, SIM-02, SIM-03)
-- [ ] 16-02-PLAN.md — Similar skills section on detail page (SIM-04)
+- [x] 16-01-PLAN.md — Similar skills on publish flow (SIM-01, SIM-02, SIM-03)
+- [x] 16-02-PLAN.md — Similar skills section on detail page (SIM-04)
 
 ### Phase 17: AI Review Pipeline
 **Goal**: Users can trigger AI-powered quality reviews for skills
@@ -160,8 +160,8 @@ Phases 18-19 can execute in parallel with 16-17 after Phase 15.
 | 12. Two-Panel Layout | v1.2 | 3/3 | Complete | 2026-02-01 |
 | 13. Interactive Sorting & Accordion | v1.2 | 4/4 | Complete | 2026-02-01 |
 | 14. Mobile & Accessibility | v1.2 | 5/5 | Complete | 2026-02-01 |
-| 15. Embeddings Foundation | v1.3 | 0/4 | Ready | - |
-| 16. Similarity Detection | v1.3 | 0/2 | Ready | - |
+| 15. Embeddings Foundation | v1.3 | 4/4 | Complete | 2026-02-02 |
+| 16. Similarity Detection | v1.3 | 2/2 | Complete | 2026-02-03 |
 | 17. AI Review Pipeline | v1.3 | 0/TBD | Not started | - |
 | 18. Fork-Based Versioning | v1.3 | 0/TBD | Not started | - |
 | 19. Cross-Platform Install | v1.3 | 0/TBD | Not started | - |
