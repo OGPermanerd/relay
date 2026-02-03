@@ -94,11 +94,11 @@ Plans:
   2. User can dismiss similarity warning and publish anyway
   3. Skill detail page shows "Similar Skills" section with related skills
   4. Similarity detection does not block publishing (advisory only)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 16-01: TBD
-- [ ] 16-02: TBD
+- [ ] 16-01-PLAN.md — Similar skills on publish flow (SIM-01, SIM-02, SIM-03)
+- [ ] 16-02-PLAN.md — Similar skills section on detail page (SIM-04)
 
 ### Phase 17: AI Review Pipeline
 **Goal**: Users can trigger AI-powered quality reviews for skills
@@ -161,7 +161,7 @@ Phases 18-19 can execute in parallel with 16-17 after Phase 15.
 | 13. Interactive Sorting & Accordion | v1.2 | 4/4 | Complete | 2026-02-01 |
 | 14. Mobile & Accessibility | v1.2 | 5/5 | Complete | 2026-02-01 |
 | 15. Embeddings Foundation | v1.3 | 0/4 | Ready | - |
-| 16. Similarity Detection | v1.3 | 0/TBD | Not started | - |
+| 16. Similarity Detection | v1.3 | 0/2 | Ready | - |
 | 17. AI Review Pipeline | v1.3 | 0/TBD | Not started | - |
 | 18. Fork-Based Versioning | v1.3 | 0/TBD | Not started | - |
 | 19. Cross-Platform Install | v1.3 | 0/TBD | Not started | - |
