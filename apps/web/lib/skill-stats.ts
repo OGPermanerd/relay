@@ -77,8 +77,10 @@ export async function getSkillStats(skillId: string): Promise<SkillStats> {
   const countWithEstimate = timeEstimateResult?.[0]?.countWithEstimate ?? 0;
 
   // Use user estimates if at least one exists, otherwise creator estimate
-  const effectiveHoursSaved =
+  // Round to nearest 0.1 hour
+  const rawHoursSaved =
     countWithEstimate > 0 && userAvgHours !== null ? userAvgHours : (skill?.hoursSaved ?? 1);
+  const effectiveHoursSaved = Math.round(rawHoursSaved * 10) / 10;
 
   const hoursSavedSource: "user" | "creator" =
     countWithEstimate > 0 && userAvgHours !== null ? "user" : "creator";
