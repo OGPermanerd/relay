@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { db, skills } from "@relay/db";
 import { ratings } from "@relay/db/schema";
+import { getSkillEmbedding, findSimilarSkills, type SimilarSkillResult } from "@relay/db/services";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { SkillDetail } from "@/components/skill-detail";
+import { SimilarSkillsSection } from "@/components/similar-skills-section";
 import { getSkillStats } from "@/lib/skill-stats";
 import { getSkillDetailTrends } from "@/lib/skill-detail-trends";
 import { auth } from "@/auth";
@@ -39,10 +41,28 @@ export default async function SkillPage(props: SkillPageProps) {
     notFound();
   }
 
-  // Get usage statistics and trends
-  const [stats, trends] = await Promise.all([
+  // Get usage statistics, trends, and similar skills in parallel
+  const [stats, trends, similarSkills] = await Promise.all([
     getSkillStats(skill.id),
     getSkillDetailTrends(skill.id),
+    // Query similar skills using the skill's embedding
+    (async (): Promise<SimilarSkillResult[]> => {
+      try {
+        const embedding = await getSkillEmbedding(skill.id);
+        if (embedding?.embedding) {
+          return await findSimilarSkills(embedding.embedding, {
+            threshold: 0.7,
+            limit: 5,
+            excludeSkillId: skill.id,
+          });
+        }
+        return [];
+      } catch (error) {
+        // Log but don't fail - similar skills is enhancement, not critical
+        console.warn("Failed to fetch similar skills:", error);
+        return [];
+      }
+    })(),
   ]);
 
   // Get session for authenticated user
@@ -81,6 +101,13 @@ export default async function SkillPage(props: SkillPageProps) {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="max-w-4xl">
         <SkillDetail skill={skill} stats={stats} trends={trends} />
+
+        {/* Similar Skills section */}
+        {similarSkills.length > 0 && (
+          <div className="mt-8">
+            <SimilarSkillsSection similarSkills={similarSkills} />
+          </div>
+        )}
 
         {/* Rating form for authenticated users */}
         {session?.user && (

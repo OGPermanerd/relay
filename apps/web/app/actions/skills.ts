@@ -44,10 +44,59 @@ const createSkillSchema = z.object({
   content: z.string().min(1, "Content is required"),
 });
 
+import { checkSimilarSkills, type SimilarSkillResult } from "@/lib/similar-skills";
+
 export type CreateSkillState = {
   errors?: Record<string, string[]>;
   message?: string;
 };
+
+export type CheckSimilarityState = {
+  errors?: Record<string, string[]>;
+  similarSkills?: SimilarSkillResult[];
+};
+
+/**
+ * Check for similar skills before publishing.
+ * Validates form data and returns similar skills if found.
+ */
+export async function checkSimilarity(
+  prevState: CheckSimilarityState,
+  formData: FormData
+): Promise<CheckSimilarityState> {
+  // Check authentication
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { errors: { _form: ["You must be signed in to create a skill"] } };
+  }
+
+  // Parse and validate form data
+  const parsed = createSkillSchema.safeParse({
+    name: formData.get("name"),
+    description: formData.get("description"),
+    category: formData.get("category"),
+    tags: formData.get("tags"),
+    usageInstructions: formData.get("usageInstructions"),
+    hoursSaved: formData.get("hoursSaved"),
+    content: formData.get("content"),
+  });
+
+  if (!parsed.success) {
+    return {
+      errors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  // Check for similar skills
+  const similarSkills = await checkSimilarSkills({
+    name: parsed.data.name,
+    description: parsed.data.description,
+    content: parsed.data.content,
+    tags: parsed.data.tags,
+  });
+
+  return { similarSkills };
+}
 
 export async function createSkill(
   prevState: CreateSkillState,
