@@ -14,6 +14,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.72.1",
     "@auth/drizzle-adapter": "^1.11.1",
     "@relay/core": "workspace:*",
     "@relay/db": "workspace:*",
