@@ -11,7 +11,10 @@ import { useTransition, useRef, useEffect } from "react";
  * Uses startTransition for non-blocking updates.
  */
 export function SearchInput() {
-  const [query, setQuery] = useQueryState("q", parseAsString.withDefault(""));
+  const [query, setQuery] = useQueryState(
+    "q",
+    parseAsString.withDefault("").withOptions({ shallow: false })
+  );
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
