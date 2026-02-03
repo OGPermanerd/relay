@@ -2,15 +2,14 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { LeaderboardEntry } from "@/lib/leaderboard";
-import { useAuthorFilter } from "@/hooks/use-author-filter";
 
 interface LeaderboardTableProps {
   contributors: LeaderboardEntry[];
 }
 
 export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
-  const { author, filterByAuthor } = useAuthorFilter();
   const [isExpanded, setIsExpanded] = useState(true);
 
   if (contributors.length === 0) {
@@ -64,11 +63,13 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
               {contributors.map((contributor, index) => (
                 <tr
                   key={contributor.userId}
-                  onClick={() => filterByAuthor(contributor.userId)}
-                  className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} ${author === contributor.userId ? "ring-2 ring-blue-500 bg-blue-50" : ""} hover:bg-blue-50 transition-colors cursor-pointer`}
+                  className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
                 >
                   <td className="px-3 py-2">
-                    <div className="flex items-center gap-2">
+                    <Link
+                      href={`/users/${contributor.userId}`}
+                      className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+                    >
                       {contributor.image ? (
                         <Image
                           src={contributor.image}
@@ -82,8 +83,10 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
                           {contributor.name.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      <span className="truncate text-sm text-gray-900">{contributor.name}</span>
-                    </div>
+                      <span className="truncate text-sm text-gray-900 hover:text-blue-600">
+                        {contributor.name}
+                      </span>
+                    </Link>
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 text-right text-sm font-medium text-blue-600">
                     {Math.round(contributor.fteDaysSaved).toLocaleString()}

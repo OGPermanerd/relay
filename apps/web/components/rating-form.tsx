@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { submitRating, RatingState } from "@/app/actions/ratings";
 import { StarRatingInput } from "./star-rating-input";
+import { ThankYouButton } from "./thank-you-button";
 
 interface RatingFormProps {
   skillId: string;
@@ -12,11 +13,15 @@ interface RatingFormProps {
     comment: string | null;
     hoursSavedEstimate: number | null;
   };
+  author?: {
+    id: string;
+    name: string | null;
+  };
 }
 
 const initialState: RatingState = {};
 
-export function RatingForm({ skillId, skillSlug, existingRating }: RatingFormProps) {
+export function RatingForm({ skillId, skillSlug, existingRating, author }: RatingFormProps) {
   const [state, formAction, isPending] = useActionState(submitRating, initialState);
 
   return (
@@ -24,6 +29,16 @@ export function RatingForm({ skillId, skillSlug, existingRating }: RatingFormPro
       {/* Hidden fields */}
       <input type="hidden" name="skillId" value={skillId} />
       <input type="hidden" name="skillSlug" value={skillSlug} />
+
+      {/* Thank the author */}
+      {author && (
+        <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+          <span className="text-sm text-gray-600">
+            Show appreciation to {author.name?.split(" ")[0] || "the author"}
+          </span>
+          <ThankYouButton userId={author.id} userName={author.name || "the author"} />
+        </div>
+      )}
 
       {/* Error message */}
       {state.message && !state.success && (

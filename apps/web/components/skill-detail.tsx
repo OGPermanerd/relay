@@ -1,5 +1,6 @@
 import { StatCard } from "./stat-card";
 import Image from "next/image";
+import Link from "next/link";
 import type { SkillStats } from "@/lib/skill-stats";
 import type { SkillDetailTrends } from "@/lib/skill-detail-trends";
 import { calculateQualityScore } from "@/lib/quality-score";
@@ -62,23 +63,27 @@ export function SkillDetail({ skill, stats, trends }: SkillDetailProps) {
         <QualityBreakdown breakdown={breakdown} tier={tier} score={score} />
         {skill.author && (
           <div className="mt-4 flex items-center gap-3">
-            {skill.author.image ? (
-              <Image
-                src={skill.author.image}
-                alt={skill.author.name || "Author"}
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-gray-600">
-                {skill.author.name?.charAt(0).toUpperCase() || "?"}
+            <Link href={`/users/${skill.author.id}`} className="flex items-center gap-3 group">
+              {skill.author.image ? (
+                <Image
+                  src={skill.author.image}
+                  alt={skill.author.name || "Author"}
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-gray-600">
+                  {skill.author.name?.charAt(0).toUpperCase() || "?"}
+                </div>
+              )}
+              <div>
+                <p className="font-medium group-hover:text-blue-600 transition-colors">
+                  {skill.author.name || "Anonymous"}
+                </p>
+                <p className="text-sm text-gray-500">Created {formattedDate}</p>
               </div>
-            )}
-            <div>
-              <p className="font-medium">{skill.author.name || "Anonymous"}</p>
-              <p className="text-sm text-gray-500">Created {formattedDate}</p>
-            </div>
+            </Link>
           </div>
         )}
       </div>

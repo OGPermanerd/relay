@@ -161,7 +161,17 @@ export function SkillsTableRow({
           {dateAdded}
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-          {skill.author?.name || "Anonymous"}
+          {skill.author ? (
+            <Link
+              href={`/users/${skill.author.id}`}
+              className="hover:text-blue-600 transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {skill.author.name || "Anonymous"}
+            </Link>
+          ) : (
+            "Anonymous"
+          )}
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-center">
           {rating ? (

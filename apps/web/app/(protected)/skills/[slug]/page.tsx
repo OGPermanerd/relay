@@ -10,6 +10,9 @@ import { getSkillDetailTrends } from "@/lib/skill-detail-trends";
 import { auth } from "@/auth";
 import { RatingForm } from "@/components/rating-form";
 import { ReviewsList } from "@/components/reviews-list";
+import { SearchInput } from "@/components/search-input";
+import { SkillTypeFilter } from "@/components/skill-type-filter";
+import Link from "next/link";
 
 interface SkillPageProps {
   params: Promise<{ slug: string }>;
@@ -99,6 +102,33 @@ export default async function SkillPage(props: SkillPageProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Search bar and filters */}
+      <div className="mb-6 flex items-center gap-4">
+        <Link
+          href="/skills"
+          className="flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 transition-colors"
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+            />
+          </svg>
+          Back to Skills
+        </Link>
+        <div className="flex-1">
+          <SearchInput />
+        </div>
+        <SkillTypeFilter />
+      </div>
+
       <div className="max-w-4xl">
         <SkillDetail skill={skill} stats={stats} trends={trends} />
 
@@ -119,6 +149,7 @@ export default async function SkillPage(props: SkillPageProps) {
               skillId={skill.id}
               skillSlug={skill.slug}
               existingRating={existingRating ?? undefined}
+              author={skill.author ? { id: skill.author.id, name: skill.author.name } : undefined}
             />
           </div>
         )}
