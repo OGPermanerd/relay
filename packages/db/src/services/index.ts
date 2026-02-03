@@ -9,3 +9,9 @@ export {
   type FindSimilarOptions,
   type SimilarSkillResult,
 } from "./skill-embeddings";
+export {
+  getSkillReview,
+  upsertSkillReview,
+  toggleReviewVisibility,
+  type UpsertSkillReviewParams,
+} from "./skill-reviews";
