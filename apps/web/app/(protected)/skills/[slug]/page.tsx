@@ -1,12 +1,20 @@
 import { notFound } from "next/navigation";
 import { db, skills } from "@relay/db";
 import { ratings } from "@relay/db/schema";
-import { getSkillEmbedding, findSimilarSkills, type SimilarSkillResult } from "@relay/db/services";
+import {
+  getSkillEmbedding,
+  findSimilarSkills,
+  getSkillReview,
+  type SimilarSkillResult,
+} from "@relay/db/services";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { SkillDetail } from "@/components/skill-detail";
 import { SimilarSkillsSection } from "@/components/similar-skills-section";
+import { SkillDetailTabs } from "@/components/skill-detail-tabs";
+import { AiReviewTab } from "@/components/ai-review-tab";
 import { getSkillStats } from "@/lib/skill-stats";
 import { getSkillDetailTrends } from "@/lib/skill-detail-trends";
+import { hashContent } from "@/lib/content-hash";
 import { auth } from "@/auth";
 import { RatingForm } from "@/components/rating-form";
 import { ReviewsList } from "@/components/reviews-list";
@@ -44,8 +52,8 @@ export default async function SkillPage(props: SkillPageProps) {
     notFound();
   }
 
-  // Get usage statistics, trends, and similar skills in parallel
-  const [stats, trends, similarSkills] = await Promise.all([
+  // Get usage statistics, trends, similar skills, review, and content hash in parallel
+  const [stats, trends, similarSkills, existingReview, currentContentHash] = await Promise.all([
     getSkillStats(skill.id),
     getSkillDetailTrends(skill.id),
     // Query similar skills using the skill's embedding
@@ -66,6 +74,8 @@ export default async function SkillPage(props: SkillPageProps) {
         return [];
       }
     })(),
+    getSkillReview(skill.id),
+    hashContent(skill.content),
   ]);
 
   // Get session for authenticated user
@@ -83,6 +93,21 @@ export default async function SkillPage(props: SkillPageProps) {
           },
         })
       : null;
+
+  // Determine if current user is the skill author
+  const isAuthor = session?.user?.id === skill.authorId;
+
+  // Map review to props shape for AiReviewTab
+  const reviewProps = existingReview
+    ? {
+        categories: existingReview.categories,
+        summary: existingReview.summary,
+        createdAt: existingReview.createdAt,
+        modelName: existingReview.modelName,
+        isVisible: existingReview.isVisible,
+        reviewedContentHash: existingReview.reviewedContentHash,
+      }
+    : null;
 
   // Query reviews for this skill (exclude current user to avoid showing their own review in list)
   const reviews = db
@@ -130,35 +155,48 @@ export default async function SkillPage(props: SkillPageProps) {
       </div>
 
       <div className="max-w-4xl">
-        <SkillDetail skill={skill} stats={stats} trends={trends} />
-
-        {/* Similar Skills section */}
-        {similarSkills.length > 0 && (
-          <div className="mt-8">
-            <SimilarSkillsSection similarSkills={similarSkills} />
-          </div>
-        )}
-
-        {/* Rating form for authenticated users */}
-        {session?.user && (
-          <div className="mt-8 rounded-lg border border-gray-200 p-6">
-            <h2 className="mb-4 text-xl font-semibold">
-              {existingRating ? "Update Your Rating" : "Rate This Skill"}
-            </h2>
-            <RatingForm
+        <SkillDetailTabs
+          aiReviewContent={
+            <AiReviewTab
               skillId={skill.id}
+              isAuthor={isAuthor}
+              existingReview={reviewProps}
+              currentContentHash={currentContentHash}
               skillSlug={skill.slug}
-              existingRating={existingRating ?? undefined}
-              author={skill.author ? { id: skill.author.id, name: skill.author.name } : undefined}
             />
-          </div>
-        )}
+          }
+        >
+          {/* Details tab content -- preserves existing page layout */}
+          <SkillDetail skill={skill} stats={stats} trends={trends} />
 
-        {/* Reviews section */}
-        <div className="mt-8">
-          <h2 className="mb-4 text-xl font-semibold">Reviews ({reviews.length})</h2>
-          <ReviewsList reviews={reviews} />
-        </div>
+          {/* Similar Skills section */}
+          {similarSkills.length > 0 && (
+            <div className="mt-8">
+              <SimilarSkillsSection similarSkills={similarSkills} />
+            </div>
+          )}
+
+          {/* Rating form for authenticated users */}
+          {session?.user && (
+            <div className="mt-8 rounded-lg border border-gray-200 p-6">
+              <h2 className="mb-4 text-xl font-semibold">
+                {existingRating ? "Update Your Rating" : "Rate This Skill"}
+              </h2>
+              <RatingForm
+                skillId={skill.id}
+                skillSlug={skill.slug}
+                existingRating={existingRating ?? undefined}
+                author={skill.author ? { id: skill.author.id, name: skill.author.name } : undefined}
+              />
+            </div>
+          )}
+
+          {/* Reviews section */}
+          <div className="mt-8">
+            <h2 className="mb-4 text-xl font-semibold">Reviews ({reviews.length})</h2>
+            <ReviewsList reviews={reviews} />
+          </div>
+        </SkillDetailTabs>
       </div>
     </div>
   );
