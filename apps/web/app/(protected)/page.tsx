@@ -7,6 +7,7 @@ import { getLeaderboard } from "@/lib/leaderboard";
 import { StatCard } from "@/components/stat-card";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { TrendingSection } from "@/components/trending-section";
+import { HomeSearchBar } from "@/components/home-search-bar";
 
 // Icons for stat cards (Heroicons)
 function UsersIcon() {
@@ -166,6 +167,10 @@ export default async function HomePage() {
         <p className="mt-2 text-gray-600">
           Connect with colleagues who have the skills you need, and share your own expertise.
         </p>
+        {/* Quick Search */}
+        <div className="mt-4 max-w-xl">
+          <HomeSearchBar />
+        </div>
       </div>
 
       {/* Platform Stats */}
