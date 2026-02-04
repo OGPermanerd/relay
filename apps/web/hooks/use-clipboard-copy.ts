@@ -7,7 +7,19 @@ export function useClipboardCopy() {
 
   const copyToClipboard = useCallback(async (id: string, text: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      if (!navigator.clipboard) {
+        // Fallback for non-HTTPS contexts (e.g., localhost)
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      } else {
+        await navigator.clipboard.writeText(text);
+      }
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
       return true;
