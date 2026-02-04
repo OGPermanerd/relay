@@ -140,11 +140,11 @@ Plans:
   2. User can copy MCP config for Claude Desktop with correct OS-specific paths
   3. Platform selection modal appears before copy, showing available platforms
   4. System auto-detects user's OS and pre-selects appropriate platform
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 19-01: TBD
-- [ ] 19-02: TBD
+- [ ] 19-01-PLAN.md — Platform modal, config generation, OS detection, install scripts
+- [ ] 19-02-PLAN.md — Integration into all install entry points and E2E tests
 
 ## Progress
 
@@ -165,7 +165,7 @@ Phases 18-19 can execute in parallel with 16-17 after Phase 15.
 | 16. Similarity Detection | v1.3 | 2/2 | Complete | 2026-02-03 |
 | 17. AI Review Pipeline | v1.3 | 3/3 | Complete | 2026-02-04 |
 | 18. Fork-Based Versioning | v1.3 | 2/2 | Complete | 2026-02-04 |
-| 19. Cross-Platform Install | v1.3 | 0/TBD | Not started | - |
+| 19. Cross-Platform Install | v1.3 | 0/2 | Not started | - |
 
 ## Coverage Validation
 
