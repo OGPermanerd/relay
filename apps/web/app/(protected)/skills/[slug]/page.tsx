@@ -5,6 +5,9 @@ import {
   getSkillEmbedding,
   findSimilarSkills,
   getSkillReview,
+  getForkCount,
+  getTopForks,
+  getParentSkill,
   type SimilarSkillResult,
 } from "@relay/db/services";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -20,6 +23,8 @@ import { RatingForm } from "@/components/rating-form";
 import { ReviewsList } from "@/components/reviews-list";
 import { SearchInput } from "@/components/search-input";
 import { SkillTypeFilter } from "@/components/skill-type-filter";
+import { ForkButton } from "@/components/fork-button";
+import { ForksSection } from "@/components/forks-section";
 import Link from "next/link";
 
 interface SkillPageProps {
@@ -52,8 +57,17 @@ export default async function SkillPage(props: SkillPageProps) {
     notFound();
   }
 
-  // Get usage statistics, trends, similar skills, review, and content hash in parallel
-  const [stats, trends, similarSkills, existingReview, currentContentHash] = await Promise.all([
+  // Get usage statistics, trends, similar skills, review, content hash, and fork data in parallel
+  const [
+    stats,
+    trends,
+    similarSkills,
+    existingReview,
+    currentContentHash,
+    forkCount,
+    topForks,
+    parentSkill,
+  ] = await Promise.all([
     getSkillStats(skill.id),
     getSkillDetailTrends(skill.id),
     // Query similar skills using the skill's embedding
@@ -76,6 +90,9 @@ export default async function SkillPage(props: SkillPageProps) {
     })(),
     getSkillReview(skill.id),
     hashContent(skill.content),
+    getForkCount(skill.id),
+    getTopForks(skill.id, 5),
+    skill.forkedFromId ? getParentSkill(skill.forkedFromId) : Promise.resolve(null),
   ]);
 
   // Get session for authenticated user
@@ -167,7 +184,27 @@ export default async function SkillPage(props: SkillPageProps) {
           }
         >
           {/* Details tab content -- preserves existing page layout */}
-          <SkillDetail skill={skill} stats={stats} trends={trends} />
+          <SkillDetail
+            skill={skill}
+            stats={stats}
+            trends={trends}
+            forkCount={forkCount}
+            parentSkill={parentSkill}
+          />
+
+          {/* Fork button for authenticated users */}
+          {session?.user && (
+            <div className="mt-4">
+              <ForkButton skillId={skill.id} skillName={skill.name} forkCount={forkCount} />
+            </div>
+          )}
+
+          {/* Forks section */}
+          {topForks.length > 0 && (
+            <div className="mt-8">
+              <ForksSection forks={topForks} totalForkCount={forkCount} parentSlug={skill.slug} />
+            </div>
+          )}
 
           {/* Similar Skills section */}
           {similarSkills.length > 0 && (

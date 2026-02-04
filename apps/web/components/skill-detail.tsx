@@ -6,6 +6,7 @@ import type { SkillDetailTrends } from "@/lib/skill-detail-trends";
 import { calculateQualityScore } from "@/lib/quality-score";
 import { QualityBadge } from "./quality-badge";
 import { QualityBreakdown } from "./quality-breakdown";
+import { ForkAttribution } from "./fork-attribution";
 
 interface SkillWithAuthor {
   id: string;
@@ -25,13 +26,22 @@ interface SkillWithAuthor {
   } | null;
 }
 
+interface ParentSkillInfo {
+  id: string;
+  name: string;
+  slug: string;
+  author: { id: string; name: string | null } | null;
+}
+
 interface SkillDetailProps {
   skill: SkillWithAuthor;
   stats: SkillStats;
   trends: SkillDetailTrends;
+  forkCount?: number;
+  parentSkill?: ParentSkillInfo | null;
 }
 
-export function SkillDetail({ skill, stats, trends }: SkillDetailProps) {
+export function SkillDetail({ skill, stats, trends, forkCount, parentSkill }: SkillDetailProps) {
   const formattedDate = skill.createdAt.toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
@@ -60,6 +70,7 @@ export function SkillDetail({ skill, stats, trends }: SkillDetailProps) {
           <h1 className="text-3xl font-bold">{skill.name}</h1>
           <QualityBadge tier={tier} size="md" />
         </div>
+        {parentSkill && <ForkAttribution parentSkill={parentSkill} />}
         <QualityBreakdown breakdown={breakdown} tier={tier} score={score} />
         {skill.author && (
           <div className="mt-4 flex items-center gap-3">
@@ -113,6 +124,7 @@ export function SkillDetail({ skill, stats, trends }: SkillDetailProps) {
           value={stats.averageRating ?? "N/A"}
           suffix={stats.totalRatings ? `(${stats.totalRatings})` : undefined}
         />
+        {forkCount != null && forkCount > 0 && <StatCard label="Forks" value={forkCount} />}
       </div>
 
       {/* Description section */}
