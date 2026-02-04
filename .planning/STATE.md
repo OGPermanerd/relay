@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-03)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 18 complete — ready for Phase 19 (Cross-Platform Install)
+**Current focus:** Phase 19 in progress — Cross-Platform Install (plan 01 of 02 complete)
 
 ## Current Position
 
-Phase: 18 of 19 (Fork-Based Versioning) — COMPLETE
-Plan: 2 of 2 in current phase (all done)
-Status: Phase complete
-Last activity: 2026-02-04 - Completed Phase 18 (schema, service, UI, E2E tests + verification)
+Phase: 19 of 19 (Cross-Platform Install)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-04 - Completed 19-01-PLAN.md (platform install modal + utilities)
 
-Progress: [██████████████████████████████████████████░] 67/~69 plans (v1.0-v1.2 complete, v1.3 phase 18 done)
+Progress: [██████████████████████████████████████████░░] 68/~69 plans (v1.0-v1.2 complete, v1.3 phase 19 plan 01 done)
 
 ## Milestones
 
 - v1.0 MVP - 33 plans - shipped 2026-01-31
 - v1.1 Quality & Polish - 9 plans - shipped 2026-02-01
 - v1.2 UI Redesign - 12 plans - shipped 2026-02-02
-- v1.3 AI Quality & Cross-Platform - 5 phases, TBD plans - in progress (4/5 phases complete, ready for phase 19)
+- v1.3 AI Quality & Cross-Platform - 5 phases, TBD plans - in progress (4/5 phases complete, phase 19 plan 01 done)
 
 ## Performance Metrics
 
@@ -31,7 +31,7 @@ Progress: [███████████████████████
 - Average: 3.8 min/plan
 
 **v1.3:**
-- Plans completed: 13 (4 in phase 15, 2 in phase 16, 3 in phase 17, 2 in phase 18, 1 remaining phase TBD)
+- Plans completed: 14 (4 in phase 15, 2 in phase 16, 3 in phase 17, 2 in phase 18, 1 in phase 19)
 - Phases 15-16 implemented via bulk commits
 
 ## Accumulated Context
@@ -54,6 +54,8 @@ Recent decisions affecting current work:
 - [18]: Self-referential forkedFromId on skills table, fork confirmation modal, pre-fill publish as draft
 - [18]: Fork attribution as subtitle under title with linked parent skill and author names
 - [18]: Top 5 forks sorted by highest rating in Forks section on parent detail page
+- [19-01]: All 4 platforms share identical MCP config (npx -y @relay/mcp), differ only in file path and instructions
+- [19-01]: Claude Desktop pre-selected as default platform for all OS; install script download only for claude-desktop
 
 ### Pending Todos
 
@@ -68,5 +70,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-04
-Stopped at: Phase 18 complete, ready for Phase 19 (Cross-Platform Install)
+Stopped at: Completed 19-01-PLAN.md, ready for 19-02
 Resume file: None
