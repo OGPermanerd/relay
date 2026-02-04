@@ -4,7 +4,7 @@ import { users } from "./users";
 
 /**
  * Category score structure stored as JSONB
- * Each of the six review categories has a numeric score (1-10) and improvement suggestions
+ * Each review category has a numeric score (1-10) and improvement suggestions
  */
 export interface ReviewCategoryScore {
   score: number; // 1-10
@@ -12,15 +12,12 @@ export interface ReviewCategoryScore {
 }
 
 /**
- * All six review categories evaluated by the AI reviewer
+ * Three review categories evaluated by the AI reviewer
  */
 export interface ReviewCategories {
-  functionality: ReviewCategoryScore;
   quality: ReviewCategoryScore;
-  security: ReviewCategoryScore;
   clarity: ReviewCategoryScore;
   completeness: ReviewCategoryScore;
-  reusability: ReviewCategoryScore;
 }
 
 /**

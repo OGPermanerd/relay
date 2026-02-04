@@ -10,7 +10,7 @@ import {
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { hashContent } from "@/lib/content-hash";
-import { generateSkillReview } from "@/lib/ai-review";
+import { generateSkillReview, REVIEW_MODEL } from "@/lib/ai-review";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -94,7 +94,7 @@ export async function requestAiReview(
       categories,
       summary,
       reviewedContentHash: contentHash,
-      modelName: "claude-haiku-4-5-20241022",
+      modelName: REVIEW_MODEL,
     });
 
     revalidatePath(`/skills/${skill.slug}`);
