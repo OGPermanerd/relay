@@ -9,10 +9,10 @@ Requirements for v1.3 AI Quality & Cross-Platform release. Each maps to roadmap 
 
 ### Embeddings Foundation
 
-- [ ] **EMB-01**: System generates vector embeddings for skill content using Voyage AI
-- [ ] **EMB-02**: Embeddings stored in PostgreSQL using pgvector extension
-- [ ] **EMB-03**: Existing skills backfilled with embeddings on migration
-- [ ] **EMB-04**: New skills automatically embedded on publish
+- [x] **EMB-01**: System generates vector embeddings for skill content using Voyage AI
+- [x] **EMB-02**: Embeddings stored in PostgreSQL using pgvector extension
+- [x] **EMB-03**: Existing skills backfilled with embeddings on migration
+- [x] **EMB-04**: New skills automatically embedded on publish
 
 ### AI Review
 
@@ -22,10 +22,10 @@ Requirements for v1.3 AI Quality & Cross-Platform release. Each maps to roadmap 
 
 ### Similarity Detection
 
-- [ ] **SIM-01**: System shows top 3 similar skills when user publishes new skill
-- [ ] **SIM-02**: Similar skills display similarity percentage (e.g., "87% similar")
-- [ ] **SIM-03**: User can bypass similarity warning and publish anyway
-- [ ] **SIM-04**: "Similar skills" section displayed on skill detail page
+- [x] **SIM-01**: System shows top 3 similar skills when user publishes new skill
+- [x] **SIM-02**: Similar skills display similarity percentage (e.g., "87% similar")
+- [x] **SIM-03**: User can bypass similarity warning and publish anyway
+- [x] **SIM-04**: "Similar skills" section displayed on skill detail page
 
 ### Fork Model
 
@@ -36,10 +36,10 @@ Requirements for v1.3 AI Quality & Cross-Platform release. Each maps to roadmap 
 
 ### Cross-Platform Install
 
-- [ ] **INST-01**: User can copy MCP config for Claude Code (existing functionality)
-- [ ] **INST-02**: User can copy MCP config for Claude Desktop with OS-specific paths
-- [ ] **INST-03**: System detects user's OS (macOS/Windows/Linux) for instructions
-- [ ] **INST-04**: Platform selection modal allows choosing target platform before copy
+- [x] **INST-01**: User can copy MCP config for Claude Code (existing functionality)
+- [x] **INST-02**: User can copy MCP config for Claude Desktop with OS-specific paths
+- [x] **INST-03**: System detects user's OS (macOS/Windows/Linux) for instructions
+- [x] **INST-04**: Platform selection modal allows choosing target platform before copy
 
 ## v1.4 Requirements
 
@@ -89,25 +89,25 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EMB-01 | Phase 15 | Pending |
-| EMB-02 | Phase 15 | Pending |
-| EMB-03 | Phase 15 | Pending |
-| EMB-04 | Phase 15 | Pending |
+| EMB-01 | Phase 15 | Complete |
+| EMB-02 | Phase 15 | Complete |
+| EMB-03 | Phase 15 | Complete |
+| EMB-04 | Phase 15 | Complete |
 | REV-01 | Phase 17 | Complete |
 | REV-02 | Phase 17 | Complete |
 | REV-03 | Phase 17 | Complete |
-| SIM-01 | Phase 16 | Pending |
-| SIM-02 | Phase 16 | Pending |
-| SIM-03 | Phase 16 | Pending |
-| SIM-04 | Phase 16 | Pending |
+| SIM-01 | Phase 16 | Complete |
+| SIM-02 | Phase 16 | Complete |
+| SIM-03 | Phase 16 | Complete |
+| SIM-04 | Phase 16 | Complete |
 | FORK-01 | Phase 18 | Complete |
 | FORK-02 | Phase 18 | Complete |
 | FORK-03 | Phase 18 | Complete |
 | FORK-04 | Phase 18 | Complete |
-| INST-01 | Phase 19 | Pending |
-| INST-02 | Phase 19 | Pending |
-| INST-03 | Phase 19 | Pending |
-| INST-04 | Phase 19 | Pending |
+| INST-01 | Phase 19 | Complete |
+| INST-02 | Phase 19 | Complete |
+| INST-03 | Phase 19 | Complete |
+| INST-04 | Phase 19 | Complete |
 
 **Coverage:**
 - v1.3 requirements: 19 total
