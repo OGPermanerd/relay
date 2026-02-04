@@ -56,10 +56,16 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
 
   const conditions = [];
 
-  // Full-text search condition
+  // Search condition: combine full-text search with ILIKE for substring/prefix matching
   if (params.query && params.query.trim()) {
+    const q = params.query.trim();
+    const likePattern = `%${q}%`;
     conditions.push(
-      sql`${skills.searchVector} @@ websearch_to_tsquery('english', ${params.query})`
+      sql`(
+        ${skills.searchVector} @@ websearch_to_tsquery('english', ${q})
+        OR ${skills.name} ILIKE ${likePattern}
+        OR ${skills.description} ILIKE ${likePattern}
+      )`
     );
   }
 
