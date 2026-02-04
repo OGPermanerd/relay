@@ -29,10 +29,10 @@ Requirements for v1.3 AI Quality & Cross-Platform release. Each maps to roadmap 
 
 ### Fork Model
 
-- [ ] **FORK-01**: User can fork a skill, creating a copy with "Forked from X" attribution
-- [ ] **FORK-02**: Parent skill displays fork count
-- [ ] **FORK-03**: User can view list of all forks for a skill
-- [ ] **FORK-04**: Forked skills inherit parent's tags and category
+- [x] **FORK-01**: User can fork a skill, creating a copy with "Forked from X" attribution
+- [x] **FORK-02**: Parent skill displays fork count
+- [x] **FORK-03**: User can view list of all forks for a skill
+- [x] **FORK-04**: Forked skills inherit parent's tags and category
 
 ### Cross-Platform Install
 
@@ -100,10 +100,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SIM-02 | Phase 16 | Pending |
 | SIM-03 | Phase 16 | Pending |
 | SIM-04 | Phase 16 | Pending |
-| FORK-01 | Phase 18 | Pending |
-| FORK-02 | Phase 18 | Pending |
-| FORK-03 | Phase 18 | Pending |
-| FORK-04 | Phase 18 | Pending |
+| FORK-01 | Phase 18 | Complete |
+| FORK-02 | Phase 18 | Complete |
+| FORK-03 | Phase 18 | Complete |
+| FORK-04 | Phase 18 | Complete |
 | INST-01 | Phase 19 | Pending |
 | INST-02 | Phase 19 | Pending |
 | INST-03 | Phase 19 | Pending |

@@ -63,7 +63,7 @@ Total: 12 plans completed.
 - [x] **Phase 15: Embeddings Foundation** - Vector embeddings infrastructure for semantic search
 - [x] **Phase 16: Similarity Detection** - Advisory duplicate warnings on publish
 - [x] **Phase 17: AI Review Pipeline** - On-demand AI quality reviews
-- [ ] **Phase 18: Fork-Based Versioning** - Create attributed skill variants
+- [x] **Phase 18: Fork-Based Versioning** - Create attributed skill variants
 - [ ] **Phase 19: Cross-Platform Install** - Multi-platform MCP config generation
 
 ## Phase Details
@@ -125,11 +125,11 @@ Plans:
   2. Parent skill shows fork count
   3. User can view list of all forks for any skill
   4. Forked skill inherits parent's tags and category automatically
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 18-01: TBD
-- [ ] 18-02: TBD
+- [x] 18-01-PLAN.md — Schema, service layer, fork action (FORK-01, FORK-04)
+- [x] 18-02-PLAN.md — Fork UI: button, attribution, forks section (FORK-02, FORK-03)
 
 ### Phase 19: Cross-Platform Install
 **Goal**: Users can install skills on any supported Claude platform
@@ -164,7 +164,7 @@ Phases 18-19 can execute in parallel with 16-17 after Phase 15.
 | 15. Embeddings Foundation | v1.3 | 4/4 | Complete | 2026-02-02 |
 | 16. Similarity Detection | v1.3 | 2/2 | Complete | 2026-02-03 |
 | 17. AI Review Pipeline | v1.3 | 3/3 | Complete | 2026-02-04 |
-| 18. Fork-Based Versioning | v1.3 | 0/TBD | Not started | - |
+| 18. Fork-Based Versioning | v1.3 | 2/2 | Complete | 2026-02-04 |
 | 19. Cross-Platform Install | v1.3 | 0/TBD | Not started | - |
 
 ## Coverage Validation
