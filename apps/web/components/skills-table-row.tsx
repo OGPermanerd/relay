@@ -3,7 +3,6 @@
 import { useRef, KeyboardEvent, FocusEvent, MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useSwipeable } from "react-swipeable";
 import { Sparkline } from "./sparkline";
 import { SkillAccordionContent } from "./skill-accordion-content";
 import { InstallButton } from "./install-button";
@@ -23,8 +22,6 @@ interface SkillsTableRowProps {
   tabIndex: 0 | -1;
   onKeyDown: (e: KeyboardEvent) => void;
   registerRef: (el: HTMLTableRowElement | null) => void;
-  isCopied: boolean;
-  onInstall: () => void;
   rowIndex: number;
 }
 
@@ -34,7 +31,7 @@ interface SkillsTableRowProps {
  * Features:
  * - Hover over row to expand accordion
  * - Click row to navigate to skill detail page
- * - Quick install icon in row
+ * - Quick install icon in row (opens platform modal)
  * - Accordion content with full details when expanded
  * - Visual highlight when expanded (ring)
  */
@@ -48,8 +45,6 @@ export function SkillsTableRow({
   tabIndex,
   onKeyDown,
   registerRef,
-  isCopied,
-  onInstall,
   rowIndex,
 }: SkillsTableRowProps) {
   const router = useRouter();
@@ -69,15 +64,6 @@ export function SkillsTableRow({
 
     onCollapse();
   };
-
-  // Swipe handlers for mobile install gesture
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => onInstall(),
-    onSwipedRight: () => onInstall(),
-    delta: 80, // Minimum swipe distance
-    preventScrollOnSwipe: true,
-    trackMouse: false, // Only touch, not mouse drag
-  });
 
   // Handle blur - collapse when focus leaves the row (unless focus moves to accordion content)
   const handleBlur = (e: FocusEvent<HTMLTableRowElement>) => {
@@ -124,7 +110,6 @@ export function SkillsTableRow({
     <>
       {/* Main data row */}
       <tr
-        {...swipeHandlers}
         ref={setRef}
         tabIndex={tabIndex}
         aria-expanded={isExpanded}
@@ -191,12 +176,7 @@ export function SkillsTableRow({
           )}
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-center">
-          <InstallButton
-            skillName={skill.name}
-            isCopied={isCopied}
-            onCopy={onInstall}
-            variant="icon"
-          />
+          <InstallButton variant="icon" />
         </td>
       </tr>
 
@@ -212,8 +192,6 @@ export function SkillsTableRow({
             category: skill.category,
             tags: skill.tags ?? undefined,
           }}
-          onInstall={onInstall}
-          isCopied={isCopied}
           onMouseEnter={onExpand}
           onMouseLeave={onCollapse}
           onClick={() => router.push(`/skills/${skill.slug}`)}

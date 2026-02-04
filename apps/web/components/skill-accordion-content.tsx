@@ -12,8 +12,6 @@ interface SkillAccordionContentProps {
     category: string;
     tags?: string[];
   };
-  onInstall: () => void;
-  isCopied: boolean;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   onClick?: () => void;
@@ -26,15 +24,13 @@ interface SkillAccordionContentProps {
  * - Category badge
  * - Description (or placeholder if empty)
  * - Tags (if present)
- * - Install button (full variant)
+ * - Install button (full variant, opens platform modal)
  *
  * Uses preview card style with blue-50 background for expanded state
  */
 export function SkillAccordionContent({
   id,
   skill,
-  onInstall,
-  isCopied,
   onMouseEnter,
   onMouseLeave,
   onClick,
@@ -71,14 +67,9 @@ export function SkillAccordionContent({
             </div>
           )}
 
-          {/* Install button - stopPropagation prevents navigation */}
+          {/* Install button - stopPropagation is handled internally by InstallButton */}
           <div className="mt-4" onClick={(e) => e.stopPropagation()}>
-            <InstallButton
-              skillName={skill.name}
-              isCopied={isCopied}
-              onCopy={onInstall}
-              variant="full"
-            />
+            <InstallButton variant="full" />
           </div>
         </div>
       </td>

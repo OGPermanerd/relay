@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { announceToScreenReader } from "@/lib/accessibility";
 import { useSortState } from "@/hooks/use-sort-state";
 import { useExpandedRows } from "@/hooks/use-expanded-rows";
-import { useClipboardCopy } from "@/hooks/use-clipboard-copy";
 import { useRovingTabindex } from "@/hooks/use-roving-tabindex";
-import { generateMcpConfig } from "@/lib/mcp-config";
 import { SortableColumnHeader } from "./sortable-column-header";
 import { SkillsTableRow } from "./skills-table-row";
 
@@ -64,7 +62,6 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
   const router = useRouter();
   const { sortBy, sortDir, toggleSort } = useSortState();
   const { expandRow, collapseRow, isExpanded } = useExpandedRows();
-  const { copyToClipboard, isCopied } = useClipboardCopy();
 
   // Roving tabindex for keyboard navigation (single column: row focus only)
   const { getTabIndex, handleKeyDown, registerCell } = useRovingTabindex({
@@ -233,8 +230,6 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
               tabIndex={getTabIndex(index, 0)}
               onKeyDown={(e: React.KeyboardEvent) => handleRowKeyDown(e, skill.slug)}
               registerRef={(el: HTMLTableRowElement | null) => registerCell(index, 0, el)}
-              isCopied={isCopied(skill.id)}
-              onInstall={() => copyToClipboard(skill.id, generateMcpConfig(skill))}
               rowIndex={index}
             />
           ))}

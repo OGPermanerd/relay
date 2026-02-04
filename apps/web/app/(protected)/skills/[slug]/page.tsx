@@ -24,6 +24,7 @@ import { ReviewsList } from "@/components/reviews-list";
 import { SearchInput } from "@/components/search-input";
 import { SkillTypeFilter } from "@/components/skill-type-filter";
 import { ForkButton } from "@/components/fork-button";
+import { InstallButton } from "@/components/install-button";
 import { ForksSection } from "@/components/forks-section";
 import Link from "next/link";
 
@@ -192,12 +193,13 @@ export default async function SkillPage(props: SkillPageProps) {
             parentSkill={parentSkill}
           />
 
-          {/* Fork button for authenticated users */}
-          {session?.user && (
-            <div className="mt-4">
+          {/* Install and Fork buttons */}
+          <div className="mt-4 flex items-center gap-3">
+            <InstallButton variant="full" />
+            {session?.user && (
               <ForkButton skillId={skill.id} skillName={skill.name} forkCount={forkCount} />
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Forks section */}
           {topForks.length > 0 && (
