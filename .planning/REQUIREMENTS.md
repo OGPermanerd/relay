@@ -16,9 +16,9 @@ Requirements for v1.3 AI Quality & Cross-Platform release. Each maps to roadmap 
 
 ### AI Review
 
-- [ ] **REV-01**: User can trigger AI review from skill detail page
-- [ ] **REV-02**: Review displays structured feedback (functionality score, quality score, improvement suggestions)
-- [ ] **REV-03**: Review results stored in database with timestamp
+- [x] **REV-01**: User can trigger AI review from skill detail page
+- [x] **REV-02**: Review displays structured feedback (functionality score, quality score, improvement suggestions)
+- [x] **REV-03**: Review results stored in database with timestamp
 
 ### Similarity Detection
 
@@ -93,9 +93,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EMB-02 | Phase 15 | Pending |
 | EMB-03 | Phase 15 | Pending |
 | EMB-04 | Phase 15 | Pending |
-| REV-01 | Phase 17 | Pending |
-| REV-02 | Phase 17 | Pending |
-| REV-03 | Phase 17 | Pending |
+| REV-01 | Phase 17 | Complete |
+| REV-02 | Phase 17 | Complete |
+| REV-03 | Phase 17 | Complete |
 | SIM-01 | Phase 16 | Pending |
 | SIM-02 | Phase 16 | Pending |
 | SIM-03 | Phase 16 | Pending |

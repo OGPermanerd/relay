@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-03)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 17 - AI Review Pipeline
+**Current focus:** Phase 17 complete — ready for Phase 18 (Fork-Based Versioning)
 
 ## Current Position
 
-Phase: 17 of 19 (AI Review Pipeline)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-03 - Completed 17-02-PLAN.md (server action + AI review logic)
+Phase: 17 of 19 (AI Review Pipeline) — COMPLETE
+Plan: 3 of 3 in current phase (all done)
+Status: Phase complete
+Last activity: 2026-02-04 - Completed Phase 17 (all 3 plans + verification)
 
-Progress: [██████████████████████████████████████░░░] 62/~67 plans (v1.0-v1.2 complete, v1.3 in progress)
+Progress: [█████████████████████████████████████████░] 65/~67 plans (v1.0-v1.2 complete, v1.3 phase 17 done)
 
 ## Milestones
 
 - v1.0 MVP - 33 plans - shipped 2026-01-31
 - v1.1 Quality & Polish - 9 plans - shipped 2026-02-01
 - v1.2 UI Redesign - 12 plans - shipped 2026-02-02
-- v1.3 AI Quality & Cross-Platform - 5 phases, TBD plans - in progress (2/5 phases complete, phase 17 started)
+- v1.3 AI Quality & Cross-Platform - 5 phases, TBD plans - in progress (3/5 phases complete, ready for phase 18)
 
 ## Performance Metrics
 
@@ -31,7 +31,7 @@ Progress: [███████████████████████
 - Average: 3.8 min/plan
 
 **v1.3:**
-- Plans completed: 8 (4 in phase 15, 2 in phase 16, 2 in phase 17)
+- Plans completed: 11 (4 in phase 15, 2 in phase 16, 3 in phase 17, 2 remaining phases TBD)
 - Phases 15-16 implemented via bulk commits
 
 ## Accumulated Context
@@ -54,6 +54,7 @@ Recent decisions affecting current work:
 - [17-01]: UpsertSkillReviewParams interface instead of NewSkillReview for clearer service API
 - [17-02]: Manual JSON schema for output_config.format (zodOutputFormat requires Zod v4, project uses v3)
 - [17-02]: Categories destructured from summary before persisting to match service layer interface
+- [17-03]: Simplified from 6 to 3 review categories (quality, clarity, completeness) with overall score
 
 ### Pending Todos
 
@@ -61,13 +62,12 @@ None.
 
 ### Blockers/Concerns
 
-- [Research]: AI review prompt engineering may require iteration
 - [Research]: Similarity threshold needs empirical tuning (start at 0.85)
 - [Research]: Voyage AI is relatively new — store model version for future migration
 - [17-01]: ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
 
 ## Session Continuity
 
-Last session: 2026-02-03
-Stopped at: Completed 17-02-PLAN.md, ready for 17-03-PLAN.md (UI components)
+Last session: 2026-02-04
+Stopped at: Phase 17 complete, ready for Phase 18 (Fork-Based Versioning)
 Resume file: None

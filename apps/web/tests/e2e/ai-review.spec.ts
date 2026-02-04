@@ -7,6 +7,8 @@ import { hashContent } from "@/lib/content-hash";
 const TEST_USER_ID = "e2e-test-user";
 
 test.describe("AI Review Display", () => {
+  test.describe.configure({ mode: "serial" });
+
   let testSkillSlug: string;
   let testSkillId: string;
 
