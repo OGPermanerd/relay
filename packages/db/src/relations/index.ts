@@ -9,6 +9,8 @@ import { skills, skillVersions, ratings, users, usageEvents } from "../schema";
  * - draftVersion: one-to-one with skillVersions (nullable)
  * - ratings: one-to-many with ratings
  * - usageEvents: one-to-many with usageEvents
+ * - forkedFrom: one-to-one with skills (parent, nullable)
+ * - forks: one-to-many with skills (children)
  */
 export const skillsRelations = relations(skills, ({ one, many }) => ({
   author: one(users, {
@@ -28,6 +30,12 @@ export const skillsRelations = relations(skills, ({ one, many }) => ({
   }),
   ratings: many(ratings),
   usageEvents: many(usageEvents),
+  forkedFrom: one(skills, {
+    fields: [skills.forkedFromId],
+    references: [skills.id],
+    relationName: "forks",
+  }),
+  forks: many(skills, { relationName: "forks" }),
 }));
 
 /**

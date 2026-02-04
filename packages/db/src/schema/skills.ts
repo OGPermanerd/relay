@@ -50,6 +50,9 @@ export const skills = pgTable(
     content: text("content").notNull(), // The actual skill content (markdown)
     hoursSaved: integer("hours_saved").default(1), // Estimated hours saved per use
 
+    // Fork tracking (self-referential, nullable)
+    forkedFromId: text("forked_from_id"),
+
     authorId: text("author_id").references(() => users.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
