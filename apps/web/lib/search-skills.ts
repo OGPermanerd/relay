@@ -65,6 +65,8 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
         ${skills.searchVector} @@ websearch_to_tsquery('english', ${q})
         OR ${skills.name} ILIKE ${likePattern}
         OR ${skills.description} ILIKE ${likePattern}
+        OR ${users.name} ILIKE ${likePattern}
+        OR array_to_string(${skills.tags}, ' ') ILIKE ${likePattern}
       )`
     );
   }
