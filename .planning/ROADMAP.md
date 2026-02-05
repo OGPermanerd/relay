@@ -135,11 +135,12 @@ Plans:
   2. Bearer token authentication validates the same `rlk_` API keys used by stdio, rejecting invalid or revoked keys with 401
   3. All three MCP tools (list, search, deploy) work identically over HTTP as they do over stdio
   4. CORS headers allow Claude.ai origin while rejecting unauthorized origins
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 22-01: TBD
-- [ ] 22-02: TBD
+- [ ] 22-01-PLAN.md -- Foundation: deps, middleware exemption, handler refactor for userId param
+- [ ] 22-02-PLAN.md -- MCP HTTP route handler with auth, tools, CORS, rate limiter
+- [ ] 22-03-PLAN.md -- Connect to Claude.ai UI + Playwright E2E tests
 
 ### Phase 23: Analytics Dashboard
 **Goal**: Admins and employees can see org-wide usage trends, per-employee breakdowns, and export data to prove Relay's value
@@ -178,7 +179,7 @@ Plans:
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
 | 20. API Key Management | v1.4 | 7/7 | Complete | 2026-02-05 |
 | 21. Employee Usage Tracking | v1.4 | 6/6 | Complete | 2026-02-05 |
-| 22. Web Remote MCP | v1.4 | 0/TBD | Not started | - |
+| 22. Web Remote MCP | v1.4 | 0/3 | Not started | - |
 | 23. Analytics Dashboard | v1.4 | 0/TBD | Not started | - |
 | 24. Extended MCP Search | v1.4 | 0/TBD | Not started | - |
 
