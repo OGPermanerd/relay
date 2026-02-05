@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 20 (API Key Management) - first of 5 in v1.4
-Plan: 20-02 complete, 20-03 next
+Plan: 20-03 complete, 20-04 next
 Status: In progress
-Last activity: 2026-02-05 — Completed 20-02-PLAN.md (DB service layer)
+Last activity: 2026-02-05 — Completed 20-03-PLAN.md (validation endpoint + server actions)
 
 Completed in phase 20:
 - packages/db/src/schema/api-keys.ts — DONE (schema + migration)
@@ -22,8 +22,10 @@ Completed in phase 20:
 - apps/web/lib/admin.ts — DONE (20-01)
 - packages/db/src/services/api-keys.ts — DONE (20-02)
 - packages/db/src/services/index.ts — DONE (20-02, re-exports added)
+- apps/web/app/api/auth/validate-key/route.ts — DONE (20-03)
+- apps/web/app/actions/api-keys.ts — DONE (20-03)
 
-Progress: [██░░░░░░░░] ~7% (v1.4 - 2 of ~30 plans)
+Progress: [███░░░░░░░] ~10% (v1.4 - 3 of ~30 plans)
 
 ## Milestones
 
@@ -36,7 +38,7 @@ Progress: [██░░░░░░░░] ~7% (v1.4 - 2 of ~30 plans)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 71
+- Total plans completed: 72
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~5.8 hours
 
@@ -60,6 +62,7 @@ Recent decisions affecting current work:
 - [Replan]: Phase 20 split from 4 plans to 6 smaller plans to prevent context crashes
 - [20-01]: Used Node.js built-in crypto only — zero external deps for key generation/hashing
 - [20-02]: Timing-safe comparison + fire-and-forget lastUsedAt + explicit column exclusion of keyHash
+- [20-03]: leftJoin makes userEmail nullable in admin listAll; rotateApiKey always targets self
 
 ### Pending Todos
 
@@ -75,5 +78,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 20-02-PLAN.md (DB service layer)
+Stopped at: Completed 20-03-PLAN.md (validation endpoint + server actions)
 Resume file: None
