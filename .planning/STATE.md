@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 21 (Employee Usage Tracking) - second of 5 in v1.4
-Plan: 21-01 + 21-04 complete (wave 1 in progress)
+Plan: 21-01 + 21-02 + 21-04 complete (wave 1 complete)
 Status: In progress
-Last activity: 2026-02-05 — Completed 21-01-PLAN.md (MCP auth module + tool wiring)
+Last activity: 2026-02-05 — Completed 21-02-PLAN.md (Install callback route)
 
 Completed in phase 21:
 - apps/mcp/src/auth.ts — DONE (21-01, userId resolution + nudge counter)
@@ -20,9 +20,11 @@ Completed in phase 21:
 - apps/mcp/src/tools/search.ts — DONE (21-01, auth wiring)
 - apps/mcp/src/tools/list.ts — DONE (21-01, auth wiring)
 - apps/mcp/src/tools/deploy.ts — DONE (21-01, auth wiring)
+- apps/web/app/api/install-callback/route.ts — DONE (21-02, install_confirmed events)
+- apps/web/middleware.ts — DONE (21-02, /api/install-callback exemption)
 - apps/web/lib/my-leverage.ts — DONE (21-04, 4 aggregation query functions)
 
-Progress: [█████████░] ~30% (v1.4 - 9 of ~30 plans)
+Progress: [██████████░] ~33% (v1.4 - 10 of ~30 plans)
 
 ## Milestones
 
@@ -35,7 +37,7 @@ Progress: [█████████░] ~30% (v1.4 - 9 of ~30 plans)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 78
+- Total plans completed: 79
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~5.8 hours
 
@@ -62,6 +64,7 @@ Recent decisions affecting current work:
 - [20-03]: leftJoin makes userEmail nullable in admin listAll; rotateApiKey always targets self
 - [20-04]: useState+useCallback over useActionState for multi-action component; amber show-once pattern
 - [20-06]: Admin view uses table layout (vs card layout for user view); client-side text filter for instant search
+- [21-02]: Anonymous installs valid: missing/invalid API key records null userId (graceful degradation)
 - [21-04]: COALESCE fallback chain for FTE hours: rating estimate -> creator estimate -> 1
 
 ### Pending Todos
@@ -78,5 +81,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 21-01-PLAN.md (MCP auth module + tool wiring)
+Stopped at: Completed 21-02-PLAN.md (Install callback route)
 Resume file: None
