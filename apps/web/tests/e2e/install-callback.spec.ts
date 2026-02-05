@@ -14,14 +14,14 @@ test.describe("Install Callback API", () => {
     // Navigate to a page first so page.evaluate has proper context
     await page.goto("/login");
     // Use page.evaluate with the full URL to send truly invalid JSON
-    const result = await page.evaluate(async (url: string) => {
+    const result = await page.evaluate(async (url) => {
       const res = await fetch(`${url}/api/install-callback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "not valid json{{{",
       });
       return { status: res.status, body: await res.json() };
-    }, baseURL);
+    }, baseURL!);
     expect(result.status).toBe(400);
     expect(result.body.error).toBe("Invalid JSON body");
   });

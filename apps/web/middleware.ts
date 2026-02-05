@@ -9,9 +9,10 @@ export default auth((req) => {
   const isAuthApi = req.nextUrl.pathname.startsWith("/api/auth");
   const isDevLogin = req.nextUrl.pathname === "/api/dev-login";
   const isInstallCallback = req.nextUrl.pathname.startsWith("/api/install-callback");
+  const isMcpApi = req.nextUrl.pathname.startsWith("/api/mcp");
 
-  // Allow auth API routes, dev login, and install callback
-  if (isAuthApi || isDevLogin || isInstallCallback) {
+  // Allow auth API routes, dev login, install callback, and MCP API
+  if (isAuthApi || isDevLogin || isInstallCallback || isMcpApi) {
     return;
   }
 
