@@ -73,14 +73,21 @@ Previous:
 
 ### Active
 
-(No active milestone — run /gsd:new-milestone to start v1.4)
+**v1.4: Employee Analytics & Remote MCP**
+
+- [ ] Per-employee usage tracking — identify which employee used which skill via MCP
+- [ ] Org API keys for MCP authentication — tie MCP sessions to employees
+- [ ] Install callback analytics — track installs per platform with employee attribution
+- [ ] Usage analytics dashboard — per-employee skill usage, hours saved, activity over time
+- [ ] Web remote MCP via Claude.ai — streamable HTTP transport for browser-based skill access
+- [ ] Extended search — query matches author name and tags in addition to name/description
 
 ### Out of Scope
 
 - Review prompts in Claude after skill use — adds MCP complexity, defer
 - Skill creation scaffolding via MCP — focus on deploy/track first
 - Approval gates or review process for new versions — metrics-driven quality model instead
-- Claude.ai web remote MCP — requires Anthropic partnership, defer to v1.4+
+- Claude.ai web remote MCP — moved to v1.4 Active scope
 - Auto-review on every publish — cost scaling issues, use on-demand instead
 
 ## Context
@@ -136,4 +143,4 @@ Previous:
 | Self-contained InstallButton | Internal modal state, no props drilling | ✓ Good |
 
 ---
-*Last updated: 2026-02-04 after v1.3 milestone complete*
+*Last updated: 2026-02-05 after v1.4 milestone started*

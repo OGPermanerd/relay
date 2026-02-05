@@ -2,19 +2,17 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-04)
+See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v1.3 complete — Planning next milestone
+**Current focus:** v1.4 Employee Analytics & Remote MCP
 
 ## Current Position
 
-Phase: 19 of 19 (all phases complete)
-Plan: N/A
-Status: Milestone complete
-Last activity: 2026-02-04 - v1.3 milestone archived
-
-Progress: [████████████████████████████████████████████] 69/69 plans (v1.0-v1.3 complete)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-05 — Milestone v1.4 started
 
 ## Milestones
 
@@ -38,9 +36,10 @@ None.
 - [Research]: Similarity threshold needs empirical tuning (start at 0.85)
 - [Research]: Voyage AI is relatively new — store model version for future migration
 - [17-01]: ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
+- [Discovery]: MCP userId field exists in usage_events schema but is never populated — core gap for v1.4
 
 ## Session Continuity
 
-Last session: 2026-02-04
-Stopped at: v1.3 milestone complete and archived
+Last session: 2026-02-05
+Stopped at: v1.4 milestone initialization
 Resume file: None
