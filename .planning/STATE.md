@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 20 (API Key Management) - first of 5 in v1.4
-Plan: 20-04 complete, 20-05 next
-Status: In progress
-Last activity: 2026-02-05 — Completed 20-04-PLAN.md (ApiKeyManager client component)
+Plan: 20-06 complete, phase 20 complete
+Status: Phase complete
+Last activity: 2026-02-05 — Completed 20-06-PLAN.md (Admin key management page and component)
 
 Completed in phase 20:
 - packages/db/src/schema/api-keys.ts — DONE (schema + migration)
@@ -25,8 +25,10 @@ Completed in phase 20:
 - apps/web/app/api/auth/validate-key/route.ts — DONE (20-03)
 - apps/web/app/actions/api-keys.ts — DONE (20-03)
 - apps/web/components/api-key-manager.tsx — DONE (20-04)
+- apps/web/app/(protected)/admin/keys/page.tsx — DONE (20-06)
+- apps/web/components/admin-key-manager.tsx — DONE (20-06)
 
-Progress: [████░░░░░░] ~13% (v1.4 - 4 of ~30 plans)
+Progress: [██████░░░░] ~20% (v1.4 - 6 of ~30 plans)
 
 ## Milestones
 
@@ -39,7 +41,7 @@ Progress: [████░░░░░░] ~13% (v1.4 - 4 of ~30 plans)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 73
+- Total plans completed: 75
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~5.8 hours
 
@@ -65,6 +67,7 @@ Recent decisions affecting current work:
 - [20-02]: Timing-safe comparison + fire-and-forget lastUsedAt + explicit column exclusion of keyHash
 - [20-03]: leftJoin makes userEmail nullable in admin listAll; rotateApiKey always targets self
 - [20-04]: useState+useCallback over useActionState for multi-action component; amber show-once pattern
+- [20-06]: Admin view uses table layout (vs card layout for user view); client-side text filter for instant search
 
 ### Pending Todos
 
@@ -80,5 +83,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 20-04-PLAN.md (ApiKeyManager client component)
+Stopped at: Completed 20-06-PLAN.md (Admin key management page and component) - Phase 20 complete
 Resume file: None
