@@ -1,27 +1,27 @@
-# Technology Stack: v1.3 AI Review, Semantic Similarity, Cross-Platform Install
+# Technology Stack: v1.4 Employee Analytics, MCP Authentication & Remote MCP
 
-**Project:** Relay v1.3 - AI-Driven Quality & Discovery
-**Researched:** 2026-02-02
-**Scope:** Stack additions for AI skill review, semantic duplicate detection, fork-based versioning, cross-platform MCP install
-**Confidence:** HIGH (verified via official docs, npm packages, and Context7)
+**Project:** Relay v1.4 - Employee Analytics & Remote MCP
+**Researched:** 2026-02-05
+**Scope:** Stack additions for per-employee MCP tracking, org API keys, usage analytics dashboard, install callback tracking, web remote MCP via Streamable HTTP, extended search
+**Confidence:** HIGH (verified via npm registry, official SDK docs, MCP spec, and community patterns)
 
 ---
 
 ## Executive Summary
 
-For v1.3 AI-driven features, the recommendations are:
+v1.4 requires four capabilities not currently in the stack:
 
-### AI Skill Review
-**Use `@anthropic-ai/sdk` ^0.71.x** for Claude API calls to review uploaded skills. The SDK provides streaming, tool use, and native MCP integration. Review prompts evaluate functionality, security patterns, and quality.
+### 1. MCP Authentication (Employee Identity)
+**Use `mcp-handler` ^1.0.7 with `withMcpAuth`** to add bearer token authentication to the remote MCP endpoint. For the local stdio server, pass a `RELAY_API_KEY` environment variable that the server resolves to a userId via a lightweight HTTP call. API keys are generated per-employee in the web app and stored in a new `api_keys` table.
 
-### Semantic Similarity / Duplicate Detection
-**Use `pgvector` ^0.8.x + `voyage-code-3` embeddings** for semantic skill matching. pgvector integrates natively with the existing PostgreSQL/Drizzle stack. Voyage's code-specialized embeddings outperform general-purpose models for Claude skills (which contain code, prompts, and technical content).
+### 2. Remote MCP via Streamable HTTP
+**Use `mcp-handler` ^1.0.7** to host a Streamable HTTP MCP endpoint inside the existing Next.js app at `app/api/[transport]/route.ts`. This avoids spinning up a separate Express server and reuses the existing Next.js infrastructure, database connection, and auth middleware. Claude.ai web users connect to `https://relay.company.com/api/mcp`.
 
-### Fork-Based Versioning
-**No new dependencies needed.** The existing `skillVersions` table plus new `forkedFromId` foreign key handles fork relationships. Add UI components from shadcn/ui.
+### 3. Analytics Dashboard (Charts)
+**Use `recharts` ^3.7.0** for usage visualization. Recharts is already the de facto standard for React dashboards, uses SVG rendering, and the project already has a dependency on `react-sparklines` (which Recharts can replace). All chart components require `"use client"` -- data is fetched in Server Components and passed as props.
 
-### Cross-Platform Install
-**Upgrade `@modelcontextprotocol/sdk` to v1.25+ with Streamable HTTP support** for remote MCP server capability. This enables Claude.ai web, Claude Desktop, VS Code, and Claude Code to all connect to Relay as a skill source.
+### 4. Install Callback Tracking
+**No new library needed.** Add a `confirm_install` MCP tool that the deploy_skill tool's response instructs Claude to call after saving the file. This creates a two-step tracking flow: deploy_skill logs intent, confirm_install logs completion with employee attribution.
 
 ---
 
@@ -29,438 +29,486 @@ For v1.3 AI-driven features, the recommendations are:
 
 ### Required New Dependencies
 
-| Library | Version | Purpose | Bundle/Runtime | Why |
-|---------|---------|---------|----------------|-----|
-| **@anthropic-ai/sdk** | ^0.71.2 | Claude API for AI review | Server-side only | Official TypeScript SDK with streaming, tool use, MCP helpers. Supports `claude-sonnet-4-5-20250929` model. |
-| **voyageai** | ^0.1.0 | Generate skill embeddings | Server-side only | Anthropic's recommended embedding provider. `voyage-code-3` model optimized for code/technical content. 1024 dimensions, $0.18/1M tokens. |
-| **pgvector** | ^0.2.0 | Node.js pgvector types | Server-side only | TypeScript types and SQL helpers for pgvector queries with Drizzle. |
+| Library | Version | Package | Purpose | Why |
+|---------|---------|---------|---------|-----|
+| **mcp-handler** | ^1.0.7 | `apps/web` | Streamable HTTP MCP in Next.js route handlers + auth wrapper | Vercel's official adapter. Handles transport plumbing, works natively with App Router `route.ts`. Includes `withMcpAuth` for bearer token validation. Actively maintained (last release Jan 9, 2026). |
+| **recharts** | ^3.7.0 | `apps/web` | Usage analytics charts (bar, line, area) | Most popular React charting lib (24.8k GitHub stars). SVG-based, composable React components. Works with Tailwind CSS. Used under the hood by shadcn/ui and Tremor. |
+
+### Existing Dependencies to Upgrade
+
+| Library | Current | Target | Why |
+|---------|---------|--------|-----|
+| **@modelcontextprotocol/sdk** | ^1.25.0 (installed: 1.25.3) | ^1.26.0 | Latest stable. Required as peer dep by mcp-handler. Includes StreamableHTTPServerTransport improvements. |
 
 ### Required Database Changes
 
 | Change | Purpose | Migration |
 |--------|---------|-----------|
-| **pgvector extension** | Enable vector storage/search | `CREATE EXTENSION IF NOT EXISTS vector;` |
-| **embedding column** | Store skill content embeddings | `ALTER TABLE skills ADD COLUMN embedding vector(1024);` |
-| **HNSW index** | Fast approximate nearest neighbor | `CREATE INDEX skills_embedding_idx ON skills USING hnsw (embedding vector_cosine_ops);` |
-| **forkedFromId column** | Track fork relationships | `ALTER TABLE skills ADD COLUMN forked_from_id TEXT REFERENCES skills(id);` |
-| **aiReviewStatus column** | Track review state | `ALTER TABLE skills ADD COLUMN ai_review_status TEXT DEFAULT 'pending';` |
-| **aiReviewResult column** | Store AI review output | `ALTER TABLE skills ADD COLUMN ai_review_result JSONB;` |
+| **`api_keys` table** | Store per-employee API keys for MCP auth | New table with `id`, `userId` FK, `keyHash` (SHA-256), `keyPrefix` (first 8 chars for display), `name`, `lastUsedAt`, `createdAt`, `revokedAt` |
+| **`usage_events.userId` population** | Actually fill the existing nullable userId column | Application logic change (not schema) -- trackUsage receives userId from auth context |
 
 ### Installation Commands
 
 ```bash
-# In monorepo root
-pnpm add -w @anthropic-ai/sdk voyageai pgvector
+# In apps/web
+cd apps/web && pnpm add mcp-handler recharts
 
-# Or in apps/web specifically
-cd apps/web && pnpm add @anthropic-ai/sdk voyageai pgvector
+# Upgrade MCP SDK in apps/mcp
+cd apps/mcp && pnpm add @modelcontextprotocol/sdk@^1.26.0
 ```
 
 ### Environment Variables
 
 ```bash
-# .env.local additions
-ANTHROPIC_API_KEY=sk-ant-...           # For AI review
-VOYAGEAI_API_KEY=pa-...                # For embeddings
+# No new environment variables needed for v1.4
+# API keys are generated and stored in the database
+# The existing DATABASE_URL, AUTH_SECRET, etc. are sufficient
 ```
 
 ---
 
 ## Feature-Specific Stack Recommendations
 
-### 1. AI Skill Review
+### 1. MCP Authentication (Employee Identity in MCP Sessions)
 
-**Approach:** Server-side Claude API calls via `@anthropic-ai/sdk`
+**Problem:** The current MCP server runs as a local stdio process. `trackUsage()` inserts events but never populates `userId`. There is no way to know which employee invoked which tool.
 
-| Aspect | Recommendation | Rationale |
-|--------|----------------|-----------|
-| SDK | `@anthropic-ai/sdk` ^0.71.2 | Official TypeScript SDK, native streaming, tool use support |
-| Model | `claude-sonnet-4-5-20250929` | Fast, capable enough for code review. Cheaper than Opus for batch reviews. |
-| Invocation | Server Action or API Route | Keep API key server-side, avoid client exposure |
-| Review types | Functionality, Security, Quality | Three structured prompts, run in sequence or parallel |
-| Output format | Structured JSON via system prompt | Consistent schema for UI rendering |
+**Solution: Two authentication paths, one API key table.**
 
-**SDK Usage Pattern:**
+#### Path A: Remote MCP (Claude.ai web, API clients)
+
+Use `mcp-handler`'s `withMcpAuth` wrapper. The bearer token is the employee's API key. The handler validates it against the database and injects `authInfo` into tool handlers.
+
 ```typescript
-import Anthropic from '@anthropic-ai/sdk';
+// apps/web/app/api/[transport]/route.ts
+import { createMcpHandler, withMcpAuth } from "mcp-handler";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-interface ReviewResult {
-  functionality: { score: number; issues: string[]; suggestions: string[] };
-  security: { score: number; risks: string[]; recommendations: string[] };
-  quality: { score: number; feedback: string[]; improvements: string[] };
-  overall: { tier: 'gold' | 'silver' | 'bronze' | 'needs-work'; summary: string };
-}
-
-async function reviewSkill(skillContent: string): Promise<ReviewResult> {
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
-    max_tokens: 2048,
-    messages: [{
-      role: 'user',
-      content: `Review this Claude skill for functionality, security, and quality:\n\n${skillContent}`
-    }],
-    system: `You are a skill reviewer for a Claude skill marketplace.
-    Analyze the skill and return ONLY valid JSON matching this schema:
-    { functionality: {...}, security: {...}, quality: {...}, overall: {...} }`
-  });
-
-  return JSON.parse(message.content[0].text);
-}
-```
-
-**Security Scanning Approach:**
-
-Do NOT add heavy SAST tools (Semgrep, SonarQube). Instead:
-1. Use Claude to analyze skill content for common patterns:
-   - Prompt injection vectors
-   - Unsafe tool configurations
-   - Credential exposure patterns
-   - Overly permissive file access
-2. Check for known bad patterns with regex (cheap, fast pre-filter)
-3. Claude provides contextual security review (understands intent)
-
-**Why Claude over SAST tools:**
-- Skills are prompt/config files, not executable code
-- Traditional SAST tools don't understand Claude skill semantics
-- Claude can evaluate prompt injection risk, which SAST cannot
-- No additional infrastructure (Semgrep server, etc.)
-
-### 2. Semantic Similarity / Duplicate Detection
-
-**Approach:** pgvector with Voyage embeddings, Drizzle ORM integration
-
-| Aspect | Recommendation | Rationale |
-|--------|----------------|-----------|
-| Vector DB | pgvector ^0.8.1 | Stays in existing PostgreSQL, no new infrastructure. Supports HNSW for fast search. |
-| Embedding model | `voyage-code-3` | Optimized for code/technical content. 1024 dimensions. $0.18/1M tokens with 200M free tier. |
-| Dimensions | 1024 | voyage-code-3 default. Good balance of quality vs storage. |
-| Index type | HNSW | Better query performance than IVFFlat, can build without data |
-| Distance metric | Cosine | Standard for text embeddings, normalized vectors |
-| Threshold | 0.85+ similarity | Advisory "similar skill exists" without blocking |
-
-**Why voyage-code-3 over alternatives:**
-- Anthropic recommends Voyage AI for Claude ecosystem
-- `voyage-code-3` specifically trained for code retrieval
-- Skills contain code, prompts, and technical content
-- Outperforms general models like OpenAI's `text-embedding-3-small` for this domain
-- 200M token free tier covers initial deployment
-
-**Drizzle Schema Addition:**
-```typescript
-import { pgTable, text, index, customType } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
-
-// Custom vector type for pgvector
-const vector = customType<{ data: number[] }>({
-  dataType() {
-    return "vector(1024)";
-  },
-  toDriver(value: number[]): string {
-    return `[${value.join(",")}]`;
-  },
-  fromDriver(value: unknown): number[] {
-    if (typeof value === "string") {
-      return value.slice(1, -1).split(",").map(Number);
-    }
-    return value as number[];
-  },
-});
-
-// In skills table
-export const skills = pgTable(
-  "skills",
+const handler = withMcpAuth(
+  createMcpHandler(
+    (server, { authInfo }) => {
+      server.registerTool("search_skills", {
+        // ... schema
+      }, async (params) => {
+        // authInfo.extra.userId available here
+        await trackUsage({
+          toolName: "search_skills",
+          userId: authInfo?.extra?.userId,
+          metadata: { query: params.query },
+        });
+        // ... tool logic
+      });
+    },
+    {},
+    { basePath: "/api", maxDuration: 30 }
+  ),
   {
-    // ... existing columns
-    embedding: vector("embedding"), // 1024-dim voyage-code-3 embedding
-  },
-  (table) => [
-    // HNSW index for cosine similarity search
-    index("skills_embedding_idx").using("hnsw", sql`${table.embedding} vector_cosine_ops`),
-  ]
+    verifyToken: async (req, bearer) => {
+      if (!bearer) return undefined; // Allow unauthenticated for now
+      const apiKey = await validateApiKey(bearer); // DB lookup by hash
+      if (!apiKey) return undefined;
+      return {
+        token: bearer,
+        clientId: apiKey.userId,
+        scopes: ["tools"],
+        extra: { userId: apiKey.userId, keyId: apiKey.id },
+      };
+    },
+  }
 );
+
+export { handler as GET, handler as POST, handler as DELETE };
 ```
 
-**Similarity Search Query:**
+#### Path B: Local stdio MCP (Claude Code, Claude Desktop)
+
+The stdio server cannot do HTTP bearer auth. Instead, read `RELAY_API_KEY` from the environment (set during install), make a one-time HTTP call to validate it, and cache the userId for the session.
+
 ```typescript
-import { cosineDistance, desc, sql } from "drizzle-orm";
+// apps/mcp/src/auth.ts
+let cachedUserId: string | null = null;
 
-async function findSimilarSkills(embedding: number[], limit = 5) {
-  const similarity = sql<number>`1 - (${cosineDistance(skills.embedding, embedding)})`;
+export async function resolveUserId(): Promise<string | null> {
+  if (cachedUserId !== null) return cachedUserId;
 
-  return db.select({
-    id: skills.id,
-    name: skills.name,
-    similarity,
-  })
-  .from(skills)
-  .where(sql`${skills.embedding} IS NOT NULL`)
-  .orderBy(desc(similarity))
-  .limit(limit);
+  const apiKey = process.env.RELAY_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch(`${process.env.RELAY_URL}/api/auth/validate-key`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: apiKey }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      cachedUserId = data.userId;
+      return cachedUserId;
+    }
+  } catch {
+    // Offline or server unreachable -- degrade gracefully
+    console.error("Could not validate API key, tracking without userId");
+  }
+  return null;
 }
 ```
 
-**Embedding Generation:**
-```typescript
-import { VoyageAIClient } from "voyageai";
-
-const voyage = new VoyageAIClient({ apiKey: process.env.VOYAGEAI_API_KEY });
-
-async function generateEmbedding(skillContent: string): Promise<number[]> {
-  const result = await voyage.embed({
-    input: [skillContent],
-    model: "voyage-code-3",
-    inputType: "document", // Use "query" for search queries
-  });
-
-  return result.data[0].embedding;
-}
-```
-
-### 3. Fork-Based Versioning
-
-**Approach:** Database schema changes only, no new libraries
-
-| Aspect | Recommendation | Rationale |
-|--------|----------------|-----------|
-| Fork tracking | `forkedFromId` FK column | Simple parent reference, enables fork trees |
-| Version numbering | Sequential per skill | Already exists in `skillVersions.version` |
-| Diff display | No library needed | Skills are markdown/JSON - show side-by-side in UI |
-| Fork UI | shadcn Dialog + Card | Already in stack |
-
-**No new dependencies needed.** The fork model is a data structure change:
-
-```typescript
-// Schema addition
-export const skills = pgTable("skills", {
-  // ... existing columns
-  forkedFromId: text("forked_from_id").references(() => skills.id),
-  forkCount: integer("fork_count").notNull().default(0), // Denormalized for display
-});
-```
-
-**Fork creation is a Server Action:**
-```typescript
-async function forkSkill(originalSkillId: string, userId: string) {
-  const original = await db.query.skills.findFirst({ where: eq(skills.id, originalSkillId) });
-
-  const [forked] = await db.insert(skills).values({
-    name: `${original.name} (Fork)`,
-    description: original.description,
-    category: original.category,
-    tags: original.tags,
-    content: original.content,
-    forkedFromId: originalSkillId,
-    authorId: userId,
-  }).returning();
-
-  // Update fork count on original
-  await db.update(skills)
-    .set({ forkCount: sql`${skills.forkCount} + 1` })
-    .where(eq(skills.id, originalSkillId));
-
-  return forked;
-}
-```
-
-### 4. Cross-Platform Install (Claude Code, Desktop, Web, VS Code)
-
-**Approach:** Upgrade MCP SDK, add Streamable HTTP transport for remote server capability
-
-| Platform | Connection Method | What Relay Provides |
-|----------|-------------------|---------------------|
-| **Claude Code** | `claude mcp add` CLI | MCP config JSON for stdio transport |
-| **Claude Desktop** | Config file or Desktop Extension | MCP config JSON + optional .mcpb extension |
-| **Claude.ai Web** | Remote MCP connector | Streamable HTTP endpoint |
-| **VS Code (Claude)** | MCP settings | MCP config JSON |
-
-**Current State:** Relay has an MCP server (`apps/mcp`) using `@modelcontextprotocol/sdk` ^1.25.0 with stdio transport.
-
-**Required Changes:**
-
-1. **Add Streamable HTTP transport** for web clients:
-```typescript
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import express from "express";
-
-const app = express();
-const server = new McpServer({ name: "relay-skills", version: "1.0.0" });
-
-// Register tools...
-
-app.post("/mcp", async (req, res) => {
-  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-  await server.connect(transport);
-  await transport.handleRequest(req, res);
-});
-
-app.listen(3001);
-```
-
-2. **Generate platform-specific install configs:**
-```typescript
-// apps/web/lib/mcp-config.ts
-export function generateInstallConfig(skillId: string, platform: Platform) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-
-  switch (platform) {
-    case "claude-code":
-      return {
-        command: "claude mcp add relay-skills --transport http",
-        config: { url: `${baseUrl}/api/mcp` }
-      };
-
-    case "claude-desktop":
-      return {
-        config: {
-          mcpServers: {
-            "relay-skills": {
-              command: "npx",
-              args: ["-y", "@relay/mcp"]
-            }
-          }
-        }
-      };
-
-    case "claude-web":
-      return {
-        connectorUrl: `${baseUrl}/api/mcp`,
-        instructions: "Add as custom connector in Claude.ai settings"
-      };
-
-    case "vscode":
-      return {
-        config: {
-          "claude.mcpServers": {
-            "relay-skills": {
-              command: "npx",
-              args: ["-y", "@relay/mcp"]
-            }
-          }
-        }
-      };
+The MCP config becomes:
+```json
+{
+  "mcpServers": {
+    "relay": {
+      "command": "npx",
+      "args": ["@relay/mcp"],
+      "env": {
+        "DATABASE_URL": "...",
+        "RELAY_API_KEY": "rlk_abc123...",
+        "RELAY_URL": "https://relay.company.com"
+      }
+    }
   }
 }
 ```
 
-3. **Package MCP server for npm distribution:**
-```json
-// apps/mcp/package.json
-{
-  "name": "@relay/mcp",
-  "version": "1.0.0",
-  "bin": { "relay-mcp": "./dist/index.js" },
-  "publishConfig": { "access": "public" }
-}
+#### API Key Design
+
+| Aspect | Decision | Rationale |
+|--------|----------|-----------|
+| Format | `rlk_` prefix + 32 random bytes (base62) | Prefix identifies Relay keys in logs; base62 avoids URL-encoding issues |
+| Storage | SHA-256 hash only, prefix stored for display | Never store plaintext keys. Show `rlk_abc1...` in UI. |
+| Rotation | Revoke + create new | Simpler than key rotation; employees can have multiple active keys |
+| Scope | Per-employee, full MCP access | No fine-grained scopes needed for internal tool |
+| Generation | Server Action in web app | Authenticated endpoint, returns key once on creation |
+
+**Why NOT full OAuth 2.1:**
+- This is an internal tool behind Google Workspace SSO
+- All employees are already authenticated via Auth.js
+- API keys are generated within the authenticated web app
+- OAuth adds complexity (authorization server, token refresh, PKCE) with no benefit for an internal single-org tool
+- If Relay ever becomes multi-tenant or external-facing, upgrade to OAuth then
+
+### 2. Remote MCP via Streamable HTTP
+
+**Problem:** The MCP server only supports stdio transport. Claude.ai web and other HTTP-based clients cannot connect.
+
+**Solution: Add a Streamable HTTP endpoint inside the Next.js app.**
+
+| Aspect | Decision | Rationale |
+|--------|----------|-----------|
+| Framework adapter | `mcp-handler` ^1.0.7 | Works with Next.js App Router route handlers natively. No Express needed. Handles POST/GET/DELETE for MCP protocol. |
+| Endpoint | `/api/mcp` (via `app/api/[transport]/route.ts`) | Standard pattern from Vercel's docs. The `[transport]` dynamic segment handles `/api/mcp` and `/api/sse` (backward compat). |
+| Session mode | Stateless (`sessionIdGenerator: undefined`) | Simpler. No session state to manage. Each request is independent. Works with serverless. |
+| Auth | Bearer token (API key) via `withMcpAuth` | Employees paste their API key into Claude.ai's custom connector settings. |
+| Tools | Shared with stdio server | Extract tool definitions into `packages/core` or shared module. Both stdio and HTTP servers register the same tools. |
+
+**Architecture: Tool code reuse between stdio and HTTP servers**
+
+```
+packages/core/src/mcp-tools/    <-- shared tool definitions
+  search.ts                      (pure functions, no transport dependency)
+  list.ts
+  deploy.ts
+  confirm-install.ts
+
+apps/mcp/src/index.ts            <-- stdio entry point
+  imports from @relay/core/mcp-tools
+  registers with StdioServerTransport
+
+apps/web/app/api/[transport]/    <-- HTTP entry point
+  route.ts
+  imports from @relay/core/mcp-tools
+  registers with mcp-handler
 ```
 
-**Streamable HTTP Benefits:**
-- Stateless operation (no long-lived connections)
-- Compatible with serverless (Vercel, Cloudflare)
-- Works through standard HTTP proxies/load balancers
-- Supports Claude.ai web custom connectors
+**Claude.ai Connection:**
+1. Employee navigates to Claude.ai Settings > Integrations
+2. Adds custom connector: Transport = "Streamable HTTP", URL = `https://relay.company.com/api/mcp`
+3. Enters API key as bearer token
+4. Claude.ai can now use relay search/deploy tools
+
+**Why `mcp-handler` over raw `StreamableHTTPServerTransport`:**
+- Next.js App Router uses Web `Request`/`Response` API, not Node.js `IncomingMessage`/`ServerResponse`
+- `StreamableHTTPServerTransport.handleRequest()` expects Node.js types
+- `mcp-handler` bridges this gap automatically
+- Includes `withMcpAuth` for bearer token validation
+- Handles protocol negotiation (Streamable HTTP vs SSE fallback)
+
+**Why NOT a separate Express server:**
+- Adds infrastructure complexity (separate process, port, deployment)
+- Cannot reuse Next.js database connection pool
+- Cannot reuse Auth.js session validation
+- Separate CORS configuration needed
+- The existing MCP server (`apps/mcp`) stays as the stdio entry point; the web app becomes the HTTP entry point
+
+**Concern: `mcp-handler` depends on `redis`**
+- Redis is a direct dependency but only used for session storage in stateful mode
+- In stateless mode (our use case), Redis is never connected to
+- Bundle size impact is minimal since it's server-side only
+- If this becomes a concern, we can vendor just the route handler logic (~200 lines)
+
+### 3. Analytics Dashboard (Charts)
+
+**Problem:** No visualization for per-employee usage data. The `usage_events` table has data but no way to display trends, breakdowns, or comparisons.
+
+**Solution: Recharts for chart components, Server Components for data fetching.**
+
+| Aspect | Decision | Rationale |
+|--------|----------|-----------|
+| Chart library | `recharts` ^3.7.0 | Most popular React chart lib. SVG-based, composable. Used by shadcn/ui and Tremor under the hood. |
+| Chart types needed | AreaChart (usage over time), BarChart (top skills/employees), simple stats cards | Covers the analytics dashboard requirements without exotic chart types |
+| Rendering | Client-side (`"use client"`) | All chart libs require browser APIs. Data fetched in Server Component, passed as props. |
+| Replace `react-sparklines`? | Yes, migrate sparklines to Recharts | Consolidate on one charting library. Recharts `<Sparkline>` equivalent is a simple `<AreaChart>` with minimal config. |
+
+**Dashboard data flow:**
+```
+Server Component (page.tsx)
+  -> SQL queries via Drizzle (aggregate usage_events by employee, skill, time)
+  -> Pass serialized data as props
+
+Client Component (charts.tsx "use client")
+  -> Recharts <AreaChart>, <BarChart>, etc.
+  -> Responsive, interactive, tooltips
+```
+
+**Chart components needed:**
+```typescript
+// Usage over time (area chart)
+<UsageOverTimeChart data={dailyUsageCounts} />
+
+// Top skills by usage (horizontal bar)
+<TopSkillsChart data={topSkillsByUses} />
+
+// Per-employee usage breakdown (bar chart)
+<EmployeeUsageChart data={employeeUsageCounts} />
+
+// Hours saved over time (area chart)
+<HoursSavedChart data={hoursSavedByWeek} />
+```
+
+**Why Recharts over alternatives:**
+
+| Library | Decision | Reason |
+|---------|----------|--------|
+| **Recharts** | USE | Most popular, composable React API, SVG, great docs, 3.x is current |
+| **Tremor** | SKIP | Uses Recharts internally. Adds Radix UI dependency for components we don't need. Dashboard-in-a-box is more than we need. |
+| **Chart.js / react-chartjs-2** | SKIP | Canvas-based (harder to style with Tailwind). Less composable. |
+| **shadcn/ui Charts** | SKIP | Uses Recharts. Would require adding shadcn/ui (class-variance-authority, @radix-ui) to the project which currently uses plain Tailwind. |
+| **Nivo** | SKIP | Heavier. Better for exotic chart types we don't need. |
+| **D3 directly** | SKIP | Too low-level for standard dashboard charts. |
+
+### 4. Install Callback Tracking
+
+**Problem:** `deploy_skill` tracks that a skill was requested, but not whether the file was actually saved. Need to know install completion per employee.
+
+**Solution: Add a `confirm_install` MCP tool. No new library needed.**
+
+The `deploy_skill` tool's response already includes `instructions` telling Claude what to do. Add an instruction: "After saving the file, call confirm_install to record the successful installation."
+
+```typescript
+// In deploy_skill response:
+{
+  instructions: [
+    "Save this skill to your project's .claude/skills/ directory",
+    "Suggested path: .claude/skills/${skill.slug}.md",
+    "After saving, call confirm_install with the skill ID to record the installation"
+  ]
+}
+
+// New tool:
+server.registerTool("confirm_install", {
+  description: "Record that a skill was successfully installed. Call this after saving a deployed skill file.",
+  inputSchema: {
+    skillId: z.string().describe("Skill ID that was installed"),
+    platform: z.enum(["claude-code", "claude-desktop", "claude-web", "vscode", "other"]).optional(),
+  },
+}, async ({ skillId, platform }) => {
+  const userId = await resolveUserId(); // or authInfo from HTTP
+  await trackUsage({
+    toolName: "confirm_install",
+    skillId,
+    userId,
+    metadata: { platform: platform || "unknown", confirmedAt: new Date().toISOString() },
+  });
+  return { content: [{ type: "text", text: "Installation recorded." }] };
+});
+```
+
+**Why NOT a webhook/HTTP callback:**
+- Adds complexity (server endpoint, CORS, auth for callback)
+- MCP tools already have a bidirectional communication channel
+- Claude follows instructions to call confirm_install after saving
+- Clean event chain: deploy_skill (intent) -> confirm_install (completion)
+
+**Why NOT npm postinstall scripts:**
+- Skills aren't npm packages
+- Skills are markdown files saved by Claude
+- No package manager lifecycle hooks available
 
 ---
 
 ## What NOT to Add
 
-| Library | Why NOT |
-|---------|---------|
-| **Pinecone / Weaviate / Qdrant** | pgvector handles our scale (<10k skills). Adding a separate vector DB increases infrastructure complexity. |
-| **OpenAI Embeddings** | Voyage is Anthropic-recommended, `voyage-code-3` outperforms `text-embedding-3-small` for code. |
-| **Semgrep / SonarQube** | Skills are prompts/configs, not executable code. Claude does better contextual security review. |
-| **LangChain** | Direct SDK usage is simpler for our review prompts. LangChain adds abstraction without benefit here. |
-| **Redis for embedding cache** | PostgreSQL with pgvector is sufficient. Embeddings are generated once at upload time. |
-| **Dedicated diff library** | Skills are small text files. Simple side-by-side UI suffices. |
-| **@modelcontextprotocol/sdk v2** | v2 is pre-alpha. v1.25.x has Streamable HTTP and is production-ready. |
+| Library/Approach | Why NOT | Use Instead |
+|------------------|---------|-------------|
+| **Full OAuth 2.1 server** | Internal tool, employees already authenticated via Google SSO. OAuth adds authorization server, token refresh, PKCE complexity with zero benefit for single-org internal use. | Simple API keys validated against DB hash |
+| **`@vercel/mcp-adapter`** | Dormant since July 2025 (v1.0.0). Superseded by `mcp-handler` from the same team. | `mcp-handler` ^1.0.7 |
+| **Express.js** | Not needed. `mcp-handler` bridges MCP SDK to Next.js route handlers. Adding Express creates a separate server process. | `mcp-handler` in Next.js route handler |
+| **`@modelcontextprotocol/express`** | Middleware packages from SDK monorepo not yet published to npm (as of 2026-02-05). | `mcp-handler` (published, tested) |
+| **Tremor** | Dashboard-in-a-box. Pulls in Radix UI, adds abstraction layer over Recharts. Overkill for 4 chart components. | `recharts` directly |
+| **shadcn/ui Charts** | Would require adding shadcn/ui framework (class-variance-authority, @radix-ui, cn() utility) to a project that uses plain Tailwind. | `recharts` directly |
+| **Redis** | `mcp-handler` lists Redis as a dependency but only uses it for stateful session storage. Our stateless mode never connects. No need to provision Redis infrastructure. | Stateless MCP endpoint (no session storage) |
+| **Segment / Mixpanel / analytics SDKs** | Usage data stays in our PostgreSQL. No reason to send internal skill usage to third-party analytics. | Drizzle queries on `usage_events` table |
+| **Separate analytics database** | `usage_events` table with PostgreSQL aggregate queries handles enterprise scale (500 employees, ~50k events/month). | PostgreSQL with time-bucket queries |
+| **JWT API keys** | JWTs are verifiable without DB lookup, but we want revocation capability. DB lookup on every MCP call is fine for our scale. | Hashed API keys in PostgreSQL |
 
 ---
 
 ## Integration with Existing Stack
 
-### PostgreSQL / Drizzle Integration
+### Database Integration (Drizzle ORM)
 
-pgvector integrates cleanly:
-1. Enable extension via migration (one-time)
-2. Add `vector(1024)` column type via Drizzle custom type
-3. Use Drizzle's `sql` template for distance functions
-4. Drizzle's built-in `cosineDistance` function works with pgvector
+New `api_keys` table schema:
+```typescript
+// packages/db/src/schema/api-keys.ts
+import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { users } from "./users";
 
-**Migration file:**
-```sql
--- 0003_add_pgvector.sql
-CREATE EXTENSION IF NOT EXISTS vector;
+export const apiKeys = pgTable("api_keys", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  keyHash: text("key_hash").notNull().unique(),    // SHA-256 of full key
+  keyPrefix: text("key_prefix").notNull(),          // First 8 chars for display "rlk_abc1..."
+  name: text("name").notNull().default("Default"),  // User-assigned name
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  revokedAt: timestamp("revoked_at"),               // null = active
+});
 
-ALTER TABLE skills ADD COLUMN embedding vector(1024);
-CREATE INDEX skills_embedding_idx ON skills USING hnsw (embedding vector_cosine_ops);
-
-ALTER TABLE skills ADD COLUMN forked_from_id TEXT REFERENCES skills(id);
-ALTER TABLE skills ADD COLUMN fork_count INTEGER NOT NULL DEFAULT 0;
-
-ALTER TABLE skills ADD COLUMN ai_review_status TEXT NOT NULL DEFAULT 'pending';
-ALTER TABLE skills ADD COLUMN ai_review_result JSONB;
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type NewApiKey = typeof apiKeys.$inferInsert;
 ```
 
-### Existing MCP Server Integration
+Migration:
+```sql
+CREATE TABLE api_keys (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  key_hash TEXT NOT NULL UNIQUE,
+  key_prefix TEXT NOT NULL,
+  name TEXT NOT NULL DEFAULT 'Default',
+  last_used_at TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  revoked_at TIMESTAMP
+);
+CREATE INDEX api_keys_user_id_idx ON api_keys(user_id);
+CREATE INDEX api_keys_key_hash_idx ON api_keys(key_hash);
+```
 
-The existing `apps/mcp` package already uses `@modelcontextprotocol/sdk` ^1.25.0. Changes needed:
-1. Add HTTP endpoint alongside stdio
-2. Add tools for skill install/search that platforms can invoke
-3. Keep stdio transport for local CLI usage
+### MCP Tool Code Sharing
+
+Currently tools are defined in `apps/mcp/src/tools/`. For v1.4, extract tool logic to be importable by both transports:
+
+```
+Before (v1.3):
+  apps/mcp/src/tools/search.ts   -- tool logic + server.registerTool
+  apps/mcp/src/tools/deploy.ts   -- tool logic + server.registerTool
+
+After (v1.4):
+  packages/core/src/mcp-tools/search.ts   -- pure function handleSearchSkills()
+  packages/core/src/mcp-tools/deploy.ts   -- pure function handleDeploySkill()
+  packages/core/src/mcp-tools/confirm-install.ts
+
+  apps/mcp/src/tools/index.ts    -- imports from @relay/core, registers with stdio server
+  apps/web/app/api/[transport]/route.ts  -- imports from @relay/core, registers with mcp-handler
+```
 
 ### Auth.js Integration
 
-AI review and fork operations use existing auth:
+API key generation is a Server Action requiring Auth.js session:
 ```typescript
-// Server Action with auth check
-async function reviewSkill(skillId: string) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+"use server";
+import { auth } from "@/auth";
+import { db } from "@relay/db";
+import { apiKeys } from "@relay/db/schema/api-keys";
+import { randomBytes, createHash } from "crypto";
 
-  // Trigger AI review...
+export async function generateApiKey(name: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const rawKey = `rlk_${randomBytes(32).toString("base62")}`;  // pseudo; use base62 encoding
+  const keyHash = createHash("sha256").update(rawKey).digest("hex");
+  const keyPrefix = rawKey.substring(0, 12);
+
+  await db.insert(apiKeys).values({
+    userId: session.user.id,
+    keyHash,
+    keyPrefix,
+    name,
+  });
+
+  return rawKey; // Return once, never stored in plaintext
 }
 ```
 
----
+### Existing Sparkline Migration
 
-## Cost Estimates
+Replace `react-sparklines` with Recharts for consistency:
+```typescript
+// Before (apps/web/components/sparkline.tsx)
+import { Sparklines, SparklinesLine } from "react-sparklines";
 
-| Service | Usage Estimate | Monthly Cost |
-|---------|---------------|--------------|
-| **Voyage AI (embeddings)** | 10k skills * 2k tokens avg = 20M tokens | $3.60 (or free tier) |
-| **Anthropic API (reviews)** | 1k reviews * 3k tokens = 3M tokens | ~$9 (Sonnet pricing) |
-| **pgvector** | Part of existing PostgreSQL | $0 |
-| **Total** | | ~$12.60/month |
+// After
+import { AreaChart, Area, ResponsiveContainer } from "recharts";
 
-*Free tiers: Voyage offers 200M tokens free, Anthropic offers $5 API credit for new accounts.*
+export function Sparkline({ data, width = 60, height = 20, color = "#3b82f6" }) {
+  const chartData = data.map((value, index) => ({ index, value }));
+  return (
+    <div style={{ width, height }}>
+      <ResponsiveContainer>
+        <AreaChart data={chartData}>
+          <Area type="monotone" dataKey="value" stroke={color} fill={color} fillOpacity={0.1} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+```
+
+Then remove `react-sparklines` and `@types/react-sparklines` from `apps/web/package.json`.
 
 ---
 
 ## Version Compatibility Matrix
 
-| Package | Version | Requires | Notes |
-|---------|---------|----------|-------|
-| @anthropic-ai/sdk | ^0.71.2 | Node 18+ | Works with existing Node 22 |
-| voyageai | ^0.1.0 | Node 18+ | TypeScript SDK with retries |
-| pgvector | ^0.2.0 | PostgreSQL 13+, pgvector extension | Types only, no runtime |
-| @modelcontextprotocol/sdk | ^1.25.0 | Node 18+ | Already installed, add HTTP transport |
-| drizzle-orm | ^0.38.0 | Already installed | Custom vector type works |
+| Package | Version | Requires | Compatible With | Notes |
+|---------|---------|----------|-----------------|-------|
+| mcp-handler | ^1.0.7 | Next.js >=13, @modelcontextprotocol/sdk 1.25.2 (peer) | Next.js 16.1.6 (our version) | Peer dep pins SDK 1.25.2 but works with 1.26.0 |
+| @modelcontextprotocol/sdk | ^1.26.0 | Node 18+, zod ^3 | Our Node 22, zod 3.25 | Latest stable, published 2026-02-04 |
+| recharts | ^3.7.0 | React 16-19 | Our React 19 | SVG-based, no DOM manipulation conflicts |
+| drizzle-orm | ^0.38.0 | postgres driver | No upgrade needed | Custom types work for api_keys table |
 
 ---
 
 ## Bundle Impact Assessment
 
-| Addition | Runtime | Notes |
-|----------|---------|-------|
-| @anthropic-ai/sdk | Server only | No client bundle impact |
-| voyageai | Server only | No client bundle impact |
-| pgvector | Server only | Types only, minimal |
-| Streamable HTTP transport | Server only | Part of existing MCP SDK |
-| **Client additions** | **0kb** | All AI/embedding work is server-side |
+| Addition | Runtime | Client Bundle Impact | Notes |
+|----------|---------|---------------------|-------|
+| mcp-handler | Server only (API route) | 0kb | Route handler, never imported client-side |
+| recharts | Client (charts) | ~45kb gzipped | Only loaded on analytics dashboard page. Tree-shakeable. |
+| New API routes | Server only | 0kb | /api/[transport], /api/auth/validate-key |
+| **Net client impact** | | **~45kb** | **Only on /analytics page (code-split)** |
+
+---
+
+## Cost Estimates
+
+| Resource | Usage Estimate | Monthly Cost |
+|----------|---------------|--------------|
+| API key storage | 500 employees * 1.2 avg keys | ~600 rows, negligible |
+| Usage events growth | 500 employees * 100 events/month | ~50k rows/month, negligible at PostgreSQL scale |
+| Streamable HTTP MCP | Standard HTTP requests | $0 (self-hosted) |
+| Recharts | Client-side library | $0 |
+| **Total new costs** | | **$0** (no new external services) |
 
 ---
 
@@ -468,37 +516,46 @@ async function reviewSkill(skillId: string) {
 
 | Feature | Dependencies | Priority | Complexity |
 |---------|--------------|----------|------------|
-| **AI Skill Review** | @anthropic-ai/sdk | HIGH | Medium - prompt engineering |
-| **Semantic Similarity** | pgvector, voyageai | HIGH | Medium - migration + queries |
-| **Fork Model** | Schema only | MEDIUM | Low - FK + Server Actions |
-| **Cross-Platform Install** | MCP HTTP transport | MEDIUM | Medium - multiple configs |
+| **API keys table + generation** | Schema migration | HIGH | Low -- standard CRUD |
+| **MCP auth (stdio path)** | API keys table | HIGH | Low -- env var + HTTP validation |
+| **Remote MCP endpoint** | mcp-handler, tool extraction | HIGH | Medium -- route setup, tool sharing |
+| **MCP auth (HTTP path)** | Remote MCP endpoint, API keys | HIGH | Low -- withMcpAuth wrapper |
+| **confirm_install tool** | MCP auth | MEDIUM | Low -- simple tool registration |
+| **Analytics dashboard** | recharts, userId population | MEDIUM | Medium -- SQL aggregates, chart components |
+| **Extended search** | None (SQL changes only) | LOW | Low -- add author/tags to WHERE clause |
+| **Sparkline migration** | recharts | LOW | Low -- swap component, remove old dep |
 
 **Recommended implementation order:**
-1. Semantic similarity (foundation for "similar skills" feature)
-2. AI skill review (uses similarity to avoid duplicate reviews)
-3. Fork model (simple schema change)
-4. Cross-platform install (can ship incrementally per platform)
+1. API keys schema + generation UI (foundation for everything else)
+2. MCP auth for stdio (populate userId immediately)
+3. Remote MCP endpoint with auth (enables Claude.ai web access)
+4. confirm_install tool (install tracking)
+5. Analytics dashboard (visualize the data flowing from steps 1-4)
+6. Extended search (independent, simple)
 
 ---
 
 ## Sources
 
-**HIGH Confidence (Official Documentation):**
-- [Anthropic TypeScript SDK](https://github.com/anthropics/anthropic-sdk-typescript) - v0.71.x features, streaming, tool use
-- [Voyage AI Embeddings Docs](https://docs.voyageai.com/docs/embeddings) - Model selection, pricing, input types
-- [Voyage AI TypeScript SDK](https://www.npmjs.com/package/voyageai) - v0.1.0 usage patterns
-- [pgvector GitHub](https://github.com/pgvector/pgvector) - v0.8.1, HNSW indexes, distance functions
-- [Drizzle pgvector Guide](https://orm.drizzle.team/docs/guides/vector-similarity-search) - Custom vector type, cosineDistance
-- [MCP Streamable HTTP Spec](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) - Transport protocol
-- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) - v1.x for production
-- [Claude.ai Custom Connectors](https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp) - Remote MCP setup
+**HIGH Confidence (Official Documentation / npm Registry):**
+- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) -- v1.26.0, StreamableHTTPServerTransport, middleware packages
+- [MCP Transports Spec](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) -- Streamable HTTP protocol definition
+- [mcp-handler GitHub](https://github.com/vercel/mcp-handler) -- v1.0.7, createMcpHandler, withMcpAuth API
+- [Recharts](https://recharts.org/) -- v3.7.0, React charting components
+- [Claude.ai Custom Connectors](https://support.claude.com/en/articles/11503834-building-custom-connectors-via-remote-mcp-servers) -- Remote MCP setup in Claude.ai web
+- npm registry -- Verified all package versions via `npm view` (2026-02-05)
 
 **MEDIUM Confidence (Verified Patterns):**
-- [Voyage AI Pricing](https://docs.voyageai.com/docs/pricing) - $0.18/1M for voyage-code-3
-- [pgvector HNSW Performance](https://www.crunchydata.com/blog/hnsw-indexes-with-postgres-and-pgvector) - Index tuning
-- [Claude Code MCP Setup](https://code.claude.com/docs/en/mcp) - CLI commands
+- [MCP Authorization Spec](https://modelcontextprotocol.io/specification/2025-03-26/basic/authorization) -- OAuth 2.1 standard, bearer token flow
+- [Auth0 MCP Security Blog](https://auth0.com/blog/mcp-streamable-http/) -- Streamable HTTP security benefits over SSE
+- [Vercel MCP Template](https://vercel.com/templates/next.js/model-context-protocol-mcp-with-next-js) -- Next.js route handler pattern
+- [MCP Community Discussion](https://github.com/modelcontextprotocol/modelcontextprotocol/discussions/1247) -- Bearer token best practices
+
+**LOW Confidence (Community Patterns, needs validation in implementation):**
+- `mcp-handler` Redis dependency behavior in stateless mode -- based on code analysis, not official documentation
+- `mcp-handler` SDK peer dep pinning (1.25.2) compatibility with SDK 1.26.0 -- likely works but untested
 
 ---
 
-*Stack research for: Relay v1.3 - AI Review, Semantic Similarity, Cross-Platform Install*
-*Researched: 2026-02-02*
+*Stack research for: Relay v1.4 - Employee Analytics, MCP Authentication & Remote MCP*
+*Researched: 2026-02-05*

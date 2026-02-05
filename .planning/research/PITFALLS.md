@@ -1,7 +1,7 @@
 # Pitfalls Research
 
 **Domain:** Internal skill marketplace / developer tool catalog
-**Researched:** 2026-01-31 (v1.0), 2026-02-01 (v1.2 Table UI), 2026-02-02 (v1.3 AI Features)
+**Researched:** 2026-01-31 (v1.0), 2026-02-01 (v1.2 Table UI), 2026-02-02 (v1.3 AI Features), 2026-02-05 (v1.4 Employee Analytics & Remote MCP)
 **Confidence:** HIGH (multiple sources corroborate patterns)
 
 ## Critical Pitfalls
@@ -630,35 +630,6 @@ const [expandedIndices, setExpandedIndices] = useState<number[]>([]);
 
 ---
 
-## Table UI Phase-Specific Warnings
-
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| Initial table setup | Unstable data reference (#8) | Memoize data/columns from day one |
-| Sorting implementation | State conflicts (#11), undefined values (#12) | Pick controlled vs uncontrolled, test with sparse data |
-| Accordion rows | Accessibility (#10), focus management (#14) | Use proper ARIA, test with screen reader |
-| Row actions | Event propagation (#9) | stopPropagation on all action elements |
-| Performance at scale | No virtualization (#7), no row memo (#15) | Virtualize if 100+ rows, memo row components |
-| Mobile | No responsive strategy (#16) | Design mobile approach before building |
-| Next.js architecture | Full client page (#13) | Keep page as Server Component |
-
----
-
-## Table UI Testing Recommendations
-
-Before shipping the table:
-
-1. **Performance test** - Load 1000 rows, measure initial render time (target: < 500ms)
-2. **Scroll test** - Scroll through 1000 rows, check for lag
-3. **Keyboard test** - Navigate entire table using only keyboard
-4. **Screen reader test** - Use VoiceOver or NVDA to navigate table and accordions
-5. **Mobile test** - Check on actual mobile device, not just DevTools
-6. **Action test** - Click every button/link in rows, verify no unintended side effects
-7. **Sort test** - Sort each column both directions and back to none
-8. **Memory test** - Monitor browser memory while scrolling (should stay stable)
-
----
-
 ## v1.3 AI Features Pitfalls
 
 **Domain:** AI-driven skill review, semantic similarity detection, fork-based versioning, cross-platform install
@@ -1051,257 +1022,657 @@ Cross-Platform Install phase — establish minimum version requirements per plat
 
 ---
 
-## v1.3 Technical Debt Patterns
+## v1.4 Employee Analytics & Remote MCP Pitfalls
 
-Shortcuts that seem reasonable but create long-term problems.
-
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Hardcoding embedding model | Faster implementation | Migration pain when model changes | Never — version from start |
-| Storing embeddings without original text | Saves storage | Cannot re-embed without full reprocessing | Never — storage is cheap |
-| Single platform config format | Simpler code | Platform expansion requires rewrite | MVP only, refactor before v2 |
-| Synchronous AI review | Simpler request flow | UX degradation under load | Development only |
-| Blocking on similarity check | Ensures duplicate warning shown | Submission latency increases with catalog size | Only if catalog <1000 skills |
-| No soft delete for skills | Simpler data model | Fork orphan problem, audit trail loss | Never |
-| Flat fork structure | Avoids tree traversal complexity | Fork proliferation becomes unmanageable | MVP only, plan migration |
-| No review content caching | Simpler implementation | Redundant API calls for unchanged skills | Only during initial development |
-| No cost tracking per author | Less instrumentation | Cannot detect abuse patterns | Never for production |
-
-## v1.3 Integration Gotchas
-
-Common mistakes when connecting to external services.
-
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| Claude API | Using synchronous calls for review | Queue reviews asynchronously, return "pending" status |
-| Claude API | Ignoring retry-after header | Parse and respect server-provided wait time |
-| Claude API | No budget caps | Set hard limits with alerts at thresholds |
-| Claude API | Including raw skill content in prompts | Sanitize for prompt injection before API call |
-| Embedding API | Switching models without re-indexing | Version embeddings, plan migration strategy |
-| Embedding API | Embedding at request time | Pre-compute and cache embeddings on skill save |
-| Embedding API | No dimension validation | Verify embedding dimensions match index |
-| MCP Config | Assuming Claude Desktop format everywhere | Detect platform, generate appropriate format |
-| MCP Config | Hardcoding paths | Use platform-aware path resolution |
-| MCP Config | Not validating generated JSON | Parse and validate before copying to clipboard |
-
-## v1.3 Performance Traps
-
-Patterns that work at small scale but fail as usage grows.
-
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| Naive similarity search (scan all embeddings) | Query latency increases linearly | Use vector index (HNSW, IVF) | >1,000 skills |
-| Synchronous AI review on submit | Submission timeout | Async queue with webhook/polling | Any concurrent load |
-| Re-computing embeddings on every comparison | High latency, API cost | Cache embeddings at skill creation | >10 skills |
-| Full skill content in every review prompt | Token explosion, cost explosion | Summarize, truncate, or chunk | Skills >2000 tokens |
-| No pagination in fork listing | Memory/render issues | Paginate forks, show top N | >20 forks per skill |
-| No rate limiting on review requests | API cost explosion | Per-user rate limits, budget caps | Any public usage |
-| Embedding all skill fields | Dimension bloat, poor relevance | Embed only semantic content (instructions) | Any scale |
-| N+1 queries for fork relationships | Page load time increases with fork count | Batch load fork metadata | >10 forks per skill |
-
-## v1.3 Security Mistakes
-
-Domain-specific security issues beyond general web security.
-
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| Including raw skill content in prompts without sanitization | Prompt injection, review manipulation | Sanitize inputs, use structured prompts with clear delimiters |
-| Trusting AI-generated reviews without validation | Hallucinated malicious content, false praise | Output validation, human-in-loop for flagged content |
-| Storing API keys in client-visible config | Key exposure | Server-side API calls only, never expose keys to browser |
-| MCP configs with overly broad permissions | Privilege escalation | Minimal permission configs, explicit scope limits |
-| No rate limiting on review requests per user | Cost attack, DoS | Per-user, per-author rate limits with exponential backoff |
-| Embedding queries without input validation | Embedding injection (theoretical) | Validate query format and length |
-| Allowing arbitrary shell commands in install | Command injection | Whitelist allowed commands, escape all user input |
-| Not validating platform detection | Wrong config installed | Server-side validation, fallback to manual selection |
-
-## v1.3 UX Pitfalls
-
-Common user experience mistakes in this domain.
-
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| Blocking submission on AI review | Frustration, abandonment | Async review, allow submission with "pending review" |
-| Duplicate warning without context | Confusion about why warning appeared | Show similar skill name, author, similarity score |
-| Too many install platforms shown | Choice paralysis | Auto-detect platform, show relevant option first |
-| Fork hierarchy hidden in UI | Can't find canonical skill | Show fork badge, parent link prominently |
-| AI suggestions without explanation | Distrust of recommendations | Include reasoning, cite specific issues |
-| Silent config generation failures | User thinks install succeeded | Show validation result, common error guidance |
-| AI review always visible | Stigmatizes skills with criticism | Collapse by default, expand on user action |
-| No fork comparison view | Can't understand fork differences | Side-by-side diff or changelog between fork and parent |
-
-## v1.3 "Looks Done But Isn't" Checklist
-
-Things that appear complete but are missing critical pieces.
-
-- [ ] **AI Review:** Often missing timeout handling — verify review completes or degrades gracefully under load
-- [ ] **AI Review:** Often missing cost monitoring — verify budget alerts configured before production
-- [ ] **AI Review:** Often missing input sanitization — verify prompt injection attempts are neutralized
-- [ ] **AI Review:** Often missing output validation — verify hallucinated content is flagged
-- [ ] **Duplicate Detection:** Often missing threshold tuning — verify false positive rate is acceptable to users
-- [ ] **Duplicate Detection:** Often missing model versioning — verify embeddings track which model created them
-- [ ] **Duplicate Detection:** Often missing index — verify similarity search uses vector index, not brute force
-- [ ] **Fork Versioning:** Often missing soft delete — verify deleted skills preserve lineage metadata
-- [ ] **Fork Versioning:** Often missing attribution display — verify fork shows clear parent relationship in UI
-- [ ] **Fork Versioning:** Often missing attribution policy — verify contributors understand how credit works
-- [ ] **Cross-Platform Install:** Often missing Windows testing — verify install works on all three major platforms
-- [ ] **Cross-Platform Install:** Often missing config validation — verify generated config parses on target platform
-- [ ] **Cross-Platform Install:** Often missing platform detection — verify user gets correct config automatically
-- [ ] **All Features:** Often missing error recovery — verify user can recover from any failure state
-
-## v1.3 Recovery Strategies
-
-When pitfalls occur despite prevention, how to recover.
-
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| AI hallucinated bad suggestions | LOW | Flag review, regenerate with adjusted prompt, notify affected users |
-| Prompt injection in production | MEDIUM | Disable affected skill, audit review history, patch sanitization |
-| Cost explosion | MEDIUM | Enable circuit breaker, process backlog at controlled rate, adjust budget |
-| False positive duplicate storm | LOW | Raise threshold, dismiss existing warnings, communicate to users |
-| Embedding model forced migration | HIGH | Enable dual-index mode, lazy re-embed, monitor quality metrics |
-| Fork orphan cascade | MEDIUM | Run lineage repair script, backfill deleted parent metadata |
-| Fork proliferation | MEDIUM | Implement canonical detection, auto-suggest consolidation |
-| Config format failures on platform | LOW | Generate platform-specific config, provide manual instructions |
-| Rate limit cascade | MEDIUM | Enable backpressure, queue pending reviews, notify users of delays |
-| Attribution dispute | LOW | Apply defined policy, document decision, communicate to parties |
-
-## v1.3 Pitfall-to-Phase Mapping
-
-How roadmap phases should address these pitfalls.
-
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| AI Review Hallucination | AI Review | Test with adversarial skills, track suggestion dismiss rate |
-| Prompt Injection | AI Review | Security review of prompt construction, penetration testing |
-| Cost Explosion | AI Review | Budget alerts fire in staging, circuit breaker tested under load |
-| Rate Limit Cascade | AI Review | Load test with concurrent submissions, verify graceful degradation |
-| False Positive Duplicates | Duplicate Detection | User testing, measure dismiss rate target <30% |
-| Embedding Model Lock-in | Duplicate Detection | Schema includes model version field, re-embed script exists |
-| Embedding Latency | Duplicate Detection | Pre-computed embeddings, vector index implemented |
-| Fork Proliferation | Fork Versioning | UI shows parent/fork hierarchy, search defaults to parents |
-| Fork Orphans | Fork Versioning | Soft delete implemented, lineage preserved in deleted state |
-| Attribution Disputes | Fork Versioning | Policy documented, attribution chain visible in UI |
-| Config Format Mismatch | Cross-Platform Install | Test on Claude Desktop, Claude Code, VS Code on each OS |
-| Path/Permission Issues | Cross-Platform Install | E2E install tests on macOS, Windows, Linux |
-| Version Incompatibility | Cross-Platform Install | Platform version requirements documented, compatibility warnings shown |
+**Domain:** MCP authentication, remote MCP via HTTP, employee usage analytics, install tracking, usage dashboard
+**Researched:** 2026-02-05
+**Scale Context:** Adding auth + analytics to existing anonymous MCP system serving 500+ target employees
+**Core Challenge:** The `userId` field exists in `usage_events` schema but is never populated by any MCP tool. All current MCP usage is anonymous via stdio transport with no user identity.
 
 ---
 
-## Technical Debt Patterns
+## Critical MCP Authentication Pitfalls
+
+Mistakes that cause security vulnerabilities, data integrity failures, or system rewrites.
+
+### Pitfall 32: Adding Auth to Existing Anonymous MCP Breaks All Current Users
+
+**What goes wrong:**
+Existing MCP users have the Relay MCP server configured via stdio transport in their `claude_desktop_config.json` or `.claude/settings.json`. Adding mandatory authentication breaks every existing installation simultaneously. Users who don't update their config immediately lose access. Support tickets flood in. MCP usage drops to zero while users figure out the new auth flow.
+
+**Why it happens:**
+The current MCP server (`apps/mcp/src/index.ts`) uses `StdioServerTransport` with zero authentication. Every `trackUsage()` call in the tools (search, list, deploy) passes no `userId`. Switching to authenticated calls requires every user to reconfigure. There is no migration path from "anonymous stdio" to "authenticated stdio" that doesn't require user action.
+
+**How to avoid:**
+- Run authenticated and anonymous MCP in parallel during transition (dual-transport period)
+- Keep the existing stdio MCP server working throughout the migration
+- Add a NEW remote HTTP endpoint with auth rather than modifying the existing stdio server
+- Implement a grace period: anonymous usage continues working but logs deprecation warnings
+- Track how many active users are on anonymous vs. authenticated to know when to sunset
+- Provide one-command migration: `npx relay-mcp migrate` that updates the user's config
+
+**Warning signs:**
+- MCP usage metrics suddenly drop to zero after deployment
+- Support tickets about "Relay MCP stopped working"
+- Users reverting to old config and bypassing new auth
+- Dashboard showing zero authenticated users weeks after launch
+
+**Phase to address:**
+Auth Infrastructure phase -- MUST be the first implementation. Design dual-transport architecture before touching any existing code.
+
+**Confidence:** HIGH (directly observed in codebase: `apps/mcp/src/index.ts` uses only `StdioServerTransport`, `trackUsage()` never receives userId)
+
+---
+
+### Pitfall 33: API Key Leakage Through MCP Config Files
+
+**What goes wrong:**
+Org API keys stored in MCP config files (like `claude_desktop_config.json`) get committed to git repos, shared in screenshots, or exposed through dotfile syncing. Unlike OAuth tokens, API keys don't expire, so a leaked key provides permanent access. One leaked key in a public dotfiles repo exposes the entire org's usage data.
+
+**Why it happens:**
+MCP config files live in user home directories and are often managed alongside other dotfiles. Developers routinely commit dotfiles to public repos. The config file format stores credentials in plaintext JSON. There's no built-in mechanism to reference secrets by ID rather than value. Existing install instructions (current `deploy.ts`) generate config snippets that users paste directly into config files.
+
+**How to avoid:**
+- Use environment variable references in MCP configs: `"apiKey": "${RELAY_API_KEY}"` rather than literal values
+- Generate API keys with a prefix (e.g., `rlk_`) so secret scanners can detect them
+- Implement key rotation with zero-downtime dual-key overlap period
+- Set short expiration by default (90 days) with renewal reminders
+- Add a key dashboard showing last-used timestamp per key to detect unused/leaked keys
+- Run git secret scanning on the company GitHub org for `rlk_` patterns
+- Never log the full API key in server logs; log only the prefix (`rlk_...abc`)
+
+**Warning signs:**
+- API keys found in public repos via GitHub secret scanning alerts
+- Multiple users sharing the same API key (should be per-user)
+- API key usage from unexpected IP ranges or geographies
+- Keys that haven't been rotated in 6+ months
+
+**Phase to address:**
+Auth Infrastructure phase -- key format, rotation, and scanning must be designed before key issuance begins
+
+**Confidence:** HIGH (verified via [API Key Security Best Practices 2026](https://dev.to/alixd/api-key-security-best-practices-for-2026-1n5d), [Infisical API Key Management](https://infisical.com/blog/api-key-management), [Claude API Key Best Practices](https://support.claude.com/en/articles/9767949-api-key-best-practices-keeping-your-keys-safe-and-secure))
+
+---
+
+### Pitfall 34: API Key Revocation Without Immediate Effect
+
+**What goes wrong:**
+An employee leaves the company or a key is compromised. Admin revokes the key in the dashboard, but the key continues working because revocation is checked only at key creation time, not on every request. Hours or days of unauthorized access follow the "revocation."
+
+**Why it happens:**
+For performance, developers cache API key validation results. A key lookup hits the database once, then the result is cached in memory or Redis with a long TTL. Revocation updates the database, but the cache still holds the valid result. Also, if key validation happens only in middleware that checks a JWT signed from the API key, the JWT remains valid until expiration.
+
+**How to avoid:**
+- Check key validity on EVERY request against the database (the performance cost at 500 users is negligible)
+- If caching is needed, use very short TTL (30 seconds max) with forced cache invalidation on revoke
+- Never convert API keys to long-lived JWTs -- the key IS the credential for each request
+- Implement a revocation event that pushes invalidation to all server instances
+- Add a `revokedAt` timestamp column, not just a boolean, for audit trail
+- Test revocation end-to-end: revoke a key in UI, verify the next MCP request fails within 30 seconds
+
+**Warning signs:**
+- Revoked keys still appearing in usage logs after revocation
+- Gap between `revokedAt` timestamp and last successful usage
+- Users reporting they can still use MCP after admin disables their key
+- No test coverage for revocation flow
+
+**Phase to address:**
+Auth Infrastructure phase -- revocation must be immediate, not eventually consistent
+
+**Confidence:** HIGH (verified via [API Key Management - DigitalAPI](https://www.digitalapi.ai/blogs/api-key-management), [Hardening OAuth Tokens](https://www.clutchevents.co/resources/hardening-oauth-tokens-in-api-security-token-expiry-rotation-and-revocation-best-practices))
+
+---
+
+### Pitfall 35: Stdio Transport Cannot Carry User Identity Natively
+
+**What goes wrong:**
+The team tries to add `userId` to the existing stdio MCP transport by having the MCP client pass it as a tool parameter. But Claude Code and Claude Desktop control the MCP client -- Relay cannot inject custom headers or auth tokens into the stdio pipe. The userId would need to come from the LLM itself, which is untrustworthy (the model could hallucinate or omit it).
+
+**Why it happens:**
+Stdio MCP transport is designed for local tools where the user IS the person running the process. There is no authentication layer in the stdio protocol -- the MCP specification explicitly states that STDIO transport "SHOULD NOT follow [the auth] specification, and instead retrieve credentials from the environment." The current `StdioServerTransport` in the codebase has no mechanism to identify which user launched the process.
+
+**How to avoid:**
+- For stdio: read identity from environment variables (`RELAY_USER_EMAIL` or `RELAY_API_KEY`) set during installation
+- For remote: use Streamable HTTP transport where Authorization headers carry identity
+- NEVER trust tool input parameters for user identity (the LLM provides these, not the user)
+- During install, embed the user's API key into the MCP server config's `env` block so it's available at process startup
+- Validate the API key against the database at server startup, cache the userId for all subsequent tool calls in that session
+
+**Warning signs:**
+- `userId` in usage_events is null despite "authenticated" MCP being deployed
+- Users able to impersonate others by passing a different userId as a tool parameter
+- Authentication working on HTTP transport but not on stdio
+- Different users sharing the same `userId` in usage logs
+
+**Phase to address:**
+Auth Infrastructure phase -- critical architectural decision: environment-based identity for stdio, header-based for HTTP
+
+**Confidence:** HIGH (verified via [MCP Authorization Spec](https://modelcontextprotocol.io/docs/tutorials/security/authorization): "Implementations using STDIO transport SHOULD NOT follow this specification, and instead retrieve credentials from the environment"; directly confirmed in codebase `apps/mcp/src/index.ts`)
+
+---
+
+## Critical Remote MCP (HTTP Transport) Pitfalls
+
+### Pitfall 36: Remote MCP Server Exposed Without Authentication
+
+**What goes wrong:**
+The Streamable HTTP endpoint goes live without authentication because "we'll add it later." During development/staging, the endpoint is discoverable. Anyone who finds the URL can invoke all MCP tools, query the skills database, and track fake usage events. A single exposed endpoint becomes a data exfiltration vector.
+
+**Why it happens:**
+FastMCP and the MCP SDK default to no authentication on HTTP transport. Developers focus on getting the transport working first, then plan to "bolt on" auth. The spec warning is buried in documentation. The existing codebase has zero auth in the MCP server, so extending it to HTTP feels like "just changing the transport."
+
+**How to avoid:**
+- Implement auth middleware BEFORE the first HTTP endpoint goes live, even in development
+- Use the MCP spec's OAuth 2.1 flow for Claude.ai browser-based access
+- For internal API key auth: validate the `Authorization: Bearer <api-key>` header on every request
+- Return `401 Unauthorized` with proper `WWW-Authenticate` header when auth fails
+- Bind to `127.0.0.1` during development, never `0.0.0.0`
+- Add integration test that verifies unauthenticated requests are rejected
+
+**Warning signs:**
+- HTTP endpoint accessible without any authentication in staging
+- No `Authorization` header validation in request handler
+- Endpoint bound to `0.0.0.0` instead of `127.0.0.1` in development
+- No 401 response code in any test suite
+
+**Phase to address:**
+Remote MCP phase -- auth middleware is a prerequisite, not a follow-up
+
+**Confidence:** HIGH (verified via [CardinalOps MCP Defaults](https://cardinalops.com/blog/mcp-defaults-hidden-dangers-of-remote-deployment/), [Bitsight Exposed MCP Servers](https://www.bitsight.com/blog/exposed-mcp-servers-reveal-new-ai-vulnerabilities), [MCP Streamable HTTP Security - Medium](https://medium.com/@yany.dong/mcp-streamable-http-transport-security-considerations-and-guidance-2797cfbc9b19))
+
+---
+
+### Pitfall 37: Missing Origin Validation Enables DNS Rebinding Attacks
+
+**What goes wrong:**
+The remote MCP server accepts requests from any origin. An attacker creates a malicious webpage that makes requests to the MCP server from the victim's browser. Because the browser sends the user's cookies/tokens automatically, the attacker can invoke MCP tools on behalf of authenticated users. The MCP specification explicitly warns about this.
+
+**Why it happens:**
+Developers skip `Origin` header validation because "it's an internal tool" or because CORS configuration is confusing. The MCP spec requires Origin validation but the SDK doesn't enforce it automatically. DNS rebinding bypasses same-origin policy when Origin validation is missing.
+
+**How to avoid:**
+- Validate the `Origin` header on ALL incoming HTTP requests (the MCP spec REQUIRES this)
+- Maintain a strict allowlist of permitted origins (e.g., `https://relay.company.com`)
+- Reject requests with missing or untrusted `Origin` headers
+- Set CORS headers to specific origins, never `Access-Control-Allow-Origin: *` with credentials
+- Include `Mcp-Session-Id`, `Content-Type`, `Authorization`, and `Mcp-Protocol-Version` in `Access-Control-Allow-Headers`
+- Test with `curl -H "Origin: https://evil.com"` to verify rejection
+
+**Warning signs:**
+- `Access-Control-Allow-Origin: *` in response headers
+- No Origin validation middleware in HTTP handler
+- CORS working "everywhere" without configuration (means it's too permissive)
+- Security audit flagging Origin header not being checked
+
+**Phase to address:**
+Remote MCP phase -- Origin validation is part of the transport layer, implement with transport
+
+**Confidence:** HIGH (verified via [MCP Specification Transport Security](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports): "Servers MUST validate the Origin header"; [CORS for MCP Servers - MCPcat](https://mcpcat.io/guides/implementing-cors-policies-web-based-mcp-servers/))
+
+---
+
+### Pitfall 38: Session Hijacking Through Predictable Session IDs
+
+**What goes wrong:**
+The Streamable HTTP transport uses `Mcp-Session-Id` headers to maintain stateful sessions. If session IDs are predictable (sequential integers, timestamps, non-random UUIDs), an attacker can guess another user's session ID and hijack their MCP connection. They inherit the victim's authentication context and can make tool calls as that user.
+
+**Why it happens:**
+The MCP SDK generates session IDs, but developers may override the default generator with simpler implementations for debugging. Or the session ID is stored in a URL parameter instead of a header, making it visible in server logs and browser history.
+
+**How to avoid:**
+- Use the SDK's default session ID generator (cryptographically secure random)
+- Never pass session IDs in URL query parameters
+- Bind sessions to the authenticated user's identity (session + API key must match)
+- Implement session timeout (e.g., 1 hour of inactivity)
+- Invalidate sessions on explicit disconnect and on authentication failure
+- Log session creation/destruction for audit
+
+**Warning signs:**
+- Session IDs that are sequential or contain timestamps
+- Session IDs visible in URL query strings
+- No session timeout configuration
+- Sessions surviving after user's API key is revoked
+
+**Phase to address:**
+Remote MCP phase -- session management is integral to the transport layer
+
+**Confidence:** HIGH (verified via [MCP Streamable HTTP Security](https://medium.com/@yany.dong/mcp-streamable-http-transport-security-considerations-and-guidance-2797cfbc9b19): "Use strong random session identifiers... validate all Mcp-Session-Id headers")
+
+---
+
+### Pitfall 39: Claude.ai Connector CORS and IP Allowlisting Requirements
+
+**What goes wrong:**
+The team builds a remote MCP server that works perfectly with Claude Code (which uses server-side HTTP, no CORS needed) but fails completely when connected via Claude.ai web (which makes browser-side requests subject to CORS). The Claude.ai Connectors feature has specific requirements that differ from Claude Code's remote MCP.
+
+**Why it happens:**
+Claude.ai web connectors make requests from Anthropic's infrastructure, not from the user's browser directly. This means the MCP server needs to allowlist Claude's IP addresses AND handle OAuth flows. The mental model of "just expose an HTTP endpoint" misses the protocol handshake that Claude.ai requires (PRM discovery, OAuth, resource indicators).
+
+**How to avoid:**
+- Implement separate configuration for Claude Code (API key auth) vs. Claude.ai (OAuth 2.1)
+- For Claude.ai: implement OAuth 2.1 with PKCE and Dynamic Client Registration
+- For Claude.ai: expose `/.well-known/oauth-protected-resource` metadata endpoint
+- IP allowlist Anthropic's published IP ranges if required by your network policy
+- Test with both Claude Code CLI and Claude.ai web browser to verify both paths work
+- Consider Claude.ai connector submission process for public availability
+
+**Warning signs:**
+- MCP works in Claude Code but returns CORS errors in Claude.ai
+- OAuth flow fails to complete when initiated from Claude.ai
+- Missing `/.well-known/oauth-protected-resource` endpoint returns 404
+- Claude.ai shows "connection failed" while curl to the same endpoint works fine
+
+**Phase to address:**
+Remote MCP phase -- design transport layer to handle both Claude Code and Claude.ai from the start
+
+**Confidence:** HIGH (verified via [Claude Remote MCP Server Guide](https://support.claude.com/en/articles/11503834-building-custom-connectors-via-remote-mcp-servers), [Claude Remote MCP Submission Guide](https://support.claude.com/en/articles/12922490-remote-mcp-server-submission-guide), [InfoQ: Claude Code Remote MCP](https://www.infoq.com/news/2025/06/anthropic-claude-remote-mcp/))
+
+---
+
+## Critical Employee Analytics Pitfalls
+
+### Pitfall 40: Tracking Individual Employee Activity Without Transparency Creates Trust Crisis
+
+**What goes wrong:**
+Employees discover that the tool marketplace tracks their individual usage patterns (which skills they use, when, how often) and reacts with fear, distrust, and reduced adoption. "Big Brother" narrative spreads through Slack. The tool meant to help employees becomes perceived as a surveillance tool. Adoption drops despite the tool being genuinely useful.
+
+**Why it happens:**
+Internal tools rarely have explicit privacy policies. The line between "analytics to improve the product" and "monitoring employee behavior" is blurry. Without proactive transparency, employees fill the information vacuum with worst-case assumptions. Even well-intentioned tracking (e.g., for manager dashboards showing team adoption) can be perceived as surveillance.
+
+**How to avoid:**
+- Display what is tracked directly in the UI: "Relay tracks which skills you use to calculate FTE Days Saved"
+- Let employees see their own usage data (transparency builds trust)
+- Track WHAT was used, not HOW it was used (skill invocations, not prompt content)
+- Aggregate team-level metrics by default; individual data visible only to the individual
+- Publish a clear data retention policy: "Usage data is retained for 90 days, then aggregated"
+- Get explicit buy-in from employee representatives or works council before launch
+- NEVER track: prompt content, task context, idle time, or anything resembling productivity scoring
+
+**Warning signs:**
+- Slack/Teams messages expressing concern about tracking
+- Employees using skills without MCP (copying content) to avoid tracking
+- Low adoption despite high interest
+- Questions from legal/HR about privacy compliance
+
+**Phase to address:**
+Analytics Design phase -- privacy framework must be defined BEFORE any employee-level tracking ships
+
+**Confidence:** HIGH (verified via [Workplace Privacy Report](https://www.workplaceprivacyreport.com/2025/06/articles/artificial-intelligence/managing-the-managers-governance-risks-and-considerations-for-employee-monitoring-platforms/), [BusinessNewsDaily Employee Monitoring](https://www.businessnewsdaily.com/6685-employee-monitoring-privacy.html), [WorkTime Monitoring Dos/Don'ts](https://www.worktime.com/blog/employee-monitoring/dos-and-donts-when-implementing-employee-monitoring-software))
+
+---
+
+### Pitfall 41: Historical Anonymous Events Cannot Be Retroactively Attributed
+
+**What goes wrong:**
+After deploying authentication, the team wants to retroactively assign userId to the hundreds of anonymous usage_events already in the database. But there is NO way to know who generated those events. The `userId` column remains null for all historical data. Analytics dashboards show a cliff: zero attributed usage before the auth deploy date, then a sudden jump. Historical trend analysis is meaningless.
+
+**Why it happens:**
+The current `trackUsage()` function in `apps/mcp/src/tracking/events.ts` never receives a userId because the MCP server has no concept of user identity. The `usageEvents` schema has a `userId` field with a foreign key to `users.id`, but it has always been null. There is no session ID, anonymous ID, or machine fingerprint that could retrospectively link events to users.
+
+**How to avoid:**
+- Accept that historical data is permanently anonymous -- do not try to guess attribution
+- Set a clear "attribution start date" in the dashboard (e.g., "User-level data available from Feb 10, 2026")
+- Show aggregate-only metrics for the pre-auth period, per-user metrics only after
+- Consider a voluntary "claim your past usage" flow (user self-reports which skills they used) but mark it as self-reported
+- Start tracking a machine/session fingerprint NOW (before auth ships) so there's at least a linkable anonymous ID during the transition period
+- Run a migration that sets a `migration_note` on historical events: `"pre-auth: no userId available"`
+
+**Warning signs:**
+- Stakeholders asking "how many FTE Days Saved per employee" and expecting retroactive data
+- Dashboard showing 100% anonymous usage for the pre-auth period
+- Attempts to "impute" userId from metadata (IP, timestamp) that produce garbage results
+- Product decisions delayed because "we don't have enough per-user data yet"
+
+**Phase to address:**
+Auth Infrastructure phase -- acknowledge the data boundary explicitly, then Analytics phase -- build dashboards that handle the null-userId period gracefully
+
+**Confidence:** HIGH (directly confirmed: `apps/mcp/src/tracking/events.ts` line 9 shows `trackUsage()` omits userId in all current calls; `packages/db/src/schema/usage-events.ts` line 12 shows userId is nullable)
+
+---
+
+### Pitfall 42: Dashboard Queries Degrade as Usage Events Grow
+
+**What goes wrong:**
+The usage analytics dashboard runs aggregate queries (`COUNT`, `GROUP BY date`, `SUM`) directly against the `usage_events` table. At 500 users making 10+ tool calls per day, the table grows by 5,000+ rows daily (150,000+ per month). Within 6 months, queries that took 50ms take 5 seconds. The dashboard becomes unusable. Meanwhile, the same queries compete with the OLTP workload (skill creation, ratings), slowing the entire application.
+
+**Why it happens:**
+PostgreSQL's row-oriented storage is not optimized for analytical aggregation queries. The `usage_events` table has no partitioning, no time-series indexes, and no pre-computed aggregates. The existing `getUsageTrends()` function in `apps/web/lib/usage-trends.ts` already does `date_trunc` + `GROUP BY` + `JOIN` on every page load. This pattern does not scale.
+
+**How to avoid:**
+- Create materialized views for common aggregation patterns (daily totals, per-user summaries, per-skill summaries)
+- Refresh materialized views on a schedule (every 15 minutes or hourly), not on every query
+- Partition the `usage_events` table by month using PostgreSQL declarative partitioning
+- Add a composite index on `(created_at, skill_id, user_id)` for the most common query patterns
+- For the dashboard, query the materialized view, not the raw events table
+- Set a query timeout (5 seconds) on dashboard queries to prevent long-running queries from blocking OLTP
+- Monitor query execution plans monthly as data grows
+
+**Warning signs:**
+- Dashboard page load time increasing week over week
+- PostgreSQL `pg_stat_statements` showing `usage_events` aggregation queries in top 10 by total time
+- Application latency spikes correlating with dashboard page views
+- `EXPLAIN ANALYZE` showing sequential scans on `usage_events` instead of index scans
+
+**Phase to address:**
+Analytics Dashboard phase -- design materialized views and indexes BEFORE building the dashboard UI
+
+**Confidence:** HIGH (verified via [PostgreSQL Analytics Performance - Crunchy Data](https://www.crunchydata.com/blog/postgres-tuning-and-performance-for-analytics-data), [Real-time Analytics in Postgres - Timescale](https://medium.com/timescale/real-time-analytics-in-postgres-why-its-hard-and-how-to-solve-it-bd28fa7314c7), [PostgreSQL Analytics Workloads - Epsio](https://www.epsio.io/blog/postgres-for-analytics-workloads-capabilities-and-performance-tips))
+
+---
+
+### Pitfall 43: Install Callback Tracking Produces Inflated Numbers
+
+**What goes wrong:**
+Install tracking reports 10x more installs than actual active users. The "install" callback fires on every config copy, including re-installs, failed installs, and users who copy the config but never use it. There's no deduplication, so the same user reinstalling counts as a new install each time. Stakeholders see inflated install numbers and set unrealistic adoption expectations.
+
+**Why it happens:**
+The "install" event is typically a clipboard copy or a config write -- neither confirms the skill was actually installed and working. Network retries on the callback can fire the event multiple times. There's no follow-up "activation" event to confirm the install succeeded. The distinction between "downloaded" and "installed and working" is not tracked.
+
+**How to avoid:**
+- Distinguish "config copied" (intent) from "first MCP tool call with this skill" (activation)
+- Deduplicate install events by `(userId, skillId, platform)` -- one install per user per skill per platform per day
+- Generate a unique `$insert_id` per install event to enable server-side deduplication
+- Track "activation" separately: the first `deploy_skill` or `search_skills` call after install
+- Report both "installs" and "activations" in dashboard, with conversion rate between them
+- Implement idempotency keys on the install callback endpoint to prevent network retry duplicates
+
+**Warning signs:**
+- Install count >> active user count (more than 3x indicates inflation)
+- Same userId appearing multiple times in install events within minutes
+- High install count but low subsequent skill usage
+- Stakeholders citing install numbers that don't match reality
+
+**Phase to address:**
+Install Tracking phase -- design event schema with deduplication from the start
+
+**Confidence:** HIGH (verified via [Mixpanel Event Deduplication](https://developer.mixpanel.com/reference/event-deduplication): "The $insert_id should be a randomly generated, unique value"; [GA4 Duplicate Events - Analytify](https://analytify.io/fix-ga4-duplicate-events/))
+
+---
+
+### Pitfall 44: Rate Limiting Missing on Remote MCP Allows Resource Exhaustion
+
+**What goes wrong:**
+The remote HTTP MCP endpoint has no rate limiting. A single client (malicious or buggy) sends thousands of requests per second. The PostgreSQL database connection pool is exhausted. All legitimate MCP users experience timeouts. The web application (which shares the database) also degrades. A single compromised API key can take down the entire platform.
+
+**Why it happens:**
+Rate limiting is seen as a "nice to have" for internal tools. The existing stdio MCP has natural rate limiting (one user, one process, one connection). HTTP changes the model: now any number of concurrent connections can hit the endpoint. Without rate limiting, a single bad actor or automation script can monopolize resources.
+
+**How to avoid:**
+- Implement per-API-key rate limiting: 60 requests/minute for standard keys, configurable per key
+- Implement global rate limiting: 1000 requests/minute across all keys
+- Return `429 Too Many Requests` with `Retry-After` header
+- Use a sliding window algorithm (not fixed window, which allows burst at window boundaries)
+- Add rate limit headers to every response: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+- Separate rate limits for different operations (read vs. write, search vs. deploy)
+- Monitor for keys consistently hitting rate limits (possible abuse indicator)
+
+**Warning signs:**
+- Single API key responsible for >50% of total requests
+- Database connection pool warnings in logs
+- Request latency spikes correlating with specific API key usage
+- No rate limit headers in any HTTP responses
+
+**Phase to address:**
+Remote MCP phase -- rate limiting is a transport-layer concern, implement with the HTTP endpoint
+
+**Confidence:** HIGH (verified via [API Key Management Best Practices](https://apidog.com/blog/api-key-management-best-practices/), [MCP Streamable HTTP Security](https://medium.com/@yany.dong/mcp-streamable-http-transport-security-considerations-and-guidance-2797cfbc9b19))
+
+---
+
+## Moderate v1.4 Pitfalls
+
+Mistakes that cause delays, technical debt, or degraded experience.
+
+### Pitfall 45: OAuth 2.1 Over-Engineering for Internal Use
+
+**What goes wrong:**
+The team implements the full MCP OAuth 2.1 specification (Dynamic Client Registration, Protected Resource Metadata, PKCE, token refresh) when all they need is API key authentication for 500 internal employees. The OAuth implementation takes 3 weeks instead of the 3 days API keys would take. Meanwhile, employee tracking is blocked waiting on auth.
+
+**Why it happens:**
+The MCP specification recommends OAuth 2.1 as the standard auth mechanism. Teams read the spec and build what it says rather than what they need. For an internal tool with existing Google SSO, OAuth is massive overkill for the initial release. The spec is designed for public MCP servers with unknown clients -- not internal tools with known employees.
+
+**How to avoid:**
+- Start with API key auth for the stdio transport (environment variable, per-employee)
+- Add OAuth 2.1 ONLY when Claude.ai web connector support is needed (Phase 2+)
+- Use the existing Auth.js session to issue API keys through the web dashboard
+- Keep the auth upgrade path open: API keys now, OAuth later for browser clients
+- The MCP spec explicitly allows non-OAuth auth for internal tools: "API keys have inherent limitations... but are the simplest technique"
+
+**Warning signs:**
+- Auth implementation timeline exceeding 1 week for initial deploy
+- Building OAuth infrastructure before a single authenticated MCP call works
+- Team spending time on Dynamic Client Registration when there's only one client
+- Blocked on auth while feature work (analytics, dashboard) could proceed
+
+**Phase to address:**
+Auth Infrastructure phase -- use pragmatic API keys first, plan OAuth upgrade for Claude.ai phase
+
+**Confidence:** HIGH (verified via [MCP Auth Tutorial](https://modelcontextprotocol.io/docs/tutorials/security/authorization), [Stytch MCP Auth Guide](https://stytch.com/blog/MCP-authentication-and-authorization-guide/), [Scalekit: Migrate from API Keys to OAuth](https://www.scalekit.com/blog/migrating-from-api-keys-to-oauth-mcp-servers))
+
+---
+
+### Pitfall 46: Dashboard Shows Raw Event Counts Instead of Meaningful Metrics
+
+**What goes wrong:**
+The usage dashboard displays "total MCP calls" and "events per day" as raw numbers. These metrics are meaningless to stakeholders. A user who searches 20 times before finding the right skill generates 20 events, but saved time only once. Leadership can't answer "is Relay delivering ROI?" from raw event counts. The dashboard exists but nobody uses it.
+
+**Why it happens:**
+It's easy to `COUNT(*)` on `usage_events` grouped by date. It's hard to derive meaningful business metrics like "unique users who saved time today" or "skills with repeat users this week." Teams ship the easy metrics first and never build the meaningful ones.
+
+**How to avoid:**
+- Define metrics from the stakeholder question backward: "What question does this number answer?"
+- Key metrics should be: active users (unique userId with any event), skills adopted (unique userId+skillId combinations), time saved (via deploy_skill events linked to hoursSaved)
+- Separate operational metrics (for debugging: total events, error rate) from business metrics (for leadership: adoption, retention, ROI)
+- Show trends and comparisons, not absolute numbers: "20% more active users than last week" not "47 events today"
+- Include the "so what?" for every metric: attach it to a business outcome
+
+**Warning signs:**
+- Stakeholders asking "what do these numbers mean?" after seeing the dashboard
+- Dashboard showing only raw counts with no interpretation
+- No unique-user-based metrics in the dashboard
+- Nobody bookmarking or regularly visiting the dashboard page
+
+**Phase to address:**
+Analytics Dashboard phase -- define metrics with stakeholders BEFORE building any UI
+
+**Confidence:** MEDIUM (derived from analytics best practices and project context: current `usage-trends.ts` calculates `daysSaved` but only at the skill level, not per-user)
+
+---
+
+### Pitfall 47: Dual Transport (Stdio + HTTP) Creates Two Codepaths to Maintain
+
+**What goes wrong:**
+The MCP server now has two transports: stdio for local Claude Code users and Streamable HTTP for Claude.ai web users. Each transport has different auth mechanisms (env var vs. Bearer token), different session management (process-lifetime vs. HTTP sessions), and different error handling (stderr vs. HTTP status codes). Bug fixes need to be applied to both paths. Feature updates require testing both paths. The maintenance burden doubles.
+
+**Why it happens:**
+Stdio can't be abandoned (existing users depend on it). HTTP is needed for web access. These are fundamentally different transport protocols with different lifecycle models. Without careful abstraction, the tool handler code gets littered with `if (transport === 'stdio')` branches.
+
+**How to avoid:**
+- Create a transport-agnostic auth layer: `getCurrentUser()` that works regardless of transport
+- For stdio: resolve user from `RELAY_API_KEY` environment variable at startup, cache for session
+- For HTTP: resolve user from `Authorization: Bearer <key>` header per request
+- Keep all tool handler logic (search, list, deploy) completely transport-unaware
+- The tool handler receives a `context` object that includes `userId` -- how it got there is the transport layer's job
+- Test tool handlers with a mock context, test transport layers separately
+
+**Warning signs:**
+- Tool handler code checking which transport is active
+- Bugs that appear in one transport but not the other
+- Features working on HTTP but broken on stdio (or vice versa)
+- Duplicated auth validation code in multiple files
+
+**Phase to address:**
+Auth Infrastructure phase -- design the abstraction layer before implementing either transport's auth
+
+**Confidence:** HIGH (architectural pattern derived from existing codebase analysis: `apps/mcp/src/index.ts` creates transport, `apps/mcp/src/tools/*.ts` contain handlers that should be transport-agnostic)
+
+---
+
+### Pitfall 48: Extended Search Breaking Existing Search Performance
+
+**What goes wrong:**
+Adding author name and tag matching to search queries (currently name+description only in `apps/mcp/src/tools/search.ts`) degrades search performance. The existing in-memory filter approach (`allResults.filter(...)`) now needs to JOIN with users table for author names. The query that took 50ms now takes 500ms because it's loading all skills AND all users into memory.
+
+**Why it happens:**
+The current search implementation fetches all skills and filters in-memory: `const allResults = await db.query.skills.findMany(...)` followed by `.filter()`. This was a pragmatic choice to "avoid TypeScript module resolution issues with drizzle operators." Adding more fields to match against multiplies the in-memory data set and adds JOINs.
+
+**How to avoid:**
+- Refactor search to use proper SQL queries with Drizzle operators instead of in-memory filtering
+- Extend the existing `searchVector` tsvector column to include author name and tags
+- Use `setweight(to_tsvector('english', author.name), 'C')` for author name (lower weight than name/description)
+- For tags: use PostgreSQL array operators (`@>`, `&&`) instead of text search
+- Add a compound GIN index covering the extended search vector
+- Benchmark before and after to verify no regression
+
+**Warning signs:**
+- Search latency doubling after adding author/tag matching
+- MCP `search_skills` tool calls timing out
+- Memory usage spikes during search operations
+- Users reporting search is "slower than before"
+
+**Phase to address:**
+Extended Search phase -- refactor from in-memory to SQL-based search as part of the enhancement
+
+**Confidence:** HIGH (directly confirmed in `apps/mcp/src/tools/search.ts`: lines 30-48 show the in-memory filter pattern; and `packages/db/src/schema/skills.ts`: lines 43-45 show the tsvector only covers name+description)
+
+---
+
+## v1.4 Technical Debt Patterns
 
 Shortcuts that seem reasonable but create long-term problems.
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Skip MCP tracking for MVP | Faster launch | Permanent blind spot on non-MCP usage; retrofit is expensive | Never - design multi-channel from start |
-| Store time-saved as single number | Simple data model | Can't audit, can't compare, can't detect gaming | MVP only - add context fields in Phase 2 |
-| No skill health checks | Less infrastructure | Broken skills erode trust; manual cleanup doesn't scale | First 6 months only |
-| Flat skill organization | Easy to implement | Discovery fails at 100+ skills; restructuring breaks links | First 50 skills only |
-| Creator-only edit permissions | Simpler permissions | Orphaned skills can't be maintained; wiki model breaks | Never - design for maintenance handoff |
-| Skip virtualization | Faster initial dev | Performance nightmare at scale; hard to retrofit | Only if < 100 rows guaranteed |
-| Skip memoization | Less boilerplate | Infinite re-render risk; debugging nightmare | Never for data/columns props |
+| API keys as plaintext in MCP config | Simplest user experience | Key leakage through dotfile repos, no rotation | Never -- use env var references from day one |
+| Skip key rotation mechanism | Faster initial implementation | Leaked keys grant permanent access; no way to force credential refresh | First 30 days only -- implement rotation before org-wide rollout |
+| Shared database for OLTP + analytics | No new infrastructure | Dashboard queries slow down application at scale (6+ months of data) | First 6 months; plan materialized views from the start |
+| In-memory search filtering | Avoids Drizzle operator complexity | Breaks at 500+ skills, can't extend to author/tag search | Never for v1.4 -- refactor as part of extended search |
+| Single API key per org (not per user) | Simpler key management | Zero per-employee attribution, key compromise affects everyone | Never -- defeats the purpose of employee tracking |
+| Skip rate limiting on HTTP MCP | Faster to ship | One bad actor can DoS the entire platform | Never for production HTTP endpoints |
+| Cache key validation results | Reduces DB queries per request | Revocation takes minutes to propagate instead of seconds | Only with 30-second TTL maximum |
+| Sync analytics writes in tool handlers | Simpler code flow | Tool call latency includes database write time; failures block the response | First month; move to async event queue before 500 users |
 
-## Integration Gotchas
+## v1.4 Integration Gotchas
 
-Common mistakes when connecting to external services.
+Common mistakes when connecting these specific features to the existing system.
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Claude API | Hardcoding model versions in skills | Use version-agnostic skill format; test against latest models |
-| MCP Servers | Storing API keys in skill definitions | Centralized credential management; skill references secrets by ID |
-| SSO/Identity | Treating user identity as stable string | Design for identity merges, name changes, email updates |
-| Metrics/Analytics | Assuming synchronous tracking is sufficient | Build event queue; handle offline/delayed attribution |
-| Search/Discovery | Relying on basic text search | Plan for semantic search from start; keyword matching fails at scale |
+| Stdio MCP + Auth | Passing userId as a tool parameter (model provides it, not user) | Read API key from environment variable at process startup; validate once |
+| HTTP MCP + Auth | Using the same session token as the web app's Auth.js JWT | MCP API keys are separate credentials; web session and MCP auth are independent systems |
+| Usage Events + userId | Backfilling historical events with guessed userIds | Accept historical data is anonymous; set clear "attribution start date" |
+| Dashboard + usage_events | Running aggregation queries directly on the events table | Use materialized views refreshed on schedule for dashboard queries |
+| Install tracking + dedup | Counting every clipboard copy as an "install" | Deduplicate by (userId, skillId, platform) per day; track "activation" separately |
+| API key generation + Auth.js | Generating API keys outside the existing auth flow | Use the web dashboard (behind Google SSO) to generate/manage API keys |
+| Extended search + MCP | Adding search fields only in the web UI, not in MCP tools | Both `apps/web` search and `apps/mcp` search must use the same extended search logic |
+| Remote MCP + CORS | Using `Access-Control-Allow-Origin: *` for convenience | Allowlist specific origins; include MCP-specific headers (Mcp-Session-Id, Mcp-Protocol-Version) |
+| Rate limiting + API key | Applying rate limits globally instead of per-key | Per-key limits prevent one user from affecting others; also have global limits as safety net |
 
-## Performance Traps
+## v1.4 Performance Traps
 
 Patterns that work at small scale but fail as usage grows.
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Loading full skill catalog on search | Search latency grows linearly | Implement pagination, faceted search, lazy loading | 500+ skills |
-| Synchronous metrics writes | Skill execution slowed by tracking | Async event queue with eventual consistency | 100+ concurrent users |
-| Single-node search index | Search becomes bottleneck | Design for distributed search from architecture phase | 1000+ skills |
-| Storing all versions inline | Page load times balloon | Version storage with lazy retrieval; show active only | 50+ versions per skill |
-| No caching on popular skills | Same skills fetched repeatedly | Implement tiered caching with TTL-based invalidation | 1000+ daily active users |
-| No table virtualization | Page load > 5 seconds | Virtualize if targeting 100+ rows | 100+ rows |
-| Unmemoized table data | CPU spikes, infinite loops | Always useMemo data and columns | Any interactive table |
+| Raw event count queries on usage_events | Dashboard load time >5s | Materialized views with scheduled refresh | >100K events (~2 months at 500 users) |
+| No index on usage_events(created_at) | Time-range queries do sequential scans | Add `(created_at, skill_id, user_id)` composite index | >50K rows |
+| In-memory search with JOIN for author name | Search latency >500ms | Extend tsvector to include author name, use SQL queries | >200 skills or adding any JOIN |
+| API key validation hits DB on every tool call | 500+ concurrent users causes connection pool exhaustion | Cache validation result for 30s with immediate invalidation on revoke | >200 concurrent connections |
+| Synchronous usage event writes in tool handlers | Tool call latency includes DB write time (20-50ms overhead) | Async event queue (fire-and-forget with retry) | Noticeable when tool calls should be <100ms |
+| No database connection pooling for HTTP MCP | Each HTTP request creates new DB connection | Use shared connection pool (PgBouncer or Drizzle pool) | >50 concurrent HTTP connections |
+| Single materialized view refresh for all dashboards | Long refresh blocks reads; stale data during refresh | Per-metric materialized views with staggered refresh schedules | >5 dashboard widgets |
 
-## Security Mistakes
+## v1.4 Security Mistakes
 
-Domain-specific security issues beyond general web security.
+Domain-specific security issues for MCP auth and employee analytics.
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| Skills that capture user input in logs | PII exposure in analytics | Sanitize/redact user inputs before any persistence |
-| Storing API keys in skill configurations | Credential theft if skill is exported/shared | Reference secrets by ID; never inline credentials |
-| No rate limiting on skill execution | DoS via automated skill invocation; cost explosion | Per-user, per-skill rate limits |
-| Trusting skill-provided "time saved" for billing | Gaming to inflate usage-based charges | Independent verification for any financial metrics |
-| Skills that can modify other skills | Privilege escalation via malicious skill update | Strict permission boundaries; skills can't write to catalog |
+| Logging full API keys in server logs | Key exposure via log aggregation systems | Log only key prefix (`rlk_...abc`); scrub Authorization headers from logs |
+| API keys without expiration | Leaked keys grant permanent access | 90-day expiration with renewal reminders; automatic revocation of unused keys after 180 days |
+| Storing API key hash with MD5 or SHA-1 | Rainbow table attacks on stolen hashes | Use bcrypt or argon2 for key hashing; store only hash, never plaintext |
+| Same API key for all environments | Dev key leak compromises production | Separate keys per environment; prefix indicates env (`rlk_dev_`, `rlk_prod_`) |
+| Tracking prompt content in usage events | PII/IP exposure; employee privacy violation | Track only tool name, skill ID, timestamp; NEVER log prompt content or user queries |
+| HTTP MCP without TLS | Credentials transmitted in plaintext | Enforce HTTPS; reject HTTP connections; use HSTS header |
+| No audit log for key operations | Cannot investigate security incidents | Log all key create/revoke/rotate events with actor, timestamp, IP |
+| Admin can see individual employee usage without disclosure | Privacy law violation (GDPR, CCPA state analogs) | Employee consent; visible privacy notice; anonymized team-level aggregates for managers |
 
-## UX Pitfalls
+## v1.4 UX Pitfalls
 
-Common user experience mistakes in this domain.
+Common user experience mistakes when adding auth and analytics.
 
 | Pitfall | User Impact | Better Approach |
 |---------|-------------|-----------------|
-| Requiring MCP setup before browsing | New users bounce immediately | Allow browsing/discovery without authentication |
-| Complex contribution workflow | Only power users contribute | One-click "add prompt" for simple cases; progressive complexity |
-| No preview before execution | Users afraid to try skills | Show example inputs/outputs; "try with sample data" option |
-| Overwhelming search results | Users give up finding relevant skill | Default to quality-weighted ranking; progressive disclosure of results |
-| No feedback after skill use | Users can't report problems | Inline "did this work?" with one-click issue reporting |
-| Hidden version history | Users can't understand skill evolution | Visible changelog; diff between versions |
-| No sort direction indicators | Users confused about table state | Clear visual feedback for sort state |
-| Buttons that also toggle rows | Unexpected accordion behavior | stopPropagation on all action buttons |
+| Requiring auth setup before any MCP usage | New users bounce at the config step | Allow anonymous browse/search; require auth only for tracking attribution |
+| API key as only auth option (no SSO bridge) | Extra credential to manage; password fatigue | Generate API key through the web dashboard (already behind SSO); one-click "create key" |
+| Dashboard visible only to admins | Employees can't see their own impact; reduces motivation | Self-service dashboard: employees see their usage, skills adopted, time saved |
+| Team comparison leaderboards | Creates unhealthy competition; employees game metrics | Show absolute values ("Your team saved 14 days") not rankings ("Your team is 5th") |
+| Migration notification only in the web UI | MCP users don't visit the web UI; they work in Claude Code | Send migration instructions via the MCP server itself: deprecation warning in tool responses |
+| Install tracking without user feedback | Users don't know their install was recorded | Confirm in MCP tool response: "Installed successfully. This counts toward your team's adoption metrics." |
+| Breaking change in MCP tools API | Existing automations and workflows break | Version MCP tools; deprecate old versions with warnings before removal |
+| Dashboard showing "0 time saved" for new users | Discouraging; makes tool seem useless | Show onboarding message: "Use a skill via MCP to see your impact here" |
 
-## "Looks Done But Isn't" Checklist
+## v1.4 "Looks Done But Isn't" Checklist
 
 Things that appear complete but are missing critical pieces.
 
-- [ ] **Skill search:** Often missing semantic understanding - verify it finds "meeting notes" when user searches "standup summary"
-- [ ] **Usage tracking:** Often missing offline/copied usage - verify tracking plan covers non-MCP scenarios
-- [ ] **Quality ratings:** Often missing fraud detection - verify you can detect coordinated rating manipulation
-- [ ] **Version control:** Often missing rollback mechanism - verify users can revert to previous version
-- [ ] **Metrics dashboard:** Often missing confidence intervals - verify you show uncertainty, not false precision
-- [ ] **Skill categories:** Often missing multi-categorization - verify skills can appear in multiple relevant categories
-- [ ] **Contributor profiles:** Often missing maintenance burden view - verify contributors can see "your skills needing attention"
-- [ ] **Admin tools:** Often missing bulk operations - verify admins can deprecate/archive at scale
-- [ ] **Sortable table:** Often missing aria-sort - verify screen readers announce sort state
-- [ ] **Accordion rows:** Often missing hidden attribute - verify collapsed content is not in a11y tree
-- [ ] **Table virtualization:** Often missing row memoization - verify rows don't re-render on scroll
-- [ ] **Mobile table:** Often missing responsive strategy - verify table works on actual mobile device
+- [ ] **API Key Auth:** Often missing key revocation -- verify revoking a key causes the NEXT MCP request to fail (not just future sessions)
+- [ ] **API Key Auth:** Often missing key rotation -- verify old and new keys both work during the overlap period, then old key stops working
+- [ ] **API Key Auth:** Often missing rate limiting per key -- verify one key being rate-limited doesn't affect other keys
+- [ ] **Remote MCP HTTP:** Often missing Origin validation -- verify requests from `https://evil.com` Origin are rejected
+- [ ] **Remote MCP HTTP:** Often missing session timeout -- verify idle sessions are cleaned up after 1 hour
+- [ ] **Remote MCP HTTP:** Often missing CORS headers for MCP-specific headers -- verify `Mcp-Session-Id` and `Mcp-Protocol-Version` are in `Access-Control-Allow-Headers`
+- [ ] **Usage Tracking:** Often missing async event writes -- verify tool call latency doesn't include event write time
+- [ ] **Usage Tracking:** Often missing userId population -- verify EVERY usage event from authenticated MCP has a non-null userId
+- [ ] **Dashboard:** Often missing materialized views -- verify dashboard queries hit pre-computed views, not raw events table
+- [ ] **Dashboard:** Often missing null-userId handling -- verify dashboard gracefully shows "data available from [date]" for pre-auth period
+- [ ] **Install Tracking:** Often missing deduplication -- verify reinstalling the same skill doesn't inflate the install count
+- [ ] **Install Tracking:** Often missing activation distinction -- verify "installed" and "activated" are separate tracked states
+- [ ] **Extended Search:** Often missing MCP parity -- verify search improvements work in BOTH web UI and MCP tools
+- [ ] **Extended Search:** Often missing tsvector migration -- verify the searchVector column is updated to include author name
+- [ ] **Privacy:** Often missing employee disclosure -- verify users can see exactly what data is tracked about them
+- [ ] **Privacy:** Often missing data retention policy -- verify usage events older than the retention period are aggregated and raw data deleted
 
-## Recovery Strategies
+## v1.4 Recovery Strategies
 
 When pitfalls occur despite prevention, how to recover.
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Catalog staleness | MEDIUM | 1) Mass deprecation announcement 2) Automated health scan 3) Community "fix-a-thon" event 4) Rebuild trust through "verified working" badge |
-| Metrics gaming | HIGH | 1) Acknowledge issue publicly 2) Retroactively flag suspicious data 3) Introduce verification 4) Reset baseline expectations |
-| MCP lock-in blindspot | HIGH | 1) Add alternative tracking channels 2) Survey for untracked usage 3) Adjust historical metrics with estimates 4) Communicate limitations |
-| Cold start failure | MEDIUM | 1) Pause public marketing 2) Intensive seeding sprint 3) Recruit power users directly 4) Relaunch to specific communities first |
-| Quality collapse | MEDIUM | 1) Introduce curation layer 2) Archive low-quality content 3) Feature high-quality examples 4) Communicate quality standards |
-| Version sprawl | LOW | 1) Implement archival automation 2) Surface canonical versions 3) Merge duplicates manually 4) Prevent future sprawl with duplicate detection |
-| Table performance issues | MEDIUM | 1) Add virtualization 2) Memoize data/columns 3) Profile with React DevTools 4) Test at scale before launch |
-| Infinite re-render loop | LOW | 1) Add useMemo to data/columns 2) Check dependency arrays 3) Use React DevTools Profiler |
+| Auth breaks existing MCP users (#32) | HIGH | 1) Immediately revert to anonymous mode 2) Re-deploy with dual-transport 3) Communicate migration timeline 4) Provide automated migration tool |
+| API key leaked in public repo (#33) | MEDIUM | 1) Revoke key immediately 2) Issue new key to affected user 3) Audit usage logs for unauthorized access 4) Enable GitHub secret scanning for `rlk_` prefix |
+| Key revocation not working (#34) | HIGH | 1) Restart all MCP server instances to clear caches 2) Patch to check DB on every request 3) Audit what the revoked key accessed during the gap |
+| Dashboard query performance (#42) | MEDIUM | 1) Kill long-running queries 2) Add `statement_timeout` 3) Create materialized views 4) Redirect dashboard to views |
+| Inflated install numbers (#43) | LOW | 1) Run dedup script on existing events 2) Add unique constraint 3) Re-calculate affected metrics 4) Communicate corrected numbers |
+| Employee trust crisis (#40) | HIGH | 1) Immediately publish what is/isn't tracked 2) Delete any data beyond the stated scope 3) Offer opt-out period 4) Get employee representatives involved |
+| Remote MCP with no auth (#36) | CRITICAL | 1) Take endpoint offline immediately 2) Audit all requests for unauthorized access 3) Re-deploy with auth middleware 4) Rotate any API keys that may have been exposed |
+| Rate limiting absent (#44) | MEDIUM | 1) Deploy emergency rate limiter at reverse proxy level 2) Block offending IPs 3) Implement per-key rate limiting 4) Investigate abuse scope |
+| Historical data gap (#41) | LOW | 1) Accept the gap 2) Set attribution start date 3) Show appropriate messaging in UI 4) Focus on forward-looking metrics |
+| Extended search regression (#48) | LOW | 1) Revert to previous search 2) Profile the new query 3) Fix with proper indexing 4) Re-deploy with benchmarks |
 
-## Pitfall-to-Phase Mapping
+## v1.4 Pitfall-to-Phase Mapping
 
 How roadmap phases should address these pitfalls.
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| Catalog staleness | Phase 1 - Build freshness tracking into core model | Skills have last_verified, health_status fields; automated checks running |
-| Metrics gaming | Phase 2 - Design safeguard metrics before public dashboard | Multiple metrics tracked; anomaly detection in place |
-| MCP lock-in | Phase 1 - Multi-channel tracking architecture | Non-MCP usage has attribution path; not 100% but not 0% |
-| Cold start | Phase 0 - Seeding before launch | 50+ skills live before public announcement |
-| Quality collapse | Phase 1/2 - Quality signals in foundation; tiered visibility in metrics | Quality score computed; featured vs. standard tiers exist |
-| Version sprawl | Phase 2/3 - Usage tracking enables cleanup; archival workflows at scale | Auto-archive triggers active; duplicate detection at creation |
-| No virtualization | v1.2 Phase 1 - Implement with initial table | 1000 rows render in < 500ms |
-| Unstable references | v1.2 Phase 1 - Memoize from day one | No infinite re-render loops in testing |
-| Event propagation | v1.2 Phase 2 - When adding row actions | Clicking buttons doesn't toggle accordion |
-| Accordion a11y | v1.2 Phase 1 - During accordion implementation | Screen reader test passes |
+| Auth breaks existing users (#32) | Auth Infrastructure | Existing anonymous MCP still works after auth deploy; dual-transport test passes |
+| API key leakage (#33) | Auth Infrastructure | Keys use env var references; `rlk_` prefix in GitHub secret scanning; no plaintext keys in configs |
+| Key revocation delay (#34) | Auth Infrastructure | E2E test: revoke key, next request within 30s returns 401 |
+| Stdio identity (#35) | Auth Infrastructure | API key in env var resolves to userId; all stdio usage_events have non-null userId |
+| HTTP without auth (#36) | Remote MCP | Integration test: request without Authorization header returns 401 |
+| Missing Origin validation (#37) | Remote MCP | Test: request with `Origin: https://evil.com` returns 403; legitimate origin succeeds |
+| Session hijacking (#38) | Remote MCP | Session IDs are cryptographically random; sessions timeout after 1 hour |
+| Claude.ai connector (#39) | Remote MCP | MCP works from both Claude Code CLI and Claude.ai web browser |
+| Employee privacy (#40) | Analytics Design | Privacy notice visible in UI; no prompt content in events; employees see own data |
+| Historical data gap (#41) | Auth Infrastructure + Analytics | Dashboard shows "User data from [date]"; no null userId in post-auth events |
+| Dashboard query perf (#42) | Analytics Dashboard | Dashboard queries use materialized views; load time <2s with 6 months of data |
+| Install inflation (#43) | Install Tracking | Events deduplicated; install + activation tracked separately; numbers match reality |
+| Rate limiting (#44) | Remote MCP | 429 returned when limit exceeded; rate limit headers on every response |
+| OAuth over-engineering (#45) | Auth Infrastructure | API keys working within 1 week; OAuth deferred to Claude.ai phase |
+| Meaningless dashboard (#46) | Analytics Dashboard | Stakeholders can answer "What is Relay's ROI?" from the dashboard |
+| Dual transport burden (#47) | Auth Infrastructure | Tool handlers are transport-agnostic; `getCurrentUser()` abstraction verified |
+| Search regression (#48) | Extended Search | Search latency benchmarked before/after; tsvector includes author name |
 
 ## Sources
 
@@ -1368,8 +1739,61 @@ How roadmap phases should address these pitfalls.
 - [ISACA AI Pitfalls 2026](https://www.isaca.org/resources/news-and-trends/isaca-now-blog/2025/avoiding-ai-pitfalls-in-2026-lessons-learned-from-top-2025-incidents)
 - [MIT Technology Review: Rise of AI Coding](https://www.technologyreview.com/2025/12/15/1128352/rise-of-ai-coding-developers-2026/)
 
+### v1.4 MCP Authentication Sources (High Confidence)
+- [MCP Authorization Tutorial](https://modelcontextprotocol.io/docs/tutorials/security/authorization)
+- [MCP Spec Updates June 2025 - Auth0](https://auth0.com/blog/mcp-specs-update-all-about-auth/)
+- [MCP Auth Implementation Guide - Stytch](https://stytch.com/blog/MCP-authentication-and-authorization-guide/)
+- [MCP Auth on Stack Overflow Blog](https://stackoverflow.blog/2026/01/21/is-that-allowed-authentication-and-authorization-in-model-context-protocol/)
+- [MCP Bearer Auth Best Practices Discussion #1247](https://github.com/modelcontextprotocol/modelcontextprotocol/discussions/1247)
+- [MCP Auth Implementation - Logto](https://blog.logto.io/mcp-auth-implementation-guide-2025-06-18)
+- [Migrate API Keys to OAuth for MCP - Scalekit](https://www.scalekit.com/blog/migrating-from-api-keys-to-oauth-mcp-servers)
+- [MCP Bearer Auth Config - MCP Auth](https://mcp-auth.dev/docs/configure-server/bearer-auth)
+
+### v1.4 Remote MCP / HTTP Transport Sources (High Confidence)
+- [MCP Defaults Will Betray You - CardinalOps](https://cardinalops.com/blog/mcp-defaults-hidden-dangers-of-remote-deployment/)
+- [MCP Streamable HTTP Security - Medium](https://medium.com/@yany.dong/mcp-streamable-http-transport-security-considerations-and-guidance-2797cfbc9b19)
+- [MCP Transport Specification](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports)
+- [Exposed MCP Servers - Bitsight](https://www.bitsight.com/blog/exposed-mcp-servers-reveal-new-ai-vulnerabilities)
+- [CORS for MCP Web Servers - MCPcat](https://mcpcat.io/guides/implementing-cors-policies-web-based-mcp-servers/)
+- [Apollo MCP Server CORS](https://www.apollographql.com/docs/apollo-mcp-server/cors)
+- [Building Custom Connectors via Remote MCP - Claude Help Center](https://support.claude.com/en/articles/11503834-building-custom-connectors-via-remote-mcp-servers)
+- [Remote MCP Server Submission Guide - Claude Help Center](https://support.claude.com/en/articles/12922490-remote-mcp-server-submission-guide)
+- [Claude Code Remote MCP - InfoQ](https://www.infoq.com/news/2025/06/anthropic-claude-remote-mcp/)
+- [Implementing MCP Tips and Pitfalls - Nearform](https://nearform.com/digital-community/implementing-model-context-protocol-mcp-tips-tricks-and-pitfalls/)
+- [MCP Streamable HTTP vs SSE - Auth0](https://auth0.com/blog/mcp-streamable-http/)
+
+### v1.4 API Key Management Sources (High Confidence)
+- [API Key Management Best Practices - Apidog](https://apidog.com/blog/api-key-management-best-practices/)
+- [API Key Security Best Practices 2026 - DEV Community](https://dev.to/alixd/api-key-security-best-practices-for-2026-1n5d)
+- [API Key Management - Infisical](https://infisical.com/blog/api-key-management)
+- [API Key Management - DigitalAPI](https://www.digitalapi.ai/blogs/api-key-management)
+- [Claude API Key Best Practices](https://support.claude.com/en/articles/9767949-api-key-best-practices-keeping-your-keys-safe-and-secure)
+- [Hardening OAuth Tokens - Clutch Events](https://www.clutchevents.co/resources/hardening-oauth-tokens-in-api-security-token-expiry-rotation-and-revocation-best-practices)
+
+### v1.4 Employee Analytics / Privacy Sources (High Confidence)
+- [Governance Risks for Employee Monitoring - Workplace Privacy Report](https://www.workplaceprivacyreport.com/2025/06/articles/artificial-intelligence/managing-the-managers-governance-risks-and-considerations-for-employee-monitoring-platforms/)
+- [Employee Monitoring Privacy Laws - BusinessNewsDaily](https://www.businessnewsdaily.com/6685-employee-monitoring-privacy.html)
+- [Employee Monitoring Disclosure Rules - WorkWise](https://www.workwisecompliance.com/blog/what-must-employers-disclose-when-monitoring-employees.html)
+- [Data Privacy in Time Tracking - TimeLake](https://timelake.io/blog/time-tracking/data-privacy-and-security-in-employee-time-tracking-tools)
+- [Employee Monitoring Dos and Don'ts - WorkTime](https://www.worktime.com/blog/employee-monitoring/dos-and-donts-when-implementing-employee-monitoring-software)
+- [Compliance Laws for Remote Monitoring - Worklytics](https://www.worklytics.co/blog/key-compliance-laws-for-remote-employee-monitoring-data-protection)
+
+### v1.4 Analytics Dashboard / PostgreSQL Sources (High Confidence)
+- [PostgreSQL Analytics Tuning - Crunchy Data](https://www.crunchydata.com/blog/postgres-tuning-and-performance-for-analytics-data)
+- [Real-time Analytics in Postgres - Timescale/Medium](https://medium.com/timescale/real-time-analytics-in-postgres-why-its-hard-and-how-to-solve-it-bd28fa7314c7)
+- [Postgres for Analytics Workloads - Epsio](https://www.epsio.io/blog/postgres-for-analytics-workloads-capabilities-and-performance-tips)
+- [ClickHouse vs PostgreSQL 2026 - Tasrie IT](https://tasrieit.com/blog/clickhouse-vs-postgres-2026)
+- [PostgreSQL as Real-Time Analytics - Tiger Data](https://www.tigerdata.com/learn/real-time-analytics-in-postgres)
+
+### v1.4 Event Deduplication Sources (Medium Confidence)
+- [Mixpanel Event Deduplication](https://developer.mixpanel.com/reference/event-deduplication)
+- [GA4 Duplicate Events Fix - Analytify](https://analytify.io/fix-ga4-duplicate-events/)
+- [Segment Identity Management](https://segment.com/docs/connections/sources/catalog/libraries/website/javascript/identity/)
+- [Segment Best Practices for Identifying Users](https://segment.com/docs/connections/spec/best-practices-identify/)
+
 ---
 *Pitfalls research for: Internal skill marketplace / developer tool catalog*
 *v1.0/v1.1 researched: 2026-01-31*
 *v1.2 Table UI researched: 2026-02-01*
 *v1.3 AI Features researched: 2026-02-02*
+*v1.4 Employee Analytics & Remote MCP researched: 2026-02-05*

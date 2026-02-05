@@ -367,1213 +367,778 @@ Phase 5: Scale (as needed)
 
 ---
 
-# v1.2 UI Redesign: Two-Panel Table Architecture
+# v1.4 Employee Analytics, MCP Auth & Remote MCP: Integration Architecture
 
-**Milestone:** v1.2 UI Redesign
-**Researched:** 2026-02-01
-**Confidence:** HIGH (based on existing codebase patterns and verified Next.js 15 documentation)
+**Milestone:** v1.4 Employee Analytics & Remote MCP
+**Researched:** 2026-02-05
+**Confidence:** HIGH (existing codebase analysis, MCP SDK documentation, official Next.js/Vercel docs)
 
 ## Executive Summary
 
-The two-panel sortable table UI should integrate with the existing Next.js 15 App Router architecture using a **hybrid Server Component + Client Component pattern**. The core data fetching and table structure remain Server Components, while interactive elements (sort controls, accordion expansion, install button) become targeted Client Components. This matches the established patterns in the codebase (SearchInput, CategoryFilter, SortDropdown already use nuqs).
+v1.4 adds six capabilities to Relay: per-employee usage tracking, org API keys for MCP auth, install callback analytics, a usage analytics dashboard, web remote MCP via Streamable HTTP, and extended search. This document maps exactly how each feature integrates with the existing Next.js 15 + MCP stdio + PostgreSQL architecture, what new components are needed, and the recommended build order.
 
-**Key Recommendation:** Use nuqs for all sort/filter state (already adopted), keep data fetching in Server Components, and create a thin Client Component wrapper for table interactions. Avoid TanStack Table - the use case is simple enough that native components with shadcn/ui Table suffice.
-
-## Recommended Architecture
-
-### Component Hierarchy
-
-```
-/app/(protected)/skills/page.tsx  (Server Component - existing, modified)
-+-- SearchInput                   (Client - existing, reuse)
-+-- TwoPanelLayout               (Server - NEW wrapper)
-    +-- SkillsTablePanel          (Server - NEW, 2/3 width)
-    |   +-- TableSortControls     (Client - NEW, nuqs-based)
-    |   +-- SkillsTable           (Server - data table structure)
-    |       +-- SkillTableRow     (Client - expandable accordion)
-    |           +-- RowSummary    (Server child - visible by default)
-    |           +-- RowDetails    (Client child - expanded content)
-    |           +-- InstallButton (Client - MCP integration)
-    +-- LeaderboardPanel          (Server - 1/3 width)
-        +-- LeaderboardTable      (Server - existing, minor mods)
-```
-
-### Component Boundaries
-
-| Component | Type | Responsibility | Communicates With |
-|-----------|------|----------------|-------------------|
-| `page.tsx` | Server | Data fetching, layout orchestration | All child components via props |
-| `TwoPanelLayout` | Server | Grid layout (2/3 + 1/3), responsive | Children as slots |
-| `TableSortControls` | Client | Sort column selection, direction toggle | URL (nuqs), triggers re-render |
-| `SkillsTable` | Server | Renders table headers and rows | Receives sorted data from page |
-| `SkillTableRow` | Client | Accordion open/close state | Local state only |
-| `InstallButton` | Client | Triggers MCP deploy_skill | Server Action for tracking |
-| `LeaderboardTable` | Server | Renders leaderboard (existing) | Props only |
-
-### Data Flow
-
-```
-URL params (nuqs: sortBy, sortDir, q, category, tags, qualityTier)
-    |
-    v
-page.tsx (Server Component)
-    |
-    +-> searchSkills({ ...params, sortBy, sortDir })  -> PostgreSQL
-    |                                                        |
-    |<----------------------- skills[] <---------------------+
-    |
-    +-> getLeaderboard(limit)  -> PostgreSQL
-    |                                 |
-    |<------------ leaderboard[] <----+
-    |
-    v
-Render: TwoPanelLayout
-    +-> SkillsTablePanel(skills, sortBy, sortDir)
-    |       +-> TableSortControls (nuqs state)
-    |       +-> SkillsTable (receives pre-sorted data)
-    |               +-> SkillTableRow[] (client for accordion)
-    |                       +-> InstallButton (MCP action)
-    +-> LeaderboardPanel(leaderboard)
-```
-
-## Patterns to Follow
-
-### Pattern 1: nuqs for Sort State
-
-**What:** Store sort column and direction in URL using nuqs (already adopted in codebase).
-
-**Why:**
-- Consistent with existing CategoryFilter, QualityFilter, SortDropdown patterns
-- Enables shareable/bookmarkable views
-- Server Components re-render with new data on URL change
-- Already in package.json (nuqs@2.8.7)
-
-**Example:**
-```typescript
-// components/table-sort-controls.tsx
-"use client";
-
-import { useQueryState, parseAsStringEnum } from "nuqs";
-import { useTransition } from "react";
-
-const SORT_COLUMNS = ["name", "uses", "rating", "quality", "fteDays"] as const;
-const SORT_DIRS = ["asc", "desc"] as const;
-
-export function TableSortControls() {
-  const [sortBy, setSortBy] = useQueryState(
-    "sortBy",
-    parseAsStringEnum(SORT_COLUMNS).withDefault("uses")
-  );
-  const [sortDir, setSortDir] = useQueryState(
-    "sortDir",
-    parseAsStringEnum(SORT_DIRS).withDefault("desc")
-  );
-  const [isPending, startTransition] = useTransition();
-
-  const handleSort = (column: typeof SORT_COLUMNS[number]) => {
-    startTransition(() => {
-      if (sortBy === column) {
-        // Toggle direction
-        setSortDir(sortDir === "asc" ? "desc" : "asc");
-      } else {
-        // New column, default to desc
-        setSortBy(column);
-        setSortDir("desc");
-      }
-    });
-  };
-
-  return (
-    // ... column header buttons with sort indicators
-  );
-}
-```
-
-### Pattern 2: Server Component Data Fetching with Sort
-
-**What:** Extend existing `searchSkills()` to accept sortBy column and direction, do sorting in SQL.
-
-**Why:**
-- Matches existing pattern in `/app/(protected)/skills/page.tsx`
-- Server-side sorting is fast and reduces client bundle
-- PostgreSQL handles sort efficiently
-
-**Example:**
-```typescript
-// lib/search-skills.ts (extend existing)
-export interface SearchParams {
-  query?: string;
-  category?: string;
-  tags?: string[];
-  qualityTier?: "gold" | "silver" | "bronze";
-  sortBy?: "name" | "uses" | "rating" | "quality" | "fteDays";
-  sortDir?: "asc" | "desc";
-}
-
-// In the query builder:
-const orderByColumn = {
-  name: skills.name,
-  uses: skills.totalUses,
-  rating: skills.averageRating,
-  quality: qualityScoreSql,
-  fteDays: sql`(${skills.totalUses} * ${skills.hoursSaved} / 8.0)`,
-}[params.sortBy || "uses"];
-
-const orderFn = params.sortDir === "asc" ? asc : desc;
-return filteredQuery.orderBy(orderFn(orderByColumn));
-```
-
-### Pattern 3: Client Component Accordion Rows
-
-**What:** Each table row is a Client Component managing its own open/close state.
-
-**Why:**
-- Expansion is purely local UI state - no URL sync needed
-- Each row independently manages expansion
-- Avoids prop drilling through Server Component
-
-**Example:**
-```typescript
-// components/skill-table-row.tsx
-"use client";
-
-import { useState } from "react";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-
-interface SkillTableRowProps {
-  skill: SkillRowData;
-}
-
-export function SkillTableRow({ skill }: SkillTableRowProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <tr className="border-b hover:bg-gray-50">
-        <CollapsibleTrigger asChild>
-          <td className="cursor-pointer">
-            <ChevronIcon className={isOpen ? "rotate-90" : ""} />
-          </td>
-        </CollapsibleTrigger>
-        <td>{skill.name}</td>
-        <td>{skill.totalUses}</td>
-        <td>{skill.averageRating}</td>
-        <td><InstallButton skillId={skill.id} /></td>
-      </tr>
-      <CollapsibleContent asChild>
-        <tr className="bg-gray-50">
-          <td colSpan={5}>
-            <SkillRowDetails skill={skill} />
-          </td>
-        </tr>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
-```
-
-### Pattern 4: MCP Install via Server Action
-
-**What:** Install button triggers a Server Action that returns skill content for clipboard/download.
-
-**Why:**
-- MCP servers run in Claude Code/Claude Desktop, not in browser
-- Web app cannot directly invoke MCP tools
-- Best we can do: copy skill content or provide download, with instructions
-
-**Limitation:** True one-click install requires the user to have the Relay MCP server configured in their Claude environment. The web app can:
-1. Copy skill content to clipboard
-2. Provide download link
-3. Show MCP command to run
-
-**Example:**
-```typescript
-// app/actions/install.ts
-"use server";
-
-import { auth } from "@/auth";
-import { db, skills } from "@relay/db";
-import { eq } from "drizzle-orm";
-import { trackInstall } from "@/lib/tracking";
-
-export async function getInstallContent(skillId: string) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "Unauthorized" };
-  }
-
-  const skill = await db.query.skills.findFirst({
-    where: eq(skills.id, skillId),
-    columns: { id: true, name: true, slug: true, content: true },
-  });
-
-  if (!skill) {
-    return { error: "Skill not found" };
-  }
-
-  // Track web-initiated install intent (different from MCP deploy)
-  await trackInstall(skill.id, session.user.id, "web");
-
-  return {
-    content: skill.content,
-    filename: `${skill.slug}.md`,
-    instructions: [
-      `1. Copy the content below to your clipboard`,
-      `2. Save to: .claude/skills/${skill.slug}.md`,
-      `3. Or use MCP: deploy_skill with skillId="${skill.id}"`,
-    ],
-  };
-}
-```
-
-```typescript
-// components/install-button.tsx
-"use client";
-
-import { useState, useTransition } from "react";
-import { getInstallContent } from "@/app/actions/install";
-
-export function InstallButton({ skillId }: { skillId: string }) {
-  const [isPending, startTransition] = useTransition();
-  const [copied, setCopied] = useState(false);
-
-  const handleInstall = () => {
-    startTransition(async () => {
-      const result = await getInstallContent(skillId);
-      if (result.content) {
-        await navigator.clipboard.writeText(result.content);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }
-    });
-  };
-
-  return (
-    <button
-      onClick={handleInstall}
-      disabled={isPending}
-      className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
-    >
-      {isPending ? "..." : copied ? "Copied!" : "Install"}
-    </button>
-  );
-}
-```
-
-## Anti-Patterns to Avoid
-
-### Anti-Pattern 1: TanStack Table for Simple Use Case
-
-**What:** Importing @tanstack/react-table for the skills table.
-
-**Why bad:**
-- Adds 30-50KB to client bundle
-- Complexity overkill for a single-column-sort, no-pagination table
-- Existing patterns (nuqs + Server Component) already solve this
-
-**Instead:** Use shadcn/ui Table component with manual column headers that trigger nuqs updates. The server does the sorting.
-
-### Anti-Pattern 2: Client-Side Data Fetching
-
-**What:** Fetching skills data in useEffect or React Query on the client.
-
-**Why bad:**
-- Loses SEO benefits of Server Components
-- Adds loading states and waterfalls
-- Existing page.tsx already fetches server-side
-
-**Instead:** Keep data fetching in page.tsx Server Component. Let nuqs URL changes trigger full server re-render with new data.
-
-### Anti-Pattern 3: Global Accordion State
-
-**What:** Managing all row expansion states in a single parent state object.
-
-**Why bad:**
-- Unnecessary prop drilling
-- Re-renders entire table when one row expands
-- More complex than needed
-
-**Instead:** Each SkillTableRow manages its own `isOpen` state locally.
-
-### Anti-Pattern 4: URL State for Row Expansion
-
-**What:** Storing which rows are expanded in URL params.
-
-**Why bad:**
-- Makes URLs ugly and unbookmarkable
-- Expansion is ephemeral UI state, not application state
-- Complicates nuqs usage
-
-**Instead:** Local useState per row.
-
-## Integration Points
-
-### 1. Existing nuqs Setup
-
-The app already has nuqs configured:
-- `nuqs@2.8.7` in package.json
-- Used in SearchInput, CategoryFilter, QualityFilter, SortDropdown
-- Pattern: `useQueryState` with parser and `startTransition`
-
-**Integration:** Add `sortBy` and `sortDir` params following same pattern.
-
-### 2. Existing Data Fetching
-
-`searchSkills()` in `/lib/search-skills.ts` already:
-- Accepts SearchParams including sortBy
-- Does server-side ordering with Drizzle
-- Returns full skill data with author
-
-**Integration:** Extend to accept sortDir and support column-specific sorting.
-
-### 3. Existing Table Component
-
-`LeaderboardTable` in `/components/leaderboard-table.tsx`:
-- Uses shadcn/ui-style table markup
-- Purely presentational Server Component
-- No sorting controls (just displays ranked data)
-
-**Integration:** New SkillsTable follows similar structure but with sortable headers.
-
-### 4. MCP Server
-
-`deploy_skill` tool in `/apps/mcp/src/tools/deploy.ts`:
-- Takes skillId, returns skill content
-- Tracks usage via `trackUsage()`
-- Used from Claude Code MCP integration
-
-**Integration:** Web InstallButton provides alternative path - copy to clipboard with instructions to use MCP or save manually.
-
-## Suggested Build Order
-
-Based on dependencies and integration points:
-
-### Phase 1: Layout Foundation
-1. Create `TwoPanelLayout` component (Server, simple grid wrapper)
-2. Update `/app/(protected)/skills/page.tsx` to use two-panel layout
-3. Move existing LeaderboardTable into right panel
-4. Verify existing functionality still works
-
-### Phase 2: Table Structure
-1. Create `SkillsTable` Server Component (table structure, no sorting yet)
-2. Create `SkillTableRow` Client Component with Collapsible
-3. Replace SkillList/SkillCard grid with table
-4. Add row expansion with existing skill data
-
-### Phase 3: Sortable Columns
-1. Add `sortBy` and `sortDir` to nuqs params in page.tsx
-2. Extend `searchSkills()` for column-specific sorting
-3. Create `TableSortControls` Client Component
-4. Add sort indicators to column headers
-
-### Phase 4: Install Button
-1. Create `getInstallContent` Server Action
-2. Create `InstallButton` Client Component
-3. Add install column to table
-4. Add tracking for web installs
-
-### Phase 5: Polish
-1. Responsive breakpoints for two-panel layout
-2. Loading states during sort transitions
-3. Empty states for table
-4. Keyboard navigation for accordion
-
-## Confidence Assessment
-
-| Decision | Confidence | Rationale |
-|----------|------------|-----------|
-| nuqs for sort state | HIGH | Already adopted, pattern verified in codebase |
-| Server Component data fetch | HIGH | Matches existing page.tsx pattern, Next.js 15 best practice |
-| Local state for accordion | HIGH | Standard React pattern, avoids complexity |
-| shadcn Table over TanStack | HIGH | Simpler, bundle-efficient, sufficient for use case |
-| Server Action for install | MEDIUM | Best available pattern for web-to-MCP bridge |
-| Collapsible for accordion | HIGH | shadcn/ui component, verified in search results |
-
-## Sources
-
-- [Next.js Server and Client Components Documentation](https://nextjs.org/docs/app/getting-started/server-and-client-components) - HIGH confidence
-- [nuqs Official Documentation](https://nuqs.dev/) - HIGH confidence
-- [shadcn/ui Data Table](https://ui.shadcn.com/docs/components/data-table) - HIGH confidence
-- [TanStack Table Sorting Guide](https://tanstack.com/table/v8/docs/guide/sorting) - HIGH confidence (for reference)
-- [Build Expandable Data Table with shadcn/ui](https://dev.to/mfts/build-an-expandable-data-table-with-2-shadcnui-components-4nge) - MEDIUM confidence
-- Existing codebase patterns in `/apps/web/components/` - HIGH confidence
-
----
-
-# v1.3 Feature Integration Architecture
-
-**Milestone:** v1.3 AI Review, Similarity, Forks, Cross-Platform
-**Researched:** 2026-02-02
-**Confidence:** HIGH (Context7, official docs, existing codebase analysis)
-
-## Executive Summary
-
-v1.3 introduces four major capabilities to Relay's existing Next.js/PostgreSQL/MCP architecture. This document maps how each integrates with existing components, what new infrastructure is required, and the recommended build order.
-
-**Key finding:** All four features share a common dependency on vector embeddings. Implementing pgvector + embedding generation first enables both AI review context and similarity detection, reducing overall complexity.
+**Critical architectural insight:** The current MCP server (`apps/mcp`) connects directly to PostgreSQL via `DATABASE_URL`. For remote MCP, the server needs to transition from stdio-only to also supporting Streamable HTTP transport over an authenticated endpoint. The cleanest approach is to add the remote MCP endpoint as a Next.js API route using `mcp-handler` (Vercel's adapter), keeping the existing stdio server intact for local use. This avoids duplicating tool logic and naturally shares the web app's database connection and auth infrastructure.
 
 ## Existing Architecture Reference
 
 ```
 +-------------------------------------------------------------------------+
-|                           CURRENT STATE                                  |
+|                           CURRENT STATE (v1.3)                           |
 +-------------------------------------------------------------------------+
 |                                                                         |
-|  apps/web (Next.js 15)              apps/mcp (MCP Server)              |
-|  +-- app/                           +-- tools/                          |
-|  |   +-- (protected)/               |   +-- search.ts                   |
-|  |   |   +-- skills/                |   +-- list.ts                     |
-|  |   |       +-- page.tsx           |   +-- deploy.ts                   |
-|  |   |       +-- [slug]/page.tsx    +-- tracking/                       |
-|  |   |       +-- new/page.tsx           +-- events.ts                   |
+|  apps/web (Next.js 15 App Router)      apps/mcp (stdio MCP Server)     |
+|  +-- app/                              +-- tools/                       |
+|  |   +-- (protected)/                  |   +-- search.ts                |
+|  |   |   +-- skills/page.tsx           |   +-- list.ts                  |
+|  |   |   +-- skills/[slug]/page.tsx    |   +-- deploy.ts                |
+|  |   |   +-- skills/new/page.tsx       +-- tracking/                    |
+|  |   |   +-- profile/page.tsx              +-- events.ts                |
+|  |   |   +-- users/[id]/page.tsx                                        |
 |  |   +-- actions/                                                       |
-|  |       +-- skills.ts                                                  |
-|  |       +-- ratings.ts                                                 |
+|  |   |   +-- skills.ts                                                  |
+|  |   |   +-- ratings.ts                                                 |
+|  |   |   +-- ai-review.ts                                               |
+|  |   |   +-- fork-skill.ts                                              |
+|  |   +-- api/auth/[...nextauth]/route.ts                                |
+|  |   +-- api/dev-login/route.ts                                         |
 |  +-- lib/                                                               |
-|      +-- search-skills.ts                                               |
-|      +-- quality-score.ts                                               |
+|  |   +-- search-skills.ts                                               |
+|  |   +-- platform-stats.ts                                              |
+|  |   +-- user-stats.ts                                                  |
+|  |   +-- usage-trends.ts                                                |
+|  |   +-- leaderboard.ts                                                 |
+|  |   +-- install-script.ts                                              |
+|  |   +-- mcp-config.ts                                                  |
+|  +-- middleware.ts (Auth.js + edge redirect)                             |
+|  +-- auth.ts (Auth.js v5, Google SSO, JWT strategy)                     |
+|  +-- auth.config.ts (Edge-compatible config)                            |
 |                                                                         |
-|  packages/db                                                            |
+|  packages/db (Drizzle ORM + PostgreSQL)                                 |
 |  +-- schema/                                                            |
-|  |   +-- skills.ts          (searchVector tsvector, publishedVersionId) |
-|  |   +-- skill-versions.ts  (contentUrl, contentHash, metadata jsonb)   |
-|  |   +-- ratings.ts                                                     |
+|  |   +-- skills.ts (searchVector, forkedFromId, publishedVersionId)     |
 |  |   +-- users.ts                                                       |
-|  +-- relations/                                                         |
-|      +-- index.ts           (skills -> versions, author, ratings)       |
+|  |   +-- usage-events.ts (toolName, skillId, userId, metadata, jsonb)   |
+|  |   +-- ratings.ts                                                     |
+|  |   +-- skill-versions.ts                                              |
+|  |   +-- skill-embeddings.ts                                            |
+|  |   +-- skill-reviews.ts                                               |
+|  +-- services/                                                          |
+|  |   +-- skill-metrics.ts (incrementSkillUses, updateSkillRating)       |
+|  |   +-- skill-embeddings.ts                                            |
+|  |   +-- skill-forks.ts                                                 |
+|  |   +-- skill-reviews.ts                                               |
+|  +-- relations/index.ts                                                 |
 |                                                                         |
 +-------------------------------------------------------------------------+
 ```
 
-## Feature 1: AI Skill Review Pipeline
+### Current State: Key Facts
 
-### Integration Points
+1. **MCP server** uses `StdioServerTransport` from `@modelcontextprotocol/sdk` v1.25.0. No HTTP transport, no authentication.
+2. **MCP tracking** calls `trackUsage()` which inserts into `usage_events` table. Currently has no `userId` populated (no auth context in stdio MCP).
+3. **usage_events schema** already has a nullable `userId` column referencing `users.id`, but it is never set by MCP tools.
+4. **Web auth** uses Auth.js v5 with JWT session strategy, Google Workspace SSO restricted to company domain. Middleware redirects unauthenticated users.
+5. **Middleware matcher** exempts `/api/auth` and `/api/dev-login`. New API routes for MCP and callbacks will need similar exemptions.
+6. **Search** in `search-skills.ts` uses PostgreSQL `websearch_to_tsquery` with ILIKE fallback. Already searches `skills.name`, `skills.description`, `users.name`, and `skills.tags` (via `array_to_string`).
 
-| Component | Integration Type | Notes |
-|-----------|------------------|-------|
-| `apps/web/app/actions/skills.ts` | MODIFY | Add review step after skill creation |
-| `packages/db/src/schema/skills.ts` | MODIFY | Add `reviewStatus`, `reviewFeedback` columns |
-| `apps/web/lib/` | NEW | `ai-review.ts` - Claude API integration |
-| Environment | MODIFY | Add `ANTHROPIC_API_KEY` |
+## Feature Integration Map
 
-### Where Claude API Call Happens
+### Feature 1: Org API Keys for MCP Authentication
 
-**Recommended:** Server Action in `apps/web/app/actions/skills.ts`
+**Goal:** Tie MCP sessions to specific employees. When a user calls `list_skills` or `deploy_skill` via MCP, the system knows who they are.
+
+#### New Schema: `api_keys` Table
+
+```
++-------------------------------------------------------------------------+
+|  packages/db/src/schema/api-keys.ts (NEW)                               |
++-------------------------------------------------------------------------+
+|                                                                         |
+|  api_keys                                                               |
+|  +-- id: uuid (PK)                                                     |
+|  +-- userId: text -> users.id (who owns this key)                       |
+|  +-- keyHash: text (SHA-256 of the actual key; never store plaintext)   |
+|  +-- keyPrefix: text (first 8 chars for display: "rl_abc12...")         |
+|  +-- name: text (user-given label, e.g. "Work Laptop")                 |
+|  +-- lastUsedAt: timestamp (nullable, updated on each use)              |
+|  +-- createdAt: timestamp                                               |
+|  +-- revokedAt: timestamp (nullable; soft-delete)                       |
+|                                                                         |
++-------------------------------------------------------------------------+
+```
+
+**Design decisions:**
+- Store `keyHash` (SHA-256), not the plaintext key. The full key is shown once on creation.
+- `keyPrefix` (e.g., `rl_abc12345...`) allows users to identify keys without exposing the secret.
+- `revokedAt` enables soft-delete. Revoked keys fail validation immediately.
+- No scopes or role-based permissions for v1.4. All keys get full read access (list, search, deploy). Write operations (publish) remain web-only.
+
+**Key format:** `rl_<32 random hex chars>` (e.g., `rl_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4`)
+
+#### Integration Points
+
+| Component | Type | Change |
+|-----------|------|--------|
+| `packages/db/src/schema/api-keys.ts` | NEW | Table definition |
+| `packages/db/src/schema/index.ts` | MODIFY | Export new schema |
+| `packages/db/src/relations/index.ts` | MODIFY | Add user -> apiKeys relation |
+| `packages/db/src/services/api-keys.ts` | NEW | createKey, validateKey, revokeKey, listKeys |
+| `apps/web/app/(protected)/profile/page.tsx` | MODIFY | Add API key management section |
+| `apps/web/app/actions/api-keys.ts` | NEW | Server Actions for key CRUD |
+| `apps/web/components/api-key-manager.tsx` | NEW | UI for creating/revoking keys |
+| `apps/web/app/api/auth/validate-key/route.ts` | NEW | API route for key validation (used by MCP) |
+
+#### Key Validation Flow
+
+```
+MCP Client sends request with Authorization header
+    |
+    v
+API Route / MCP endpoint receives request
+    |
+    v
+Extract Bearer token from Authorization header
+    |
+    v
+SHA-256 hash the token
+    |
+    v
+Query: SELECT * FROM api_keys WHERE key_hash = $hash AND revoked_at IS NULL
+    |
+    +-- Not found -> 401 Unauthorized
+    |
+    +-- Found -> Update last_used_at, return userId
+    |
+    v
+Attach userId to request context / MCP authInfo
+    |
+    v
+Tool handlers receive userId, pass to trackUsage()
+```
+
+### Feature 2: Per-Employee Usage Tracking
+
+**Goal:** Populate `usage_events.userId` so analytics can show who used what.
+
+#### How It Works with Existing Architecture
+
+The `trackUsage()` function in `apps/mcp/src/tracking/events.ts` already accepts an event object with an optional `userId` field. The `usage_events` schema already has a nullable `userId` column. The only missing piece is the identity context flowing from authentication into tool handlers.
+
+**For stdio MCP (existing):**
+- Add optional `--api-key` CLI flag or `RELAY_API_KEY` env var
+- On startup, validate key against the web app's API route
+- Cache the resolved `userId` for the session lifetime
+- Pass `userId` into every `trackUsage()` call
+
+**For remote MCP (new):**
+- `authInfo` is automatically available in tool handlers via the MCP SDK
+- Extract `userId` from `authInfo` and pass to `trackUsage()`
+
+#### Integration Points
+
+| Component | Type | Change |
+|-----------|------|--------|
+| `apps/mcp/src/index.ts` | MODIFY | Parse --api-key / RELAY_API_KEY, validate on startup |
+| `apps/mcp/src/tracking/events.ts` | MODIFY | Accept userId parameter in all trackUsage calls |
+| `apps/mcp/src/tools/search.ts` | MODIFY | Pass userId from context into trackUsage |
+| `apps/mcp/src/tools/list.ts` | MODIFY | Same |
+| `apps/mcp/src/tools/deploy.ts` | MODIFY | Same |
+
+#### Data Flow
+
+```
+MCP startup (stdio mode):
+    |
+    v
+Read RELAY_API_KEY from env
+    |
+    v
+POST /api/auth/validate-key { key: RELAY_API_KEY }
+    |
+    +-- 200 { userId: "abc", userName: "Alice" }
+    |       -> Store in memory, attach to all trackUsage() calls
+    |
+    +-- 401 -> Log warning, continue without userId (anonymous usage)
+```
+
+### Feature 3: Install Callback Analytics
+
+**Goal:** When a user runs the install script, "phone home" to record the install event with employee attribution and platform info.
+
+#### Architecture
+
+The existing `install-script.ts` generates bash/PowerShell scripts that configure Claude Desktop. These scripts need a callback step that pings the web app API with install metadata.
+
+**New API route:** `POST /api/callbacks/install`
+
+```
+Install script runs on user's machine
+    |
+    v
+Script configures MCP in claude_desktop_config.json
+    |
+    v
+Script calls: curl -X POST https://relay.company.com/api/callbacks/install \
+  -H "Authorization: Bearer $API_KEY" \
+  -d '{"platform":"claude-desktop","os":"macos"}'
+    |
+    v
+API route validates Bearer token (same api_keys table)
+    |
+    v
+Insert into install_events table
+    |
+    v
+Return 200 OK (non-blocking; script doesn't fail on callback error)
+```
+
+#### New Schema: `install_events` Table
+
+```
+install_events
++-- id: uuid (PK)
++-- userId: text -> users.id (from API key)
++-- platform: text ("claude-desktop" | "claude-code" | "other-ide" | "other-systems")
++-- os: text ("macos" | "windows" | "linux")
++-- metadata: jsonb (any extra info)
++-- createdAt: timestamp
+```
+
+#### Integration Points
+
+| Component | Type | Change |
+|-----------|------|--------|
+| `packages/db/src/schema/install-events.ts` | NEW | Table definition |
+| `apps/web/app/api/callbacks/install/route.ts` | NEW | POST handler for install callbacks |
+| `apps/web/lib/install-script.ts` | MODIFY | Add curl/Invoke-WebRequest callback step to generated scripts |
+| `apps/web/middleware.ts` | MODIFY | Exempt `/api/callbacks/` from auth redirect |
+
+#### Middleware Exemption
+
+The install callback URL must be accessible without browser auth (it uses API key Bearer auth instead). Update the middleware:
 
 ```typescript
-// apps/web/lib/ai-review.ts
-import Anthropic from "@anthropic-ai/sdk";
+// apps/web/middleware.ts
+const isCallbackApi = req.nextUrl.pathname.startsWith("/api/callbacks");
+const isMcpApi = req.nextUrl.pathname.startsWith("/api/mcp");
 
-const anthropic = new Anthropic();
-
-export async function reviewSkill(
-  content: string,
-  metadata: { name: string; category: string; description: string },
-  similarSkills: { name: string; description: string }[]
-): Promise<ReviewResult> {
-  const response = await anthropic.messages.create({
-    model: "claude-haiku-4-20250514", // Cost-effective for review
-    max_tokens: 1024,
-    messages: [{
-      role: "user",
-      content: `Review this skill for quality, clarity, and potential issues:
-
-Name: ${metadata.name}
-Category: ${metadata.category}
-Description: ${metadata.description}
-
-Content:
-${content}
-
-Similar existing skills for reference:
-${similarSkills.map(s => `- ${s.name}: ${s.description}`).join('\n')}
-
-Provide:
-1. Quality score (1-10)
-2. Suggestions for improvement
-3. Potential issues or concerns
-4. Whether this seems like a duplicate`
-    }]
-  });
-
-  return parseReviewResponse(response);
+// Allow callback and MCP API routes (they use their own API key auth)
+if (isAuthApi || isDevLogin || isCallbackApi || isMcpApi) {
+  return;
 }
 ```
 
-**Rationale:** Server Actions run server-side with full environment access, integrate naturally with form submission flow, and keep API key secure.
+### Feature 4: Usage Analytics Dashboard
 
-### Schema Changes
+**Goal:** New pages in `apps/web` showing per-employee skill usage, hours saved, activity over time.
+
+#### Where It Lives
+
+New route group under the existing `(protected)` layout:
+
+```
+apps/web/app/(protected)/analytics/
++-- page.tsx            (analytics overview / org-level dashboard)
++-- employees/
+|   +-- page.tsx        (employee table with usage metrics)
+|   +-- [id]/
+|       +-- page.tsx    (individual employee deep-dive)
++-- skills/
+    +-- page.tsx        (skill-level analytics, not per-employee)
+```
+
+#### New Lib Functions
+
+| Function | Location | Purpose |
+|----------|----------|---------|
+| `getEmployeeAnalytics()` | `apps/web/lib/employee-analytics.ts` | Aggregate per-employee: skills used, total uses, FTE days saved, last active |
+| `getEmployeeDetail()` | `apps/web/lib/employee-analytics.ts` | Single employee: usage timeline, top skills, activity heatmap data |
+| `getSkillAnalytics()` | `apps/web/lib/skill-analytics.ts` | Per-skill: unique users, usage over time, top users |
+| `getInstallAnalytics()` | `apps/web/lib/install-analytics.ts` | Install counts by platform, OS, over time |
+
+#### Data Flow
+
+All analytics queries are Server Components hitting PostgreSQL directly via Drizzle -- the same pattern used by the existing homepage (`getPlatformStats`, `getLeaderboard`, `getTrendingSkills`). No new API layer needed.
+
+```
+/analytics (Server Component)
+    |
+    v
+getEmployeeAnalytics() -> PostgreSQL (usage_events JOIN users JOIN skills)
+getInstallAnalytics()  -> PostgreSQL (install_events)
+getPlatformStats()     -> PostgreSQL (existing, reuse)
+    |
+    v
+Render: OrgDashboard
+    +-- StatCards (total employees active, total FTE days, install count)
+    +-- EmployeeTable (sortable, linked to /analytics/employees/[id])
+    +-- InstallChart (by platform, over time)
+```
+
+#### SQL Patterns
+
+Employee analytics queries aggregate from `usage_events`:
 
 ```sql
--- Add to skills table
-ALTER TABLE skills ADD COLUMN review_status text DEFAULT 'pending';
-  -- Values: 'pending', 'passed', 'needs_improvement', 'flagged'
-ALTER TABLE skills ADD COLUMN review_feedback jsonb;
-  -- Structure: { score: number, suggestions: string[], issues: string[] }
-ALTER TABLE skills ADD COLUMN reviewed_at timestamp with time zone;
+-- Top employees by FTE days saved
+SELECT
+  u.id, u.name, u.image,
+  COUNT(DISTINCT ue.skill_id) as skills_used,
+  COUNT(*) as total_uses,
+  SUM(COALESCE(s.hours_saved, 1)) / 8.0 as fte_days_saved,
+  MAX(ue.created_at) as last_active
+FROM usage_events ue
+JOIN users u ON ue.user_id = u.id
+JOIN skills s ON ue.skill_id = s.id
+WHERE ue.created_at >= NOW() - INTERVAL '30 days'
+GROUP BY u.id, u.name, u.image
+ORDER BY fte_days_saved DESC;
 ```
 
-### Data Flow
+This works because `usage_events.userId` will now be populated via MCP auth.
+
+### Feature 5: Web Remote MCP via Streamable HTTP
+
+**Goal:** Allow Claude.ai (browser-based) to connect to Relay's MCP server over HTTP instead of requiring local stdio setup.
+
+#### Architecture Decision: Where to Host Remote MCP
+
+**Option A: Separate Express server in `apps/mcp`**
+- Pro: Keeps MCP server self-contained
+- Con: Duplicates DB config, auth logic; separate deployment
+- Con: Need CORS, session management, separate process
+
+**Option B: Next.js API route in `apps/web` using `mcp-handler`** (RECOMMENDED)
+- Pro: Shares web app's DB connection, auth infrastructure, deployment
+- Pro: `mcp-handler` handles Streamable HTTP transport automatically
+- Pro: Single deployment, no new infrastructure
+- Pro: Tool registration can share logic with stdio server
+- Con: Tools defined in `apps/mcp` need to be importable by `apps/web`
+
+**Recommendation:** Option B. Use Vercel's `mcp-handler` package to expose an MCP endpoint as a Next.js API route. Extract tool handler logic from `apps/mcp/src/tools/*.ts` into shared functions that both the stdio server and the web API route can import.
+
+#### Component Architecture
 
 ```
-User submits skill
-    |
-    v
-createSkill() Server Action
-    |
-    v
-Insert skill (review_status: 'pending')
-    |
-    v
-Generate embedding (see Feature 2)
-    |
-    v
-Find similar skills using embedding
-    |
-    v
-Call Claude API with skill content + similar skills context
-    |
-    v
-Parse review response
-    |
-    v
-Update skill with review_status, review_feedback
-    |
-    v
-Return to user (show feedback if needs_improvement)
++--------------------------------------------------------------------------+
+|                    v1.4 REMOTE MCP ARCHITECTURE                           |
++--------------------------------------------------------------------------+
+|                                                                          |
+|  Browser (Claude.ai)              CLI (Claude Code / Claude Desktop)     |
+|  Streamable HTTP                  stdio                                  |
+|       |                                |                                 |
+|       v                                v                                 |
+|  apps/web/app/api/mcp/            apps/mcp/src/index.ts                  |
+|    [transport]/route.ts               StdioServerTransport               |
+|    (mcp-handler)                      + RELAY_API_KEY validation         |
+|    + API key Bearer auth              |                                  |
+|       |                                |                                 |
+|       v                                v                                 |
+|  +--------------------------------------------------+                    |
+|  | Shared Tool Handlers (packages/mcp-tools or      |                    |
+|  | apps/mcp/src/tools/handlers.ts)                   |                    |
+|  |   handleListSkills()                              |                    |
+|  |   handleSearchSkills()                            |                    |
+|  |   handleDeploySkill()                             |                    |
+|  +--------------------------------------------------+                    |
+|       |                                                                  |
+|       v                                                                  |
+|  packages/db (shared database access)                                    |
+|  trackUsage() with userId from auth context                              |
+|                                                                          |
++--------------------------------------------------------------------------+
 ```
 
-### Cost Considerations
+#### Implementation Pattern
 
-| Model | Input (1M tokens) | Output (1M tokens) | Est. cost per review |
-|-------|-------------------|--------------------|-----------------------|
-| claude-sonnet-4-20250514 | $3 | $15 | ~$0.005 (avg 500 in / 800 out) |
-| claude-haiku-4-20250514 | $1 | $5 | ~$0.002 |
-
-**Recommendation:** Use Haiku for initial review, escalate to Sonnet if content flagged.
-
-## Feature 2: Semantic Similarity Detection
-
-### Integration Points
-
-| Component | Integration Type | Notes |
-|-----------|------------------|-------|
-| PostgreSQL | MODIFY | Enable pgvector extension |
-| `packages/db/src/schema/skills.ts` | MODIFY | Add `embedding` vector column |
-| `apps/web/lib/` | NEW | `embeddings.ts` - embedding generation |
-| `apps/web/lib/search-skills.ts` | MODIFY | Add semantic search option |
-| `apps/web/app/actions/skills.ts` | MODIFY | Generate embedding on create/update |
-
-### pgvector Integration with Drizzle
-
-Based on [Drizzle ORM documentation](https://orm.drizzle.team/docs/guides/vector-similarity-search):
+The existing tool handlers in `apps/mcp/src/tools/*.ts` already export handler functions separately from tool registration (e.g., `handleSearchSkills`, `handleDeploySkill`, `handleListSkills`). The remote MCP route can import and re-register these.
 
 ```typescript
-// packages/db/src/schema/skills.ts
-import { pgTable, text, vector, index } from "drizzle-orm/pg-core";
+// apps/web/app/api/mcp/[transport]/route.ts (NEW)
+import { createMcpHandler } from "mcp-handler";
+import { z } from "zod";
 
-export const skills = pgTable(
-  "skills",
-  {
-    // ... existing columns
+// Import shared handler functions from mcp package
+import { handleListSkills } from "@relay/mcp/tools/list";
+import { handleSearchSkills } from "@relay/mcp/tools/search";
+import { handleDeploySkill } from "@relay/mcp/tools/deploy";
 
-    // Semantic embedding for similarity search
-    // 1024 dimensions for Voyage-3-lite (Anthropic recommended)
-    embedding: vector("embedding", { dimensions: 1024 }),
-  },
-  (table) => [
-    // Existing full-text search index
-    index("skills_search_idx").using("gin", table.searchVector),
-
-    // Vector similarity index (HNSW for fast approximate search)
-    index("skills_embedding_idx").using(
-      "hnsw",
-      table.embedding.op("vector_cosine_ops")
-    ),
-  ]
-);
-```
-
-### Embedding Provider Choice
-
-| Provider | Model | Dimensions | Cost (1M tokens) | Notes |
-|----------|-------|------------|------------------|-------|
-| **Voyage AI** | voyage-3-lite | 1024 | $0.02 | Anthropic recommended |
-| Voyage AI | voyage-3 | 1024 | $0.06 | Higher quality |
-| OpenAI | text-embedding-3-small | 1536 | $0.02 | Widely used |
-| OpenAI | text-embedding-3-large | 3072 | $0.13 | Highest quality |
-
-**Recommendation:** Voyage-3-lite. Anthropic partnership ensures compatibility, 1024 dimensions balance quality/storage, lowest cost tier.
-
-### Embedding Generation
-
-```typescript
-// apps/web/lib/embeddings.ts
-
-// Voyage AI uses same SDK pattern as Anthropic
-export async function generateEmbedding(text: string): Promise<number[]> {
-  const response = await fetch("https://api.voyageai.com/v1/embeddings", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${process.env.VOYAGE_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "voyage-3-lite",
-      input: text,
-    }),
-  });
-
-  const data = await response.json();
-  return data.data[0].embedding;
-}
-
-export async function generateSkillEmbedding(skill: {
-  name: string;
-  description: string;
-  content: string;
-}): Promise<number[]> {
-  // Combine relevant text for embedding
-  const text = `${skill.name}\n\n${skill.description}\n\n${skill.content}`;
-  return generateEmbedding(text);
-}
-```
-
-### Similarity Search Query
-
-```typescript
-// apps/web/lib/search-skills.ts
-import { cosineDistance, desc, gt, sql } from "drizzle-orm";
-
-export async function findSimilarSkills(
-  embedding: number[],
-  threshold = 0.7,
-  limit = 10,
-  excludeId?: string
-): Promise<SimilarSkill[]> {
-  if (!db) return [];
-
-  const similarity = sql<number>`1 - (${cosineDistance(skills.embedding, embedding)})`;
-
-  const conditions = [gt(similarity, threshold)];
-  if (excludeId) {
-    conditions.push(sql`${skills.id} != ${excludeId}`);
-  }
-
-  return db
-    .select({
-      id: skills.id,
-      name: skills.name,
-      slug: skills.slug,
-      description: skills.description,
-      similarity,
-    })
-    .from(skills)
-    .where(and(...conditions))
-    .orderBy(desc(similarity))
-    .limit(limit);
-}
-```
-
-### Duplicate Detection Flow
-
-```
-User submits new skill
-    |
-    v
-generateSkillEmbedding(name, description, content)
-    |
-    v
-findSimilarSkills(embedding, threshold=0.85)
-    |
-    v
-if (similarSkills.length > 0)
-    |
-    v
-Show warning: "Similar skills exist: [links]"
-    |
-    v
-User chooses: Create anyway | Fork existing | Cancel
-```
-
-## Feature 3: Fork-Based Versioning
-
-### Current vs Proposed Schema
-
-**Current:** Wiki-style versioning (single skill, multiple versions)
-```
-skills (id, slug, publishedVersionId, draftVersionId)
-    |
-    v
-skill_versions (id, skillId, version, contentUrl)
-```
-
-**Proposed:** Add fork relationships
-```
-skills (id, slug, parentSkillId, forkReason, publishedVersionId)
-    |
-    v
-skill_versions (id, skillId, version, contentUrl)
-    |
-    v
-skill_forks (implicit via parentSkillId)
-```
-
-### Schema Changes
-
-```typescript
-// packages/db/src/schema/skills.ts - ADD columns
-export const skills = pgTable("skills", {
-  // ... existing columns
-
-  // Fork relationship
-  parentSkillId: text("parent_skill_id").references(() => skills.id),
-  forkReason: text("fork_reason"), // "improvement", "variant", "specialization"
-  isFork: boolean("is_fork").default(false), // Denormalized for query perf
-
-  // Fork tree metrics (denormalized)
-  forkCount: integer("fork_count").default(0),
-  rootSkillId: text("root_skill_id"), // Original ancestor for deep trees
-});
-```
-
-### Relations Update
-
-```typescript
-// packages/db/src/relations/index.ts - ADD
-export const skillsRelations = relations(skills, ({ one, many }) => ({
-  // ... existing relations
-
-  // Fork relationships
-  parent: one(skills, {
-    fields: [skills.parentSkillId],
-    references: [skills.id],
-    relationName: "forks",
-  }),
-  forks: many(skills, {
-    relationName: "forks",
-  }),
-}));
-```
-
-### Fork Creation Flow
-
-```
-User views skill
-    |
-    v
-Clicks "Fork this skill"
-    |
-    v
-Select fork reason: "Improvement" | "Variant" | "Specialization"
-    |
-    v
-createFork() Server Action
-    |
-    v
-Copy skill content to new skill with parentSkillId set
-    |
-    v
-Increment parent.forkCount
-    |
-    v
-User edits their fork
-    |
-    v
-Publish as new skill (linked to parent)
-```
-
-### UI Integration Points
-
-| Location | Change |
-|----------|--------|
-| Skill detail page | Add "Fork" button, show fork tree if has forks/parent |
-| Skill card | Badge showing "Fork of X" or "N forks" |
-| Create skill form | Option to "Fork from existing" |
-| Profile page | "My Forks" section |
-
-### Query Patterns
-
-```typescript
-// Get skill with fork context
-const skillWithForks = await db.query.skills.findFirst({
-  where: eq(skills.slug, slug),
-  with: {
-    parent: { columns: { id: true, name: true, slug: true } },
-    forks: {
-      columns: { id: true, name: true, slug: true },
-      limit: 5,
-      orderBy: desc(skills.totalUses),
-    },
-  },
-});
-
-// Get fork tree (for visualization)
-async function getForkTree(rootId: string): Promise<ForkNode[]> {
-  return db.query.skills.findMany({
-    where: or(
-      eq(skills.id, rootId),
-      eq(skills.rootSkillId, rootId)
-    ),
-    columns: { id: true, name: true, parentSkillId: true, totalUses: true },
-  });
-}
-```
-
-## Feature 4: Cross-Platform Install Configs
-
-### Platform Config Formats
-
-Based on research of Claude Code, Cursor, and Windsurf documentation:
-
-| Platform | Config Location | Format | Key Structure |
-|----------|-----------------|--------|---------------|
-| Claude Code | `.claude/skills/<name>/SKILL.md` | YAML frontmatter + Markdown | `name`, `description`, frontmatter |
-| Cursor | `.cursor/rules/<name>.mdc` | MDC (frontmatter + content) | `description`, `globs`, `alwaysApply` |
-| Windsurf | `.windsurf/rules/<name>.md` | Markdown | Simpler format, 6000 char limit |
-| MCP | `claude_desktop_config.json` | JSON | `mcpServers` object |
-
-### Config Generator Service
-
-```typescript
-// apps/web/lib/config-generators.ts
-
-interface SkillConfig {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  category: string;
-  content: string;
-  tags: string[];
-}
-
-// Claude Code SKILL.md format
-export function generateClaudeCodeConfig(skill: SkillConfig): string {
-  return `---
-name: ${skill.slug}
-description: ${skill.description}
----
-
-${skill.content}`;
-}
-
-// Cursor .mdc format
-export function generateCursorConfig(skill: SkillConfig): string {
-  // Map skill category to appropriate glob patterns
-  const globs = getCursorGlobs(skill.category, skill.tags);
-
-  return `---
-description: ${skill.description}
-globs: ${globs}
-alwaysApply: false
----
-
-# ${skill.name}
-
-${skill.content}`;
-}
-
-// Windsurf .md format
-export function generateWindsurfConfig(skill: SkillConfig): string {
-  // Windsurf has 6000 char limit per rule file
-  const truncatedContent = skill.content.slice(0, 5500);
-
-  return `# ${skill.name}
-
-${skill.description}
-
-${truncatedContent}`;
-}
-
-// Existing MCP config (enhanced)
-export function generateMcpConfig(skill: SkillConfig): string | null {
-  if (skill.category === "mcp") {
-    return JSON.stringify({
-      mcpServers: {
-        [skill.slug]: {
-          command: "npx",
-          args: ["-y", `@relay/${skill.slug}`],
+const handler = createMcpHandler(
+  (server) => {
+    server.registerTool(
+      "list_skills",
+      {
+        description: "List available skills in the Relay marketplace",
+        inputSchema: {
+          category: z.enum(["prompt", "workflow", "agent", "mcp"]).optional(),
+          limit: z.number().min(1).max(50).default(20),
         },
       },
-    }, null, 2);
+      async ({ category, limit }) => handleListSkills({ category, limit })
+    );
+
+    server.registerTool(
+      "search_skills",
+      {
+        description: "Search skills by query",
+        inputSchema: {
+          query: z.string().min(1),
+          category: z.enum(["prompt", "workflow", "agent", "mcp"]).optional(),
+          limit: z.number().min(1).max(25).default(10),
+        },
+      },
+      async ({ query, category, limit }) =>
+        handleSearchSkills({ query, category, limit })
+    );
+
+    server.registerTool(
+      "deploy_skill",
+      {
+        description: "Deploy a skill from Relay",
+        inputSchema: {
+          skillId: z.string(),
+        },
+      },
+      async ({ skillId }) => handleDeploySkill({ skillId })
+    );
+  },
+  {},
+  {
+    basePath: "/api/mcp",
+    maxDuration: 60,
   }
-  return null; // Non-MCP skills don't get this config
-}
+);
+
+export { handler as GET, handler as POST };
 ```
 
-### Multi-Platform Install UI
+#### Authentication for Remote MCP
+
+`mcp-handler` supports authentication via `withMcpAuth`:
 
 ```typescript
-// apps/web/components/install-modal.tsx
-interface Platform {
-  id: string;
-  name: string;
-  icon: string;
-  configGenerator: (skill: SkillConfig) => string;
-  installPath: string;
-  instructions: string[];
-}
+import { createMcpHandler, withMcpAuth } from "mcp-handler";
+import { validateApiKey } from "@/lib/api-key-validation";
 
-const PLATFORMS: Platform[] = [
-  {
-    id: "claude-code",
-    name: "Claude Code",
-    icon: "/icons/claude.svg",
-    configGenerator: generateClaudeCodeConfig,
-    installPath: ".claude/skills/{slug}/SKILL.md",
-    instructions: [
-      "Create directory: mkdir -p .claude/skills/{slug}",
-      "Save content to: .claude/skills/{slug}/SKILL.md",
-      "Skill will be available as /{slug} command",
-    ],
-  },
-  {
-    id: "cursor",
-    name: "Cursor",
-    icon: "/icons/cursor.svg",
-    configGenerator: generateCursorConfig,
-    installPath: ".cursor/rules/{slug}.mdc",
-    instructions: [
-      "Create directory: mkdir -p .cursor/rules",
-      "Save content to: .cursor/rules/{slug}.mdc",
-      "Rule will auto-apply based on glob patterns",
-    ],
-  },
-  {
-    id: "windsurf",
-    name: "Windsurf",
-    icon: "/icons/windsurf.svg",
-    configGenerator: generateWindsurfConfig,
-    installPath: ".windsurf/rules/{slug}.md",
-    instructions: [
-      "Create directory: mkdir -p .windsurf/rules",
-      "Save content to: .windsurf/rules/{slug}.md",
-      "Rule will be available in Cascade",
-    ],
-  },
-];
-```
-
-### Install Button Enhancement
-
-```typescript
-// apps/web/components/install-button.tsx - ENHANCE
-interface InstallButtonProps {
-  skill: SkillConfig;
-  variant?: "full" | "icon";
-}
-
-export function InstallButton({ skill, variant = "full" }: InstallButtonProps) {
-  const [showModal, setShowModal] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-
-  // On click, show platform selection modal
-  // After selection, generate config and copy to clipboard
-  // Show post-copy instructions specific to platform
-}
-```
-
-### MCP Tool Enhancement
-
-```typescript
-// apps/mcp/src/tools/deploy.ts - ENHANCE
-server.registerTool(
-  "deploy_skill",
-  {
-    inputSchema: {
-      skillId: z.string(),
-      platform: z.enum(["claude-code", "cursor", "windsurf", "mcp"]).default("claude-code"),
-    },
-  },
-  async ({ skillId, platform }) => {
-    const skill = await getSkill(skillId);
-    const config = generateConfigForPlatform(skill, platform);
-    const installPath = getInstallPath(platform, skill.slug);
-
+const handler = withMcpAuth(
+  createMcpHandler(/* ... */),
+  async (req) => {
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      throw new Response("Unauthorized", { status: 401 });
+    }
+    const key = authHeader.slice(7);
+    const result = await validateApiKey(key);
+    if (!result) {
+      throw new Response("Invalid API key", { status: 401 });
+    }
     return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          success: true,
-          platform,
-          config,
-          installPath,
-          instructions: getInstructions(platform, skill),
-        }, null, 2),
-      }],
+      token: key,
+      clientId: result.userId,
+      scopes: ["read"],
     };
   }
 );
 ```
 
-## Component Summary
+#### Client Configuration
 
-### New Components
+Users connecting from Claude.ai or other Streamable HTTP clients:
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `ai-review.ts` | `apps/web/lib/` | Claude API for skill review |
-| `embeddings.ts` | `apps/web/lib/` | Voyage AI embedding generation |
-| `config-generators.ts` | `apps/web/lib/` | Multi-platform config generation |
-| `install-modal.tsx` | `apps/web/components/` | Platform selection UI |
-| `fork-button.tsx` | `apps/web/components/` | Fork action button |
-| `fork-tree.tsx` | `apps/web/components/` | Fork relationship visualization |
-| `similar-skills.tsx` | `apps/web/components/` | Duplicate detection display |
-
-### Modified Components
-
-| Component | Changes |
-|-----------|---------|
-| `packages/db/src/schema/skills.ts` | Add `embedding`, `reviewStatus`, `parentSkillId`, `forkCount` |
-| `apps/web/app/actions/skills.ts` | Add review, embedding, fork logic |
-| `apps/web/lib/search-skills.ts` | Add semantic search function |
-| `apps/web/components/install-button.tsx` | Platform selection modal |
-| `apps/mcp/src/tools/deploy.ts` | Multi-platform support |
-
-## Recommended Build Order
-
-Based on dependency analysis:
-
-```
-Phase 1: Foundation (pgvector + embeddings)
-+-- Enable pgvector extension
-+-- Add embedding column to skills
-+-- Create embeddings.ts service
-+-- Backfill existing skill embeddings
-+-- Add semantic search to search-skills.ts
-
-Phase 2: Similarity Detection
-+-- findSimilarSkills() function
-+-- similar-skills.tsx component
-+-- Integrate with skill creation flow
-+-- Add "Similar skills" to detail page
-
-Phase 3: AI Review Pipeline
-+-- Add review columns to skills
-+-- Create ai-review.ts service
-+-- Integrate with createSkill() action
-+-- Review feedback UI on detail page
-+-- Admin view for flagged skills
-
-Phase 4: Fork Versioning
-+-- Add parent/fork columns to skills
-+-- Update relations
-+-- Fork creation action
-+-- fork-button.tsx component
-+-- fork-tree.tsx visualization
-+-- Update profile with "My Forks"
-
-Phase 5: Cross-Platform Install
-+-- config-generators.ts service
-+-- install-modal.tsx component
-+-- Enhance install-button.tsx
-+-- Update MCP deploy tool
-+-- Add platform badges to skill cards
-```
-
-**Rationale for order:**
-1. **Embeddings first** - Both AI review (needs similar skills context) and similarity detection depend on embeddings
-2. **Similarity before review** - AI review benefits from showing similar skills in prompt
-3. **Fork after similarity** - "Fork existing" option uses similarity to suggest forkable skills
-4. **Cross-platform last** - Independent feature, no dependencies on others
-
-## Migration Strategy
-
-### Database Migrations
-
-```sql
--- Migration 1: pgvector extension and embedding column
-CREATE EXTENSION IF NOT EXISTS vector;
-ALTER TABLE skills ADD COLUMN embedding vector(1024);
-CREATE INDEX skills_embedding_idx ON skills
-  USING hnsw (embedding vector_cosine_ops);
-
--- Migration 2: AI review columns
-ALTER TABLE skills ADD COLUMN review_status text DEFAULT 'pending';
-ALTER TABLE skills ADD COLUMN review_feedback jsonb;
-ALTER TABLE skills ADD COLUMN reviewed_at timestamp with time zone;
-
--- Migration 3: Fork relationship columns
-ALTER TABLE skills ADD COLUMN parent_skill_id text REFERENCES skills(id);
-ALTER TABLE skills ADD COLUMN fork_reason text;
-ALTER TABLE skills ADD COLUMN is_fork boolean DEFAULT false;
-ALTER TABLE skills ADD COLUMN fork_count integer DEFAULT 0;
-ALTER TABLE skills ADD COLUMN root_skill_id text;
-CREATE INDEX skills_parent_idx ON skills(parent_skill_id);
-```
-
-### Backfill Strategy
-
-```typescript
-// scripts/backfill-embeddings.ts
-async function backfillEmbeddings() {
-  const skillsWithoutEmbedding = await db.query.skills.findMany({
-    where: isNull(skills.embedding),
-  });
-
-  for (const skill of skillsWithoutEmbedding) {
-    const embedding = await generateSkillEmbedding(skill);
-    await db.update(skills)
-      .set({ embedding })
-      .where(eq(skills.id, skill.id));
-
-    // Rate limit to avoid API throttling
-    await sleep(100);
+```json
+{
+  "mcpServers": {
+    "relay-skills": {
+      "url": "https://relay.company.com/api/mcp/mcp",
+      "headers": {
+        "Authorization": "Bearer rl_<your-api-key>"
+      }
+    }
   }
 }
 ```
 
+For stdio-only clients, the existing `npx @relay/mcp` continues to work with `RELAY_API_KEY` env var.
+
+### Feature 6: Extended Search
+
+**Goal:** Search query matches author name and tags in addition to name/description.
+
+#### Current State
+
+The existing `searchSkills()` in `apps/web/lib/search-skills.ts` (line 60-72) ALREADY searches:
+- `skills.searchVector` (PostgreSQL FTS on name + description)
+- `skills.name` via ILIKE
+- `skills.description` via ILIKE
+- `users.name` via ILIKE
+- `skills.tags` via `array_to_string(tags, ' ') ILIKE`
+
+**The web app search already covers author name and tags.** The gap is the MCP server search.
+
+#### MCP Search Gap
+
+The MCP `search_skills` tool in `apps/mcp/src/tools/search.ts` uses in-memory filtering with only `name` and `description` matching (lines 41-44). It does NOT search author names or tags.
+
+**Fix:** Either:
+1. Have the MCP search tool use the same `searchSkills()` function from `apps/web/lib/search-skills.ts` (requires making it importable from MCP), or
+2. Enhance the MCP in-memory search to also match tags and load author data.
+
+**Recommendation:** Option 1. Move `searchSkills()` to `packages/db/src/services/search.ts` so both `apps/web` and `apps/mcp` can import it. This eliminates the divergence between web and MCP search behavior.
+
+#### Integration Points
+
+| Component | Type | Change |
+|-----------|------|--------|
+| `packages/db/src/services/search.ts` | NEW | Move searchSkills() from apps/web/lib |
+| `packages/db/src/services/index.ts` | MODIFY | Export search service |
+| `apps/web/lib/search-skills.ts` | MODIFY | Re-export from packages/db service |
+| `apps/mcp/src/tools/search.ts` | MODIFY | Import searchSkills from @relay/db |
+
+## New Components Summary
+
+### New Files
+
+| File | Purpose | Depends On |
+|------|---------|------------|
+| `packages/db/src/schema/api-keys.ts` | API key table schema | users schema |
+| `packages/db/src/schema/install-events.ts` | Install event table schema | users schema |
+| `packages/db/src/services/api-keys.ts` | Key validation, CRUD | api-keys schema |
+| `packages/db/src/services/search.ts` | Shared search (moved from web) | skills, users schemas |
+| `apps/web/app/api/mcp/[transport]/route.ts` | Remote MCP endpoint | mcp-handler, tool handlers |
+| `apps/web/app/api/callbacks/install/route.ts` | Install callback | api-keys service |
+| `apps/web/app/api/auth/validate-key/route.ts` | Key validation API | api-keys service |
+| `apps/web/app/actions/api-keys.ts` | Server Actions for key CRUD | api-keys service |
+| `apps/web/app/(protected)/analytics/page.tsx` | Analytics overview | analytics lib |
+| `apps/web/app/(protected)/analytics/employees/page.tsx` | Employee list | analytics lib |
+| `apps/web/app/(protected)/analytics/employees/[id]/page.tsx` | Employee detail | analytics lib |
+| `apps/web/lib/employee-analytics.ts` | Employee aggregation queries | usage_events, users |
+| `apps/web/lib/install-analytics.ts` | Install event queries | install_events |
+| `apps/web/components/api-key-manager.tsx` | Key management UI | api-keys actions |
+| `apps/web/components/analytics-charts.tsx` | Dashboard charts | analytics lib |
+
+### Modified Files
+
+| File | Change |
+|------|--------|
+| `packages/db/src/schema/index.ts` | Export api-keys, install-events |
+| `packages/db/src/relations/index.ts` | Add user -> apiKeys, user -> installEvents |
+| `packages/db/src/services/index.ts` | Export api-keys service, search service |
+| `apps/mcp/src/index.ts` | Add API key validation on startup |
+| `apps/mcp/src/tools/search.ts` | Use shared searchSkills from @relay/db |
+| `apps/mcp/src/tools/list.ts` | Pass userId into trackUsage |
+| `apps/mcp/src/tools/deploy.ts` | Pass userId into trackUsage |
+| `apps/mcp/src/tracking/events.ts` | Accept userId parameter consistently |
+| `apps/mcp/package.json` | (may need mcp-handler if sharing types) |
+| `apps/web/middleware.ts` | Exempt /api/callbacks/ and /api/mcp/ paths |
+| `apps/web/lib/install-script.ts` | Add callback curl/Invoke-WebRequest step |
+| `apps/web/lib/search-skills.ts` | Re-export from shared service |
+| `apps/web/app/(protected)/layout.tsx` | Add Analytics nav link |
+| `apps/web/app/(protected)/profile/page.tsx` | Add API key management section |
+
+## Data Flow Changes
+
+### Before v1.4 (Anonymous MCP Usage)
+
+```
+Claude Code -> stdio MCP -> trackUsage(toolName, skillId, metadata)
+                                  |
+                                  v
+                            usage_events { userId: NULL }
+```
+
+### After v1.4 (Authenticated MCP Usage)
+
+```
+Claude Code                              Claude.ai (browser)
+    |                                         |
+    v                                         v
+stdio MCP                              Streamable HTTP
+(RELAY_API_KEY env)                   (Bearer token in header)
+    |                                         |
+    v                                         v
+Validate key on startup              mcp-handler validates per-request
+Cache userId for session             authInfo passed to tool handlers
+    |                                         |
+    v                                         v
+trackUsage(toolName, skillId, userId, metadata)
+    |
+    v
+usage_events { userId: "real-user-id" }
+    |
+    v
+Analytics dashboard shows per-employee data
+```
+
+### Install Callback Flow
+
+```
+User visits /skills/[slug] -> clicks "Install" -> selects platform
+    |
+    v
+Generate install script with embedded callback
+    |
+    v
+User runs script locally:
+  1. Configure MCP in claude_desktop_config.json
+  2. curl POST /api/callbacks/install -H "Bearer $KEY" -d '{"platform":"claude-desktop","os":"macos"}'
+    |
+    v
+API route validates key, inserts install_events
+    |
+    v
+Analytics dashboard shows install counts
+```
+
+## Dependency Graph
+
+```
+                    API Keys Schema + Service
+                    /           |          \
+                   /            |           \
+                  v             v            v
+        MCP Auth        Install Callbacks    Remote MCP Auth
+       (stdio key)     (Bearer validation)   (mcp-handler auth)
+            |                  |                    |
+            v                  v                    v
+    Employee Tracking    Install Analytics     Remote MCP Endpoint
+            |                  |                    |
+            +--------+---------+--------------------+
+                     |
+                     v
+              Analytics Dashboard
+                     |
+                     v
+              Extended Search (independent, can be parallel)
+```
+
+## Recommended Build Order
+
+Based on the dependency graph above:
+
+```
+Phase 20: API Keys & MCP Authentication
+  Plan 20-01: api_keys schema + migration + service (createKey, validateKey, revokeKey)
+  Plan 20-02: Key validation API route + MCP stdio key validation on startup
+  Plan 20-03: API key management UI on profile page (create, revoke, list)
+
+Phase 21: Employee Usage Tracking
+  Plan 21-01: Wire userId through all MCP tool handlers + trackUsage
+  Plan 21-02: Install events schema + install callback API route
+  Plan 21-03: Update install scripts with callback step
+
+Phase 22: Remote MCP
+  Plan 22-01: Install mcp-handler, create /api/mcp/[transport]/route.ts
+  Plan 22-02: Add withMcpAuth using API key validation
+  Plan 22-03: Shared tool handlers between stdio and remote
+
+Phase 23: Analytics Dashboard
+  Plan 23-01: Employee analytics queries + overview page
+  Plan 23-02: Employee detail page with usage timeline
+  Plan 23-03: Install analytics + org stats integration
+
+Phase 24: Extended Search
+  Plan 24-01: Move searchSkills to packages/db/src/services/search.ts
+  Plan 24-02: Update MCP search to use shared service
+```
+
+**Rationale for order:**
+
+1. **API keys first** -- Every authenticated feature depends on API keys. This is the foundation that unlocks MCP auth, install callbacks, and remote MCP.
+2. **Employee tracking second** -- Once API keys exist, wiring userId through trackUsage is a small change that immediately starts collecting attributable data. Install callbacks also land here since they depend on key validation.
+3. **Remote MCP third** -- Depends on API keys being built and the auth pattern being proven. The install callback API route provides a precedent for auth-exempt API routes.
+4. **Analytics dashboard fourth** -- Needs data in usage_events.userId to be meaningful. Building it after tracking has been active for even a short time means there is data to display.
+5. **Extended search last** -- Completely independent. Can actually be built in parallel with any other phase. Placed last because it is the simplest change.
+
+## Technology Requirements
+
+### New Dependencies
+
+| Package | Version | Purpose | Install Location |
+|---------|---------|---------|------------------|
+| `mcp-handler` | latest | Streamable HTTP MCP in Next.js | apps/web |
+| `@modelcontextprotocol/sdk` | ^1.25.2 | Required peer dep for mcp-handler | apps/web |
+
+**Note:** `@modelcontextprotocol/sdk` ^1.25.0 is already installed in `apps/mcp`. Version 1.25.2+ is recommended for security. The web app will need its own copy for the remote MCP route.
+
+### Environment Variables
+
+| Variable | Purpose | Used By |
+|----------|---------|---------|
+| `RELAY_API_KEY` | MCP auth for stdio server | apps/mcp (optional env var) |
+
+No new server-side env vars needed for the web app -- API keys are stored in the database.
+
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Client-Side AI Calls
+### Anti-Pattern 1: OAuth for Internal MCP Auth
 
-**What people do:** Call Claude/Voyage API from React components
-**Why it's wrong:** Exposes API keys, no rate limiting, inconsistent results
-**Do this instead:** All AI calls through Server Actions or API routes
+**What people do:** Implement full OAuth 2.1 with PKCE for MCP authentication.
+**Why it's wrong for Relay:** OAuth is designed for third-party integrations. Relay is internal, behind corporate SSO. The MCP spec's OAuth flow adds massive complexity (discovery endpoints, token exchange, refresh) for no benefit when all users are already authenticated via Google Workspace.
+**Do this instead:** Simple API key auth validated against the same user database. Keys are created through the authenticated web UI, so identity is already verified.
 
-### Anti-Pattern 2: Synchronous Review on Submit
+### Anti-Pattern 2: Separate Analytics Database
 
-**What people do:** Block form submission until AI review completes
-**Why it's wrong:** 2-5 second delay, poor UX, timeouts
-**Do this instead:** Create skill immediately with `review_status: 'pending'`, review async
+**What people do:** Set up a dedicated analytics DB or data warehouse for usage data.
+**Why it's wrong at Relay's scale:** With 500 users, usage_events will have tens of thousands of rows per month. PostgreSQL handles this trivially with proper indexes. A separate analytics DB adds infrastructure, data sync complexity, and deployment burden.
+**Do this instead:** Query usage_events directly with indexed columns. Add materialized views or summary tables only if query performance degrades.
 
-### Anti-Pattern 3: Embedding Every Search Query
+### Anti-Pattern 3: Duplicating Tool Logic for Remote MCP
 
-**What people do:** Generate embedding for every search
-**Why it's wrong:** Adds latency, increases API costs
-**Do this instead:** Offer semantic search as explicit option, default to full-text
+**What people do:** Rewrite tool handlers in the web API route separately from the stdio server.
+**Why it's wrong:** Two codepaths for the same operations diverge over time. Bugs get fixed in one but not the other. Feature parity becomes a maintenance burden.
+**Do this instead:** Extract handler functions (already done: `handleListSkills`, `handleSearchSkills`, `handleDeploySkill`) and import them in both stdio and remote registrations.
 
-### Anti-Pattern 4: Deep Fork Trees
+### Anti-Pattern 4: Client-Side Analytics Fetching
 
-**What people do:** Allow unlimited fork depth
-**Why it's wrong:** Complex queries, confusing UI, attribution dilution
-**Do this instead:** Consider max 3 levels, or flatten to direct parent only
+**What people do:** Fetch analytics data via client-side API calls with loading spinners.
+**Why it's wrong:** Matches the existing Relay pattern to use Server Components for data fetching. Client-side fetching adds loading states, waterfalls, and bundle size.
+**Do this instead:** Server Component pages that fetch data at render time, matching the existing homepage, profile, and skills browse patterns.
 
-### Anti-Pattern 5: Platform-Specific Content
+### Anti-Pattern 5: Storing API Keys in Plaintext
 
-**What people do:** Store different content per platform
-**Why it's wrong:** Maintenance nightmare, content drift
-**Do this instead:** Single source content, generate platform configs on-demand
+**What people do:** Store the full API key string in the database.
+**Why it's wrong:** Database breach exposes all keys immediately. No defense in depth.
+**Do this instead:** Store SHA-256 hash of key. Show full key once on creation. Store prefix for display/identification.
+
+## Confidence Assessment
+
+| Decision | Confidence | Rationale |
+|----------|------------|-----------|
+| API key auth over OAuth | HIGH | Internal tool, all users already SSO-authenticated, OAuth is overkill |
+| mcp-handler for remote MCP | HIGH | Official Vercel adapter, documented for Next.js App Router, handles transport |
+| Shared tool handlers | HIGH | Existing code already exports handler functions separately from registration |
+| Analytics as Server Components | HIGH | Matches 100% of existing Relay data-fetching patterns |
+| API key schema design | HIGH | Standard pattern (hash + prefix), proven at scale |
+| install_events table | MEDIUM | Simple design, may need platform enum refinement |
+| Middleware exemptions for /api/mcp | HIGH | Same pattern as existing /api/auth exemption |
+| searchSkills move to packages/db | MEDIUM | Clean separation but requires verifying all imports resolve |
 
 ## Sources
 
-### Context7 / Official Documentation
-- [Drizzle ORM pgvector guide](https://orm.drizzle.team/docs/guides/vector-similarity-search) - Schema and query patterns
-- [Claude Code Skills documentation](https://code.claude.com/docs/en/skills) - SKILL.md format specification
-- [Cursor Rules documentation](https://cursor.com/docs/context/rules) - .mdc format specification
+### Official Documentation
+- [MCP TypeScript SDK - Server Documentation](https://github.com/modelcontextprotocol/typescript-sdk/blob/main/docs/server.md) - StreamableHTTPServerTransport API
+- [MCP Transports Specification (2025-06-18)](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports) - Streamable HTTP protocol
+- [mcp-handler GitHub](https://github.com/vercel/mcp-handler) - Vercel's Next.js MCP adapter
+- [MCP Authorization Tutorial](https://modelcontextprotocol.io/docs/tutorials/security/authorization) - Auth patterns for remote MCP
+- [Next.js MCP Guide](https://nextjs.org/docs/app/guides/mcp) - Next.js 16+ built-in MCP support
 
-### WebSearch (Verified)
-- [pgvector GitHub](https://github.com/pgvector/pgvector) - Extension capabilities and index types
-- [Anthropic embeddings docs](https://docs.claude.com/en/docs/build-with-claude/embeddings) - Voyage AI partnership
-- [Windsurf rules docs](https://docs.windsurf.com/windsurf/cascade/memories) - Rule file format
+### WebSearch (Verified with official sources)
+- [Why MCP Deprecated SSE for Streamable HTTP](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/) - Transport migration rationale
+- [MCP Auth Best Practices Discussion](https://github.com/modelcontextprotocol/modelcontextprotocol/discussions/1247) - Community auth patterns
+- [Build a Secure MCP Server](https://rebeccamdeprey.com/blog/secure-mcp-server) - Express auth middleware patterns
+- [mcp-handler npm](https://www.npmjs.com/package/mcp-handler) - Package details and version info
 
-### Existing Codebase
-- `/home/dev/projects/relay/packages/db/src/schema/skills.ts` - Current schema
-- `/home/dev/projects/relay/apps/web/app/actions/skills.ts` - Skill creation flow
-- `/home/dev/projects/relay/apps/web/lib/search-skills.ts` - Full-text search implementation
-- `/home/dev/projects/relay/apps/mcp/src/tools/deploy.ts` - MCP deploy tool
+### Existing Codebase (HIGH confidence)
+- `/home/dev/projects/relay/apps/mcp/src/server.ts` - McpServer setup
+- `/home/dev/projects/relay/apps/mcp/src/index.ts` - StdioServerTransport entry point
+- `/home/dev/projects/relay/apps/mcp/src/tools/search.ts` - Search tool with exported handler
+- `/home/dev/projects/relay/apps/mcp/src/tools/deploy.ts` - Deploy tool with exported handler
+- `/home/dev/projects/relay/apps/mcp/src/tracking/events.ts` - trackUsage() with optional userId
+- `/home/dev/projects/relay/packages/db/src/schema/usage-events.ts` - usage_events with userId column
+- `/home/dev/projects/relay/apps/web/lib/search-skills.ts` - Full search with author + tags
+- `/home/dev/projects/relay/apps/web/auth.ts` - Auth.js v5 config with JWT strategy
+- `/home/dev/projects/relay/apps/web/middleware.ts` - Auth redirect with API route exemptions
 
 ---
 *Architecture research for: Relay Internal Skill Marketplace*
-*Updated: 2026-02-02 for v1.3 Feature Integration*
+*Updated: 2026-02-05 for v1.4 Employee Analytics, MCP Auth & Remote MCP*
