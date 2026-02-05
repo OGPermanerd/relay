@@ -4,7 +4,17 @@ import { db } from "@relay/db";
 import { trackUsage } from "../tracking/events.js";
 import { getUserId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
 
-export async function handleDeploySkill({ skillId }: { skillId: string }) {
+export async function handleDeploySkill({
+  skillId,
+  userId,
+  skipNudge,
+  transport,
+}: {
+  skillId: string;
+  userId?: string;
+  skipNudge?: boolean;
+  transport?: "stdio" | "http";
+}) {
   if (!db) {
     return {
       content: [
@@ -41,7 +51,7 @@ export async function handleDeploySkill({ skillId }: { skillId: string }) {
     };
   }
 
-  if (getUserId() === null) {
+  if (!userId && !skipNudge) {
     incrementAnonymousCount();
   }
 
@@ -49,51 +59,62 @@ export async function handleDeploySkill({ skillId }: { skillId: string }) {
   await trackUsage({
     toolName: "deploy_skill",
     skillId: skill.id,
-    userId: getUserId() ?? undefined,
+    userId,
     metadata: {
       skillName: skill.name,
       skillCategory: skill.category,
     },
   });
 
+  // Build response based on transport
+  const skillPayload: Record<string, unknown> = {
+    id: skill.id,
+    name: skill.name,
+    category: skill.category,
+    filename: `${skill.slug}.md`,
+    content: skill.content,
+    hoursSaved: skill.hoursSaved,
+  };
+
+  const responseBody: Record<string, unknown> = {
+    success: true,
+    skill: skillPayload,
+  };
+
+  if (transport === "http") {
+    // HTTP transport: skill is used in-conversation, no file-save instructions
+    responseBody.message =
+      "This skill is now available in this conversation. You can use it directly.";
+  } else {
+    // Stdio transport: Claude Code will save the file locally
+    responseBody.instructions = [
+      `Save this skill to your project's .claude/skills/ directory`,
+      `Suggested path: .claude/skills/${skill.slug}.md`,
+      `After saving, the skill will be available in your Claude Code session`,
+    ];
+  }
+
   // Return skill content for Claude to save
   // Claude Code will handle file writing with user confirmation
   const content: Array<{ type: "text"; text: string }> = [
     {
       type: "text" as const,
-      text: JSON.stringify(
-        {
-          success: true,
-          skill: {
-            id: skill.id,
-            name: skill.name,
-            category: skill.category,
-            filename: `${skill.slug}.md`,
-            content: skill.content,
-            hoursSaved: skill.hoursSaved,
-          },
-          instructions: [
-            `Save this skill to your project's .claude/skills/ directory`,
-            `Suggested path: .claude/skills/${skill.slug}.md`,
-            `After saving, the skill will be available in your Claude Code session`,
-          ],
-        },
-        null,
-        2
-      ),
+      text: JSON.stringify(responseBody, null, 2),
     },
   ];
 
-  const firstAuthMsg = getFirstAuthMessage();
-  if (firstAuthMsg) {
-    content.push({ type: "text" as const, text: firstAuthMsg });
-  }
+  if (!skipNudge) {
+    const firstAuthMsg = getFirstAuthMessage();
+    if (firstAuthMsg) {
+      content.push({ type: "text" as const, text: firstAuthMsg });
+    }
 
-  if (shouldNudge()) {
-    content.push({
-      type: "text" as const,
-      text: "Tip: Set RELAY_API_KEY to track your usage and unlock analytics.",
-    });
+    if (shouldNudge()) {
+      content.push({
+        type: "text" as const,
+        text: "Tip: Set RELAY_API_KEY to track your usage and unlock analytics.",
+      });
+    }
   }
 
   return { content };
@@ -108,5 +129,5 @@ server.registerTool(
       skillId: z.string().describe("Skill ID from search/list results"),
     },
   },
-  async ({ skillId }) => handleDeploySkill({ skillId })
+  async ({ skillId }) => handleDeploySkill({ skillId, userId: getUserId() ?? undefined })
 );

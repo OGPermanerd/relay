@@ -4,7 +4,17 @@ import { db } from "@relay/db";
 import { trackUsage } from "../tracking/events.js";
 import { getUserId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
 
-export async function handleListSkills({ category, limit }: { category?: string; limit: number }) {
+export async function handleListSkills({
+  category,
+  limit,
+  userId,
+  skipNudge,
+}: {
+  category?: string;
+  limit: number;
+  userId?: string;
+  skipNudge?: boolean;
+}) {
   if (!db) {
     return {
       content: [
@@ -33,13 +43,13 @@ export async function handleListSkills({ category, limit }: { category?: string;
     ? allResults.filter((s) => s.category === category).slice(0, limit)
     : allResults;
 
-  if (getUserId() === null) {
+  if (!userId && !skipNudge) {
     incrementAnonymousCount();
   }
 
   await trackUsage({
     toolName: "list_skills",
-    userId: getUserId() ?? undefined,
+    userId,
     metadata: { category, limit, resultCount: results.length },
   });
 
@@ -57,16 +67,18 @@ export async function handleListSkills({ category, limit }: { category?: string;
     },
   ];
 
-  const firstAuthMsg = getFirstAuthMessage();
-  if (firstAuthMsg) {
-    content.push({ type: "text" as const, text: firstAuthMsg });
-  }
+  if (!skipNudge) {
+    const firstAuthMsg = getFirstAuthMessage();
+    if (firstAuthMsg) {
+      content.push({ type: "text" as const, text: firstAuthMsg });
+    }
 
-  if (shouldNudge()) {
-    content.push({
-      type: "text" as const,
-      text: "Tip: Set RELAY_API_KEY to track your usage and unlock analytics.",
-    });
+    if (shouldNudge()) {
+      content.push({
+        type: "text" as const,
+        text: "Tip: Set RELAY_API_KEY to track your usage and unlock analytics.",
+      });
+    }
   }
 
   return { content };
@@ -85,5 +97,6 @@ server.registerTool(
       limit: z.number().min(1).max(50).default(20).describe("Maximum number of results"),
     },
   },
-  async ({ category, limit }) => handleListSkills({ category, limit })
+  async ({ category, limit }) =>
+    handleListSkills({ category, limit, userId: getUserId() ?? undefined })
 );

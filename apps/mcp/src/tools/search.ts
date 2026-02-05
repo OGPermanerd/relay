@@ -8,10 +8,14 @@ export async function handleSearchSkills({
   query,
   category,
   limit,
+  userId,
+  skipNudge,
 }: {
   query: string;
   category?: string;
   limit: number;
+  userId?: string;
+  skipNudge?: boolean;
 }) {
   if (!db) {
     return {
@@ -49,13 +53,13 @@ export async function handleSearchSkills({
 
   const results = filtered.slice(0, limit);
 
-  if (getUserId() === null) {
+  if (!userId && !skipNudge) {
     incrementAnonymousCount();
   }
 
   await trackUsage({
     toolName: "search_skills",
-    userId: getUserId() ?? undefined,
+    userId,
     metadata: { query, category, resultCount: results.length },
   });
 
@@ -74,16 +78,18 @@ export async function handleSearchSkills({
     },
   ];
 
-  const firstAuthMsg = getFirstAuthMessage();
-  if (firstAuthMsg) {
-    content.push({ type: "text" as const, text: firstAuthMsg });
-  }
+  if (!skipNudge) {
+    const firstAuthMsg = getFirstAuthMessage();
+    if (firstAuthMsg) {
+      content.push({ type: "text" as const, text: firstAuthMsg });
+    }
 
-  if (shouldNudge()) {
-    content.push({
-      type: "text" as const,
-      text: "Tip: Set RELAY_API_KEY to track your usage and unlock analytics.",
-    });
+    if (shouldNudge()) {
+      content.push({
+        type: "text" as const,
+        text: "Tip: Set RELAY_API_KEY to track your usage and unlock analytics.",
+      });
+    }
   }
 
   return { content };
@@ -103,5 +109,6 @@ server.registerTool(
       limit: z.number().min(1).max(25).default(10).describe("Maximum number of results"),
     },
   },
-  async ({ query, category, limit }) => handleSearchSkills({ query, category, limit })
+  async ({ query, category, limit }) =>
+    handleSearchSkills({ query, category, limit, userId: getUserId() ?? undefined })
 );
