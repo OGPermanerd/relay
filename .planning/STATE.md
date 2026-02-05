@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 22 (Web Remote MCP) - third of 5 in v1.4
-Plan: 22-02 complete (2 of 3 plans done)
-Status: In progress
-Last activity: 2026-02-05 — Completed 22-02-PLAN.md (MCP Streamable HTTP endpoint)
+Plan: 22-03 complete (3 of 3 plans done) - PHASE COMPLETE
+Status: Phase complete
+Last activity: 2026-02-05 — Completed 22-03-PLAN.md (MCP Connect UI & E2E tests)
 
 Completed in phase 22:
 - apps/web/package.json — DONE (22-01, mcp-handler + SDK installed)
@@ -22,8 +22,11 @@ Completed in phase 22:
 - apps/mcp/src/tools/search.ts — DONE (22-01, userId param refactoring)
 - apps/mcp/src/tools/deploy.ts — DONE (22-01, userId + transport param refactoring)
 - apps/web/app/api/mcp/[transport]/route.ts — DONE (22-02, MCP HTTP endpoint with auth, tools, CORS, rate limiter)
+- apps/web/components/mcp-connect-button.tsx — DONE (22-03, Connect to Claude.ai component)
+- apps/web/app/(protected)/profile/page.tsx — DONE (22-03, MCP Connection section added)
+- apps/web/tests/e2e/mcp-http.spec.ts — DONE (22-03, 5 E2E tests for endpoint + UI)
 
-Progress: [██████████████░] ~47% (v1.4 - 14 of ~30 plans)
+Progress: [███████████████░] ~50% (v1.4 - 15 of ~30 plans)
 
 ## Milestones
 
@@ -36,12 +39,12 @@ Progress: [██████████████░] ~47% (v1.4 - 14 of ~30
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 84
+- Total plans completed: 85
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~5.9 hours
+- Total execution time: ~6.0 hours
 
 **Recent Trend (v1.4):**
-- 14 plans across 3 phases (20, 21, 22)
+- 15 plans across 3 phases (20, 21, 22)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -70,6 +73,7 @@ Recent decisions affecting current work:
 - [21-06]: getByRole('heading') to disambiguate heading vs StatCard labels; page.evaluate for raw fetch in API tests
 - [22-01]: SDK resolved to 1.25.3; skipNudge suppresses nudge for HTTP; transport param controls deploy response format
 - [22-02]: Inline tool logic (no cross-app imports); withCors wrapper on all responses; rate limit keyed by clientId (keyId)
+- [22-03]: Playwright request API for CORS testing (browser fetch cannot set Origin header); clipboard fallback for older browsers
 
 ### Pending Todos
 
@@ -86,5 +90,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 22-02-PLAN.md
+Stopped at: Completed 22-03-PLAN.md (Phase 22 complete)
 Resume file: None
