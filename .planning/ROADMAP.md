@@ -79,7 +79,7 @@ Total: 15 plans completed.
 
 - [x] **Phase 20: API Key Management** - Employees and admins can create, manage, and revoke API keys that tie MCP sessions to identities
 - [x] **Phase 21: Employee Usage Tracking** - Every MCP tool call and install event is attributed to the employee who performed it
-- [ ] **Phase 22: Web Remote MCP** - Claude.ai browser users can access Relay skills via Streamable HTTP transport
+- [x] **Phase 22: Web Remote MCP** - Claude.ai browser users can access Relay skills via Streamable HTTP transport
 - [ ] **Phase 23: Analytics Dashboard** - Org-wide and per-employee usage trends visible through charts and exportable data
 - [ ] **Phase 24: Extended MCP Search** - MCP search reaches parity with web search by matching author names and tags
 
@@ -138,9 +138,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 22-01-PLAN.md -- Foundation: deps, middleware exemption, handler refactor for userId param
-- [ ] 22-02-PLAN.md -- MCP HTTP route handler with auth, tools, CORS, rate limiter
-- [ ] 22-03-PLAN.md -- Connect to Claude.ai UI + Playwright E2E tests
+- [x] 22-01-PLAN.md -- Foundation: deps, middleware exemption, handler refactor for userId param
+- [x] 22-02-PLAN.md -- MCP HTTP route handler with auth, tools, CORS, rate limiter
+- [x] 22-03-PLAN.md -- Connect to Claude.ai UI + Playwright E2E tests
 
 ### Phase 23: Analytics Dashboard
 **Goal**: Admins and employees can see org-wide usage trends, per-employee breakdowns, and export data to prove Relay's value
@@ -179,11 +179,11 @@ Plans:
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
 | 20. API Key Management | v1.4 | 7/7 | Complete | 2026-02-05 |
 | 21. Employee Usage Tracking | v1.4 | 6/6 | Complete | 2026-02-05 |
-| 22. Web Remote MCP | v1.4 | 0/3 | Not started | - |
+| 22. Web Remote MCP | v1.4 | 3/3 | Complete | 2026-02-05 |
 | 23. Analytics Dashboard | v1.4 | 0/TBD | Not started | - |
 | 24. Extended MCP Search | v1.4 | 0/TBD | Not started | - |
 
-**Total: 82 plans completed across 21 phases and 4 milestones**
+**Total: 85 plans completed across 22 phases and 4 milestones**
 
 ---
 *Roadmap created: 2026-01-31*
