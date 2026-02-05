@@ -147,7 +147,7 @@ export function PlatformInstallModal({ onClose }: PlatformInstallModalProps) {
 
   const handleDownloadScript = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const { content, filename } = generateInstallScript(detectedOS);
+    const { content, filename } = generateInstallScript(detectedOS, window.location.origin);
     downloadScript(content, filename);
     setShowRunInstructions(true);
   };

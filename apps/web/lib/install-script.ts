@@ -9,7 +9,10 @@ import type { DetectedOS } from "@/lib/os-detection";
  * All scripts safely read existing config, merge the relay-skills entry,
  * and write back -- they never overwrite existing MCP server entries.
  */
-export function generateInstallScript(os: DetectedOS): {
+export function generateInstallScript(
+  os: DetectedOS,
+  baseUrl: string
+): {
   content: string;
   filename: string;
 } {
@@ -49,6 +52,19 @@ console.log(JSON.stringify(existing, null, 2));
 
 $Result = node -e $MergeScript $Existing
 $Result | Set-Content $ConfigFile -Encoding UTF8
+
+# Report install to Relay (non-blocking, failure OK)
+try {
+  $ApiKey = ""
+  if (Test-Path $ConfigFile) {
+    $Config = Get-Content $ConfigFile -Raw | ConvertFrom-Json
+    if ($Config.mcpServers.'relay-skills'.env.RELAY_API_KEY) {
+      $ApiKey = $Config.mcpServers.'relay-skills'.env.RELAY_API_KEY
+    }
+  }
+  $Body = @{ key = $ApiKey; platform = "claude-desktop"; os = "windows" } | ConvertTo-Json
+  Invoke-WebRequest -Uri "${baseUrl}/api/install-callback" -Method POST -ContentType "application/json" -Body $Body -UseBasicParsing | Out-Null
+} catch { }
 
 Write-Host "Relay MCP server installed successfully!"
 Write-Host "Config written to: $ConfigFile"
@@ -95,6 +111,16 @@ node -e "
   };
   console.log(JSON.stringify(existing, null, 2));
 " "$EXISTING" > "$CONFIG_FILE"
+
+# Report install to Relay (non-blocking, failure OK)
+RELAY_API_KEY=""
+if [ -f "$CONFIG_FILE" ]; then
+  RELAY_API_KEY=$(node -e "try{const c=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));const s=c.mcpServers&&c.mcpServers['relay-skills'];if(s&&s.env&&s.env.RELAY_API_KEY)console.log(s.env.RELAY_API_KEY)}catch{}" "$CONFIG_FILE" 2>/dev/null || true)
+fi
+curl -s -X POST "${baseUrl}/api/install-callback" \\
+  -H "Content-Type: application/json" \\
+  -d "{\\"key\\":\\"$RELAY_API_KEY\\",\\"platform\\":\\"claude-desktop\\",\\"os\\":\\"$(uname -s | tr '[:upper:]' '[:lower:]')\\"}" \\
+  > /dev/null 2>&1 || true
 
 echo 'Relay MCP server installed successfully!'
 echo "Config written to: $CONFIG_FILE"
