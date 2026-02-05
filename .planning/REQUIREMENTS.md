@@ -80,35 +80,35 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| KEY-01 | — | Pending |
-| KEY-02 | — | Pending |
-| KEY-03 | — | Pending |
-| KEY-04 | — | Pending |
-| KEY-05 | — | Pending |
-| KEY-06 | — | Pending |
-| TRK-01 | — | Pending |
-| TRK-02 | — | Pending |
-| TRK-03 | — | Pending |
-| TRK-04 | — | Pending |
-| INST-01 | — | Pending |
-| INST-02 | — | Pending |
-| INST-03 | — | Pending |
-| DASH-01 | — | Pending |
-| DASH-02 | — | Pending |
-| DASH-03 | — | Pending |
-| DASH-04 | — | Pending |
-| RMCP-01 | — | Pending |
-| RMCP-02 | — | Pending |
-| RMCP-03 | — | Pending |
-| RMCP-04 | — | Pending |
-| SRCH-01 | — | Pending |
-| SRCH-02 | — | Pending |
+| KEY-01 | Phase 20 | Pending |
+| KEY-02 | Phase 20 | Pending |
+| KEY-03 | Phase 20 | Pending |
+| KEY-04 | Phase 20 | Pending |
+| KEY-05 | Phase 20 | Pending |
+| KEY-06 | Phase 20 | Pending |
+| TRK-01 | Phase 21 | Pending |
+| TRK-02 | Phase 21 | Pending |
+| TRK-03 | Phase 21 | Pending |
+| TRK-04 | Phase 21 | Pending |
+| INST-01 | Phase 21 | Pending |
+| INST-02 | Phase 21 | Pending |
+| INST-03 | Phase 21 | Pending |
+| DASH-01 | Phase 23 | Pending |
+| DASH-02 | Phase 23 | Pending |
+| DASH-03 | Phase 23 | Pending |
+| DASH-04 | Phase 23 | Pending |
+| RMCP-01 | Phase 22 | Pending |
+| RMCP-02 | Phase 22 | Pending |
+| RMCP-03 | Phase 22 | Pending |
+| RMCP-04 | Phase 22 | Pending |
+| SRCH-01 | Phase 24 | Pending |
+| SRCH-02 | Phase 24 | Pending |
 
 **Coverage:**
 - v1.4 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23
+- Mapped to phases: 23
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-05*
-*Last updated: 2026-02-05 after initial definition*
+*Last updated: 2026-02-05 after roadmap creation*

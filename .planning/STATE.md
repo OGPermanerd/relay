@@ -5,14 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v1.4 Employee Analytics & Remote MCP
+**Current focus:** v1.4 Phase 20 - API Key Management
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-05 — Milestone v1.4 started
+Phase: 20 (API Key Management) - first of 5 in v1.4
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-02-05 — v1.4 roadmap created (5 phases, 23 requirements)
+
+Progress: [░░░░░░░░░░] 0% (v1.4)
 
 ## Milestones
 
@@ -20,12 +22,32 @@ Last activity: 2026-02-05 — Milestone v1.4 started
 - v1.1 Quality & Polish - 9 plans - shipped 2026-02-01
 - v1.2 UI Redesign - 12 plans - shipped 2026-02-02
 - v1.3 AI Quality & Cross-Platform - 15 plans - shipped 2026-02-04
+- v1.4 Employee Analytics & Remote MCP - 5 phases planned
+
+## Performance Metrics
+
+**Velocity:**
+- Total plans completed: 69
+- Average duration: ~5 min (across milestones)
+- Total execution time: ~5.8 hours
+
+**Recent Trend (v1.3):**
+- 15 plans across 5 phases
+- Trend: Stable
+
+*Updated after each plan completion*
 
 ## Accumulated Context
 
 ### Decisions
 
 All decisions logged in PROJECT.md Key Decisions table.
+Recent decisions affecting current work:
+
+- [Research]: Dual-transport MCP (stdio + Streamable HTTP) with shared tool handlers
+- [Research]: API key format `rlk_` prefix + 32 random bytes, SHA-256 hash storage
+- [Research]: Graceful degradation — anonymous tracking if no API key (backward compatible)
+- [Research]: Only 2 new deps: mcp-handler ^1.0.7, recharts ^3.7.0
 
 ### Pending Todos
 
@@ -33,13 +55,13 @@ None.
 
 ### Blockers/Concerns
 
-- [Research]: Similarity threshold needs empirical tuning (start at 0.85)
-- [Research]: Voyage AI is relatively new — store model version for future migration
-- [17-01]: ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
 - [Discovery]: MCP userId field exists in usage_events schema but is never populated — core gap for v1.4
+- [17-01]: ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
+- [Research]: Exact CORS headers for Claude.ai need empirical testing during Phase 22
+- [Research]: PostgreSQL query performance at 100k+ usage_events — add indexes if slow
 
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: v1.4 milestone initialization
+Stopped at: v1.4 roadmap created, ready to plan Phase 20
 Resume file: None
