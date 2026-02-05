@@ -25,8 +25,12 @@ Completed in phase 21:
 - apps/web/lib/install-script.ts — DONE (21-03, curl/Invoke-WebRequest callbacks)
 - apps/web/components/platform-install-modal.tsx — DONE (21-03, baseUrl caller update)
 - apps/web/lib/my-leverage.ts — DONE (21-04, 4 aggregation query functions)
+- apps/web/components/home-tabs.tsx — DONE (21-05, nuqs URL-synced tab switcher)
+- apps/web/components/my-leverage-view.tsx — DONE (21-05, leverage data display)
+- apps/web/app/actions/my-leverage.ts — DONE (21-05, load more pagination action)
+- apps/web/app/(protected)/page.tsx — DONE (21-05, tabbed home page with browse/leverage)
 
-Progress: [██████████░] ~33% (v1.4 - 10 of ~30 plans)
+Progress: [███████████░] ~37% (v1.4 - 11 of ~30 plans)
 
 ## Milestones
 
@@ -39,7 +43,7 @@ Progress: [██████████░] ~33% (v1.4 - 10 of ~30 plans)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 80
+- Total plans completed: 81
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~5.8 hours
 
@@ -69,6 +73,7 @@ Recent decisions affecting current work:
 - [21-02]: Anonymous installs valid: missing/invalid API key records null userId (graceful degradation)
 - [21-03]: Non-blocking install callbacks with error suppression; extract API key from just-written config
 - [21-04]: COALESCE fallback chain for FTE hours: rating estimate -> creator estimate -> 1
+- [21-05]: nuqs URL state for tabs; serialize Date to ISO string across server-client boundary
 
 ### Pending Todos
 
@@ -84,5 +89,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 21-03-PLAN.md (Install callback in scripts)
+Stopped at: Completed 21-05-PLAN.md (My Leverage tab UI)
 Resume file: None
