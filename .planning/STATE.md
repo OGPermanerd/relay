@@ -5,34 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v1.4 Phase 21 - Employee Usage Tracking
+**Current focus:** v1.4 Phase 22 - Web Remote MCP
 
 ## Current Position
 
-Phase: 21 (Employee Usage Tracking) - second of 5 in v1.4
-Plan: 21-06 complete (all 6 plans done)
-Status: Phase complete
-Last activity: 2026-02-05 — Completed 21-06-PLAN.md (Playwright E2E tests)
+Phase: 22 (Web Remote MCP) - third of 5 in v1.4
+Plan: 22-01 complete (1 of 3 plans done)
+Status: In progress
+Last activity: 2026-02-05 — Completed 22-01-PLAN.md (Foundation for HTTP MCP transport)
 
-Completed in phase 21:
-- apps/mcp/src/auth.ts — DONE (21-01, userId resolution + nudge counter)
-- apps/mcp/src/index.ts — DONE (21-01, resolveUserId at startup)
-- apps/mcp/src/tools/search.ts — DONE (21-01, auth wiring)
-- apps/mcp/src/tools/list.ts — DONE (21-01, auth wiring)
-- apps/mcp/src/tools/deploy.ts — DONE (21-01, auth wiring)
-- apps/web/app/api/install-callback/route.ts — DONE (21-02, install_confirmed events)
-- apps/web/middleware.ts — DONE (21-02, /api/install-callback exemption)
-- apps/web/lib/install-script.ts — DONE (21-03, curl/Invoke-WebRequest callbacks)
-- apps/web/components/platform-install-modal.tsx — DONE (21-03, baseUrl caller update)
-- apps/web/lib/my-leverage.ts — DONE (21-04, 4 aggregation query functions)
-- apps/web/components/home-tabs.tsx — DONE (21-05, nuqs URL-synced tab switcher)
-- apps/web/components/my-leverage-view.tsx — DONE (21-05, leverage data display)
-- apps/web/app/actions/my-leverage.ts — DONE (21-05, load more pagination action)
-- apps/web/app/(protected)/page.tsx — DONE (21-05, tabbed home page with browse/leverage)
-- apps/web/tests/e2e/home.spec.ts — DONE (21-06, home tabs E2E tests)
-- apps/web/tests/e2e/install-callback.spec.ts — DONE (21-06, install callback API E2E tests)
+Completed in phase 22:
+- apps/web/package.json — DONE (22-01, mcp-handler + SDK installed)
+- apps/mcp/package.json — DONE (22-01, SDK upgraded to ^1.25.3)
+- apps/web/middleware.ts — DONE (22-01, /api/mcp exemption)
+- apps/mcp/src/tools/list.ts — DONE (22-01, userId param refactoring)
+- apps/mcp/src/tools/search.ts — DONE (22-01, userId param refactoring)
+- apps/mcp/src/tools/deploy.ts — DONE (22-01, userId + transport param refactoring)
 
-Progress: [████████████░] ~40% (v1.4 - 12 of ~30 plans)
+Progress: [█████████████░] ~43% (v1.4 - 13 of ~30 plans)
 
 ## Milestones
 
@@ -45,12 +35,12 @@ Progress: [████████████░] ~40% (v1.4 - 12 of ~30 plans
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 82
+- Total plans completed: 83
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~5.8 hours
+- Total execution time: ~5.9 hours
 
-**Recent Trend (v1.3):**
-- 15 plans across 5 phases
+**Recent Trend (v1.4):**
+- 13 plans across 3 phases (20, 21, 22)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -77,6 +67,7 @@ Recent decisions affecting current work:
 - [21-04]: COALESCE fallback chain for FTE hours: rating estimate -> creator estimate -> 1
 - [21-05]: nuqs URL state for tabs; serialize Date to ISO string across server-client boundary
 - [21-06]: getByRole('heading') to disambiguate heading vs StatCard labels; page.evaluate for raw fetch in API tests
+- [22-01]: SDK resolved to 1.25.3; skipNudge suppresses nudge for HTTP; transport param controls deploy response format
 
 ### Pending Todos
 
@@ -88,9 +79,10 @@ Recent decisions affecting current work:
 - [17-01]: ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
 - [Research]: Exact CORS headers for Claude.ai need empirical testing during Phase 22
 - [Research]: PostgreSQL query performance at 100k+ usage_events — add indexes if slow
+- [Note]: apps/mcp tsc --noEmit has pre-existing errors from packages/db module resolution — not blocking
 
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 21-06-PLAN.md (Phase 21 complete)
+Stopped at: Completed 22-01-PLAN.md
 Resume file: None
