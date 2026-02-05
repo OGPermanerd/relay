@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { SignOutButton } from "@/components/sign-out-button";
 import { HeaderStats } from "@/components/header-stats";
 import { getTotalStats } from "@/lib/total-stats";
+import { isAdmin } from "@/lib/admin";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -41,6 +42,14 @@ export default async function ProtectedLayout({ children }: { children: React.Re
               >
                 Profile
               </Link>
+              {isAdmin(user.email) && (
+                <Link
+                  href="/admin/keys"
+                  className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
+                >
+                  Admin
+                </Link>
+              )}
             </nav>
           </div>
 
