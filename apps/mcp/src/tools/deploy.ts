@@ -2,6 +2,7 @@ import { z } from "zod";
 import { server } from "../server.js";
 import { db } from "@relay/db";
 import { trackUsage } from "../tracking/events.js";
+import { getUserId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
 
 export async function handleDeploySkill({ skillId }: { skillId: string }) {
   if (!db) {
@@ -40,10 +41,15 @@ export async function handleDeploySkill({ skillId }: { skillId: string }) {
     };
   }
 
+  if (getUserId() === null) {
+    incrementAnonymousCount();
+  }
+
   // Track deployment
   await trackUsage({
     toolName: "deploy_skill",
     skillId: skill.id,
+    userId: getUserId() ?? undefined,
     metadata: {
       skillName: skill.name,
       skillCategory: skill.category,
@@ -52,33 +58,45 @@ export async function handleDeploySkill({ skillId }: { skillId: string }) {
 
   // Return skill content for Claude to save
   // Claude Code will handle file writing with user confirmation
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify(
-          {
-            success: true,
-            skill: {
-              id: skill.id,
-              name: skill.name,
-              category: skill.category,
-              filename: `${skill.slug}.md`,
-              content: skill.content,
-              hoursSaved: skill.hoursSaved,
-            },
-            instructions: [
-              `Save this skill to your project's .claude/skills/ directory`,
-              `Suggested path: .claude/skills/${skill.slug}.md`,
-              `After saving, the skill will be available in your Claude Code session`,
-            ],
+  const content: Array<{ type: "text"; text: string }> = [
+    {
+      type: "text" as const,
+      text: JSON.stringify(
+        {
+          success: true,
+          skill: {
+            id: skill.id,
+            name: skill.name,
+            category: skill.category,
+            filename: `${skill.slug}.md`,
+            content: skill.content,
+            hoursSaved: skill.hoursSaved,
           },
-          null,
-          2
-        ),
-      },
-    ],
-  };
+          instructions: [
+            `Save this skill to your project's .claude/skills/ directory`,
+            `Suggested path: .claude/skills/${skill.slug}.md`,
+            `After saving, the skill will be available in your Claude Code session`,
+          ],
+        },
+        null,
+        2
+      ),
+    },
+  ];
+
+  const firstAuthMsg = getFirstAuthMessage();
+  if (firstAuthMsg) {
+    content.push({ type: "text" as const, text: firstAuthMsg });
+  }
+
+  if (shouldNudge()) {
+    content.push({
+      type: "text" as const,
+      text: "Tip: Set RELAY_API_KEY to track your usage and unlock analytics.",
+    });
+  }
+
+  return { content };
 }
 
 server.registerTool(

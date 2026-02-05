@@ -2,6 +2,7 @@ import { z } from "zod";
 import { server } from "../server.js";
 import { db } from "@relay/db";
 import { trackUsage } from "../tracking/events.js";
+import { getUserId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
 
 export async function handleSearchSkills({
   query,
@@ -48,27 +49,44 @@ export async function handleSearchSkills({
 
   const results = filtered.slice(0, limit);
 
+  if (getUserId() === null) {
+    incrementAnonymousCount();
+  }
+
   await trackUsage({
     toolName: "search_skills",
+    userId: getUserId() ?? undefined,
     metadata: { query, category, resultCount: results.length },
   });
 
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify(
-          {
-            query,
-            count: results.length,
-            skills: results,
-          },
-          null,
-          2
-        ),
-      },
-    ],
-  };
+  const content: Array<{ type: "text"; text: string }> = [
+    {
+      type: "text" as const,
+      text: JSON.stringify(
+        {
+          query,
+          count: results.length,
+          skills: results,
+        },
+        null,
+        2
+      ),
+    },
+  ];
+
+  const firstAuthMsg = getFirstAuthMessage();
+  if (firstAuthMsg) {
+    content.push({ type: "text" as const, text: firstAuthMsg });
+  }
+
+  if (shouldNudge()) {
+    content.push({
+      type: "text" as const,
+      text: "Tip: Set RELAY_API_KEY to track your usage and unlock analytics.",
+    });
+  }
+
+  return { content };
 }
 
 server.registerTool(
