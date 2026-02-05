@@ -5,31 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v1.4 Phase 20 - API Key Management
+**Current focus:** v1.4 Phase 21 - Employee Usage Tracking
 
 ## Current Position
 
-Phase: 20 (API Key Management) - first of 5 in v1.4
-Plan: 20-07 complete, phase 20 fully complete (all 7 plans)
-Status: Phase complete
-Last activity: 2026-02-05 — Completed 20-07-PLAN.md (Admin nav link in header)
+Phase: 21 (Employee Usage Tracking) - second of 5 in v1.4
+Plan: 21-04 complete (wave 1 in progress)
+Status: In progress
+Last activity: 2026-02-05 — Completed 21-04-PLAN.md (My Leverage aggregation queries)
 
-Completed in phase 20:
-- packages/db/src/schema/api-keys.ts — DONE (schema + migration)
-- packages/db/src/schema/index.ts — DONE (export added)
-- packages/db/src/relations/index.ts — DONE (apiKeys relations added)
-- apps/web/lib/api-key-crypto.ts — DONE (20-01)
-- apps/web/lib/admin.ts — DONE (20-01)
-- packages/db/src/services/api-keys.ts — DONE (20-02)
-- packages/db/src/services/index.ts — DONE (20-02, re-exports added)
-- apps/web/app/api/auth/validate-key/route.ts — DONE (20-03)
-- apps/web/app/actions/api-keys.ts — DONE (20-03)
-- apps/web/components/api-key-manager.tsx — DONE (20-04)
-- apps/web/app/(protected)/admin/keys/page.tsx — DONE (20-06)
-- apps/web/components/admin-key-manager.tsx — DONE (20-06)
-- apps/web/app/(protected)/layout.tsx — DONE (20-07, admin nav link)
+Completed in phase 21:
+- apps/web/lib/my-leverage.ts — DONE (21-04, 4 aggregation query functions)
 
-Progress: [███████░░░] ~23% (v1.4 - 7 of ~30 plans)
+Progress: [████████░░] ~27% (v1.4 - 8 of ~30 plans)
 
 ## Milestones
 
@@ -42,7 +30,7 @@ Progress: [███████░░░] ~23% (v1.4 - 7 of ~30 plans)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 76
+- Total plans completed: 77
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~5.8 hours
 
@@ -69,6 +57,7 @@ Recent decisions affecting current work:
 - [20-03]: leftJoin makes userEmail nullable in admin listAll; rotateApiKey always targets self
 - [20-04]: useState+useCallback over useActionState for multi-action component; amber show-once pattern
 - [20-06]: Admin view uses table layout (vs card layout for user view); client-side text filter for instant search
+- [21-04]: COALESCE fallback chain for FTE hours: rating estimate -> creator estimate -> 1
 
 ### Pending Todos
 
@@ -84,5 +73,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 20-07-PLAN.md (Admin nav link) - Phase 20 fully complete
+Stopped at: Completed 21-04-PLAN.md (My Leverage aggregation queries)
 Resume file: None
