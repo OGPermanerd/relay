@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 22 (Web Remote MCP) - third of 5 in v1.4
-Plan: 22-01 complete (1 of 3 plans done)
+Plan: 22-02 complete (2 of 3 plans done)
 Status: In progress
-Last activity: 2026-02-05 — Completed 22-01-PLAN.md (Foundation for HTTP MCP transport)
+Last activity: 2026-02-05 — Completed 22-02-PLAN.md (MCP Streamable HTTP endpoint)
 
 Completed in phase 22:
 - apps/web/package.json — DONE (22-01, mcp-handler + SDK installed)
@@ -21,8 +21,9 @@ Completed in phase 22:
 - apps/mcp/src/tools/list.ts — DONE (22-01, userId param refactoring)
 - apps/mcp/src/tools/search.ts — DONE (22-01, userId param refactoring)
 - apps/mcp/src/tools/deploy.ts — DONE (22-01, userId + transport param refactoring)
+- apps/web/app/api/mcp/[transport]/route.ts — DONE (22-02, MCP HTTP endpoint with auth, tools, CORS, rate limiter)
 
-Progress: [█████████████░] ~43% (v1.4 - 13 of ~30 plans)
+Progress: [██████████████░] ~47% (v1.4 - 14 of ~30 plans)
 
 ## Milestones
 
@@ -35,12 +36,12 @@ Progress: [█████████████░] ~43% (v1.4 - 13 of ~30 pl
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 83
+- Total plans completed: 84
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~5.9 hours
 
 **Recent Trend (v1.4):**
-- 13 plans across 3 phases (20, 21, 22)
+- 14 plans across 3 phases (20, 21, 22)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -68,6 +69,7 @@ Recent decisions affecting current work:
 - [21-05]: nuqs URL state for tabs; serialize Date to ISO string across server-client boundary
 - [21-06]: getByRole('heading') to disambiguate heading vs StatCard labels; page.evaluate for raw fetch in API tests
 - [22-01]: SDK resolved to 1.25.3; skipNudge suppresses nudge for HTTP; transport param controls deploy response format
+- [22-02]: Inline tool logic (no cross-app imports); withCors wrapper on all responses; rate limit keyed by clientId (keyId)
 
 ### Pending Todos
 
@@ -77,12 +79,12 @@ Recent decisions affecting current work:
 
 - [Resolved]: MCP userId field now populated via auth.ts resolveUserId() when RELAY_API_KEY is set (21-01)
 - [17-01]: ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
-- [Research]: Exact CORS headers for Claude.ai need empirical testing during Phase 22
+- [Resolved]: CORS headers for Claude.ai tested and working — allow-origin, expose Mcp-Session-Id, max-age 86400 (22-02)
 - [Research]: PostgreSQL query performance at 100k+ usage_events — add indexes if slow
 - [Note]: apps/mcp tsc --noEmit has pre-existing errors from packages/db module resolution — not blocking
 
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 22-01-PLAN.md
+Stopped at: Completed 22-02-PLAN.md
 Resume file: None
