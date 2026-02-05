@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 20 (API Key Management) - first of 5 in v1.4
-Plan: 20-06 complete, phase 20 complete
+Plan: 20-07 complete, phase 20 fully complete (all 7 plans)
 Status: Phase complete
-Last activity: 2026-02-05 — Completed 20-06-PLAN.md (Admin key management page and component)
+Last activity: 2026-02-05 — Completed 20-07-PLAN.md (Admin nav link in header)
 
 Completed in phase 20:
 - packages/db/src/schema/api-keys.ts — DONE (schema + migration)
@@ -27,8 +27,9 @@ Completed in phase 20:
 - apps/web/components/api-key-manager.tsx — DONE (20-04)
 - apps/web/app/(protected)/admin/keys/page.tsx — DONE (20-06)
 - apps/web/components/admin-key-manager.tsx — DONE (20-06)
+- apps/web/app/(protected)/layout.tsx — DONE (20-07, admin nav link)
 
-Progress: [██████░░░░] ~20% (v1.4 - 6 of ~30 plans)
+Progress: [███████░░░] ~23% (v1.4 - 7 of ~30 plans)
 
 ## Milestones
 
@@ -41,7 +42,7 @@ Progress: [██████░░░░] ~20% (v1.4 - 6 of ~30 plans)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 75
+- Total plans completed: 76
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~5.8 hours
 
@@ -83,5 +84,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 20-06-PLAN.md (Admin key management page and component) - Phase 20 complete
+Stopped at: Completed 20-07-PLAN.md (Admin nav link) - Phase 20 fully complete
 Resume file: None
