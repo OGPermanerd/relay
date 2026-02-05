@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getUserStats } from "@/lib/user-stats";
 import { listApiKeysAction } from "@/app/actions/api-keys";
 import { ApiKeyManager } from "@/components/api-key-manager";
+import { McpConnectButton } from "@/components/mcp-connect-button";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -20,6 +21,8 @@ export default async function ProfilePage() {
   // Fetch API keys for the current user
   const keysResult = await listApiKeysAction();
   const keys = keysResult.keys || [];
+
+  const mcpServerUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:2000"}/api/mcp/mcp`;
 
   const stats = [
     {
@@ -109,6 +112,12 @@ export default async function ProfilePage() {
         <h2 className="mb-4 text-lg font-semibold text-gray-900">API Keys</h2>
         <p className="mb-4 text-sm text-gray-600">Manage keys for MCP authentication</p>
         <ApiKeyManager initialKeys={keys} />
+      </div>
+
+      {/* MCP Connection */}
+      <div className="mt-8">
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">MCP Connection</h2>
+        <McpConnectButton serverUrl={mcpServerUrl} />
       </div>
     </div>
   );
