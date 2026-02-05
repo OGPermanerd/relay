@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 20 (API Key Management) - first of 5 in v1.4
-Plan: 20-03 complete, 20-04 next
+Plan: 20-04 complete, 20-05 next
 Status: In progress
-Last activity: 2026-02-05 — Completed 20-03-PLAN.md (validation endpoint + server actions)
+Last activity: 2026-02-05 — Completed 20-04-PLAN.md (ApiKeyManager client component)
 
 Completed in phase 20:
 - packages/db/src/schema/api-keys.ts — DONE (schema + migration)
@@ -24,8 +24,9 @@ Completed in phase 20:
 - packages/db/src/services/index.ts — DONE (20-02, re-exports added)
 - apps/web/app/api/auth/validate-key/route.ts — DONE (20-03)
 - apps/web/app/actions/api-keys.ts — DONE (20-03)
+- apps/web/components/api-key-manager.tsx — DONE (20-04)
 
-Progress: [███░░░░░░░] ~10% (v1.4 - 3 of ~30 plans)
+Progress: [████░░░░░░] ~13% (v1.4 - 4 of ~30 plans)
 
 ## Milestones
 
@@ -38,7 +39,7 @@ Progress: [███░░░░░░░] ~10% (v1.4 - 3 of ~30 plans)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 72
+- Total plans completed: 73
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~5.8 hours
 
@@ -63,6 +64,7 @@ Recent decisions affecting current work:
 - [20-01]: Used Node.js built-in crypto only — zero external deps for key generation/hashing
 - [20-02]: Timing-safe comparison + fire-and-forget lastUsedAt + explicit column exclusion of keyHash
 - [20-03]: leftJoin makes userEmail nullable in admin listAll; rotateApiKey always targets self
+- [20-04]: useState+useCallback over useActionState for multi-action component; amber show-once pattern
 
 ### Pending Todos
 
@@ -78,5 +80,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 20-03-PLAN.md (validation endpoint + server actions)
+Stopped at: Completed 20-04-PLAN.md (ApiKeyManager client component)
 Resume file: None
