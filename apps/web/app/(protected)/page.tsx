@@ -4,10 +4,18 @@ import { redirect } from "next/navigation";
 import { getPlatformStats } from "@/lib/platform-stats";
 import { getTrendingSkills } from "@/lib/trending";
 import { getLeaderboard } from "@/lib/leaderboard";
+import {
+  getSkillsUsed,
+  getSkillsUsedStats,
+  getSkillsCreated,
+  getSkillsCreatedStats,
+} from "@/lib/my-leverage";
 import { StatCard } from "@/components/stat-card";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { TrendingSection } from "@/components/trending-section";
 import { HomeSearchBar } from "@/components/home-search-bar";
+import { HomeTabs } from "@/components/home-tabs";
+import { MyLeverageView } from "@/components/my-leverage-view";
 
 // Icons for stat cards (Heroicons)
 function UsersIcon() {
@@ -94,10 +102,22 @@ export default async function HomePage() {
   const firstName = user.name?.split(" ")[0] || "there";
 
   // Fetch all data in parallel
-  const [stats, trending, leaderboard] = await Promise.all([
+  const [
+    stats,
+    trending,
+    leaderboard,
+    skillsUsedResult,
+    skillsUsedStats,
+    skillsCreatedResult,
+    skillsCreatedStats,
+  ] = await Promise.all([
     getPlatformStats(),
     getTrendingSkills(6),
     getLeaderboard(5),
+    getSkillsUsed(user.id!),
+    getSkillsUsedStats(user.id!),
+    getSkillsCreated(user.id!),
+    getSkillsCreatedStats(user.id!),
   ]);
 
   const navigationCards = [
@@ -159,20 +179,14 @@ export default async function HomePage() {
     },
   ];
 
-  return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Welcome back, {firstName}!</h1>
-        <p className="mt-2 text-gray-600">
-          Connect with colleagues who have the skills you need, and share your own expertise.
-        </p>
-        {/* Quick Search */}
-        <div className="mt-4 max-w-xl">
-          <HomeSearchBar />
-        </div>
-      </div>
+  // Serialize timeline entry timestamps to ISO strings for client component
+  const serializedSkillsUsed = skillsUsedResult.items.map((entry) => ({
+    ...entry,
+    timestamp: entry.timestamp.toISOString(),
+  }));
 
+  const browseContent = (
+    <>
       {/* Platform Stats */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
@@ -246,6 +260,34 @@ export default async function HomePage() {
           </Link>
         </div>
       </div>
+    </>
+  );
+
+  const leverageContent = (
+    <MyLeverageView
+      skillsUsed={serializedSkillsUsed}
+      skillsUsedStats={skillsUsedStats}
+      skillsCreated={skillsCreatedResult.items}
+      skillsCreatedStats={skillsCreatedStats}
+      skillsUsedTotal={skillsUsedResult.total}
+    />
+  );
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Welcome Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Welcome back, {firstName}!</h1>
+        <p className="mt-2 text-gray-600">
+          Connect with colleagues who have the skills you need, and share your own expertise.
+        </p>
+        {/* Quick Search */}
+        <div className="mt-4 max-w-xl">
+          <HomeSearchBar />
+        </div>
+      </div>
+
+      <HomeTabs browseContent={browseContent} leverageContent={leverageContent} />
     </div>
   );
 }
