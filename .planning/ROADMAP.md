@@ -115,11 +115,15 @@ Plans:
   3. Install scripts send a callback to Relay on successful install, recording the employee, platform, OS, and skill
   4. The "My Usage" page shows an employee their personal skill usage history, frequency breakdown, and cumulative hours saved
   5. Install events distinguish between deploy intent (MCP deploy_skill) and confirmed installation (callback received)
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 21-01: TBD
-- [ ] 21-02: TBD
+- [ ] 21-01-PLAN.md -- MCP auth module + userId wiring into tool handlers
+- [ ] 21-02-PLAN.md -- Install callback endpoint + middleware exemption
+- [ ] 21-03-PLAN.md -- Install script callback addition (bash + PowerShell)
+- [ ] 21-04-PLAN.md -- Usage analytics aggregation queries (my-leverage.ts)
+- [ ] 21-05-PLAN.md -- My Skill Leverage tab UI on home page
+- [ ] 21-06-PLAN.md -- Playwright E2E verification
 
 ### Phase 22: Web Remote MCP
 **Goal**: Claude.ai browser users can discover, search, and deploy Relay skills through a Streamable HTTP MCP endpoint
@@ -172,7 +176,7 @@ Plans:
 | 12-14 | v1.2 | 12/12 | Complete | 2026-02-02 |
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
 | 20. API Key Management | v1.4 | 0/6 | Planned | - |
-| 21. Employee Usage Tracking | v1.4 | 0/TBD | Not started | - |
+| 21. Employee Usage Tracking | v1.4 | 0/6 | Planned | - |
 | 22. Web Remote MCP | v1.4 | 0/TBD | Not started | - |
 | 23. Analytics Dashboard | v1.4 | 0/TBD | Not started | - |
 | 24. Extended MCP Search | v1.4 | 0/TBD | Not started | - |
