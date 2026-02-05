@@ -8,9 +8,10 @@ export default auth((req) => {
   const isLoginPage = req.nextUrl.pathname === "/login";
   const isAuthApi = req.nextUrl.pathname.startsWith("/api/auth");
   const isDevLogin = req.nextUrl.pathname === "/api/dev-login";
+  const isInstallCallback = req.nextUrl.pathname.startsWith("/api/install-callback");
 
-  // Allow auth API routes and dev login
-  if (isAuthApi || isDevLogin) {
+  // Allow auth API routes, dev login, and install callback
+  if (isAuthApi || isDevLogin || isInstallCallback) {
     return;
   }
 
