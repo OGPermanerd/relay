@@ -95,13 +95,15 @@ Total: 15 plans completed.
   3. API key validation endpoint accepts a raw key, resolves it to a userId, and rejects revoked or expired keys
   4. Keys are stored as SHA-256 hashes with an `rlk_` prefix visible for identification -- raw key is never persisted
   5. Key rotation works: employee generates a new key while the old key remains valid during a configurable grace period
-**Plans**: 4 plans
+**Plans**: 6 plans (replanned for smaller scope per plan)
 
 Plans:
-- [ ] 20-01-PLAN.md -- Schema, crypto utils, and admin helper foundation
-- [ ] 20-02-PLAN.md -- Service layer, server actions, and validation endpoint
-- [ ] 20-03-PLAN.md -- Employee profile page API key management UI
-- [ ] 20-04-PLAN.md -- Admin key management page and navigation
+- [ ] 20-01-PLAN.md -- Crypto utils and admin helper (schema already done)
+- [ ] 20-02-PLAN.md -- DB service layer (validate, list, revoke, setExpiry)
+- [ ] 20-03-PLAN.md -- Validation endpoint and server actions
+- [ ] 20-04-PLAN.md -- ApiKeyManager client component
+- [ ] 20-05-PLAN.md -- Profile page integration + Playwright
+- [ ] 20-06-PLAN.md -- Admin page, admin component, and nav link
 
 ### Phase 21: Employee Usage Tracking
 **Goal**: Every MCP tool call and install event is attributed to the specific employee, with a personal dashboard showing their activity
@@ -169,7 +171,7 @@ Plans:
 | 9-11 | v1.1 | 9/9 | Complete | 2026-02-01 |
 | 12-14 | v1.2 | 12/12 | Complete | 2026-02-02 |
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
-| 20. API Key Management | v1.4 | 0/4 | Planned | - |
+| 20. API Key Management | v1.4 | 0/6 | Planned | - |
 | 21. Employee Usage Tracking | v1.4 | 0/TBD | Not started | - |
 | 22. Web Remote MCP | v1.4 | 0/TBD | Not started | - |
 | 23. Analytics Dashboard | v1.4 | 0/TBD | Not started | - |

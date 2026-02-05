@@ -10,9 +10,15 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 20 (API Key Management) - first of 5 in v1.4
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-02-05 — v1.4 roadmap created (5 phases, 23 requirements)
+Plan: 20-01 (Crypto utils + admin helper) — ready to execute
+Status: Replanned — 6 smaller plans to prevent context crashes
+Last activity: 2026-02-05 — Replanned phase with smaller plans
+
+Partial work already done (committed or staged):
+- packages/db/src/schema/api-keys.ts — DONE (schema created)
+- packages/db/src/schema/index.ts — DONE (export added)
+- packages/db/src/relations/index.ts — DONE (apiKeys relations added)
+- Migration NOT yet generated/run
 
 Progress: [░░░░░░░░░░] 0% (v1.4)
 
@@ -48,6 +54,7 @@ Recent decisions affecting current work:
 - [Research]: API key format `rlk_` prefix + 32 random bytes, SHA-256 hash storage
 - [Research]: Graceful degradation — anonymous tracking if no API key (backward compatible)
 - [Research]: Only 2 new deps: mcp-handler ^1.0.7, recharts ^3.7.0
+- [Replan]: Phase 20 split from 4 plans to 6 smaller plans to prevent context crashes
 
 ### Pending Todos
 
@@ -63,5 +70,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: v1.4 roadmap created, ready to plan Phase 20
+Stopped at: Replanned Phase 20 into 6 smaller plans, ready to execute
 Resume file: None
