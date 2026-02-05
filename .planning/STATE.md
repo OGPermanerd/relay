@@ -10,14 +10,19 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 21 (Employee Usage Tracking) - second of 5 in v1.4
-Plan: 21-04 complete (wave 1 in progress)
+Plan: 21-01 + 21-04 complete (wave 1 in progress)
 Status: In progress
-Last activity: 2026-02-05 — Completed 21-04-PLAN.md (My Leverage aggregation queries)
+Last activity: 2026-02-05 — Completed 21-01-PLAN.md (MCP auth module + tool wiring)
 
 Completed in phase 21:
+- apps/mcp/src/auth.ts — DONE (21-01, userId resolution + nudge counter)
+- apps/mcp/src/index.ts — DONE (21-01, resolveUserId at startup)
+- apps/mcp/src/tools/search.ts — DONE (21-01, auth wiring)
+- apps/mcp/src/tools/list.ts — DONE (21-01, auth wiring)
+- apps/mcp/src/tools/deploy.ts — DONE (21-01, auth wiring)
 - apps/web/lib/my-leverage.ts — DONE (21-04, 4 aggregation query functions)
 
-Progress: [████████░░] ~27% (v1.4 - 8 of ~30 plans)
+Progress: [█████████░] ~30% (v1.4 - 9 of ~30 plans)
 
 ## Milestones
 
@@ -30,7 +35,7 @@ Progress: [████████░░] ~27% (v1.4 - 8 of ~30 plans)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 77
+- Total plans completed: 78
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~5.8 hours
 
@@ -65,7 +70,7 @@ None.
 
 ### Blockers/Concerns
 
-- [Discovery]: MCP userId field exists in usage_events schema but is never populated — core gap for v1.4
+- [Resolved]: MCP userId field now populated via auth.ts resolveUserId() when RELAY_API_KEY is set (21-01)
 - [17-01]: ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
 - [Research]: Exact CORS headers for Claude.ai need empirical testing during Phase 22
 - [Research]: PostgreSQL query performance at 100k+ usage_events — add indexes if slow
@@ -73,5 +78,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 21-04-PLAN.md (My Leverage aggregation queries)
+Stopped at: Completed 21-01-PLAN.md (MCP auth module + tool wiring)
 Resume file: None
