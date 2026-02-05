@@ -8,24 +8,15 @@ Relay is an internal skill marketplace where Claude skills, prompts, workflows, 
 
 Skills get better as they pass through more hands, with real metrics proving that value.
 
-## Current Milestone: v1.3 AI Quality & Cross-Platform
-
-**Goal:** Add AI-driven skill review, semantic duplicate detection, fork-based versioning, and cross-platform install support.
-
-**Target features:**
-- AI skill review (functionality testing, security scanning, quality assessment, improvement suggestions)
-- Semantic similarity detection (advisory duplicate warnings on publish)
-- Fork-based versioning (users create variants of existing skills)
-- Cross-platform install (Claude Code, Claude Desktop, Claude.ai web, VS Code extension)
-
 ## Current State
 
-**v1.2 shipped 2026-02-02** — Two-panel UI redesign with sortable table, inline expansion, keyboard navigation, and mobile accessibility.
+**v1.3 shipped 2026-02-04** — AI-driven skill review, semantic similarity detection, fork-based versioning, and cross-platform MCP install.
 
-Tech stack: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, Playwright, vitest, nuqs, react-swipeable
-LOC: 5,592 TypeScript across 230 files
+Tech stack: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, Playwright, vitest, nuqs, react-swipeable, Voyage AI, pgvector, Anthropic SDK
+LOC: 9,475 TypeScript across 250+ files
 
 Previous:
+- v1.2 shipped 2026-02-02 — Two-panel UI redesign with sortable table, inline expansion, keyboard navigation, and mobile accessibility
 - v1.1 shipped 2026-02-01 — Quality scorecards and comprehensive E2E test coverage
 - v1.0 shipped 2026-01-31 — Full internal skill marketplace with MCP integration
 
@@ -64,10 +55,25 @@ Previous:
 - ✓ Full keyboard navigation (Tab, Enter, Arrow keys) — v1.2
 - ✓ Screen reader accessibility (aria-sort, live announcements, ARIA attributes) — v1.2
 - ✓ Mobile responsive layout with swipe gestures — v1.2
+- ✓ Vector embeddings for skill content using Voyage AI — v1.3
+- ✓ Embeddings stored in PostgreSQL using pgvector extension — v1.3
+- ✓ Existing skills backfilled with embeddings — v1.3
+- ✓ New skills automatically embedded on publish — v1.3
+- ✓ AI review with quality, clarity, completeness scores — v1.3
+- ✓ AI review results stored and persisted — v1.3
+- ✓ Top 3 similar skills shown on publish (advisory) — v1.3
+- ✓ Similar skills section on skill detail page — v1.3
+- ✓ Fork skill with "Forked from X" attribution — v1.3
+- ✓ Parent skill shows fork count — v1.3
+- ✓ View all forks for any skill — v1.3
+- ✓ Forked skills inherit parent's tags and category — v1.3
+- ✓ Cross-platform install modal with 4 platforms — v1.3
+- ✓ OS auto-detection (macOS/Windows/Linux) — v1.3
+- ✓ Install scripts for Claude Desktop (bash/PowerShell) — v1.3
 
 ### Active
 
-(Defined in REQUIREMENTS.md for v1.3)
+(No active milestone — run /gsd:new-milestone to start v1.4)
 
 ### Out of Scope
 
@@ -100,11 +106,11 @@ Previous:
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Wiki-style versioning over fork model | Keeps skills as single evolving artifacts rather than fragmenting into forks; simpler mental model | ⚠️ Revisit — adding fork model in v1.3 |
+| Wiki-style versioning over fork model | Keeps skills as single evolving artifacts rather than fragmenting into forks; simpler mental model | ✓ Both — added fork model in v1.3 as complement |
 | MCP-only tracking | Provides accurate usage data; creates natural incentive for MCP adoption | ✓ Good |
 | No approval gates | Reduces friction for contributors; lets metrics surface quality organically | ✓ Good |
 | User estimates override creator | Real-world usage data more reliable than creator's guess | ✓ Good |
-| Defer similarity detection to v2 | Simplifies v1 scope; basic search sufficient to start | ⚠️ Revisit — adding in v1.3 |
+| Defer similarity detection to v2 | Simplifies v1 scope; basic search sufficient to start | ✓ Done — shipped in v1.3 |
 | MCP Integration in Phase 3 | Enable usage tracking from day one; core metric needs real data | ✓ Good |
 | JWT session strategy | Required for Edge middleware compatibility with Auth.js | ✓ Good |
 | Denormalized totalUses counter | Display performance over query complexity | ✓ Good |
@@ -123,5 +129,11 @@ Previous:
 | 5 sessions as onboarding threshold | Balances feature discovery with mobile UX | ✓ Good |
 | 80px swipe delta threshold | Balances sensitivity with accidental activation prevention | ✓ Good |
 
+| Voyage AI for embeddings | Anthropic-recommended, voyage-code-3 model with 1024 dimensions | ✓ Good |
+| pgvector for storage | Stays within PostgreSQL, no new infrastructure | ✓ Good |
+| Advisory similarity detection | Never blocking, high threshold 0.85+ | ✓ Good |
+| On-demand AI review | Not auto-trigger, manages costs | ✓ Good |
+| Self-contained InstallButton | Internal modal state, no props drilling | ✓ Good |
+
 ---
-*Last updated: 2026-02-02 after v1.3 milestone started*
+*Last updated: 2026-02-04 after v1.3 milestone complete*

@@ -1,5 +1,31 @@
 # Project Milestones: Relay
 
+## v1.3 AI Quality & Cross-Platform (Shipped: 2026-02-04)
+
+**Delivered:** AI-driven skill review, semantic similarity detection, fork-based versioning, and cross-platform MCP install with OS auto-detection.
+
+**Phases completed:** 15-19 (15 plans total)
+
+**Key accomplishments:**
+- Vector embeddings infrastructure with Voyage AI and pgvector for semantic search
+- Similarity detection showing top 3 similar skills on publish (advisory, non-blocking)
+- On-demand AI quality review with 3 categories (quality, clarity, completeness) and overall score
+- Fork-based versioning with "Forked from X" attribution and fork count display
+- Cross-platform install modal with 4 platforms (Claude Desktop, Claude Code, Other IDE, Other Systems)
+- OS auto-detection with install scripts for macOS/Linux (bash) and Windows (PowerShell)
+
+**Stats:**
+- 25 files created/modified
+- 9,475 lines of TypeScript
+- 5 phases, 15 plans
+- 2 days from v1.2 to v1.3
+
+**Git range:** `dd0c6f1` (feat(15-01)) → `138083f` (test(19))
+
+**Archive:** [v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md) | [v1.3-REQUIREMENTS.md](milestones/v1.3-REQUIREMENTS.md)
+
+---
+
 ## v1.2 UI Redesign (Shipped: 2026-02-02)
 
 **Delivered:** Two-panel sortable table layout with inline expansion, one-click install, full keyboard navigation, and mobile accessibility.
