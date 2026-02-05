@@ -2,6 +2,8 @@ import Image from "next/image";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getUserStats } from "@/lib/user-stats";
+import { listApiKeysAction } from "@/app/actions/api-keys";
+import { ApiKeyManager } from "@/components/api-key-manager";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -14,6 +16,10 @@ export default async function ProfilePage() {
 
   // Fetch real user statistics from database
   const userStats = await getUserStats(session.user.id);
+
+  // Fetch API keys for the current user
+  const keysResult = await listApiKeysAction();
+  const keys = keysResult.keys || [];
 
   const stats = [
     {
@@ -96,6 +102,13 @@ export default async function ProfilePage() {
             </div>
           </dl>
         </div>
+      </div>
+
+      {/* API Keys */}
+      <div className="mt-8">
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">API Keys</h2>
+        <p className="mb-4 text-sm text-gray-600">Manage keys for MCP authentication</p>
+        <ApiKeyManager initialKeys={keys} />
       </div>
     </div>
   );

@@ -12,10 +12,10 @@ interface ApiKeyData {
   id: string;
   keyPrefix: string;
   name: string;
-  lastUsedAt: Date | null;
-  createdAt: Date;
-  revokedAt: Date | null;
-  expiresAt: Date | null;
+  lastUsedAt: string | Date | null;
+  createdAt: string | Date;
+  revokedAt: string | Date | null;
+  expiresAt: string | Date | null;
 }
 
 interface ApiKeyManagerProps {
