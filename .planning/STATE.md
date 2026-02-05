@@ -80,7 +80,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None.
+1. Test usage tracking E2E with Corporate Document Branding skill (testing)
 
 ### Blockers/Concerns
 
