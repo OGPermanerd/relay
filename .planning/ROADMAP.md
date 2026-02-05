@@ -77,8 +77,8 @@ Total: 15 plans completed.
 
 **Milestone Goal:** Transform Relay from an anonymous skill marketplace into an enterprise platform with employee-level attribution, usage analytics, and web-accessible MCP. The userId column in usage_events finally gets populated, and real metrics prove the value of skills passing through hands.
 
-- [ ] **Phase 20: API Key Management** - Employees and admins can create, manage, and revoke API keys that tie MCP sessions to identities
-- [ ] **Phase 21: Employee Usage Tracking** - Every MCP tool call and install event is attributed to the employee who performed it
+- [x] **Phase 20: API Key Management** - Employees and admins can create, manage, and revoke API keys that tie MCP sessions to identities
+- [x] **Phase 21: Employee Usage Tracking** - Every MCP tool call and install event is attributed to the employee who performed it
 - [ ] **Phase 22: Web Remote MCP** - Claude.ai browser users can access Relay skills via Streamable HTTP transport
 - [ ] **Phase 23: Analytics Dashboard** - Org-wide and per-employee usage trends visible through charts and exportable data
 - [ ] **Phase 24: Extended MCP Search** - MCP search reaches parity with web search by matching author names and tags
@@ -98,12 +98,13 @@ Total: 15 plans completed.
 **Plans**: 6 plans (replanned for smaller scope per plan)
 
 Plans:
-- [ ] 20-01-PLAN.md -- Crypto utils and admin helper (schema already done)
-- [ ] 20-02-PLAN.md -- DB service layer (validate, list, revoke, setExpiry)
-- [ ] 20-03-PLAN.md -- Validation endpoint and server actions
-- [ ] 20-04-PLAN.md -- ApiKeyManager client component
-- [ ] 20-05-PLAN.md -- Profile page integration + Playwright
-- [ ] 20-06-PLAN.md -- Admin page, admin component, and nav link
+- [x] 20-01-PLAN.md -- Crypto utils and admin helper (schema already done)
+- [x] 20-02-PLAN.md -- DB service layer (validate, list, revoke, setExpiry)
+- [x] 20-03-PLAN.md -- Validation endpoint and server actions
+- [x] 20-04-PLAN.md -- ApiKeyManager client component
+- [x] 20-05-PLAN.md -- Profile page integration + Playwright
+- [x] 20-06-PLAN.md -- Admin page, admin component, and nav link
+- [x] 20-07-PLAN.md -- Admin nav link + Playwright tests
 
 ### Phase 21: Employee Usage Tracking
 **Goal**: Every MCP tool call and install event is attributed to the specific employee, with a personal dashboard showing their activity
@@ -118,12 +119,12 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [ ] 21-01-PLAN.md -- MCP auth module + userId wiring into tool handlers
-- [ ] 21-02-PLAN.md -- Install callback endpoint + middleware exemption
-- [ ] 21-03-PLAN.md -- Install script callback addition (bash + PowerShell)
-- [ ] 21-04-PLAN.md -- Usage analytics aggregation queries (my-leverage.ts)
-- [ ] 21-05-PLAN.md -- My Skill Leverage tab UI on home page
-- [ ] 21-06-PLAN.md -- Playwright E2E verification
+- [x] 21-01-PLAN.md -- MCP auth module + userId wiring into tool handlers
+- [x] 21-02-PLAN.md -- Install callback endpoint + middleware exemption
+- [x] 21-03-PLAN.md -- Install script callback addition (bash + PowerShell)
+- [x] 21-04-PLAN.md -- Usage analytics aggregation queries (my-leverage.ts)
+- [x] 21-05-PLAN.md -- My Skill Leverage tab UI on home page
+- [x] 21-06-PLAN.md -- Playwright E2E verification
 
 ### Phase 22: Web Remote MCP
 **Goal**: Claude.ai browser users can discover, search, and deploy Relay skills through a Streamable HTTP MCP endpoint
@@ -175,13 +176,13 @@ Plans:
 | 9-11 | v1.1 | 9/9 | Complete | 2026-02-01 |
 | 12-14 | v1.2 | 12/12 | Complete | 2026-02-02 |
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
-| 20. API Key Management | v1.4 | 0/6 | Planned | - |
-| 21. Employee Usage Tracking | v1.4 | 0/6 | Planned | - |
+| 20. API Key Management | v1.4 | 7/7 | Complete | 2026-02-05 |
+| 21. Employee Usage Tracking | v1.4 | 6/6 | Complete | 2026-02-05 |
 | 22. Web Remote MCP | v1.4 | 0/TBD | Not started | - |
 | 23. Analytics Dashboard | v1.4 | 0/TBD | Not started | - |
 | 24. Extended MCP Search | v1.4 | 0/TBD | Not started | - |
 
-**Total: 69 plans completed across 19 phases and 4 milestones**
+**Total: 82 plans completed across 21 phases and 4 milestones**
 
 ---
 *Roadmap created: 2026-01-31*
