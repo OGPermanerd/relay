@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 21 (Employee Usage Tracking) - second of 5 in v1.4
-Plan: 21-01 + 21-02 + 21-03 + 21-04 + 21-05 complete
-Status: In progress
-Last activity: 2026-02-05 — Completed 21-05-PLAN.md (My Leverage tab UI)
+Plan: 21-06 complete (all 6 plans done)
+Status: Phase complete
+Last activity: 2026-02-05 — Completed 21-06-PLAN.md (Playwright E2E tests)
 
 Completed in phase 21:
 - apps/mcp/src/auth.ts — DONE (21-01, userId resolution + nudge counter)
@@ -29,8 +29,10 @@ Completed in phase 21:
 - apps/web/components/my-leverage-view.tsx — DONE (21-05, leverage data display)
 - apps/web/app/actions/my-leverage.ts — DONE (21-05, load more pagination action)
 - apps/web/app/(protected)/page.tsx — DONE (21-05, tabbed home page with browse/leverage)
+- apps/web/tests/e2e/home.spec.ts — DONE (21-06, home tabs E2E tests)
+- apps/web/tests/e2e/install-callback.spec.ts — DONE (21-06, install callback API E2E tests)
 
-Progress: [███████████░] ~37% (v1.4 - 11 of ~30 plans)
+Progress: [████████████░] ~40% (v1.4 - 12 of ~30 plans)
 
 ## Milestones
 
@@ -43,7 +45,7 @@ Progress: [███████████░] ~37% (v1.4 - 11 of ~30 plans)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 81
+- Total plans completed: 82
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~5.8 hours
 
@@ -74,6 +76,7 @@ Recent decisions affecting current work:
 - [21-03]: Non-blocking install callbacks with error suppression; extract API key from just-written config
 - [21-04]: COALESCE fallback chain for FTE hours: rating estimate -> creator estimate -> 1
 - [21-05]: nuqs URL state for tabs; serialize Date to ISO string across server-client boundary
+- [21-06]: getByRole('heading') to disambiguate heading vs StatCard labels; page.evaluate for raw fetch in API tests
 
 ### Pending Todos
 
@@ -89,5 +92,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 21-05-PLAN.md (My Leverage tab UI)
+Stopped at: Completed 21-06-PLAN.md (Phase 21 complete)
 Resume file: None
