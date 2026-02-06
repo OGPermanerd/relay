@@ -151,11 +151,16 @@ Plans:
   2. Per-employee usage table lists each employee with their skills used count, usage frequency, and total hours saved
   3. Top skills view shows the most-used skills ranked by usage count with a breakdown of which employees use each
   4. Any analytics view can be exported to CSV with a single click
-**Plans**: TBD
+**Plans**: 7 plans
 
 Plans:
-- [ ] 23-01: TBD
-- [ ] 23-02: TBD
+- [ ] 23-01-PLAN.md -- SQL analytics queries (overview stats, employee usage, skill usage, export data)
+- [ ] 23-02-PLAN.md -- Recharts setup and area chart + time range selector components
+- [ ] 23-03-PLAN.md -- Employees tab with sortable table and detail modal
+- [ ] 23-04-PLAN.md -- Skills tab with leaderboard cards and analytics modal
+- [ ] 23-05-PLAN.md -- Overview tab (stat cards + chart) and CSV export functionality
+- [ ] 23-06-PLAN.md -- Analytics page and nav link integration
+- [ ] 23-07-PLAN.md -- Playwright E2E tests
 
 ### Phase 24: Extended MCP Search
 **Goal**: MCP search matches the same fields as web search, so employees find skills by author name or tag regardless of client
@@ -180,7 +185,7 @@ Plans:
 | 20. API Key Management | v1.4 | 7/7 | Complete | 2026-02-05 |
 | 21. Employee Usage Tracking | v1.4 | 6/6 | Complete | 2026-02-05 |
 | 22. Web Remote MCP | v1.4 | 3/3 | Complete | 2026-02-05 |
-| 23. Analytics Dashboard | v1.4 | 0/TBD | Not started | - |
+| 23. Analytics Dashboard | v1.4 | 0/7 | Planned | - |
 | 24. Extended MCP Search | v1.4 | 0/TBD | Not started | - |
 
 **Total: 85 plans completed across 22 phases and 4 milestones**
