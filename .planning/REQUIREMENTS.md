@@ -9,39 +9,39 @@ Requirements for Employee Analytics & Remote MCP milestone. Each maps to roadmap
 
 ### API Key Management
 
-- [ ] **KEY-01**: Admin can generate API keys for employees via web UI
-- [ ] **KEY-02**: API keys stored as SHA-256 hashes with prefix for identification
-- [ ] **KEY-03**: Key validation endpoint resolves API key to userId
-- [ ] **KEY-04**: Admin can revoke API keys immediately
-- [ ] **KEY-05**: Employee can generate their own API key from profile page
-- [ ] **KEY-06**: Key rotation with configurable expiry and grace period for old keys
+- [x] **KEY-01**: Admin can generate API keys for employees via web UI
+- [x] **KEY-02**: API keys stored as SHA-256 hashes with prefix for identification
+- [x] **KEY-03**: Key validation endpoint resolves API key to userId
+- [x] **KEY-04**: Admin can revoke API keys immediately
+- [x] **KEY-05**: Employee can generate their own API key from profile page
+- [x] **KEY-06**: Key rotation with configurable expiry and grace period for old keys
 
 ### Per-Employee Usage Tracking
 
-- [ ] **TRK-01**: MCP tools include userId in every trackUsage() call when API key is configured
-- [ ] **TRK-02**: API key resolves to userId on each MCP request
-- [ ] **TRK-03**: Graceful degradation — anonymous tracking if no API key configured (backward compatible)
-- [ ] **TRK-04**: "My Usage" page showing individual employee's skill usage, frequency, and hours saved
+- [x] **TRK-01**: MCP tools include userId in every trackUsage() call when API key is configured
+- [x] **TRK-02**: API key resolves to userId on each MCP request
+- [x] **TRK-03**: Graceful degradation — anonymous tracking if no API key configured (backward compatible)
+- [x] **TRK-04**: "My Usage" page showing individual employee's skill usage, frequency, and hours saved
 
 ### Install Analytics
 
-- [ ] **INST-01**: Install callback endpoint receives confirmation from shell install scripts
-- [ ] **INST-02**: Install events tracked per platform, OS, employee, and skill
-- [ ] **INST-03**: Install vs. deploy intent distinction (deploy_skill event vs. confirmed install)
+- [x] **INST-01**: Install callback endpoint receives confirmation from shell install scripts
+- [x] **INST-02**: Install events tracked per platform, OS, employee, and skill
+- [x] **INST-03**: Install vs. deploy intent distinction (deploy_skill event vs. confirmed install)
 
 ### Analytics Dashboard
 
-- [ ] **DASH-01**: Org-wide usage trends chart (skills used over time)
-- [ ] **DASH-02**: Per-employee usage table (skills used, frequency, hours saved)
-- [ ] **DASH-03**: Top skills by usage with employee breakdown
-- [ ] **DASH-04**: Export usage data to CSV
+- [x] **DASH-01**: Org-wide usage trends chart (skills used over time)
+- [x] **DASH-02**: Per-employee usage table (skills used, frequency, hours saved)
+- [x] **DASH-03**: Top skills by usage with employee breakdown
+- [x] **DASH-04**: Export usage data to CSV
 
 ### Web Remote MCP
 
-- [ ] **RMCP-01**: Streamable HTTP MCP endpoint hosted in Next.js via mcp-handler
-- [ ] **RMCP-02**: Bearer token authentication using same API keys as stdio
-- [ ] **RMCP-03**: Same tools available via HTTP as stdio (list, search, deploy)
-- [ ] **RMCP-04**: CORS configuration for Claude.ai browser access
+- [x] **RMCP-01**: Streamable HTTP MCP endpoint hosted in Next.js via mcp-handler
+- [x] **RMCP-02**: Bearer token authentication using same API keys as stdio
+- [x] **RMCP-03**: Same tools available via HTTP as stdio (list, search, deploy)
+- [x] **RMCP-04**: CORS configuration for Claude.ai browser access
 
 ### Extended Search
 
@@ -80,27 +80,27 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| KEY-01 | Phase 20 | Pending |
-| KEY-02 | Phase 20 | Pending |
-| KEY-03 | Phase 20 | Pending |
-| KEY-04 | Phase 20 | Pending |
-| KEY-05 | Phase 20 | Pending |
-| KEY-06 | Phase 20 | Pending |
-| TRK-01 | Phase 21 | Pending |
-| TRK-02 | Phase 21 | Pending |
-| TRK-03 | Phase 21 | Pending |
-| TRK-04 | Phase 21 | Pending |
-| INST-01 | Phase 21 | Pending |
-| INST-02 | Phase 21 | Pending |
-| INST-03 | Phase 21 | Pending |
-| DASH-01 | Phase 23 | Pending |
-| DASH-02 | Phase 23 | Pending |
-| DASH-03 | Phase 23 | Pending |
-| DASH-04 | Phase 23 | Pending |
-| RMCP-01 | Phase 22 | Pending |
-| RMCP-02 | Phase 22 | Pending |
-| RMCP-03 | Phase 22 | Pending |
-| RMCP-04 | Phase 22 | Pending |
+| KEY-01 | Phase 20 | Complete |
+| KEY-02 | Phase 20 | Complete |
+| KEY-03 | Phase 20 | Complete |
+| KEY-04 | Phase 20 | Complete |
+| KEY-05 | Phase 20 | Complete |
+| KEY-06 | Phase 20 | Complete |
+| TRK-01 | Phase 21 | Complete |
+| TRK-02 | Phase 21 | Complete |
+| TRK-03 | Phase 21 | Complete |
+| TRK-04 | Phase 21 | Complete |
+| INST-01 | Phase 21 | Complete |
+| INST-02 | Phase 21 | Complete |
+| INST-03 | Phase 21 | Complete |
+| DASH-01 | Phase 23 | Complete |
+| DASH-02 | Phase 23 | Complete |
+| DASH-03 | Phase 23 | Complete |
+| DASH-04 | Phase 23 | Complete |
+| RMCP-01 | Phase 22 | Complete |
+| RMCP-02 | Phase 22 | Complete |
+| RMCP-03 | Phase 22 | Complete |
+| RMCP-04 | Phase 22 | Complete |
 | SRCH-01 | Phase 24 | Pending |
 | SRCH-02 | Phase 24 | Pending |
 
