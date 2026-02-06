@@ -4,6 +4,7 @@ import { validateApiKey } from "@relay/db/services/api-keys";
 import { db } from "@relay/db";
 import { usageEvents } from "@relay/db/schema/usage-events";
 import { incrementSkillUses } from "@relay/db/services/skill-metrics";
+import { searchSkillsByQuery } from "@relay/db/services/search-skills";
 
 // ---------------------------------------------------------------------------
 // CORS
@@ -162,14 +163,17 @@ const handler = createMcpHandler(
       "search_skills",
       {
         description:
-          "Search for skills in the Relay marketplace by query. Matches against name and description.",
+          "Search for skills in the Relay marketplace by query. Matches against name, description, author name, and tags.",
         inputSchema: {
-          query: z.string().min(1).describe("Search query (matches name, description)"),
+          query: z
+            .string()
+            .min(1)
+            .describe("Search query (matches name, description, author, tags)"),
           category: z
             .enum(["prompt", "workflow", "agent", "mcp"])
             .optional()
             .describe("Filter by skill category"),
-          limit: z.number().min(1).max(25).default(10).describe("Maximum number of results"),
+          limit: z.number().min(1).max(50).default(10).describe("Maximum number of results"),
         },
       },
       async ({ query, category, limit }, extra) => {
@@ -177,39 +181,7 @@ const handler = createMcpHandler(
         const keyId = extractKeyId(extra);
         if (keyId && !checkRateLimit(keyId)) return rateLimitError();
 
-        if (!db) {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: JSON.stringify({ error: "Database not configured" }),
-              },
-            ],
-            isError: true,
-          };
-        }
-
-        const queryLower = query.toLowerCase();
-
-        const allResults = await db.query.skills.findMany({
-          columns: {
-            id: true,
-            name: true,
-            description: true,
-            category: true,
-            hoursSaved: true,
-          },
-        });
-
-        const filtered = allResults.filter((skill) => {
-          const matchesQuery =
-            skill.name.toLowerCase().includes(queryLower) ||
-            skill.description.toLowerCase().includes(queryLower);
-          const matchesCategory = !category || skill.category === category;
-          return matchesQuery && matchesCategory;
-        });
-
-        const results = filtered.slice(0, limit);
+        const results = await searchSkillsByQuery({ query, category, limit });
 
         await trackUsage({
           toolName: "search_skills",
