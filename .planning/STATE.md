@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v1.4 Phase 24 - Extended MCP Search (In Progress)
+**Current focus:** v1.4 Phase 24 - Extended MCP Search (Complete)
 
 ## Current Position
 
 Phase: 24 (Extended MCP Search) - fifth of 5 in v1.4
-Plan: 01 of 2
-Status: In progress
-Last activity: 2026-02-06 — Completed 24-01-PLAN.md (Search Skills Service)
+Plan: 02 of 2
+Status: Phase complete
+Last activity: 2026-02-06 — Completed 24-02-PLAN.md (MCP Search Integration)
 
-Progress: [██████████████████████░] ~80% (v1.4 - 24 of ~30 plans)
+Progress: [████████████████████████] ~83% (v1.4 - 25 of ~30 plans)
 
 ## Milestones
 
@@ -27,7 +27,7 @@ Progress: [██████████████████████░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 93
+- Total plans completed: 94
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~6.4 hours
 
@@ -68,6 +68,7 @@ Recent decisions affecting current work:
 - [23-06]: Used session.user.id as orgId (queries derive domain internally); narrowed auth guard to session?.user?.id for TS strict mode
 - [23-07]: Date.toISOString() before passing to Drizzle sql templates; sql.raw() for date_trunc granularity; sql.join() for IN clauses; no type re-exports from "use server" files
 - [24-01]: ILIKE-only search (no full-text/embedding) for MCP — practical default since MCP stdio lacks VOYAGE_API_KEY
+- [24-02]: MCP search handlers delegate to shared service; removed inline db guard (service handles internally)
 
 ### Pending Todos
 
@@ -85,5 +86,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 24-01-PLAN.md (Search Skills Service)
+Stopped at: Completed 24-02-PLAN.md (MCP Search Integration) — Phase 24 complete
 Resume file: None
