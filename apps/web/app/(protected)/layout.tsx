@@ -37,6 +37,12 @@ export default async function ProtectedLayout({ children }: { children: React.Re
                 Home
               </Link>
               <Link
+                href="/analytics"
+                className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
+              >
+                Analytics
+              </Link>
+              <Link
                 href="/profile"
                 className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
               >
