@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v1.4 Phase 23 - Analytics Dashboard
+**Current focus:** v1.4 Phase 23 - Analytics Dashboard (COMPLETE)
 
 ## Current Position
 
 Phase: 23 (Analytics Dashboard) - fourth of 5 in v1.4
-Plan: 06 of 7
-Status: In progress
-Last activity: 2026-02-06 — Completed 23-06-PLAN.md (Analytics Page & Navigation)
+Plan: 07 of 7 (PHASE COMPLETE)
+Status: Phase complete
+Last activity: 2026-02-06 — Completed 23-07-PLAN.md (Analytics E2E Tests)
 
-Progress: [████████████████████░] ~73% (v1.4 - 22 of ~30 plans)
+Progress: [█████████████████████░] ~77% (v1.4 - 23 of ~30 plans)
 
 ## Milestones
 
@@ -27,12 +27,12 @@ Progress: [████████████████████░] ~73%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 91
+- Total plans completed: 92
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~6.2 hours
+- Total execution time: ~6.4 hours
 
 **Recent Trend (v1.4):**
-- 22 plans across 4 phases (20, 21, 22, 23)
+- 23 plans across 4 phases (20, 21, 22, 23)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -66,6 +66,7 @@ Recent decisions affecting current work:
 - [23-02]: Blue #3b82f6 for charts; default 30d range; parseAsStringLiteral for type-safe URL enum
 - [23-05]: Import shared types from analytics-queries instead of redefining; handle nullable ExportDataRow fields with fallbacks
 - [23-06]: Used session.user.id as orgId (queries derive domain internally); narrowed auth guard to session?.user?.id for TS strict mode
+- [23-07]: Date.toISOString() before passing to Drizzle sql templates; sql.raw() for date_trunc granularity; sql.join() for IN clauses; no type re-exports from "use server" files
 
 ### Pending Todos
 
@@ -76,11 +77,12 @@ Recent decisions affecting current work:
 - [Resolved]: MCP userId field now populated via auth.ts resolveUserId() when RELAY_API_KEY is set (21-01)
 - [17-01]: ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
 - [Resolved]: CORS headers for Claude.ai tested and working — allow-origin, expose Mcp-Session-Id, max-age 86400 (22-02)
+- [Resolved]: Analytics SQL queries fixed — Date serialization, GROUP BY mismatch, IN clause type, type re-export (23-07)
 - [Research]: PostgreSQL query performance at 100k+ usage_events — add indexes if slow
 - [Note]: apps/mcp tsc --noEmit has pre-existing errors from packages/db module resolution — not blocking
 
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 23-06-PLAN.md (Analytics Page & Navigation)
+Stopped at: Completed 23-07-PLAN.md (Analytics E2E Tests) - Phase 23 COMPLETE
 Resume file: None
