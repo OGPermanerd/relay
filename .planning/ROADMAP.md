@@ -6,7 +6,7 @@
 - ✅ **v1.1 Quality & Polish** - Phases 9-11 (shipped 2026-02-01)
 - ✅ **v1.2 UI Redesign** - Phases 12-14 (shipped 2026-02-02)
 - ✅ **v1.3 AI Quality & Cross-Platform** - Phases 15-19 (shipped 2026-02-04)
-- 🚧 **v1.4 Employee Analytics & Remote MCP** - Phases 20-24 (in progress)
+- ✅ **v1.4 Employee Analytics & Remote MCP** - Phases 20-24 (shipped 2026-02-06)
 
 ## Phases
 
@@ -73,7 +73,7 @@ Total: 15 plans completed.
 
 </details>
 
-### 🚧 v1.4 Employee Analytics & Remote MCP (In Progress)
+### ✅ v1.4 Employee Analytics & Remote MCP (Complete)
 
 **Milestone Goal:** Transform Relay from an anonymous skill marketplace into an enterprise platform with employee-level attribution, usage analytics, and web-accessible MCP. The userId column in usage_events finally gets populated, and real metrics prove the value of skills passing through hands.
 
@@ -81,7 +81,7 @@ Total: 15 plans completed.
 - [x] **Phase 21: Employee Usage Tracking** - Every MCP tool call and install event is attributed to the employee who performed it
 - [x] **Phase 22: Web Remote MCP** - Claude.ai browser users can access Relay skills via Streamable HTTP transport
 - [x] **Phase 23: Analytics Dashboard** - Org-wide and per-employee usage trends visible through charts and exportable data
-- [ ] **Phase 24: Extended MCP Search** - MCP search reaches parity with web search by matching author names and tags
+- [x] **Phase 24: Extended MCP Search** - MCP search reaches parity with web search by matching author names and tags
 
 ## Phase Details
 
@@ -172,8 +172,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 24-01-PLAN.md -- Shared search service with ILIKE + field-weighted scoring
-- [ ] 24-02-PLAN.md -- Wire MCP stdio + web remote MCP to shared service, update tests
+- [x] 24-01-PLAN.md -- Shared search service with ILIKE + field-weighted scoring
+- [x] 24-02-PLAN.md -- Wire MCP stdio + web remote MCP to shared service, update tests
 
 ## Progress
 
@@ -187,9 +187,9 @@ Plans:
 | 21. Employee Usage Tracking | v1.4 | 6/6 | Complete | 2026-02-05 |
 | 22. Web Remote MCP | v1.4 | 3/3 | Complete | 2026-02-05 |
 | 23. Analytics Dashboard | v1.4 | 7/7 | Complete | 2026-02-06 |
-| 24. Extended MCP Search | v1.4 | 0/TBD | Not started | - |
+| 24. Extended MCP Search | v1.4 | 2/2 | Complete | 2026-02-06 |
 
-**Total: 92 plans completed across 23 phases and 4 milestones**
+**Total: 94 plans completed across 24 phases and 5 milestones**
 
 ---
 *Roadmap created: 2026-01-31*
@@ -197,3 +197,4 @@ Plans:
 *v1.2 completed: 2026-02-02*
 *v1.3 completed: 2026-02-04*
 *v1.4 roadmap added: 2026-02-05*
+*v1.4 completed: 2026-02-06*

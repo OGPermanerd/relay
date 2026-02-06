@@ -45,8 +45,8 @@ Requirements for Employee Analytics & Remote MCP milestone. Each maps to roadmap
 
 ### Extended Search
 
-- [ ] **SRCH-01**: MCP search matches author name in addition to skill name/description
-- [ ] **SRCH-02**: MCP search matches skill tags in addition to skill name/description
+- [x] **SRCH-01**: MCP search matches author name in addition to skill name/description
+- [x] **SRCH-02**: MCP search matches skill tags in addition to skill name/description
 
 ## Future Requirements
 
@@ -101,8 +101,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RMCP-02 | Phase 22 | Complete |
 | RMCP-03 | Phase 22 | Complete |
 | RMCP-04 | Phase 22 | Complete |
-| SRCH-01 | Phase 24 | Pending |
-| SRCH-02 | Phase 24 | Pending |
+| SRCH-01 | Phase 24 | Complete |
+| SRCH-02 | Phase 24 | Complete |
 
 **Coverage:**
 - v1.4 requirements: 23 total
