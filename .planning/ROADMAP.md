@@ -169,10 +169,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Searching for an author's name via MCP returns that author's skills, even if the name does not appear in the skill title or description
   2. Searching for a tag via MCP returns skills with that tag, even if the tag does not appear in the skill title or description
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 24-01: TBD
+- [ ] 24-01-PLAN.md -- Shared search service with ILIKE + field-weighted scoring
+- [ ] 24-02-PLAN.md -- Wire MCP stdio + web remote MCP to shared service, update tests
 
 ## Progress
 
