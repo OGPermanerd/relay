@@ -10,13 +10,14 @@ Skills get better as they pass through more hands, with real metrics proving tha
 
 ## Current State
 
-**v1.3 shipped 2026-02-04** — AI-driven skill review, semantic similarity detection, fork-based versioning, and cross-platform MCP install.
+**v1.4 shipped 2026-02-06** — Employee-level usage attribution, analytics dashboard, web remote MCP for Claude.ai, and extended search matching authors and tags.
 
-Tech stack: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, Playwright, vitest, nuqs, react-swipeable, Voyage AI, pgvector, Anthropic SDK
-LOC: 9,475 TypeScript across 250+ files
+Tech stack: Next.js 16.1.6, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, mcp-handler, Playwright, vitest, nuqs, react-swipeable, Recharts, Voyage AI, pgvector, Anthropic SDK
+LOC: ~13,500 TypeScript across 280+ files
 
 Previous:
-- v1.2 shipped 2026-02-02 — Two-panel UI redesign with sortable table, inline expansion, keyboard navigation, and mobile accessibility
+- v1.3 shipped 2026-02-04 — AI-driven skill review, semantic similarity, fork-based versioning, cross-platform install
+- v1.2 shipped 2026-02-02 — Two-panel UI redesign with sortable table, inline expansion, keyboard navigation, mobile accessibility
 - v1.1 shipped 2026-02-01 — Quality scorecards and comprehensive E2E test coverage
 - v1.0 shipped 2026-01-31 — Full internal skill marketplace with MCP integration
 
@@ -70,24 +71,22 @@ Previous:
 - ✓ Cross-platform install modal with 4 platforms — v1.3
 - ✓ OS auto-detection (macOS/Windows/Linux) — v1.3
 - ✓ Install scripts for Claude Desktop (bash/PowerShell) — v1.3
+- ✓ API key management with SHA-256 hashing, rotation, admin CRUD — v1.4
+- ✓ Per-employee usage tracking via RELAY_API_KEY with graceful anonymous fallback — v1.4
+- ✓ Install callback analytics (per platform, OS, employee, skill) — v1.4
+- ✓ Analytics dashboard with org-wide trends, per-employee tables, skill leaderboards, CSV export — v1.4
+- ✓ Web remote MCP via Streamable HTTP for Claude.ai browser access — v1.4
+- ✓ Extended MCP search matching author name and tags with field-weighted scoring — v1.4
 
 ### Active
 
-**v1.4: Employee Analytics & Remote MCP**
-
-- [ ] Per-employee usage tracking — identify which employee used which skill via MCP
-- [ ] Org API keys for MCP authentication — tie MCP sessions to employees
-- [ ] Install callback analytics — track installs per platform with employee attribution
-- [ ] Usage analytics dashboard — per-employee skill usage, hours saved, activity over time
-- [ ] Web remote MCP via Claude.ai — streamable HTTP transport for browser-based skill access
-- [ ] Extended search — query matches author name and tags in addition to name/description
+(No active milestone — next milestone not yet defined)
 
 ### Out of Scope
 
 - Review prompts in Claude after skill use — adds MCP complexity, defer
 - Skill creation scaffolding via MCP — focus on deploy/track first
 - Approval gates or review process for new versions — metrics-driven quality model instead
-- Claude.ai web remote MCP — moved to v1.4 Active scope
 - Auto-review on every publish — cost scaling issues, use on-demand instead
 
 ## Context
@@ -141,6 +140,14 @@ Previous:
 | Advisory similarity detection | Never blocking, high threshold 0.85+ | ✓ Good |
 | On-demand AI review | Not auto-trigger, manages costs | ✓ Good |
 | Self-contained InstallButton | Internal modal state, no props drilling | ✓ Good |
+| `rlk_` prefix + SHA-256 hash for API keys | Identifiable prefix, secure storage, timing-safe comparison | ✓ Good |
+| Graceful anonymous degradation | No breaking changes for existing MCP users without API key | ✓ Good |
+| Dual-transport MCP (stdio + HTTP) | Same tools available via both transports, shared handlers | ✓ Good |
+| Inline tool logic in web MCP route | No cross-app imports, prevents bundler issues | ✓ Good |
+| ILIKE-only search for MCP | Practical default since MCP stdio lacks VOYAGE_API_KEY | ✓ Good |
+| Field-weighted scoring (4/3/2/1) | Blended ranking: title > desc > author > tags | ✓ Good |
+| Recharts for analytics charts | Lightweight, React-native, blue #3b82f6 theme | ✓ Good |
+| mcp-handler for Streamable HTTP | Handles MCP protocol negotiation for Next.js routes | ✓ Good |
 
 ---
-*Last updated: 2026-02-05 after v1.4 milestone started*
+*Last updated: 2026-02-06 after v1.4 milestone completed*

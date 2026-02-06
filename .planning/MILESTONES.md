@@ -1,5 +1,30 @@
 # Project Milestones: Relay
 
+## v1.4 Employee Analytics & Remote MCP (Shipped: 2026-02-06)
+
+**Delivered:** Enterprise-grade employee attribution, usage analytics dashboard, web-accessible MCP via Streamable HTTP, and extended search matching authors and tags.
+
+**Phases completed:** 20-24 (25 plans total)
+
+**Key accomplishments:**
+- API key infrastructure with SHA-256 hashing, `rlk_` prefix, rotation with grace period, admin management
+- Per-employee usage attribution — every MCP tool call and install linked to the employee who performed it
+- Streamable HTTP MCP endpoint for Claude.ai browser access with bearer token auth and CORS
+- Analytics dashboard with org-wide trends chart, per-employee tables, skill leaderboards, and CSV export
+- Extended MCP search with shared ILIKE service matching name, description, author, and tags with field-weighted scoring
+
+**Stats:**
+- 34 files created/modified
+- ~4,117 lines of TypeScript
+- 5 phases, 25 plans
+- 2 days (2026-02-05 → 2026-02-06)
+
+**Git range:** `c1ebb22` (docs(20)) → `1472a72` (docs(v1.4))
+
+**Archive:** [v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md) | [v1.4-REQUIREMENTS.md](milestones/v1.4-REQUIREMENTS.md)
+
+---
+
 ## v1.3 AI Quality & Cross-Platform (Shipped: 2026-02-04)
 
 **Delivered:** AI-driven skill review, semantic similarity detection, fork-based versioning, and cross-platform MCP install with OS auto-detection.
