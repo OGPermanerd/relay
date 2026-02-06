@@ -1,7 +1,12 @@
 "use server";
 
 import { auth } from "@/auth";
-import { getExportData, getStartDate, type TimeRange } from "@/lib/analytics-queries";
+import {
+  getExportData,
+  getStartDate,
+  type TimeRange,
+  type ExportDataRow,
+} from "@/lib/analytics-queries";
 
 /**
  * Fetch analytics export data for CSV download
