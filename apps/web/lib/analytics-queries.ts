@@ -202,6 +202,7 @@ export async function getOverviewStats(orgId: string, startDate: Date): Promise<
     };
   }
 
+  const startDateStr = startDate.toISOString();
   const result = await db.execute(sql`
     SELECT
       COALESCE(SUM(COALESCE(r.hours_saved_estimate, s.hours_saved, 1)), 0)::double precision AS total_hours_saved,
@@ -215,7 +216,7 @@ export async function getOverviewStats(orgId: string, startDate: Date): Promise<
         LEFT JOIN users u2 ON u2.id = ue2.user_id
         WHERE ue2.user_id IS NOT NULL
           AND u2.email LIKE '%@' || (SELECT split_part(u3.email, '@', 2) FROM users u3 WHERE u3.id = ${orgId} LIMIT 1)
-          AND ue2.created_at >= ${startDate}
+          AND ue2.created_at >= ${startDateStr}
         GROUP BY ue2.skill_id, s2.name
         ORDER BY COUNT(*) DESC
         LIMIT 1
@@ -228,7 +229,7 @@ export async function getOverviewStats(orgId: string, startDate: Date): Promise<
         LEFT JOIN users u4 ON u4.id = ue3.user_id
         WHERE ue3.user_id IS NOT NULL
           AND u4.email LIKE '%@' || (SELECT split_part(u5.email, '@', 2) FROM users u5 WHERE u5.id = ${orgId} LIMIT 1)
-          AND ue3.created_at >= ${startDate}
+          AND ue3.created_at >= ${startDateStr}
         GROUP BY ue3.user_id, u4.name
         ORDER BY SUM(COALESCE(r3.hours_saved_estimate, s3.hours_saved, 1)) DESC
         LIMIT 1
@@ -239,7 +240,7 @@ export async function getOverviewStats(orgId: string, startDate: Date): Promise<
     LEFT JOIN users u ON u.id = ue.user_id
     WHERE ue.user_id IS NOT NULL
       AND u.email LIKE '%@' || (SELECT split_part(u6.email, '@', 2) FROM users u6 WHERE u6.id = ${orgId} LIMIT 1)
-      AND ue.created_at >= ${startDate}
+      AND ue.created_at >= ${startDateStr}
   `);
 
   const rows = result as unknown as Record<string, unknown>[];
@@ -275,9 +276,11 @@ export async function getUsageTrend(
     return [];
   }
 
+  const startDateStr = startDate.toISOString();
+  const gran = sql.raw(`'${granularity}'`);
   const result = await db.execute(sql`
     SELECT
-      date_trunc(${granularity}, ue.created_at)::date::text AS date,
+      date_trunc(${gran}, ue.created_at)::date::text AS date,
       COALESCE(SUM(COALESCE(r.hours_saved_estimate, s.hours_saved, 1)), 0)::double precision AS hours_saved
     FROM usage_events ue
     LEFT JOIN skills s ON s.id = ue.skill_id
@@ -285,9 +288,9 @@ export async function getUsageTrend(
     LEFT JOIN users u ON u.id = ue.user_id
     WHERE ue.user_id IS NOT NULL
       AND u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId} LIMIT 1)
-      AND ue.created_at >= ${startDate}
-    GROUP BY date_trunc(${granularity}, ue.created_at)
-    ORDER BY date_trunc(${granularity}, ue.created_at)
+      AND ue.created_at >= ${startDateStr}
+    GROUP BY date_trunc(${gran}, ue.created_at)
+    ORDER BY date_trunc(${gran}, ue.created_at)
   `);
 
   const rows = result as unknown as Record<string, unknown>[];
@@ -322,6 +325,7 @@ export async function getEmployeeUsage(
     return [];
   }
 
+  const startDateStr = startDate.toISOString();
   const result = await db.execute(sql`
     SELECT
       u.id,
@@ -337,7 +341,7 @@ export async function getEmployeeUsage(
         FROM usage_events ue2
         LEFT JOIN skills s2 ON s2.id = ue2.skill_id
         WHERE ue2.user_id = u.id
-          AND ue2.created_at >= ${startDate}
+          AND ue2.created_at >= ${startDateStr}
         GROUP BY ue2.skill_id, s2.name
         ORDER BY COUNT(*) DESC
         LIMIT 1
@@ -347,7 +351,7 @@ export async function getEmployeeUsage(
     LEFT JOIN skills s ON s.id = ue.skill_id
     LEFT JOIN ratings r ON r.skill_id = ue.skill_id AND r.user_id = ue.user_id
     WHERE u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId} LIMIT 1)
-      AND ue.created_at >= ${startDate}
+      AND ue.created_at >= ${startDateStr}
     GROUP BY u.id, u.name, u.email, u.image
     ORDER BY hours_saved DESC
   `);
@@ -382,6 +386,8 @@ export async function getSkillUsage(orgId: string, startDate: Date): Promise<Ski
     return [];
   }
 
+  const startDateStr = startDate.toISOString();
+
   // First, get the main skill stats
   const mainResult = await db.execute(sql`
     SELECT
@@ -398,7 +404,7 @@ export async function getSkillUsage(orgId: string, startDate: Date): Promise<Ski
     LEFT JOIN users u ON u.id = ue.user_id
     WHERE ue.user_id IS NOT NULL
       AND u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId} LIMIT 1)
-      AND ue.created_at >= ${startDate}
+      AND ue.created_at >= ${startDateStr}
     GROUP BY s.id, s.name, s.category, author.name
     ORDER BY usage_count DESC
   `);
@@ -412,6 +418,10 @@ export async function getSkillUsage(orgId: string, startDate: Date): Promise<Ski
     return [];
   }
 
+  const skillIdList = sql.join(
+    skillIds.map((id) => sql`${id}`),
+    sql`, `
+  );
   const breakdownResult = await db.execute(sql`
     SELECT
       ue.skill_id,
@@ -420,9 +430,9 @@ export async function getSkillUsage(orgId: string, startDate: Date): Promise<Ski
       COUNT(*)::integer AS usage_count
     FROM usage_events ue
     JOIN users u ON u.id = ue.user_id
-    WHERE ue.skill_id = ANY(${skillIds})
+    WHERE ue.skill_id IN (${skillIdList})
       AND u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId} LIMIT 1)
-      AND ue.created_at >= ${startDate}
+      AND ue.created_at >= ${startDateStr}
     GROUP BY ue.skill_id, ue.user_id, u.name
     ORDER BY usage_count DESC
   `);
@@ -469,6 +479,7 @@ export async function getExportData(orgId: string, startDate: Date): Promise<Exp
     return [];
   }
 
+  const startDateStr = startDate.toISOString();
   const result = await db.execute(sql`
     SELECT
       ue.created_at AS date,
@@ -484,7 +495,7 @@ export async function getExportData(orgId: string, startDate: Date): Promise<Exp
     LEFT JOIN ratings r ON r.skill_id = ue.skill_id AND r.user_id = ue.user_id
     WHERE ue.user_id IS NOT NULL
       AND u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId} LIMIT 1)
-      AND ue.created_at >= ${startDate}
+      AND ue.created_at >= ${startDateStr}
     ORDER BY ue.created_at DESC
   `);
 
@@ -518,6 +529,7 @@ export async function getEmployeeActivity(
     return [];
   }
 
+  const startDateStr = startDate.toISOString();
   const result = await db.execute(sql`
     SELECT
       ue.created_at AS date,
@@ -529,7 +541,7 @@ export async function getEmployeeActivity(
     LEFT JOIN skills s ON s.id = ue.skill_id
     LEFT JOIN ratings r ON r.skill_id = ue.skill_id AND r.user_id = ue.user_id
     WHERE ue.user_id = ${userId}
-      AND ue.created_at >= ${startDate}
+      AND ue.created_at >= ${startDateStr}
     ORDER BY ue.created_at DESC
   `);
 
@@ -564,15 +576,17 @@ export async function getSkillTrend(
     return [];
   }
 
+  const startDateStr = startDate.toISOString();
+  const gran = sql.raw(`'${granularity}'`);
   const result = await db.execute(sql`
     SELECT
-      date_trunc(${granularity}, ue.created_at)::date::text AS date,
+      date_trunc(${gran}, ue.created_at)::date::text AS date,
       COUNT(*)::integer AS usage_count
     FROM usage_events ue
     WHERE ue.skill_id = ${skillId}
-      AND ue.created_at >= ${startDate}
-    GROUP BY date_trunc(${granularity}, ue.created_at)
-    ORDER BY date_trunc(${granularity}, ue.created_at)
+      AND ue.created_at >= ${startDateStr}
+    GROUP BY date_trunc(${gran}, ue.created_at)
+    ORDER BY date_trunc(${gran}, ue.created_at)
   `);
 
   const rows = result as unknown as Record<string, unknown>[];

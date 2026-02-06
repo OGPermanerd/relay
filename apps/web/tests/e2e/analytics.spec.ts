@@ -25,14 +25,15 @@ test.describe("Analytics Dashboard", () => {
     await expect(page).toHaveURL(/[?&]tab=employees/);
     await expect(page.getByRole("button", { name: "Employees" })).toHaveClass(/border-blue-500/);
 
-    // Click Skills tab
-    await page.getByRole("button", { name: "Skills" }).click();
+    // Click Skills tab (exact match to avoid "Skills Used" sort header)
+    await page.getByRole("button", { name: "Skills", exact: true }).click();
     await expect(page).toHaveURL(/[?&]tab=skills/);
-    await expect(page.getByRole("button", { name: "Skills" })).toHaveClass(/border-blue-500/);
+    await expect(page.getByRole("button", { name: "Skills", exact: true })).toHaveClass(
+      /border-blue-500/
+    );
 
-    // Click back to Overview
+    // Click back to Overview (default tab removes param from URL)
     await page.getByRole("button", { name: "Overview" }).click();
-    await expect(page).toHaveURL(/[?&]tab=overview/);
     await expect(page.getByRole("button", { name: "Overview" })).toHaveClass(/border-blue-500/);
   });
 
@@ -91,8 +92,8 @@ test.describe("Analytics Dashboard", () => {
   test("skills tab shows cards or empty state", async ({ page }) => {
     await page.goto("/analytics");
 
-    // Click Skills tab
-    await page.getByRole("button", { name: "Skills" }).click();
+    // Click Skills tab (exact match to avoid "Skills Used" sort header)
+    await page.getByRole("button", { name: "Skills", exact: true }).click();
 
     // Either shows skill cards or empty state
     const skillCard = page.locator(".cursor-pointer.rounded-lg.border").first();

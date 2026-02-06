@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useTimeRange } from "./time-range-selector";
-import { fetchExportData, type ExportDataRow } from "@/app/actions/export-analytics";
+import { fetchExportData } from "@/app/actions/export-analytics";
+import type { ExportDataRow } from "@/lib/analytics-queries";
 
 interface CsvExportButtonProps {
   className?: string;
