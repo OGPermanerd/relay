@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 23 (Analytics Dashboard) - fourth of 5 in v1.4
-Plan: 05 of 7
+Plan: 06 of 7
 Status: In progress
-Last activity: 2026-02-06 — Completed 23-05-PLAN.md (Overview Tab & CSV Export)
+Last activity: 2026-02-06 — Completed 23-06-PLAN.md (Analytics Page & Navigation)
 
-Progress: [███████████████████░] ~70% (v1.4 - 21 of ~30 plans)
+Progress: [████████████████████░] ~73% (v1.4 - 22 of ~30 plans)
 
 ## Milestones
 
@@ -27,12 +27,12 @@ Progress: [███████████████████░] ~70% (v
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 90
+- Total plans completed: 91
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~6.2 hours
 
 **Recent Trend (v1.4):**
-- 21 plans across 4 phases (20, 21, 22, 23)
+- 22 plans across 4 phases (20, 21, 22, 23)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -65,6 +65,7 @@ Recent decisions affecting current work:
 - [23-01]: Org filtering via email domain matching; two queries for getSkillUsage to avoid N+1 on breakdown
 - [23-02]: Blue #3b82f6 for charts; default 30d range; parseAsStringLiteral for type-safe URL enum
 - [23-05]: Import shared types from analytics-queries instead of redefining; handle nullable ExportDataRow fields with fallbacks
+- [23-06]: Used session.user.id as orgId (queries derive domain internally); narrowed auth guard to session?.user?.id for TS strict mode
 
 ### Pending Todos
 
@@ -81,5 +82,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 23-05-PLAN.md (Overview Tab & CSV Export)
+Stopped at: Completed 23-06-PLAN.md (Analytics Page & Navigation)
 Resume file: None
