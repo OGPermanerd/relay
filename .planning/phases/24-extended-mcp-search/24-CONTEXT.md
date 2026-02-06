@@ -32,7 +32,7 @@ MCP search reaches parity with web search by matching author names and tags in a
 
 ### Claude's Discretion
 - Exact scoring weights for field priority blending
-- How to implement the embedding fallback threshold (< 3 results or different number)
+- How to implement the embedding fallback threshold (< 3 results or different number) — note: MCP stdio has no VOYAGE_API_KEY, so embedding fallback is optional and ILIKE-only is acceptable
 - SQL query structure (single query with OR clauses vs. UNION)
 - Whether to use a CTE or subquery for the JOIN to authors/tags
 
