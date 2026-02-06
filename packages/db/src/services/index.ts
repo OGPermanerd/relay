@@ -17,3 +17,8 @@ export {
 } from "./skill-reviews";
 export { getForkCount, getTopForks, getParentSkill, type ForkInfo } from "./skill-forks";
 export { validateApiKey, listUserKeys, revokeApiKey, setKeyExpiry } from "./api-keys";
+export {
+  searchSkillsByQuery,
+  type SearchSkillsParams,
+  type SearchSkillResult,
+} from "./search-skills";
