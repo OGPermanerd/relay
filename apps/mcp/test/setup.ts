@@ -24,3 +24,8 @@ vi.mock("@relay/db/schema/usage-events", () => ({
 vi.mock("@relay/db/services/skill-metrics", () => ({
   incrementSkillUses: vi.fn(),
 }));
+
+// Mock the search-skills service
+vi.mock("@relay/db/services/search-skills", () => ({
+  searchSkillsByQuery: vi.fn(),
+}));

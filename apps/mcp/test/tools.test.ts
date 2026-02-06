@@ -4,8 +4,10 @@ import { mockSkills } from "./mocks.js";
 import { handleListSkills } from "../src/tools/list.js";
 import { handleSearchSkills } from "../src/tools/search.js";
 import { handleDeploySkill } from "../src/tools/deploy.js";
+import { searchSkillsByQuery } from "@relay/db/services/search-skills";
 
 const mockDb = vi.mocked(db);
+const mockSearchSkills = vi.mocked(searchSkillsByQuery);
 
 // Access the mocked trackUsage via the module
 vi.mock("../src/tracking/events.js", () => ({
@@ -19,6 +21,7 @@ describe("MCP Tools", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockDb.query.skills.findMany.mockResolvedValue(mockSkills);
+    mockSearchSkills.mockResolvedValue([]);
   });
 
   describe("list_skills", () => {
@@ -69,23 +72,54 @@ describe("MCP Tools", () => {
 
   describe("search_skills", () => {
     it("returns matching skills for query", async () => {
+      mockSearchSkills.mockResolvedValue([
+        {
+          id: "skill-1",
+          name: "Code Review Assistant",
+          description: "Automated code review with best practices",
+          category: "prompt",
+          hoursSaved: 2,
+        },
+      ]);
+
       const result = await handleSearchSkills({ query: "review", limit: 10 });
       const data = JSON.parse(result.content[0].text);
 
       expect(data.query).toBe("review");
       expect(data.count).toBe(1);
       expect(data.skills[0].name).toBe("Code Review Assistant");
+      expect(mockSearchSkills).toHaveBeenCalledWith({
+        query: "review",
+        category: undefined,
+        limit: 10,
+      });
     });
 
-    it("search is case-insensitive", async () => {
+    it("passes query through to service (service handles case-insensitivity via ILIKE)", async () => {
+      mockSearchSkills.mockResolvedValue([
+        {
+          id: "skill-1",
+          name: "Code Review Assistant",
+          description: "Automated code review with best practices",
+          category: "prompt",
+          hoursSaved: 2,
+        },
+      ]);
+
       const result = await handleSearchSkills({ query: "REVIEW", limit: 10 });
       const data = JSON.parse(result.content[0].text);
 
       expect(data.count).toBe(1);
-      expect(data.skills[0].name).toBe("Code Review Assistant");
+      expect(mockSearchSkills).toHaveBeenCalledWith({
+        query: "REVIEW",
+        category: undefined,
+        limit: 10,
+      });
     });
 
     it("returns empty array when no matches", async () => {
+      mockSearchSkills.mockResolvedValue([]);
+
       const result = await handleSearchSkills({ query: "nonexistent", limit: 10 });
       const data = JSON.parse(result.content[0].text);
 
@@ -94,15 +128,40 @@ describe("MCP Tools", () => {
     });
 
     it("combines search with category filter", async () => {
+      mockSearchSkills.mockResolvedValue([
+        {
+          id: "skill-3",
+          name: "Test Writer",
+          description: "Generate comprehensive test cases",
+          category: "prompt",
+          hoursSaved: 3,
+        },
+      ]);
+
       const result = await handleSearchSkills({ query: "test", category: "prompt", limit: 10 });
       const data = JSON.parse(result.content[0].text);
 
       expect(data.count).toBe(1);
       expect(data.skills[0].name).toBe("Test Writer");
       expect(data.skills[0].category).toBe("prompt");
+      expect(mockSearchSkills).toHaveBeenCalledWith({
+        query: "test",
+        category: "prompt",
+        limit: 10,
+      });
     });
 
     it("tracks usage after searching", async () => {
+      mockSearchSkills.mockResolvedValue([
+        {
+          id: "skill-1",
+          name: "Code Review Assistant",
+          description: "Automated code review with best practices",
+          category: "prompt",
+          hoursSaved: 2,
+        },
+      ]);
+
       await handleSearchSkills({ query: "review", limit: 10 });
 
       expect(mockTrackUsage).toHaveBeenCalledTimes(1);
