@@ -116,7 +116,15 @@ Total: 25 plans completed.
   3. Skills table has a composite unique constraint on (tenant_id, slug) — two tenants can have skills with the same slug
   4. PostgreSQL RLS policies are active on all tenant-scoped tables, preventing cross-tenant reads/writes at the database level
   5. An append-only audit_logs table records all security events (auth, admin actions, data modifications), and UPDATE/DELETE are revoked on it
-**Plans**: TBD
+**Plans:** 7 plans
+Plans:
+- [ ] 25-01-PLAN.md — Tenants + audit_logs table schemas
+- [ ] 25-02-PLAN.md — withTenant() helper module
+- [ ] 25-03-PLAN.md — Add tenant_id to all 9 schema files + relations
+- [ ] 25-04-PLAN.md — Custom SQL migrations (5 files: create tenants, add columns, backfill, enforce constraints, audit logs)
+- [ ] 25-05-PLAN.md — RLS pgPolicy definitions on all 9 tables + drizzle config
+- [ ] 25-06-PLAN.md — Audit log write service
+- [ ] 25-07-PLAN.md — Run migrations + end-to-end verification
 
 ### Phase 26: Auth & Subdomain Routing
 **Goal**: Users access their tenant via a subdomain and authenticate through domain-mapped Google SSO with proper session management
@@ -223,7 +231,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 12-14 | v1.2 | 12/12 | Complete | 2026-02-02 |
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
-| 25. Multi-Tenancy Schema | v1.5 | 0/TBD | Not started | - |
+| 25. Multi-Tenancy Schema | v1.5 | 0/7 | Planned | - |
 | 26. Auth & Subdomain Routing | v1.5 | 0/TBD | Not started | - |
 | 27. Docker Deployment | v1.5 | 0/TBD | Not started | - |
 | 28. Hook-Based Tracking | v1.5 | 0/TBD | Not started | - |
