@@ -12,3 +12,11 @@ export {
   type SearchSkillsParams,
   type SearchSkillResult,
 } from "./search-skills";
+export { getSiteSettings, updateSiteSettings, invalidateSettingsCache } from "./site-settings";
+export {
+  upsertSkillEmbedding,
+  getSkillEmbedding,
+  type UpsertSkillEmbeddingParams,
+} from "./skill-embeddings";
+export { deleteSkill } from "./skill-delete";
+export { mergeSkills } from "./skill-merge";

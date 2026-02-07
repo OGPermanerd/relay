@@ -1,5 +1,13 @@
 import { relations } from "drizzle-orm";
-import { skills, skillVersions, ratings, users, usageEvents, apiKeys } from "../schema";
+import {
+  skills,
+  skillVersions,
+  ratings,
+  users,
+  usageEvents,
+  apiKeys,
+  skillEmbeddings,
+} from "../schema";
 
 /**
  * Skills relations
@@ -110,5 +118,16 @@ export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
   user: one(users, {
     fields: [apiKeys.userId],
     references: [users.id],
+  }),
+}));
+
+/**
+ * SkillEmbeddings relations
+ * - skill: one-to-one with skills
+ */
+export const skillEmbeddingsRelations = relations(skillEmbeddings, ({ one }) => ({
+  skill: one(skills, {
+    fields: [skillEmbeddings.skillId],
+    references: [skills.id],
   }),
 }));

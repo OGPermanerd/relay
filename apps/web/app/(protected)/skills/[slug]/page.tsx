@@ -17,8 +17,10 @@ import { SearchInput } from "@/components/search-input";
 import { SkillTypeFilter } from "@/components/skill-type-filter";
 import { ForkButton } from "@/components/fork-button";
 import { InstallButton } from "@/components/install-button";
+import { DeleteSkillButton } from "@/components/delete-skill-button";
 import { ForksSection } from "@/components/forks-section";
 import { findSimilarSkillsByName } from "@/lib/similar-skills";
+import { isAdmin } from "@/lib/admin";
 import Link from "next/link";
 
 interface SkillPageProps {
@@ -169,11 +171,19 @@ export default async function SkillPage(props: SkillPageProps) {
             parentSkill={parentSkill}
           />
 
-          {/* Install and Fork buttons */}
+          {/* Install, Fork, and Delete buttons */}
           <div className="mt-4 flex items-center gap-3">
             <InstallButton variant="full" />
             {session?.user && (
               <ForkButton skillId={skill.id} skillName={skill.name} forkCount={forkCount} />
+            )}
+            {session?.user && (isAuthor || isAdmin(session.user.email)) && (
+              <DeleteSkillButton
+                skillId={skill.id}
+                skillName={skill.name}
+                totalUses={skill.totalUses}
+                forkCount={forkCount}
+              />
             )}
           </div>
 

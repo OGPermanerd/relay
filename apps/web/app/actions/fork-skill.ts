@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { generateUniqueSlug } from "@/lib/slug";
+import { generateSkillEmbedding } from "@/lib/embedding-generator";
 
 export type ForkSkillState = {
   error?: string;
@@ -70,10 +71,14 @@ export async function forkSkill(
     newSkill = inserted;
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
       console.error("Failed to fork skill:", error);
     }
     return { error: "Failed to fork skill. Please try again." };
   }
+
+  // Fire-and-forget: generate embedding for semantic similarity
+  generateSkillEmbedding(newSkill.id, forkName, parent.description).catch(() => {});
 
   revalidatePath("/skills");
   revalidatePath(`/skills/${slug}`);

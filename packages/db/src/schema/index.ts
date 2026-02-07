@@ -12,3 +12,5 @@ export * from "./ratings";
 
 export * from "./skill-reviews";
 export * from "./api-keys";
+export * from "./site-settings";
+export * from "./skill-embeddings";
