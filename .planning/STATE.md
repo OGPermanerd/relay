@@ -52,6 +52,9 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 25-01 | Nullable tenantId/actorId on audit_logs | Supports system-level and cross-tenant events |
 | 25-02 | set_config() over SET LOCAL | SET LOCAL does not support parameterized values; set_config() with is_local=true is equivalent and works with Drizzle sql templates |
 | 25-02 | Cast tx to typeof db in withTenant | Gives callers full Drizzle query builder API without narrower transaction type |
+| 25-03 | Skills slug unique replaced with composite (tenantId, slug) | Allows same slug across different tenants |
+| 25-03 | Users email stays globally unique | Email is login identity via Auth.js, not tenant-scoped |
+| 25-03 | Seed script creates default tenant for all seed data | Required for FK integrity after adding notNull tenantId columns |
 | 25-05 | Deterministic default tenant UUID | Avoids subqueries in backfill migration; well-known ID referenceable across migrations |
 | 25-05 | Idempotent migration guards | IF NOT EXISTS, ON CONFLICT, WHERE IS NULL make all 3 migrations safe to re-run |
 
@@ -70,6 +73,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-07T16:36:41Z
-Stopped at: Completed 25-05-PLAN.md (tenant migration files)
+Last session: 2026-02-07T16:37:00Z
+Stopped at: Backfilled 25-03-SUMMARY.md (tenantId on first 5 data tables)
 Resume file: None
