@@ -7,6 +7,8 @@ import {
   usageEvents,
   apiKeys,
   skillEmbeddings,
+  tenants,
+  auditLogs,
 } from "../schema";
 
 /**
@@ -21,6 +23,10 @@ import {
  * - forks: one-to-many with skills (children)
  */
 export const skillsRelations = relations(skills, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [skills.tenantId],
+    references: [tenants.id],
+  }),
   author: one(users, {
     fields: [skills.authorId],
     references: [users.id],
@@ -86,7 +92,11 @@ export const ratingsRelations = relations(ratings, ({ one }) => ({
  * - usageEvents: one-to-many usage events
  * - apiKeys: one-to-many API keys
  */
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [users.tenantId],
+    references: [tenants.id],
+  }),
   skills: many(skills),
   skillVersions: many(skillVersions),
   ratings: many(ratings),
@@ -131,3 +141,21 @@ export const skillEmbeddingsRelations = relations(skillEmbeddings, ({ one }) => 
     references: [skills.id],
   }),
 }));
+
+/**
+ * Tenants relations
+ * - users: one-to-many users belonging to this tenant
+ * - skills: one-to-many skills owned by this tenant
+ * - apiKeys: one-to-many API keys issued under this tenant
+ */
+export const tenantsRelations = relations(tenants, ({ many }) => ({
+  users: many(users),
+  skills: many(skills),
+  apiKeys: many(apiKeys),
+}));
+
+/**
+ * AuditLogs relations
+ * (no FK relations — actorId and tenantId are nullable text fields for flexibility)
+ */
+export const auditLogsRelations = relations(auditLogs, () => ({}));
