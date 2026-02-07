@@ -64,6 +64,13 @@ test.describe("Skill Duplicate Check", () => {
     await expect(page.getByRole("button", { name: /publish anyway/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /go back/i })).toBeVisible();
 
+    // Verify a match type badge is shown (could be "Name match" or "Semantic match")
+    const matchBadge = page.getByText(/Name match|Semantic match/);
+    await expect(matchBadge.first()).toBeVisible();
+
+    // Verify "Create as Variation" button exists
+    await expect(page.getByRole("button", { name: /create as variation/i }).first()).toBeVisible();
+
     // Click "Publish Anyway" to verify the skip flow works
     await page.getByRole("button", { name: /publish anyway/i }).click();
     await expect(page.getByRole("button", { name: /checking/i })).not.toBeVisible({
@@ -74,5 +81,74 @@ test.describe("Skill Duplicate Check", () => {
     await expect(page).not.toHaveURL(/\/skills\/new/);
     // eslint-disable-next-line no-console
     console.log(`Second skill created via Publish Anyway: ${page.url()}`);
+  });
+
+  test("should show hover popup with skill description on similar skills", async ({ page }) => {
+    test.setTimeout(60000);
+
+    const uniqueId = Date.now();
+
+    // Step 1: Create the first skill with a distinctive description
+    await page.goto("/skills/new");
+    await expect(page.getByRole("heading", { name: /share a new skill/i })).toBeVisible();
+
+    await page.getByLabel(/^name/i).fill(`Hover Test ${uniqueId}`);
+    await page
+      .getByLabel(/^description/i)
+      .fill("Special hover popup test description for verification");
+    await page.getByLabel(/^category/i).selectOption("workflow");
+    await page.getByLabel(/skill content/i).fill("Test content for hover popup test");
+
+    await page.getByRole("button", { name: /create skill/i }).click();
+    await expect(page.getByRole("button", { name: /checking/i })).not.toBeVisible({
+      timeout: 30000,
+    });
+
+    // Handle potential duplicate warning from previous test runs
+    const publishBtn = page.getByRole("button", { name: /publish anyway/i });
+    if (await publishBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await publishBtn.click();
+      await expect(page.getByRole("button", { name: /checking/i })).not.toBeVisible({
+        timeout: 30000,
+      });
+    }
+
+    await expect(page).not.toHaveURL(/\/skills\/new/);
+
+    // Step 2: Create duplicate to trigger warning
+    await page.goto("/skills/new");
+    await expect(page.getByRole("heading", { name: /share a new skill/i })).toBeVisible();
+
+    await page.getByLabel(/^name/i).fill(`Hover Test ${uniqueId}`);
+    await page
+      .getByLabel(/^description/i)
+      .fill("Special hover popup test description for verification");
+    await page.getByLabel(/^category/i).selectOption("workflow");
+    await page.getByLabel(/skill content/i).fill("Test content for hover popup test");
+
+    await page.getByRole("button", { name: /create skill/i }).click();
+    await expect(page.getByRole("button", { name: /checking/i })).not.toBeVisible({
+      timeout: 30000,
+    });
+
+    // Expect warning with similar skills
+    await expect(page.getByText(/similar skills found/i)).toBeVisible({ timeout: 5000 });
+
+    // Hover over the first similar skill to reveal the popup
+    const skillRow = page.locator("li.group").first();
+    await skillRow.hover();
+
+    // The popup should show the description text (scoped to the list, use first() since multiple matches may exist)
+    const popupDesc = page
+      .getByRole("list")
+      .getByText(/Special hover popup test description/i)
+      .first();
+    await expect(popupDesc).toBeVisible({ timeout: 3000 });
+
+    // The popup should show the category (scoped to list popup)
+    await expect(page.getByRole("list").getByText("workflow").first()).toBeVisible();
+
+    // Cleanup: go back
+    await page.getByRole("button", { name: /go back/i }).click();
   });
 });

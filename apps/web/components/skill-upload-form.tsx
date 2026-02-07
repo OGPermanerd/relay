@@ -13,6 +13,7 @@ export function SkillUploadForm() {
 
   const [showWarning, setShowWarning] = useState(false);
   const [skipCheck, setSkipCheck] = useState(false);
+  const [variationOfId, setVariationOfId] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Controlled field values so they survive useActionState re-renders
@@ -68,6 +69,14 @@ export function SkillUploadForm() {
   const handleCancel = () => {
     setShowWarning(false);
     setSkipCheck(false);
+    setVariationOfId(null);
+  };
+
+  // Handle "Create as Variation" — link as fork of matched skill
+  const handleCreateVariation = (skillId: string) => {
+    setVariationOfId(skillId);
+    setShowWarning(false);
+    setSkipCheck(true);
   };
 
   const errors = state.errors;
@@ -77,6 +86,7 @@ export function SkillUploadForm() {
     <form ref={formRef} action={formAction} className="space-y-6">
       {/* Hidden input for skip-check flag (used by "Publish Anyway") */}
       <input type="hidden" name="_skipCheck" value={skipCheck ? "true" : ""} />
+      <input type="hidden" name="_variationOf" value={variationOfId || ""} />
 
       {message && <div className="rounded-md bg-red-50 p-4 text-red-700">{message}</div>}
 
@@ -85,6 +95,7 @@ export function SkillUploadForm() {
           similarSkills={state.similarSkills}
           onProceed={handleProceed}
           onCancel={handleCancel}
+          onCreateVariation={handleCreateVariation}
           isPending={isPending}
         />
       )}

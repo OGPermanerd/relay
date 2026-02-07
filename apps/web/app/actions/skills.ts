@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { generateUniqueSlug } from "@/lib/slug";
 import { hashContent } from "@/lib/content-hash";
+import { generateSkillEmbedding } from "@/lib/embedding-generator";
 
 // Zod schema for form validation
 const createSkillSchema = z.object({
@@ -90,6 +91,9 @@ export async function checkAndCreateSkill(
     return { errors: parsed.error.flatten().fieldErrors };
   }
 
+  // Read optional variation-of link (from "Create as Variation" flow)
+  const variationOf = (formData.get("_variationOf") as string) || null;
+
   // Step 1: check for similar skills (unless skipped)
   const skipCheck = formData.get("_skipCheck") === "true";
   if (!skipCheck) {
@@ -114,7 +118,16 @@ export async function checkAndCreateSkill(
   try {
     const [inserted] = await db
       .insert(skills)
-      .values({ name, slug, description, category, content, hoursSaved, authorId: session.user.id })
+      .values({
+        name,
+        slug,
+        description,
+        category,
+        content,
+        hoursSaved,
+        authorId: session.user.id,
+        forkedFromId: variationOf || undefined,
+      })
       .returning({ id: skills.id, slug: skills.slug });
     newSkill = inserted;
   } catch (error) {
@@ -163,6 +176,9 @@ export async function checkAndCreateSkill(
     // eslint-disable-next-line no-console
     console.warn("R2 not configured, skill created without version record");
   }
+
+  // Fire-and-forget: generate embedding for semantic similarity
+  generateSkillEmbedding(newSkill.id, name, description).catch(() => {});
 
   revalidatePath("/skills");
   revalidatePath("/");
@@ -331,6 +347,9 @@ export async function createSkill(
     // eslint-disable-next-line no-console
     console.warn("R2 not configured, skill created without version record");
   }
+
+  // Fire-and-forget: generate embedding for semantic similarity
+  generateSkillEmbedding(newSkill.id, name, description).catch(() => {});
 
   // Revalidate relevant paths
   revalidatePath("/skills");
