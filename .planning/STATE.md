@@ -74,7 +74,7 @@ All decisions logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-None.
+- AI-Independence — platform-agnostic skill translation (future phase)
 
 ### Blockers/Concerns
 
