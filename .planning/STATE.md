@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 25 — Multi-Tenancy Schema & Audit Foundation
+**Current focus:** Phase 25 complete -- ready for Phase 26
 
 ## Current Position
 
 Phase: 25 of 33 (Multi-Tenancy Schema & Audit Foundation)
-Plan: 8 of 9 in current phase
-Status: In progress
-Last activity: 2026-02-07 — Completed 25-08-PLAN.md (audit log write service)
+Plan: 9 of 9 in current phase
+Status: Phase complete
+Last activity: 2026-02-07 -- Completed 25-09-PLAN.md (run migrations and verify)
 
-Progress: [████░░░░░░░░░░░░░░░░░░░░] ~7% (v1.5 — 8 of ~TBD plans)
+Progress: [█████░░░░░░░░░░░░░░░░░░░] ~8% (v1.5 -- 9 of ~TBD plans)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [████░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 98
+- Total plans completed: 99
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~7 hours
+- Total execution time: ~7.25 hours
 
 **Cumulative:**
-- 97 plans across 25 phases and 5 milestones
-- ~13,500 LOC TypeScript
+- 99 plans across 25 phases and 5 milestones
+- ~13,600 LOC TypeScript
 - 6 days total development time
 
 *Updated after each plan completion*
@@ -68,6 +68,9 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 25-07 | Restrictive pgPolicy without `to:` param | Applies to public role; combined with FORCE RLS covers all connections |
 | 25-08 | Fire-and-forget audit pattern | Catch errors and log to console, never propagate to callers |
 | 25-08 | Direct INSERT not transaction-scoped | audit_logs is append-only, no RLS needed |
+| 25-09 | drizzle-kit push for table creation, manual SQL for RLS | Push handles CREATE TABLE/FK/indexes; manual SQL needed for FORCE RLS and policy clauses |
+| 25-09 | users.tenantId gets .default() | Auth.js DrizzleAdapter createUser doesn't pass tenantId; default ensures OAuth login works |
+| 25-09 | DEFAULT_TENANT_ID constant in action files | Blocking fix for build; each file gets hardcoded constant with TODO for dynamic resolution |
 
 ### Pending Todos
 
@@ -76,14 +79,16 @@ None.
 ### Blockers/Concerns
 
 - [17-01]: ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
-- [Research]: PostgreSQL query performance at 100k+ usage_events — add indexes if slow
-- [Note]: apps/mcp tsc --noEmit has pre-existing errors from packages/db module resolution — not blocking
+- [Research]: PostgreSQL query performance at 100k+ usage_events -- add indexes if slow
+- [Note]: apps/mcp tsc --noEmit has pre-existing errors from packages/db module resolution -- not blocking
 - [v1.5]: Hetzner server: Ubuntu 24.04, 8 CPU, 30GB RAM, Docker+Compose ready, Tailscale on :443, no native PostgreSQL
 - [v1.5]: User has domain ready to point, needs DNS A record setup
-- [v1.5]: REQUIREMENTS.md says 55 but actually contains 62 requirements — roadmap maps all 62
+- [v1.5]: REQUIREMENTS.md says 55 but actually contains 62 requirements -- roadmap maps all 62
+- [25-09]: RLS blocks ALL queries until app code wraps queries in withTenant() -- E2E tests fail at auth.setup
+- [25-09]: drizzle-kit push with `entities: { roles: true }` requires CREATEROLE permission -- workaround documented
 
 ## Session Continuity
 
-Last session: 2026-02-07T16:47:47Z
-Stopped at: Completed 25-07-PLAN.md (pgPolicy RLS declarations) and 25-08-PLAN.md (audit log write service)
+Last session: 2026-02-07T17:05:00Z
+Stopped at: Completed 25-09-PLAN.md -- Phase 25 complete
 Resume file: None
