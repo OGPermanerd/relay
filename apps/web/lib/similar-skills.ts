@@ -1,9 +1,8 @@
 "use server";
 
 import { generateEmbedding } from "@/lib/embeddings";
-import { findSimilarSkills, type SimilarSkillResult } from "@relay/db/services";
-
-export type { SimilarSkillResult };
+import { findSimilarSkills } from "@relay/db/services";
+import type { SimilarSkillResult } from "@relay/db/services";
 
 export interface CheckSimilarSkillsInput {
   name: string;

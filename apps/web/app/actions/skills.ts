@@ -44,7 +44,8 @@ const createSkillSchema = z.object({
   content: z.string().min(1, "Content is required"),
 });
 
-import { checkSimilarSkills, type SimilarSkillResult } from "@/lib/similar-skills";
+import { checkSimilarSkills } from "@/lib/similar-skills";
+import type { SimilarSkillResult } from "@relay/db/services";
 
 export type CreateSkillState = {
   errors?: Record<string, string[]>;

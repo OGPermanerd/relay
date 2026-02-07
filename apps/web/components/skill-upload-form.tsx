@@ -8,7 +8,7 @@ import {
   CheckSimilarityState,
 } from "@/app/actions/skills";
 import { SimilarSkillsWarning } from "./similar-skills-warning";
-import type { SimilarSkillResult } from "@/lib/similar-skills";
+import type { SimilarSkillResult } from "@relay/db/services";
 
 const initialCreateState: CreateSkillState = {};
 const initialCheckState: CheckSimilarityState = {};

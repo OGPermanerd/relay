@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { SimilarSkillResult } from "@/lib/similar-skills";
+import type { SimilarSkillResult } from "@relay/db/services";
 
 interface SimilarSkillsWarningProps {
   similarSkills: SimilarSkillResult[];
