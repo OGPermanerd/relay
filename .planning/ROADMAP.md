@@ -95,7 +95,7 @@ Total: 25 plans completed.
 **Milestone Goal:** Transform Relay from a single-tenant internal tool into a production-deployed, multi-tenant SaaS platform with deterministic usage tracking, SOC2 compliance foundations, white-label branding, enhanced skill management, and a notification system. 62 requirements across 9 categories deliver the infrastructure for enterprise-grade multi-organization deployment.
 
 - [x] **Phase 25: Multi-Tenancy Schema & Audit Foundation** - Tenant isolation at the database level
-- [ ] **Phase 26: Auth & Subdomain Routing** - Users can log in to their tenant's subdomain
+- [x] **Phase 26: Auth & Subdomain Routing** - Users can log in to their tenant's subdomain
 - [ ] **Phase 27: Production Docker Deployment** - Single-command production deployment (parallel track)
 - [ ] **Phase 28: Hook-Based Usage Tracking** - Deterministic skill usage tracking via Claude Code hooks
 - [ ] **Phase 29: Tenant-Scoped Analytics & MCP** - Analytics and MCP respect tenant boundaries
@@ -154,7 +154,12 @@ Plans:
   3. PostgreSQL is accessible only within the Docker internal network — no host port exposure
   4. Docker volumes are encrypted at rest via LUKS full-disk encryption on the Hetzner VPS
   5. A backup script performs pg_dump with gzip compression, GPG encryption, and off-site storage — hourly incremental and daily full with 90-day retention
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 27-01-PLAN.md — Next.js standalone config + /api/health endpoint + .dockerignore
+- [ ] 27-02-PLAN.md — Dockerfile (4-stage turbo prune) + Dockerfile.caddy + Caddyfile
+- [ ] 27-03-PLAN.md — Backup/restore scripts + LUKS encryption runbook
+- [ ] 27-04-PLAN.md — docker-compose.prod.yml + .env.example
 
 ### Phase 28: Hook-Based Usage Tracking
 **Goal**: Every Claude Code tool invocation against a deployed skill is deterministically tracked via PostToolUse hooks firing to the production endpoint
@@ -239,7 +244,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
 | 25. Multi-Tenancy Schema | v1.5 | 9/9 | Complete | 2026-02-07 |
 | 26. Auth & Subdomain Routing | v1.5 | 3/3 | Complete | 2026-02-07 |
-| 27. Docker Deployment | v1.5 | 0/TBD | Not started | - |
+| 27. Docker Deployment | v1.5 | 0/4 | Planned | - |
 | 28. Hook-Based Tracking | v1.5 | 0/TBD | Not started | - |
 | 29. Tenant Analytics & MCP | v1.5 | 0/TBD | Not started | - |
 | 30. Branding & Navigation | v1.5 | 0/TBD | Not started | - |
