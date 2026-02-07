@@ -131,74 +131,74 @@ Deferred to post-v1.5. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TENANT-01 | TBD | Pending |
-| TENANT-02 | TBD | Pending |
-| TENANT-03 | TBD | Pending |
-| TENANT-04 | TBD | Pending |
-| TENANT-05 | TBD | Pending |
-| TENANT-06 | TBD | Pending |
-| TENANT-07 | TBD | Pending |
-| TENANT-08 | TBD | Pending |
-| TENANT-09 | TBD | Pending |
-| TENANT-10 | TBD | Pending |
-| TENANT-11 | TBD | Pending |
-| TENANT-12 | TBD | Pending |
-| TENANT-13 | TBD | Pending |
-| SOC2-01 | TBD | Pending |
-| SOC2-02 | TBD | Pending |
-| SOC2-03 | TBD | Pending |
-| SOC2-04 | TBD | Pending |
-| SOC2-05 | TBD | Pending |
-| SOC2-06 | TBD | Pending |
-| SOC2-07 | TBD | Pending |
-| DEPLOY-01 | TBD | Pending |
-| DEPLOY-02 | TBD | Pending |
-| DEPLOY-03 | TBD | Pending |
-| DEPLOY-04 | TBD | Pending |
-| DEPLOY-05 | TBD | Pending |
-| DEPLOY-06 | TBD | Pending |
-| DEPLOY-07 | TBD | Pending |
-| TRACK-01 | TBD | Pending |
-| TRACK-02 | TBD | Pending |
-| TRACK-03 | TBD | Pending |
-| TRACK-04 | TBD | Pending |
-| TRACK-05 | TBD | Pending |
-| TRACK-06 | TBD | Pending |
-| TRACK-07 | TBD | Pending |
-| TRACK-08 | TBD | Pending |
-| BRAND-01 | TBD | Pending |
-| BRAND-02 | TBD | Pending |
-| BRAND-03 | TBD | Pending |
-| BRAND-04 | TBD | Pending |
-| BRAND-05 | TBD | Pending |
-| BRAND-06 | TBD | Pending |
-| BRAND-07 | TBD | Pending |
-| BRAND-08 | TBD | Pending |
-| SKILL-01 | TBD | Pending |
-| SKILL-02 | TBD | Pending |
-| SKILL-03 | TBD | Pending |
-| SKILL-04 | TBD | Pending |
-| SKILL-05 | TBD | Pending |
-| SKILL-06 | TBD | Pending |
-| SKILL-07 | TBD | Pending |
-| ADMIN-01 | TBD | Pending |
-| ADMIN-02 | TBD | Pending |
-| ADMIN-03 | TBD | Pending |
-| ADMIN-04 | TBD | Pending |
-| ADMIN-05 | TBD | Pending |
-| NOTIF-01 | TBD | Pending |
-| NOTIF-02 | TBD | Pending |
-| NOTIF-03 | TBD | Pending |
-| NOTIF-04 | TBD | Pending |
-| NOTIF-05 | TBD | Pending |
-| NOTIF-06 | TBD | Pending |
-| METRIC-01 | TBD | Pending |
+| TENANT-01 | Phase 25 | Pending |
+| TENANT-02 | Phase 25 | Pending |
+| TENANT-03 | Phase 25 | Pending |
+| TENANT-04 | Phase 25 | Pending |
+| TENANT-05 | Phase 25 | Pending |
+| TENANT-06 | Phase 26 | Pending |
+| TENANT-07 | Phase 26 | Pending |
+| TENANT-08 | Phase 26 | Pending |
+| TENANT-09 | Phase 26 | Pending |
+| TENANT-10 | Phase 26 | Pending |
+| TENANT-11 | Phase 28 | Pending |
+| TENANT-12 | Phase 29 | Pending |
+| TENANT-13 | Phase 29 | Pending |
+| SOC2-01 | Phase 25 | Pending |
+| SOC2-02 | Phase 25 | Pending |
+| SOC2-03 | Phase 27 | Pending |
+| SOC2-04 | Phase 26 | Pending |
+| SOC2-05 | Phase 28 | Pending |
+| SOC2-06 | Phase 27 | Pending |
+| SOC2-07 | Phase 27 | Pending |
+| DEPLOY-01 | Phase 27 | Pending |
+| DEPLOY-02 | Phase 27 | Pending |
+| DEPLOY-03 | Phase 27 | Pending |
+| DEPLOY-04 | Phase 27 | Pending |
+| DEPLOY-05 | Phase 27 | Pending |
+| DEPLOY-06 | Phase 27 | Pending |
+| DEPLOY-07 | Phase 27 | Pending |
+| TRACK-01 | Phase 28 | Pending |
+| TRACK-02 | Phase 28 | Pending |
+| TRACK-03 | Phase 28 | Pending |
+| TRACK-04 | Phase 28 | Pending |
+| TRACK-05 | Phase 28 | Pending |
+| TRACK-06 | Phase 28 | Pending |
+| TRACK-07 | Phase 28 | Pending |
+| TRACK-08 | Phase 28 | Pending |
+| BRAND-01 | Phase 30 | Pending |
+| BRAND-02 | Phase 30 | Pending |
+| BRAND-03 | Phase 30 | Pending |
+| BRAND-04 | Phase 30 | Pending |
+| BRAND-05 | Phase 30 | Pending |
+| BRAND-06 | Phase 30 | Pending |
+| BRAND-07 | Phase 30 | Pending |
+| BRAND-08 | Phase 30 | Pending |
+| SKILL-01 | Phase 31 | Pending |
+| SKILL-02 | Phase 31 | Pending |
+| SKILL-03 | Phase 31 | Pending |
+| SKILL-04 | Phase 31 | Pending |
+| SKILL-05 | Phase 31 | Pending |
+| SKILL-06 | Phase 31 | Pending |
+| SKILL-07 | Phase 31 | Pending |
+| ADMIN-01 | Phase 32 | Pending |
+| ADMIN-02 | Phase 32 | Pending |
+| ADMIN-03 | Phase 32 | Pending |
+| ADMIN-04 | Phase 32 | Pending |
+| ADMIN-05 | Phase 32 | Pending |
+| NOTIF-01 | Phase 33 | Pending |
+| NOTIF-02 | Phase 33 | Pending |
+| NOTIF-03 | Phase 33 | Pending |
+| NOTIF-04 | Phase 33 | Pending |
+| NOTIF-05 | Phase 33 | Pending |
+| NOTIF-06 | Phase 33 | Pending |
+| METRIC-01 | Phase 29 | Pending |
 
 **Coverage:**
-- v1.5 requirements: 55 total
-- Mapped to phases: 0
-- Unmapped: 55
+- v1.5 requirements: 62 total
+- Mapped to phases: 62
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-07*
-*Last updated: 2026-02-07 after initial definition*
+*Last updated: 2026-02-07 — traceability updated after roadmap creation*
