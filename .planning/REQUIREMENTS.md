@@ -101,9 +101,10 @@ Requirements for Production, Multi-Tenancy & Reliable Usage Tracking milestone.
 Deferred to post-v1.5. Tracked but not in current roadmap.
 
 ### Cross-Tenant Features
-- **CROSS-01**: Public/shared skill marketplace visible across tenants
+- **CROSS-01**: Public/shared skill marketplace visible across tenants — admin-controllable opt-in, subscription fee per tenant and per user per month
 - **CROSS-02**: Tenant onboarding wizard (self-service tenant creation)
 - **CROSS-03**: Cross-tenant skill forking
+- **CROSS-04**: Promote skills from private tenant catalog into public marketplace
 
 ### Advanced Deployment
 - **DEPLOY-08**: Zero-downtime rolling deployments
