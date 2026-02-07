@@ -50,7 +50,7 @@ existing.mcpServers['relay-skills'] = {
 console.log(JSON.stringify(existing, null, 2));
 "@
 
-$Result = node -e $MergeScript $Existing
+$Result = node -e $MergeScript "$Existing"
 $Result | Set-Content $ConfigFile -Encoding UTF8
 
 # Report install to Relay (non-blocking, failure OK)
