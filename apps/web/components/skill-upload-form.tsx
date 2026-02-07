@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useRef, useEffect } from "react";
+import { useActionState, useState, useRef, useEffect, useCallback } from "react";
 import {
   createSkill,
   checkSimilarity,
@@ -8,6 +8,8 @@ import {
   CheckSimilarityState,
 } from "@/app/actions/skills";
 import { SimilarSkillsWarning } from "./similar-skills-warning";
+import { SkillFileDropZone } from "./skill-file-drop-zone";
+import type { ParsedSkillData } from "@/lib/skill-file-parser";
 import type { SimilarSkillResult } from "@relay/db/services";
 
 const initialCreateState: CreateSkillState = {};
@@ -19,9 +21,31 @@ export function SkillUploadForm() {
 
   const [step, setStep] = useState<"form" | "preview">("form");
   const [similarSkills, setSimilarSkills] = useState<SimilarSkillResult[]>([]);
+  const [importedFile, setImportedFile] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   const isPending = isChecking || isCreating;
+
+  const handleFileParsed = useCallback((data: ParsedSkillData) => {
+    if (!formRef.current) return;
+    const setField = (name: string, value: string | undefined) => {
+      if (!value) return;
+      const el = formRef.current!.elements.namedItem(name);
+      if (el && el instanceof HTMLElement && "value" in el) {
+        (el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value = value;
+      }
+    };
+    setField("name", data.name);
+    setField("description", data.description);
+    setField("tags", data.tags);
+    setField("usageInstructions", data.usageInstructions);
+    setField("content", data.content);
+    if (data.category) {
+      const sel = formRef.current.elements.namedItem("category") as HTMLSelectElement | null;
+      if (sel) sel.value = data.category;
+    }
+    setImportedFile(data.parseMessage || "File imported.");
+  }, []);
 
   // Handle checkSimilarity result
   useEffect(() => {
@@ -81,6 +105,23 @@ export function SkillUploadForm() {
 
       {step === "form" && (
         <>
+          {/* File import drop zone */}
+          <SkillFileDropZone onFileParsed={handleFileParsed} disabled={isPending} />
+
+          {importedFile && (
+            <div className="flex items-center justify-between rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
+              <span>{importedFile}</span>
+              <button
+                type="button"
+                onClick={() => setImportedFile(null)}
+                className="ml-2 text-lg leading-none opacity-60 hover:opacity-100"
+                aria-label="Dismiss import message"
+              >
+                &times;
+              </button>
+            </div>
+          )}
+
           {/* Name field */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
