@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useRef, useEffect, useCallback } from "react";
+import { useActionState, useState, useRef, useEffect, useCallback, startTransition } from "react";
 import {
   createSkill,
   checkSimilarity,
@@ -21,30 +21,35 @@ export function SkillUploadForm() {
 
   const [step, setStep] = useState<"form" | "preview">("form");
   const [similarSkills, setSimilarSkills] = useState<SimilarSkillResult[]>([]);
-  const [importedFile, setImportedFile] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Controlled field values so they survive useActionState re-renders
+  const [fields, setFields] = useState({
+    name: "",
+    description: "",
+    category: "",
+    tags: "",
+    usageInstructions: "",
+    content: "",
+    hoursSaved: "1",
+  });
+
+  const setField = useCallback((name: string, value: string) => {
+    setFields((prev) => ({ ...prev, [name]: value }));
+  }, []);
 
   const isPending = isChecking || isCreating;
 
   const handleFileParsed = useCallback((data: ParsedSkillData) => {
-    if (!formRef.current) return;
-    const setField = (name: string, value: string | undefined) => {
-      if (!value) return;
-      const el = formRef.current!.elements.namedItem(name);
-      if (el && el instanceof HTMLElement && "value" in el) {
-        (el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value = value;
-      }
-    };
-    setField("name", data.name);
-    setField("description", data.description);
-    setField("tags", data.tags);
-    setField("usageInstructions", data.usageInstructions);
-    setField("content", data.content);
-    if (data.category) {
-      const sel = formRef.current.elements.namedItem("category") as HTMLSelectElement | null;
-      if (sel) sel.value = data.category;
-    }
-    setImportedFile(data.parseMessage || "File imported.");
+    setFields((prev) => ({
+      ...prev,
+      name: data.name || prev.name,
+      description: data.description || prev.description,
+      category: data.category || prev.category,
+      tags: data.tags || prev.tags,
+      usageInstructions: data.usageInstructions || prev.usageInstructions,
+      content: data.content || prev.content,
+    }));
   }, []);
 
   // Handle checkSimilarity result
@@ -57,7 +62,7 @@ export function SkillUploadForm() {
         // No similar skills and no errors - proceed to publish
         if (formRef.current) {
           const formData = new FormData(formRef.current);
-          createAction(formData);
+          startTransition(() => createAction(formData));
         }
       }
     }
@@ -71,7 +76,7 @@ export function SkillUploadForm() {
   const handleProceed = () => {
     if (formRef.current) {
       const formData = new FormData(formRef.current);
-      createAction(formData);
+      startTransition(() => createAction(formData));
     }
   };
 
@@ -108,20 +113,6 @@ export function SkillUploadForm() {
           {/* File import drop zone */}
           <SkillFileDropZone onFileParsed={handleFileParsed} disabled={isPending} />
 
-          {importedFile && (
-            <div className="flex items-center justify-between rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
-              <span>{importedFile}</span>
-              <button
-                type="button"
-                onClick={() => setImportedFile(null)}
-                className="ml-2 text-lg leading-none opacity-60 hover:opacity-100"
-                aria-label="Dismiss import message"
-              >
-                &times;
-              </button>
-            </div>
-          )}
-
           {/* Name field */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -133,6 +124,8 @@ export function SkillUploadForm() {
               name="name"
               required
               disabled={isPending}
+              value={fields.name}
+              onChange={(e) => setField("name", e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
               placeholder="My Awesome Skill"
             />
@@ -150,6 +143,8 @@ export function SkillUploadForm() {
               required
               disabled={isPending}
               rows={3}
+              value={fields.description}
+              onChange={(e) => setField("description", e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
               placeholder="A brief description of what this skill does"
             />
@@ -168,6 +163,8 @@ export function SkillUploadForm() {
               name="category"
               required
               disabled={isPending}
+              value={fields.category}
+              onChange={(e) => setField("category", e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
             >
               <option value="">Select a category</option>
@@ -189,6 +186,8 @@ export function SkillUploadForm() {
               id="tags"
               name="tags"
               disabled={isPending}
+              value={fields.tags}
+              onChange={(e) => setField("tags", e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
               placeholder="e.g. marketing, automation, analytics (comma-separated)"
             />
@@ -206,6 +205,8 @@ export function SkillUploadForm() {
               name="usageInstructions"
               disabled={isPending}
               rows={4}
+              value={fields.usageInstructions}
+              onChange={(e) => setField("usageInstructions", e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
               placeholder="How to use this skill effectively..."
             />
@@ -230,7 +231,8 @@ export function SkillUploadForm() {
               min="0"
               max="1000"
               step="0.1"
-              defaultValue="1"
+              value={fields.hoursSaved}
+              onChange={(e) => setField("hoursSaved", e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
             />
             <p className="mt-1 text-sm text-gray-500">
@@ -252,6 +254,8 @@ export function SkillUploadForm() {
               required
               disabled={isPending}
               rows={10}
+              value={fields.content}
+              onChange={(e) => setField("content", e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
               placeholder="Paste your prompt, workflow configuration, or MCP server definition here..."
             />
