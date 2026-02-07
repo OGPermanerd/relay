@@ -1140,5 +1140,929 @@ No new server-side env vars needed for the web app -- API keys are stored in the
 - `/home/dev/projects/relay/apps/web/middleware.ts` - Auth redirect with API route exemptions
 
 ---
+
+# v2.0 Multi-Tenancy & Hook-Based Tracking: Integration Architecture
+
+**Milestone:** v2.0 Multi-Tenancy & Production Deployment
+**Researched:** 2026-02-07
+**Confidence:** HIGH (full codebase audit of all 11 schema files, 10 services, 13 actions, both MCP transports + verified research)
+
+## Executive Summary
+
+Relay is currently a single-tenant Next.js 16 + Drizzle ORM + PostgreSQL monorepo that must become multi-tenant with row-level isolation and gain hook-based compliance tracking. This section maps every integration point, identifies new and modified components, defines data flow changes, and recommends a build order that minimizes risk.
+
+**Architecture strategy:** `tenant_id` column on every data table + application-level scoped queries + subdomain routing via middleware + PostgreSQL RLS as defense-in-depth. This is deliberately NOT database-per-tenant or schema-per-tenant because the codebase shares a single Drizzle client and schema module across `apps/web`, `apps/mcp`, and `packages/db`.
+
+## 1. Current Architecture Map (as of v1.4)
+
+### 1.1 Component Inventory
+
+```
+packages/db/
+  src/schema/       # 11 tables: users, skills, ratings, api_keys, usage_events,
+                    #   skill_versions, skill_reviews, skill_embeddings, site_settings,
+                    #   accounts, sessions, verification_tokens
+  src/relations/    # Drizzle relational definitions
+  src/services/     # 10 service modules (api-keys, search-skills, skill-metrics, etc.)
+  src/client.ts     # Single postgres-js connection, cached on globalThis
+  drizzle.config.ts # Migration config pointing to ./src/migrations
+
+apps/web/
+  middleware.ts         # Auth.js middleware, exempts /api/auth, /api/mcp, etc.
+  auth.ts               # NextAuth v5, Google OAuth, JWT strategy, single-domain-gated
+  auth.config.ts        # Edge-compatible config (hd param = UX only)
+  app/actions/          # 13 server actions
+  app/api/mcp/          # Streamable HTTP MCP handler (mcp-handler library)
+  app/api/install-callback/ # Webhook for skill install events
+  lib/analytics-queries.ts  # Raw SQL analytics (domain-derived org scoping)
+  lib/admin.ts          # Admin check via ADMIN_EMAILS env var
+
+apps/mcp/
+  src/auth.ts      # Resolves userId from RELAY_API_KEY env var (stdio transport)
+  src/server.ts    # MCP server instance
+  src/index.ts     # Stdio transport entry point
+  src/tools/       # Tool handlers (list, search, deploy, confirm-install, log-usage)
+  src/tracking/    # Usage event tracking
+
+docker/
+  docker-compose.yml  # PostgreSQL 16 only (dev)
+```
+
+### 1.2 Current Data Flow
+
+```
+Browser --> [Next.js Middleware (auth check)] --> [Server Actions / API routes]
+                                                       |
+                                                       v
+                                                  [packages/db services]
+                                                       |
+                                                       v
+                                                  [PostgreSQL]
+
+Claude Desktop --> [apps/mcp stdio] --> [RELAY_API_KEY --> userId] --> [packages/db]
+
+Claude.ai --> [apps/web/api/mcp/ Streamable HTTP] --> [Bearer token --> userId] --> [packages/db]
+```
+
+### 1.3 Current Tenant Isolation (Implicit, Single-Tenant)
+
+Today, Relay has **implicit single-tenant isolation** via:
+
+1. **AUTH_ALLOWED_DOMAIN** env var: Google OAuth `hd` parameter restricts login to one domain (e.g., `company.com`)
+2. **signIn callback** in `auth.ts` line 33: `profile?.email?.endsWith(\`@${ALLOWED_DOMAIN}\`)`
+3. **Analytics queries** in `analytics-queries.ts`: Derive org scope by extracting email domain: `u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId})`
+4. **ADMIN_EMAILS** env var in `lib/admin.ts`: Hardcoded list of admin emails
+
+There is NO `tenant_id` column on any table. All data lives in flat, shared tables. The current system supports exactly one organization per deployment.
+
+## 2. Multi-Tenancy Schema Design
+
+### 2.1 New `tenants` Table
+
+**New component.** Foundation for all tenant-scoped data.
+
+```typescript
+// packages/db/src/schema/tenants.ts (NEW)
+export const tenants = pgTable("tenants", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),              // "Acme Corp"
+  slug: text("slug").notNull().unique(),      // "acme" (subdomain)
+  domain: text("domain").notNull().unique(),  // "acme.com" (Google SSO domain)
+  logoUrl: text("logo_url"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+```
+
+**Key design decisions:**
+- `slug` maps to subdomain: `acme.relay.example.com`
+- `domain` maps to Google OAuth email domain: `@acme.com` users automatically associate with the `acme` tenant
+- One tenant per email domain (enforced by unique constraint on `domain`)
+- Tenant acts as the organization boundary for all data isolation
+
+### 2.2 Adding `tenantId` to Existing Tables
+
+**Modified components.** Every data table gets a `tenantId` column.
+
+| Table | Column Addition | Backfill Strategy |
+|-------|----------------|-------------------|
+| `users` | `tenantId text NOT NULL REFERENCES tenants(id)` | Match `split_part(email, '@', 2)` to `tenants.domain` |
+| `skills` | `tenantId text NOT NULL REFERENCES tenants(id)` | Copy from `authorId -> users.tenantId` |
+| `ratings` | `tenantId text NOT NULL REFERENCES tenants(id)` | Copy from `userId -> users.tenantId` |
+| `api_keys` | `tenantId text NOT NULL REFERENCES tenants(id)` | Copy from `userId -> users.tenantId` |
+| `usage_events` | `tenantId text NOT NULL REFERENCES tenants(id)` | Copy from `userId -> users.tenantId` (NULL userId rows get default tenant) |
+| `skill_versions` | `tenantId text NOT NULL REFERENCES tenants(id)` | Copy from `skillId -> skills.tenantId` |
+| `skill_reviews` | `tenantId text NOT NULL REFERENCES tenants(id)` | Copy from `skillId -> skills.tenantId` |
+| `skill_embeddings` | `tenantId text NOT NULL REFERENCES tenants(id)` | Copy from `skillId -> skills.tenantId` |
+| `site_settings` | Replace singleton PK with `tenantId` as PK | Migrate `default` row to first tenant's ID |
+
+**Auth.js tables (accounts, sessions, verification_tokens): NO `tenantId` needed.** These tables are keyed by `userId`, which already maps to a tenant via the `users` table. Adding `tenantId` to Auth.js tables would require a custom DrizzleAdapter, adding complexity for no security benefit.
+
+**Users table also gets a `role` column:**
+
+```typescript
+role: text("role").notNull().default("member"), // "admin" | "member"
+```
+
+This replaces the `ADMIN_EMAILS` env var pattern with per-tenant admin roles stored in the database.
+
+### 2.3 Index Strategy
+
+Each table needs a composite index on `(tenant_id, <primary filter column>)`:
+
+| Table | Index |
+|-------|-------|
+| `users` | `(tenant_id, email)` |
+| `skills` | `(tenant_id, slug)`, `(tenant_id, category)` |
+| `ratings` | `(tenant_id, skill_id)` |
+| `api_keys` | `(tenant_id, user_id)` |
+| `usage_events` | `(tenant_id, created_at)`, `(tenant_id, user_id)` |
+| `skill_versions` | `(tenant_id, skill_id)` |
+
+## 3. Tenant Context Resolution
+
+### 3.1 Subdomain Extraction in Middleware
+
+**Modified component:** `apps/web/middleware.ts`
+
+```
+Request: https://acme.relay.example.com/skills
+                 ^^^^
+                 subdomain = "acme"
+
+Middleware flow:
+  1. Parse host header: "acme.relay.example.com"
+  2. Extract subdomain by removing root domain suffix
+  3. Skip subdomain logic for: root domain, static assets, exempt API routes
+  4. Resolve tenant: lookup slug -> tenantId
+  5. If not found: return 404 "Tenant not found"
+  6. Inject x-tenant-id and x-tenant-slug into request headers
+  7. Continue to existing auth check logic
+```
+
+**Edge Runtime constraint:** The middleware runs on Edge Runtime, which cannot import `postgres-js`. Tenant resolution options:
+
+| Option | Approach | Verdict |
+|--------|----------|---------|
+| In-memory map from env | `TENANT_MAP='{"acme":"uuid-1"}'` | YES -- best for <50 tenants |
+| Fetch internal API | Call `/api/resolve-tenant` | NO -- adds HTTP hop per request |
+| Edge-compatible DB | Use a lighter driver | Future optimization |
+
+**Recommendation for initial deployment:** Use `TENANT_MAP` env var (JSON string). Rebuild/restart to add tenants. Acceptable for early multi-tenancy with a handful of tenants. Migrate to a database lookup when tenant count exceeds 50.
+
+### 3.2 Header Injection Pattern
+
+```typescript
+// Middleware injects headers:
+const headers = new Headers(req.headers);
+headers.set("x-tenant-id", tenantId);
+headers.set("x-tenant-slug", subdomain);
+return NextResponse.next({ request: { headers } });
+```
+
+**Why headers over AsyncLocalStorage:**
+- Next.js middleware runs on Edge Runtime; AsyncLocalStorage behavior is inconsistent there
+- Headers are naturally request-scoped and automatically cleaned up
+- Server actions read headers via `headers()` from `next/headers`
+- No additional library or runtime dependency
+
+### 3.3 Server-Side Tenant Access
+
+```typescript
+// In any server action or server component:
+import { headers } from "next/headers";
+
+function getTenantId(): string {
+  const h = await headers();
+  const tenantId = h.get("x-tenant-id");
+  if (!tenantId) throw new Error("Tenant context missing");
+  return tenantId;
+}
+```
+
+### 3.4 Root Domain Handling
+
+The root domain (`relay.example.com` without subdomain):
+- Shows a login/landing page
+- After Google SSO, reads tenant slug from JWT (set during auth)
+- Redirects to `${tenantSlug}.relay.example.com`
+
+### 3.5 Local Development
+
+Use `*.localhost` for subdomain testing:
+- `acme.localhost:2000` -- browsers resolve `*.localhost` to `127.0.0.1` natively (Chrome, Firefox)
+- No `/etc/hosts` changes needed
+- Middleware detects `localhost` and adjusts subdomain extraction
+
+## 4. Auth.js Multi-Tenant Integration
+
+### 4.1 Changes Required
+
+**Modified components:** `auth.ts`, `auth.config.ts`
+
+**Single Google OAuth app, dynamic domain validation.** One Google Cloud OAuth client serves all tenants. The `hd` parameter (already documented as "UX only, not security" in `auth.config.ts` line 13) is removed. Security enforcement moves to the `signIn` callback.
+
+### 4.2 signIn Callback (Modified)
+
+```typescript
+async signIn({ account, profile }) {
+  if (account?.provider !== "google") return false;
+  if (!profile?.email_verified) return false;
+
+  const emailDomain = profile.email?.split("@")[1];
+  if (!emailDomain) return false;
+
+  // Dynamic domain validation: look up tenant by email domain
+  const tenant = await db.query.tenants.findFirst({
+    where: eq(tenants.domain, emailDomain),
+  });
+
+  return !!tenant; // Reject if no matching tenant
+}
+```
+
+### 4.3 JWT Enrichment (Modified)
+
+```typescript
+async jwt({ token, user }) {
+  if (user) {
+    token.id = user.id;
+    // Resolve tenant from user's email domain
+    const emailDomain = (user.email ?? "").split("@")[1];
+    const tenant = await db.query.tenants.findFirst({
+      where: eq(tenants.domain, emailDomain),
+    });
+    token.tenantId = tenant?.id;
+    token.tenantSlug = tenant?.slug;
+  }
+  return token;
+}
+```
+
+### 4.4 Session Enrichment (Modified)
+
+```typescript
+async session({ session, token }) {
+  if (session.user && token.id) {
+    session.user.id = token.id as string;
+    session.user.tenantId = token.tenantId as string;
+    session.user.tenantSlug = token.tenantSlug as string;
+  }
+  return session;
+}
+```
+
+### 4.5 Type Extensions
+
+```typescript
+declare module "next-auth" {
+  interface Session {
+    user: { id: string; tenantId: string; tenantSlug: string; /* ...existing */ }
+  }
+}
+declare module "next-auth/jwt" {
+  interface JWT { tenantId?: string; tenantSlug?: string; }
+}
+```
+
+### 4.6 Admin Role Migration
+
+**Modified component:** `apps/web/lib/admin.ts`
+
+Before (env-var based):
+```typescript
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",");
+export function isAdmin(email: string | null | undefined): boolean {
+  return ADMIN_EMAILS.includes(email);
+}
+```
+
+After (database role):
+```typescript
+export function isAdmin(userRole: string | undefined): boolean {
+  return userRole === "admin";
+}
+```
+
+The role comes from the `users.role` column, exposed via the session.
+
+**Why not a separate `tenant_memberships` table:** A user belongs to exactly one tenant (enforced by email domain uniqueness). A join table would add complexity for a relationship that is always 1:1.
+
+## 5. Tenant-Scoped Query Layer
+
+### 5.1 Query Helper
+
+**New component:** `packages/db/src/tenant.ts`
+
+```typescript
+import { eq, and, SQL } from "drizzle-orm";
+
+/** Compose tenant isolation with additional conditions */
+export function withTenant<T extends { tenantId: ReturnType<typeof text> }>(
+  table: T,
+  tenantId: string,
+  ...conditions: (SQL | undefined)[]
+): SQL {
+  return and(eq(table.tenantId, tenantId), ...conditions.filter(Boolean))!;
+}
+```
+
+### 5.2 Impact Audit: Every Query That Needs Tenant Scoping
+
+**Comprehensive file-by-file audit based on codebase read:**
+
+| File | Queries | Current Scoping | Change Required |
+|------|---------|----------------|-----------------|
+| `packages/db/src/services/search-skills.ts` | `searchSkillsByQuery()` -- 1 SELECT with LEFT JOIN | None | Add `AND skills.tenant_id = $tenantId` |
+| `packages/db/src/services/skill-metrics.ts` | `incrementSkillUses()`, `updateSkillRating()` -- 2 UPDATEs | Filter by skillId only | Add tenantId to WHERE (defense-in-depth) |
+| `packages/db/src/services/skill-reviews.ts` | `getSkillReview()`, `upsertSkillReview()`, `toggleReviewVisibility()` -- ~3 queries | Filter by skillId | Add tenantId |
+| `packages/db/src/services/skill-forks.ts` | `getForkCount()`, `getTopForks()`, `getParentSkill()` -- ~3 queries | Filter by skillId | Add tenantId |
+| `packages/db/src/services/api-keys.ts` | `validateApiKey()`, `listUserKeys()`, `revokeApiKey()`, `setKeyExpiry()` -- 4 queries | Filter by keyHash/userId | Add tenantId to listUserKeys, revokeApiKey; validateApiKey returns tenantId |
+| `packages/db/src/services/skill-embeddings.ts` | `upsertSkillEmbedding()`, `getSkillEmbedding()` -- ~2 queries | Filter by skillId | Add tenantId |
+| `packages/db/src/services/site-settings.ts` | `getSiteSettings()`, `updateSiteSettings()` -- 2 queries | Singleton `id = "default"` | **Rearchitect:** key by tenantId instead of `"default"` |
+| `packages/db/src/services/skill-delete.ts` | `deleteSkill()` -- ~1 query | Filter by skillId | Add tenantId |
+| `packages/db/src/services/skill-merge.ts` | `mergeSkills()` -- ~1 query | Filter by skillId | Add tenantId |
+| `apps/web/lib/analytics-queries.ts` | `getOverviewStats()`, `getUsageTrend()`, `getEmployeeUsage()`, `getSkillUsage()`, `getExportData()`, `getEmployeeActivity()` -- **6 queries** | Email-domain subquery: `u.email LIKE '%@' || (SELECT split_part(...))` | **Replace with** `WHERE ue.tenant_id = $tenantId` |
+| `apps/web/app/actions/skills.ts` | `checkAndCreateSkill()`, `createSkill()` -- 2 INSERTs + UPDATEs | Uses `session.user.id` for authorId | Add tenantId to INSERT |
+| `apps/web/app/actions/ratings.ts` | Rating submission -- ~1 INSERT | Uses userId | Add tenantId |
+| `apps/web/app/actions/delete-skill.ts` | ~1 DELETE | Filter by skillId | Add tenantId guard |
+| `apps/web/app/actions/fork-skill.ts` | ~1 INSERT | Uses authorId | Add tenantId |
+| `apps/web/app/actions/merge-skills.ts` | ~1 merge operation | Filter by skillIds | Add tenantId guard |
+| `apps/web/app/actions/admin-settings.ts` | Settings update | Singleton | Key by tenantId |
+| `apps/web/app/actions/ai-review.ts` | ~1 INSERT | Uses skillId | Add tenantId |
+| `apps/web/app/actions/api-keys.ts` | Key create/revoke | Uses userId | Add tenantId |
+| `apps/web/app/actions/search.ts` | `quickSearch()` | Calls searchSkills | Pass tenantId through |
+| `apps/web/app/actions/my-leverage.ts` | User stats | Uses userId | Add tenantId |
+| `apps/web/app/actions/get-employee-activity.ts` | Activity fetch | Uses userId | Add tenantId |
+| `apps/web/app/actions/get-skill-trend.ts` | Skill trend | Uses skillId | Add tenantId |
+| `apps/web/app/actions/export-analytics.ts` | Export data | Uses orgId (email-derived) | Use tenantId |
+| `apps/web/app/api/mcp/[transport]/route.ts` | 5 tool queries (list, search, deploy, confirm, log) | userId via Bearer token | Derive tenantId from API key validation |
+| `apps/web/app/api/install-callback/route.ts` | 1 INSERT | userId via API key | Add tenantId from API key |
+| `apps/mcp/src/tracking/events.ts` | `trackUsage()` -- 1 INSERT | userId | Add tenantId |
+
+**Total: ~45 queries across ~27 files need tenant_id injection.**
+
+### 5.3 Analytics Query Simplification
+
+The single biggest win from multi-tenancy. Current pattern (repeated 6 times in `analytics-queries.ts`):
+
+```sql
+-- BEFORE: Complex email-domain correlated subquery
+WHERE u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId} LIMIT 1)
+```
+
+```sql
+-- AFTER: Simple tenant_id equality
+WHERE ue.tenant_id = ${tenantId}
+```
+
+This eliminates 6 correlated subqueries, improves query performance, and reduces the risk of SQL injection through the dynamic LIKE pattern.
+
+## 6. MCP Server Multi-Tenant Integration
+
+### 6.1 API Key Validation Returns tenantId
+
+**Modified component:** `packages/db/src/services/api-keys.ts`
+
+The `validateApiKey()` function currently returns `{ userId, keyId }`. Multi-tenant version returns `{ userId, keyId, tenantId }` by reading the `tenantId` column on the `api_keys` table (or JOINing to `users`).
+
+### 6.2 Streamable HTTP Transport (apps/web/app/api/mcp/)
+
+**Modified component.** The `withMcpAuth` handler already returns `extra: { userId }`. Add `tenantId`:
+
+```typescript
+return {
+  token: bearerToken,
+  clientId: result.keyId,
+  scopes: [],
+  extra: { userId: result.userId, tenantId: result.tenantId },
+};
+```
+
+All 5 tool handlers extract tenantId via `extra.authInfo.extra.tenantId` and pass to queries.
+
+### 6.3 Stdio Transport (apps/mcp)
+
+**Modified component:** `apps/mcp/src/auth.ts`
+
+`resolveUserId()` becomes `resolveAuth()` returning `{ userId, tenantId }`. Cached for session lifetime. All tool handlers receive tenantId from the cached auth context.
+
+### 6.4 MCP Query Scoping
+
+| Tool | Current Query | Tenant Change |
+|------|---------------|---------------|
+| `list_skills` | `db.query.skills.findMany()` (no filter) | Add `where: eq(skills.tenantId, tenantId)` |
+| `search_skills` | `searchSkillsByQuery(params)` | Pass tenantId, service adds filter |
+| `deploy_skill` | `db.query.skills.findMany()` then `.find()` | Add tenant filter to findMany |
+| `confirm_install` | `trackUsage(...)` | Include tenantId in event |
+| `log_skill_usage` | `trackUsage(...)` | Include tenantId in event |
+| `server_info` | Static response | Include tenant name |
+
+## 7. Hook-Based Tracking Architecture
+
+### 7.1 Tracking Endpoint
+
+**New component:** `apps/web/app/api/tracking/hook/route.ts`
+
+```
+POST /api/tracking/hook
+Content-Type: application/json
+Authorization: Bearer rlk_...
+
+{
+  "skillId": "skill-uuid",
+  "userId": "user-uuid",
+  "tenantId": "tenant-uuid",
+  "action": "tool_use",
+  "metadata": { "toolName": "...", "duration_ms": 1234 },
+  "timestamp": "2026-02-07T12:00:00Z"
+}
+```
+
+**Response:** `200 { ok: true }` (always returns quickly; processing is fire-and-forget)
+
+**Why in apps/web:**
+- Shares PostgreSQL connection pool via `packages/db`
+- Shares schema and services -- no duplication
+- Middleware already has an exemption pattern for unauthenticated API routes
+- No need for a separate service or deployment
+
+**Middleware exemption:** Add `/api/tracking` to existing exemption list in `middleware.ts`.
+
+### 7.2 Compliance Skill
+
+**New component:** A special skill auto-installed for every tenant.
+
+The compliance skill is a markdown document with embedded instructions that tell the AI to:
+1. After each tool invocation, fire an async HTTP POST to the tracking endpoint
+2. Include the skill ID, user context, action performed, and timestamp
+3. Never block on the tracking call (fire-and-forget)
+
+**Structure:**
+```
+Compliance Tracking Skill
+---
+After completing any tool use, call the tracking endpoint:
+
+POST {relay_url}/api/tracking/hook
+Authorization: Bearer {api_key}
+Body: { skillId, userId, tenantId, action, metadata, timestamp }
+
+This is non-blocking -- do not wait for the response before continuing.
+```
+
+### 7.3 Hook Callback Data Flow
+
+```
+AI Assistant (Claude)
+  |
+  | 1. Uses any MCP tool (list_skills, deploy_skill, etc.)
+  |
+  v
+MCP Server Tool Handler
+  |
+  | 2. Tool executes, server-side trackUsage() fires (PRIMARY tracking)
+  | 3. Returns result to AI
+  |
+  v
+AI reads compliance skill instructions
+  |
+  | 4. Fires async POST /api/tracking/hook (SUPPLEMENTARY tracking)
+  |    { skillId, userId, tenantId, action: "hook_callback", metadata, ts }
+  |
+  v
+Tracking Endpoint
+  |
+  | 5. Validate API key
+  | 6. INSERT into usage_events with source: "hook"
+  |
+  v
+PostgreSQL (usage_events table)
+```
+
+**Critical architectural note:** Hook-based tracking via PostToolUse relies on the AI model complying with skill instructions. This is inherently soft enforcement. The model may skip the callback, especially under context pressure.
+
+**Therefore:** Hook-based tracking is **supplementary** to server-side tracking, not a replacement. The existing `trackUsage()` in MCP tool handlers remains the primary tracking mechanism.
+
+Use hook-based tracking for:
+- Cross-tool correlation (which tools were used together in a session)
+- Client-side context not available server-side (conversation metadata)
+- Compliance audit trail ("we instructed the model to report")
+
+Do NOT use it for:
+- Accurate usage counts (model may skip callbacks)
+- Billing or SLA calculations
+- Security-critical audit logs
+
+### 7.4 Auto-Install Mechanism
+
+On first MCP connection for a tenant:
+1. Check if the compliance skill exists for this tenant (query `skills WHERE tenantId = ? AND slug = 'compliance-tracking'`)
+2. If not found, auto-create it by inserting into `skills` table with the tenant's `tenantId`
+3. The skill appears in the tenant's skill catalog like any other skill
+4. Admin can customize or disable the compliance skill per tenant via site_settings
+
+### 7.5 Deploy-Time Verification
+
+**New component:** CI/build check script.
+
+A simple verification that runs during build or in CI:
+1. Compliance skill template file exists
+2. Tracking endpoint route file exists
+3. Middleware exempts `/api/tracking`
+4. Smoke test: POST to tracking endpoint returns 200
+
+Can be implemented as a Playwright test in `apps/web/tests/e2e/`.
+
+## 8. Docker Compose Production Topology
+
+### 8.1 Service Diagram
+
+```
+                    Internet
+                       |
+                       v
+              +------------------+
+              |      Caddy       |  Ports 80/443
+              |  (reverse proxy) |  Wildcard TLS: *.relay.example.com
+              |  Auto-HTTPS      |  Automatic HTTPS via Let's Encrypt
+              +--------+---------+
+                       |
+                       v
+              +------------------+
+              |   Next.js App    |  Port 3000 (internal)
+              |   (apps/web)     |  Web UI + MCP API + tracking API
+              +--------+---------+
+                       |
+                       v
+              +------------------+
+              |  PostgreSQL 16   |  Port 5432 (internal only)
+              |  + pgvector      |  Semantic search support
+              +------------------+
+```
+
+### 8.2 Docker Compose Configuration
+
+```yaml
+# docker/docker-compose.prod.yml (NEW)
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: relay-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    container_name: relay-web
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://relay:${DB_PASSWORD}@postgres:5432/relay
+      - AUTH_SECRET=${AUTH_SECRET}
+      - AUTH_GOOGLE_ID=${AUTH_GOOGLE_ID}
+      - AUTH_GOOGLE_SECRET=${AUTH_GOOGLE_SECRET}
+      - TENANT_MAP=${TENANT_MAP}
+      - NODE_ENV=production
+    expose:
+      - "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: relay-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: relay
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: relay
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U relay"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+```
+
+### 8.3 Caddyfile
+
+```
+# docker/Caddyfile (NEW)
+{
+  email admin@relay.example.com
+}
+
+# Root domain
+relay.example.com {
+  reverse_proxy web:3000
+}
+
+# Wildcard for tenant subdomains
+*.relay.example.com {
+  reverse_proxy web:3000
+}
+```
+
+**Wildcard TLS note:** Automatic HTTPS with wildcard certs requires DNS-01 challenge. Options:
+- **Custom Caddy build** with DNS provider plugin (e.g., `caddy-dns/cloudflare`) -- recommended for production
+- **Explicit per-tenant entries** for <10 tenants -- works with default HTTP-01 challenge
+- **Pre-obtained wildcard cert** mounted as volume -- simplest for initial deployment
+
+### 8.4 Dockerfile
+
+```dockerfile
+# docker/Dockerfile (NEW)
+FROM node:22-alpine AS base
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /app
+
+# Dependencies
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages/db/package.json packages/db/
+COPY packages/core/package.json packages/core/
+COPY packages/ui/package.json packages/ui/
+COPY packages/storage/package.json packages/storage/
+COPY apps/web/package.json apps/web/
+RUN pnpm install --frozen-lockfile
+
+# Build
+COPY . .
+RUN pnpm --filter web build
+
+# Production
+FROM node:22-alpine AS runner
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /app
+COPY --from=base /app/node_modules ./node_modules
+COPY --from=base /app/packages ./packages
+COPY --from=base /app/apps/web/.next ./apps/web/.next
+COPY --from=base /app/apps/web/public ./apps/web/public
+COPY --from=base /app/apps/web/package.json ./apps/web/package.json
+COPY --from=base /app/apps/web/next.config.ts ./apps/web/next.config.ts
+ENV NODE_ENV=production
+EXPOSE 3000
+CMD ["pnpm", "--filter", "web", "start"]
+```
+
+## 9. Component Change Summary
+
+### 9.1 New Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `tenants` schema | `packages/db/src/schema/tenants.ts` | Tenant table definition |
+| Tenant query helper | `packages/db/src/tenant.ts` | `withTenant()` utility |
+| Tracking API route | `apps/web/app/api/tracking/hook/route.ts` | Hook callback endpoint |
+| Health API route | `apps/web/app/api/health/route.ts` | Docker health check |
+| Compliance skill template | TBD location | Auto-installed tracking skill |
+| Docker Compose (prod) | `docker/docker-compose.prod.yml` | Production deployment |
+| Dockerfile | `docker/Dockerfile` | Next.js container image |
+| Caddyfile | `docker/Caddyfile` | Reverse proxy with wildcard TLS |
+
+### 9.2 Modified Components
+
+| Component | Change | Files Affected |
+|-----------|--------|----------------|
+| Schema files | Add `tenantId` column | 9 files in `packages/db/src/schema/` |
+| Service files | Add tenantId parameter + filter | 10 files in `packages/db/src/services/` |
+| Relations | Add tenant relations | `packages/db/src/relations/index.ts` |
+| DB client | Optionally set `app.tenant_id` for RLS | `packages/db/src/client.ts` |
+| Middleware | Subdomain extraction + tenant injection | `apps/web/middleware.ts` |
+| Auth config | Remove `hd` parameter | `apps/web/auth.config.ts` |
+| Auth module | Dynamic domain validation, JWT enrichment | `apps/web/auth.ts` |
+| Server actions | Read tenantId from session | 13 files in `apps/web/app/actions/` |
+| Analytics queries | Replace email-domain scoping | `apps/web/lib/analytics-queries.ts` |
+| Admin helper | Use role column | `apps/web/lib/admin.ts` |
+| MCP route handler | Pass tenantId through auth | `apps/web/app/api/mcp/[transport]/route.ts` |
+| MCP auth module | Return tenantId from key validation | `apps/mcp/src/auth.ts` |
+| MCP tracking | Include tenantId in events | `apps/mcp/src/tracking/events.ts` |
+| Install callback | Include tenantId | `apps/web/app/api/install-callback/route.ts` |
+| Docker Compose (dev) | Update for pgvector image | `docker/docker-compose.yml` |
+| Site settings | Per-tenant keying | `packages/db/src/services/site-settings.ts` |
+
+### 9.3 Unchanged Components
+
+| Component | Why No Change |
+|-----------|---------------|
+| `packages/storage/` | R2 storage is skill-ID-keyed; tenant isolation comes from skill ownership |
+| `packages/ui/` | Presentation components are data-unaware |
+| `packages/core/` | Stateless utilities |
+| `apps/web/components/` | Client components receive already-scoped data from server components |
+| Auth.js tables (accounts, sessions) | Keyed by userId which maps to tenant via users table |
+
+## 10. PostgreSQL RLS as Defense-in-Depth
+
+### 10.1 Pattern
+
+Drizzle ORM v0.38+ supports `pgPolicy` in table definitions (verified at https://orm.drizzle.team/docs/rls):
+
+```typescript
+import { pgPolicy } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+
+// On each tenant-scoped table:
+pgPolicy("tenant_isolation", {
+  as: "permissive",
+  for: "all",
+  to: "public",
+  using: sql`tenant_id = current_setting('app.tenant_id')::text`,
+  withCheck: sql`tenant_id = current_setting('app.tenant_id')::text`,
+})
+```
+
+### 10.2 How It Works
+
+1. Application wraps requests in a transaction: `SET LOCAL app.tenant_id = '...'`
+2. RLS policy on every table enforces `tenant_id = current_setting('app.tenant_id')`
+3. Even if application code omits a WHERE clause, RLS prevents cross-tenant data access
+
+### 10.3 Important Caveats
+
+- RLS is defense-in-depth, NOT the primary isolation mechanism
+- Primary isolation remains application-level `WHERE tenant_id = ?`
+- Must use a non-superuser DB role (superusers bypass RLS)
+- Tables with RLS but no policies default to deny-all
+- ~5% query overhead (acceptable for security)
+- **Enable RLS last**, after all queries are tenant-scoped
+
+## 11. Migration Strategy (Zero-Downtime)
+
+### Phase A: Schema Foundation (no app changes)
+1. Create `tenants` table
+2. Seed initial tenant from current `AUTH_ALLOWED_DOMAIN` value
+3. Add `tenantId` columns as **nullable** (existing code unaffected)
+4. Add `role` column to `users` with default `"member"`
+
+### Phase B: Backfill (no app changes)
+5. Backfill `users.tenantId` from email domain
+6. Backfill all other tables from user/skill ownership chains
+7. Set first user matching ADMIN_EMAILS to `role = "admin"`
+
+### Phase C: Application Code Update
+8. Update all services to accept and use tenantId
+9. Update all server actions to pass tenantId
+10. Update middleware for subdomain routing
+11. Update auth for dynamic domain validation
+
+### Phase D: Enforce NOT NULL
+12. `ALTER TABLE ... ALTER COLUMN tenant_id SET NOT NULL` on all tables
+13. Only after ALL code paths pass tenantId
+
+### Phase E: Hardening (last)
+14. Add composite indexes
+15. Enable PostgreSQL RLS policies
+16. E2E tests for cross-tenant isolation
+
+**Why this order:** Nullable columns in phases A-B mean existing code continues working. Application updates in phase C can be deployed incrementally. NOT NULL in phase D is the point of no return. RLS in phase E is the safety net.
+
+## 12. Suggested Build Order for Roadmap
+
+```
+Wave 1: Foundation (no user-facing changes)
+  - Create tenants table + seed script
+  - Add tenantId columns (nullable) + backfill migration
+  - Add role column to users + backfill from ADMIN_EMAILS
+
+Wave 2: Tenant Context Plumbing
+  - Middleware: subdomain extraction + tenant header injection
+  - Auth: remove hd param, dynamic domain validation, JWT enrichment
+  - Query helper: withTenant() utility in packages/db
+  - Update all 10 services in packages/db to accept tenantId parameter
+
+Wave 3: Application Layer (largest wave, files are independent)
+  - Update all 13 server actions to read tenantId from session
+  - Update analytics-queries.ts (replace 6 email-domain subqueries)
+  - Update admin helper to use role column
+  - Update MCP handlers (both transports) to pass tenantId
+  - Update install-callback to include tenantId
+
+Wave 4: Deployment Infrastructure
+  - Dockerfile for Next.js
+  - Docker Compose (production) with Caddy + PostgreSQL
+  - Health check endpoint
+  - Caddyfile for subdomain routing
+
+Wave 5: Hook-Based Tracking
+  - Tracking API endpoint (/api/tracking/hook)
+  - Compliance skill template
+  - Auto-install mechanism on first MCP connection
+  - Deploy-time verification script/test
+
+Wave 6: Hardening
+  - Make tenantId columns NOT NULL
+  - Add composite indexes for tenant-scoped queries
+  - Enable PostgreSQL RLS policies
+  - E2E tests for cross-tenant data isolation
+```
+
+**Build order rationale:**
+- Wave 1 is pure schema; zero risk to existing functionality
+- Wave 2 establishes plumbing that Wave 3 consumes
+- Wave 3 is the largest but each file is independent (parallelizable across plans)
+- Wave 4 is independent of Wave 3 (can overlap)
+- Wave 5 depends on Waves 2-3 (needs tenant-scoped writes)
+- Wave 6 must be last (RLS + NOT NULL require all code paths to be tenant-aware)
+
+## 13. Anti-Patterns to Avoid
+
+### Anti-Pattern 1: Database-Per-Tenant
+**What:** Separate PostgreSQL database for each tenant.
+**Why wrong for Relay:** `packages/db/src/client.ts` creates a single cached connection on `globalThis`. The entire codebase assumes one database. Database-per-tenant requires rewriting the complete data access layer.
+**Instead:** Row-level isolation with tenant_id column.
+
+### Anti-Pattern 2: Schema-Per-Tenant
+**What:** Separate PostgreSQL schema (namespace) per tenant.
+**Why wrong for Relay:** Drizzle schema definitions are compile-time. Dynamic schema selection adds complexity to every query. Migrations become O(n) where n = tenants.
+**Instead:** Shared schema, row-level isolation.
+
+### Anti-Pattern 3: RLS as Primary Isolation
+**What:** Relying solely on PostgreSQL RLS without application-level filtering.
+**Why wrong:** If `SET LOCAL app.tenant_id` is missed, RLS defaults to deny-all (no data) or returns all data if misconfigured. Application-level `WHERE` is predictable and debuggable.
+**Instead:** Application-level `WHERE tenant_id = ?` as primary. RLS as defense-in-depth only.
+
+### Anti-Pattern 4: Tenant Resolution in Every Query
+**What:** Each service function independently resolves tenant from subdomain/session.
+**Why wrong:** Duplicated logic, easy to forget, inconsistent implementations.
+**Instead:** Resolve once in middleware/auth, pass as parameter through all layers.
+
+### Anti-Pattern 5: Per-Tenant Google OAuth Apps
+**What:** Creating a separate Google Cloud OAuth client for each tenant.
+**Why wrong:** Operational nightmare. Google requires app verification per client. O(n) credential management.
+**Instead:** Single OAuth client. Domain validation in signIn callback.
+
+### Anti-Pattern 6: Hook-Based Tracking as Primary Mechanism
+**What:** Relying on AI model compliance with PostToolUse hooks for accurate tracking.
+**Why wrong:** Models may skip callbacks under context pressure. No guarantee of execution.
+**Instead:** Server-side `trackUsage()` in MCP handlers as primary. Hooks as supplementary.
+
+## 14. Confidence Assessment
+
+| Area | Level | Rationale |
+|------|-------|-----------|
+| Schema changes (tenantId on 9 tables) | HIGH | Standard column addition, verified against current schema |
+| Query scoping (~45 queries across ~27 files) | HIGH | Full codebase audit completed, every file read |
+| Subdomain middleware | HIGH | Well-documented Next.js pattern, verified via official docs |
+| Auth.js multi-tenant | HIGH | Verified dynamic domain support in NextAuth v5 discussions |
+| Drizzle RLS support (pgPolicy) | HIGH | Verified at https://orm.drizzle.team/docs/rls |
+| Docker/Caddy deployment | MEDIUM | Standard patterns, Relay-specific Dockerfile not yet tested |
+| Hook-based tracking | MEDIUM | MCP PostToolUse hooks depend on model compliance; server-side tracking is primary |
+| Compliance skill auto-install | LOW | Conceptual; exact auto-install trigger and MCP hook semantics need validation |
+
+## Sources
+
+### Official Documentation
+- [Next.js Multi-Tenant Guide](https://nextjs.org/docs/app/guides/multi-tenant) -- Official multi-tenant patterns
+- [Drizzle ORM RLS Documentation](https://orm.drizzle.team/docs/rls) -- pgPolicy syntax, role management, caveats
+- [NextAuth v5 Multi-Domain Discussion](https://github.com/nextauthjs/next-auth/discussions/9785) -- Dynamic URL/domain support
+- [Drizzle TenantId Enforcement Discussion](https://github.com/drizzle-team/drizzle-orm/discussions/1539) -- Community patterns for tenant isolation
+
+### Verified WebSearch
+- [Caddy Wildcard Subdomains for SaaS](https://logsnag.com/blog/setting-up-vanity-subdomains-for-your-saas-using-caddy) -- Caddyfile patterns for wildcard routing
+- [Vercel Multi-Tenant Template](https://vercel.com/templates/next.js/hostname-rewrites) -- Reference implementation
+- [PostgreSQL RLS for Tenants](https://www.crunchydata.com/blog/row-level-security-for-tenants-in-postgres) -- RLS patterns and performance
+
+### Existing Codebase (HIGH confidence, all files read)
+- `/home/dev/projects/relay/packages/db/src/schema/*.ts` -- All 11 schema files
+- `/home/dev/projects/relay/packages/db/src/services/*.ts` -- All 10 service files
+- `/home/dev/projects/relay/packages/db/src/client.ts` -- Database client (single connection)
+- `/home/dev/projects/relay/packages/db/src/relations/index.ts` -- All relations
+- `/home/dev/projects/relay/apps/web/middleware.ts` -- Current auth middleware
+- `/home/dev/projects/relay/apps/web/auth.ts` -- Auth.js v5 config with JWT strategy
+- `/home/dev/projects/relay/apps/web/auth.config.ts` -- Edge config with hd param
+- `/home/dev/projects/relay/apps/web/app/actions/*.ts` -- All 13 server actions
+- `/home/dev/projects/relay/apps/web/lib/analytics-queries.ts` -- 6 analytics queries with email-domain scoping
+- `/home/dev/projects/relay/apps/web/lib/admin.ts` -- ADMIN_EMAILS env var pattern
+- `/home/dev/projects/relay/apps/web/app/api/mcp/[transport]/route.ts` -- Streamable HTTP MCP handler
+- `/home/dev/projects/relay/apps/web/app/api/install-callback/route.ts` -- Install callback endpoint
+- `/home/dev/projects/relay/apps/mcp/src/auth.ts` -- Stdio MCP auth (RELAY_API_KEY)
+- `/home/dev/projects/relay/apps/mcp/src/tracking/events.ts` -- Usage tracking
+- `/home/dev/projects/relay/docker/docker-compose.yml` -- Current dev compose (PostgreSQL only)
+
+---
 *Architecture research for: Relay Internal Skill Marketplace*
-*Updated: 2026-02-05 for v1.4 Employee Analytics, MCP Auth & Remote MCP*
+*Updated: 2026-02-07 for v2.0 Multi-Tenancy & Hook-Based Tracking*
