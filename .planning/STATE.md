@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 25 of 33 (Multi-Tenancy Schema & Audit Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-07 — v1.5 roadmap created (9 phases, 62 requirements)
+Plan: 1 of 9 in current phase
+Status: In progress
+Last activity: 2026-02-07 — Completed 25-01-PLAN.md (tenants + audit_logs schema)
 
-Progress: [░░░░░░░░░░░░░░░░░░░░░░░░] 0% (v1.5)
+Progress: [█░░░░░░░░░░░░░░░░░░░░░░░] ~1% (v1.5 — 1 of ~TBD plans)
 
 ## Milestones
 
@@ -28,12 +28,12 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 94
+- Total plans completed: 95
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7 hours
 
 **Cumulative:**
-- 94 plans across 24 phases and 5 milestones
+- 95 plans across 25 phases and 5 milestones
 - ~13,500 LOC TypeScript
 - 6 days total development time
 
@@ -44,6 +44,12 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 ### Decisions
 
 All decisions logged in PROJECT.md Key Decisions table.
+
+| Plan | Decision | Rationale |
+|------|----------|-----------|
+| 25-01 | uuid PK for audit_logs, text PK for tenants | uuid better for high-volume append-only; text consistent with existing schema |
+| 25-01 | withTimezone: true on audit_logs.createdAt | SOC2 compliance requires precise timezone tracking |
+| 25-01 | Nullable tenantId/actorId on audit_logs | Supports system-level and cross-tenant events |
 
 ### Pending Todos
 
@@ -60,6 +66,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-07
-Stopped at: v1.5 roadmap created with 9 phases (25-33), ready to plan Phase 25
+Last session: 2026-02-07T16:28:33Z
+Stopped at: Completed 25-01-PLAN.md (tenants + audit_logs schema)
 Resume file: None
