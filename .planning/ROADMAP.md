@@ -138,7 +138,11 @@ Plans:
   3. A single shared Google OAuth endpoint handles all tenants, using the state parameter to redirect back to the originating tenant subdomain after auth
   4. Auth.js session cookies work across subdomains (domain-scoped cookies), and the JWT includes a tenantId claim
   5. Sessions expire after 8 hours (reduced from 30 days)
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 26-01-PLAN.md — Tenant DB service, NextAuth type augmentation, auth.config.ts cookies/session
+- [ ] 26-02-PLAN.md — Auth.ts callbacks rewrite (signIn, jwt, session, redirect)
+- [ ] 26-03-PLAN.md — Middleware rewrite (unwrapped subdomain extraction) + login page update
 
 ### Phase 27: Production Docker Deployment
 **Goal**: Relay runs in production on a Hetzner VPS with automatic HTTPS, encrypted storage, and automated backups
@@ -234,7 +238,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
 | 25. Multi-Tenancy Schema | v1.5 | 9/9 | Complete | 2026-02-07 |
-| 26. Auth & Subdomain Routing | v1.5 | 0/TBD | Not started | - |
+| 26. Auth & Subdomain Routing | v1.5 | 0/3 | Planned | - |
 | 27. Docker Deployment | v1.5 | 0/TBD | Not started | - |
 | 28. Hook-Based Tracking | v1.5 | 0/TBD | Not started | - |
 | 29. Tenant Analytics & MCP | v1.5 | 0/TBD | Not started | - |
