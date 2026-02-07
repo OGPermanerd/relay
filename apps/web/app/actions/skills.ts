@@ -3,7 +3,6 @@
 import { auth } from "@/auth";
 import { db, skills } from "@relay/db";
 import { skillVersions } from "@relay/db/schema/skill-versions";
-import { createSkillEmbedding } from "@relay/db/services";
 import { generateUploadUrl } from "@relay/storage";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -11,7 +10,6 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { generateUniqueSlug } from "@/lib/slug";
 import { hashContent } from "@/lib/content-hash";
-import { generateEmbedding, EMBEDDING_MODEL, EMBEDDING_VERSION } from "@/lib/embeddings";
 
 // Zod schema for form validation
 const createSkillSchema = z.object({
@@ -45,7 +43,7 @@ const createSkillSchema = z.object({
 });
 
 import { checkSimilarSkills } from "@/lib/similar-skills";
-import type { SimilarSkillResult } from "@relay/db/services";
+import type { SimilarSkillResult } from "@/lib/similar-skills";
 
 export type CreateSkillState = {
   errors?: Record<string, string[]>;
@@ -62,9 +60,6 @@ export type SkillFormState = {
   errors?: Record<string, string[]>;
   message?: string;
   similarSkills?: SimilarSkillResult[];
-  similarityCheckFailed?: boolean;
-  /** Cached embedding from similarity check — reused on "Publish Anyway" to avoid a second API call. */
-  _cachedEmbedding?: number[];
 };
 
 /**
@@ -97,26 +92,17 @@ export async function checkAndCreateSkill(
 
   // Step 1: check for similar skills (unless skipped)
   const skipCheck = formData.get("_skipCheck") === "true";
-  let similarityCheckFailed = false;
-  let cachedEmbedding: number[] | undefined;
   if (!skipCheck) {
     const result = await checkSimilarSkills({
       name: parsed.data.name,
       description: parsed.data.description,
-      content: parsed.data.content,
-      tags: parsed.data.tags,
     });
     if (result.similarSkills.length > 0) {
-      return { similarSkills: result.similarSkills, _cachedEmbedding: result.embedding };
+      return { similarSkills: result.similarSkills };
     }
-    similarityCheckFailed = result.checkFailed;
-    cachedEmbedding = result.embedding;
-  } else {
-    // "Publish Anyway" — reuse embedding from previous similarity check
-    cachedEmbedding = prevState._cachedEmbedding;
   }
 
-  // Step 2: create the skill (same logic as createSkill)
+  // Step 2: create the skill
   const { name, description, category, hoursSaved, content } = parsed.data;
   const slug = await generateUniqueSlug(name, db);
 
@@ -178,28 +164,6 @@ export async function checkAndCreateSkill(
     console.warn("R2 not configured, skill created without version record");
   }
 
-  const embeddingInput = [name, description, content, ...(parsed.data.tags || [])].join(" ");
-  try {
-    // Reuse cached embedding from similarity check if available, otherwise generate fresh
-    const embedding = cachedEmbedding ?? (await generateEmbedding(embeddingInput));
-    const inputHash = await hashContent(embeddingInput);
-    await createSkillEmbedding({
-      skillId: newSkill.id,
-      embedding,
-      modelName: EMBEDDING_MODEL,
-      modelVersion: EMBEDDING_VERSION,
-      inputHash,
-    });
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error("Failed to generate embedding:", error);
-    await db.delete(skills).where(eq(skills.id, newSkill.id));
-    return {
-      message: "Failed to generate embedding for skill. Please try again.",
-      similarityCheckFailed,
-    };
-  }
-
   revalidatePath("/skills");
   revalidatePath("/");
   redirect(`/skills/${newSkill.slug}`);
@@ -240,8 +204,6 @@ export async function checkSimilarity(
   const result = await checkSimilarSkills({
     name: parsed.data.name,
     description: parsed.data.description,
-    content: parsed.data.content,
-    tags: parsed.data.tags,
   });
 
   return { similarSkills: result.similarSkills };
@@ -368,32 +330,6 @@ export async function createSkill(
   } else {
     // eslint-disable-next-line no-console
     console.warn("R2 not configured, skill created without version record");
-  }
-
-  // Generate and store embedding for the skill
-  // Combines name, description, content, and tags for semantic search
-  const embeddingInput = [name, description, content, ...(parsed.data.tags || [])].join(" ");
-
-  try {
-    const embedding = await generateEmbedding(embeddingInput);
-    const inputHash = await hashContent(embeddingInput);
-    await createSkillEmbedding({
-      skillId: newSkill.id,
-      embedding,
-      modelName: EMBEDDING_MODEL,
-      modelVersion: EMBEDDING_VERSION,
-      inputHash,
-    });
-  } catch (error) {
-    // Log error for debugging
-    // eslint-disable-next-line no-console
-    console.error("Failed to generate embedding:", error);
-    // Per CONTEXT.md: embedding failure should fail skill creation
-    // Delete the skill we just created to maintain consistency
-    await db.delete(skills).where(eq(skills.id, newSkill.id));
-    return {
-      message: "Failed to generate embedding for skill. Please try again.",
-    };
   }
 
   // Revalidate relevant paths

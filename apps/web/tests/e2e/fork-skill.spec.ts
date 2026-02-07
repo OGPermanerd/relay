@@ -128,8 +128,8 @@ test.describe("Fork Skill", () => {
     // Should show Forks section with count
     await expect(page.getByText(/forks \(1\)/i)).toBeVisible({ timeout: 10000 });
 
-    // The fork card should be visible
-    await expect(page.getByText("Fork Parent Skill (Fork)")).toBeVisible();
+    // The fork card should be visible (use .first() since similar skills section may also show it)
+    await expect(page.getByText("Fork Parent Skill (Fork)").first()).toBeVisible();
   });
 
   test("should show fork count in stats on parent skill", async ({ page }) => {

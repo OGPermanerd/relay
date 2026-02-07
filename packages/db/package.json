@@ -23,8 +23,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx src/seed.ts",
-    "db:backfill-embeddings": "tsx src/scripts/backfill-embeddings.ts"
+    "db:seed": "tsx src/seed.ts"
   },
   "dependencies": {
     "@relay/core": "workspace:*",
@@ -38,7 +37,6 @@
     "drizzle-kit": "^0.31.8",
     "next-auth": "5.0.0-beta.30",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0",
-    "voyageai": "^0.1.0"
+    "typescript": "^5.7.0"
   }
 }

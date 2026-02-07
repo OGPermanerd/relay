@@ -19,7 +19,6 @@ import { skillVersions, type NewSkillVersion } from "./schema/skill-versions";
 import { ratings } from "./schema/ratings";
 import { usageEvents } from "./schema/usage-events";
 import { users, type NewUser } from "./schema/users";
-import { skillEmbeddings } from "./schema/skill-embeddings";
 
 // Verify DATABASE_URL is set
 const connectionString = process.env.DATABASE_URL;
@@ -574,7 +573,6 @@ async function seed() {
     console.log("Clearing existing data...");
     await db.delete(usageEvents);
     await db.delete(ratings);
-    await db.delete(skillEmbeddings);
     await db.delete(skillVersions);
     await db.delete(skills);
     await db.delete(users);
@@ -593,15 +591,12 @@ async function seed() {
     const insertedSkills: { id: string; slug: string; name: string; authorId: string }[] = [];
 
     for (const skill of assignedSkills) {
-      const [result] = await db
-        .insert(skills)
-        .values(skill)
-        .returning({
-          id: skills.id,
-          slug: skills.slug,
-          name: skills.name,
-          authorId: skills.authorId,
-        });
+      const [result] = await db.insert(skills).values(skill).returning({
+        id: skills.id,
+        slug: skills.slug,
+        name: skills.name,
+        authorId: skills.authorId,
+      });
       insertedSkills.push(result);
       const author = testUsers.find((u) => u.id === skill.authorId);
       console.log(`  [+] ${skill.name} (by ${author?.name})`);
@@ -734,9 +729,6 @@ async function seed() {
     console.log(`  - ${totalRatings} ratings`);
     console.log(`  - ${totalEvents} usage events`);
     console.log("========================================\n");
-    console.log(
-      "NOTE: Run 'pnpm --filter @relay/db db:backfill-embeddings' to generate embeddings for new skills.\n"
-    );
   } catch (error) {
     console.error("Failed to seed database:", error);
     process.exit(1);

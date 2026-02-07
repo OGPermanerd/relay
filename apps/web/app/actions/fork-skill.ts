@@ -6,9 +6,6 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { generateUniqueSlug } from "@/lib/slug";
-import { hashContent } from "@/lib/content-hash";
-import { generateEmbedding, EMBEDDING_MODEL, EMBEDDING_VERSION } from "@/lib/embeddings";
-import { createSkillEmbedding } from "@relay/db/services";
 
 export type ForkSkillState = {
   error?: string;
@@ -76,31 +73,6 @@ export async function forkSkill(
       console.error("Failed to fork skill:", error);
     }
     return { error: "Failed to fork skill. Please try again." };
-  }
-
-  // Generate embedding for the forked skill
-  const embeddingInput = [
-    forkName,
-    parent.description,
-    parent.content,
-    ...(parent.tags || []),
-  ].join(" ");
-
-  try {
-    const embedding = await generateEmbedding(embeddingInput);
-    const inputHash = await hashContent(embeddingInput);
-    await createSkillEmbedding({
-      skillId: newSkill.id,
-      embedding,
-      modelName: EMBEDDING_MODEL,
-      modelVersion: EMBEDDING_VERSION,
-      inputHash,
-    });
-  } catch (error) {
-    console.error("Failed to generate embedding for fork:", error);
-    // Clean up the skill we just created
-    await db.delete(skills).where(eq(skills.id, newSkill.id));
-    return { error: "Failed to generate embedding for fork. Please try again." };
   }
 
   revalidatePath("/skills");

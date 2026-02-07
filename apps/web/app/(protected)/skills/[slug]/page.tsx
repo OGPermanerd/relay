@@ -1,15 +1,7 @@
 import { notFound } from "next/navigation";
 import { db, skills } from "@relay/db";
 import { ratings } from "@relay/db/schema";
-import {
-  getSkillEmbedding,
-  findSimilarSkills,
-  getSkillReview,
-  getForkCount,
-  getTopForks,
-  getParentSkill,
-  type SimilarSkillResult,
-} from "@relay/db/services";
+import { getSkillReview, getForkCount, getTopForks, getParentSkill } from "@relay/db/services";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { SkillDetail } from "@/components/skill-detail";
 import { SimilarSkillsSection } from "@/components/similar-skills-section";
@@ -26,6 +18,7 @@ import { SkillTypeFilter } from "@/components/skill-type-filter";
 import { ForkButton } from "@/components/fork-button";
 import { InstallButton } from "@/components/install-button";
 import { ForksSection } from "@/components/forks-section";
+import { findSimilarSkillsByName } from "@/lib/similar-skills";
 import Link from "next/link";
 
 interface SkillPageProps {
@@ -71,24 +64,7 @@ export default async function SkillPage(props: SkillPageProps) {
   ] = await Promise.all([
     getSkillStats(skill.id),
     getSkillDetailTrends(skill.id),
-    // Query similar skills using the skill's embedding
-    (async (): Promise<SimilarSkillResult[]> => {
-      try {
-        const embedding = await getSkillEmbedding(skill.id);
-        if (embedding?.embedding) {
-          return await findSimilarSkills(embedding.embedding, {
-            threshold: 0.7,
-            limit: 5,
-            excludeSkillId: skill.id,
-          });
-        }
-        return [];
-      } catch (error) {
-        // Log but don't fail - similar skills is enhancement, not critical
-        console.warn("Failed to fetch similar skills:", error);
-        return [];
-      }
-    })(),
+    findSimilarSkillsByName(skill.id, skill.name),
     getSkillReview(skill.id),
     hashContent(skill.content),
     getForkCount(skill.id),

@@ -29,12 +29,12 @@ test.describe("Skill Upload Flow", () => {
     // Make name unique to avoid slug conflicts
     await page.getByLabel(/^name/i).fill(skillName);
 
-    // Submit the form — runs checkAndCreateSkill (similarity check + create in one action)
+    // Submit the form
     await page.getByRole("button", { name: /create skill/i }).click();
 
     // Wait for action to complete
     await expect(page.getByRole("button", { name: /checking/i })).not.toBeVisible({
-      timeout: 45000,
+      timeout: 30000,
     });
 
     // If similar skills are found, click "Publish Anyway" to proceed
@@ -42,17 +42,8 @@ test.describe("Skill Upload Flow", () => {
     if (await publishAnyway.isVisible({ timeout: 2000 }).catch(() => false)) {
       await publishAnyway.click();
       await expect(page.getByRole("button", { name: /checking/i })).not.toBeVisible({
-        timeout: 45000,
+        timeout: 30000,
       });
-    }
-
-    // Check outcome: redirect (success) or error (API rate-limited)
-    if (page.url().includes("/skills/new")) {
-      const errorBanner = page.locator(".bg-red-50");
-      if (await errorBanner.isVisible().catch(() => false)) {
-        test.skip(true, "Voyage API unavailable — embedding generation failed");
-        return;
-      }
     }
 
     // Wait for redirect to the new skill page
@@ -93,15 +84,7 @@ test.describe("Skill Upload Flow", () => {
     // Button should change to "Checking..." during similarity check
     await expect(page.getByRole("button", { name: /checking/i })).toBeVisible({ timeout: 5000 });
 
-    // The form goes through two async steps:
-    // 1. checkSimilarity (fails gracefully without VOYAGE_API_KEY → returns [])
-    // 2. createSkill (inserts skill, then tries embedding generation)
-    //
-    // Outcome depends on environment:
-    // - With VOYAGE_API_KEY: redirects to /skills/[slug]
-    // - Without VOYAGE_API_KEY: shows error "Failed to generate embedding..."
-    //
-    // Wait for either outcome — the form must no longer show "Checking..."
+    // Wait for completion
     await expect(page.getByRole("button", { name: /checking/i })).not.toBeVisible({
       timeout: 30000,
     });
@@ -114,22 +97,12 @@ test.describe("Skill Upload Flow", () => {
     if (await publishAnyway.isVisible({ timeout: 2000 }).catch(() => false)) {
       await publishAnyway.click();
       await expect(page.getByRole("button", { name: /checking/i })).not.toBeVisible({
-        timeout: 45000,
+        timeout: 30000,
       });
     }
 
-    // Check outcome: redirect (success) or still on form (error/API failure)
-    if (page.url().includes("/skills/new")) {
-      const errorBanner = page.locator(".bg-red-50");
-      if (await errorBanner.isVisible().catch(() => false)) {
-        test.skip(true, "Voyage API unavailable — embedding generation failed");
-        return;
-      }
-      // Amber notice or Create Skill button should be visible
-      const notice = page.locator('.bg-amber-50, button:has-text("Create Skill")');
-      await expect(notice.first()).toBeVisible({ timeout: 5000 });
-    }
-    // If not on /skills/new, the redirect succeeded — test passes
+    // Should redirect to the new skill page
+    await expect(page).not.toHaveURL(/\/skills\/new/);
   });
 
   test("should show validation error when required fields are empty", async ({ page }) => {

@@ -32,7 +32,6 @@
     "react-sparklines": "^1.7.0",
     "react-swipeable": "^7.0.2",
     "recharts": "^3.7.0",
-    "voyageai": "^0.1.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {

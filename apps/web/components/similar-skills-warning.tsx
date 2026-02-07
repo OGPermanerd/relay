@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { SimilarSkillResult } from "@relay/db/services";
+import type { SimilarSkillResult } from "@/lib/similar-skills";
 
 interface SimilarSkillsWarningProps {
   similarSkills: SimilarSkillResult[];
@@ -59,7 +59,7 @@ export function SimilarSkillsWarning({
                   {skill.skillName}
                 </Link>
                 <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
-                  {Math.round(skill.similarity * 100)}% similar
+                  Name match
                 </span>
               </li>
             ))}

@@ -80,13 +80,6 @@ export function SkillUploadForm() {
 
       {message && <div className="rounded-md bg-red-50 p-4 text-red-700">{message}</div>}
 
-      {state.similarityCheckFailed && (
-        <div className="rounded-md bg-amber-50 p-4 text-amber-700 text-sm">
-          Could not check for similar skills (embedding service unavailable). You can still publish,
-          but duplicates may exist.
-        </div>
-      )}
-
       {showWarning && state.similarSkills && state.similarSkills.length > 0 && (
         <SimilarSkillsWarning
           similarSkills={state.similarSkills}

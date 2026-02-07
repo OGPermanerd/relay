@@ -1,14 +1,8 @@
 import Link from "next/link";
-
-interface SimilarSkill {
-  skillId: string;
-  skillName: string;
-  skillSlug: string;
-  similarity: number;
-}
+import type { SimilarSkillResult } from "@/lib/similar-skills";
 
 interface SimilarSkillsSectionProps {
-  similarSkills: SimilarSkill[];
+  similarSkills: SimilarSkillResult[];
 }
 
 export function SimilarSkillsSection({ similarSkills }: SimilarSkillsSectionProps) {
@@ -28,7 +22,7 @@ export function SimilarSkillsSection({ similarSkills }: SimilarSkillsSectionProp
           >
             <span className="font-medium text-gray-900">{skill.skillName}</span>
             <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-sm text-gray-600">
-              {Math.round(skill.similarity * 100)}%
+              Match
             </span>
           </Link>
         ))}
