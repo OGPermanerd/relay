@@ -21,3 +21,4 @@ export {
 export { deleteSkill } from "./skill-delete";
 export { mergeSkills } from "./skill-merge";
 export { writeAuditLog, writeAuditLogs, type AuditEntry } from "./audit";
+export { getTenantBySlug, getTenantByDomain, type Tenant, type NewTenant } from "./tenant";
