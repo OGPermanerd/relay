@@ -16,3 +16,6 @@ export * from "./validation";
 
 // Re-export services
 export * from "./services";
+
+// Re-export tenant context utilities
+export { withTenant } from "./tenant-context";
