@@ -1,4 +1,13 @@
-import { pgTable, text, timestamp, integer, index, uniqueIndex, customType } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  integer,
+  index,
+  uniqueIndex,
+  customType,
+  pgPolicy,
+} from "drizzle-orm/pg-core";
 import { sql, SQL } from "drizzle-orm";
 import { users } from "./users";
 import { tenants } from "./tenants";
@@ -26,7 +35,9 @@ export const skills = pgTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    tenantId: text("tenant_id").notNull().references(() => tenants.id),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     description: text("description").notNull(),
@@ -63,6 +74,12 @@ export const skills = pgTable(
     index("skills_search_idx").using("gin", table.searchVector),
     uniqueIndex("skills_tenant_slug_unique").on(table.tenantId, table.slug),
     index("skills_tenant_id_idx").on(table.tenantId),
+    pgPolicy("tenant_isolation", {
+      as: "restrictive",
+      for: "all",
+      using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+      withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+    }),
   ]
 );
 

@@ -1,4 +1,14 @@
-import { pgTable, text, timestamp, jsonb, boolean, uniqueIndex, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  jsonb,
+  boolean,
+  uniqueIndex,
+  index,
+  pgPolicy,
+} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { skills } from "./skills";
 import { users } from "./users";
 import { tenants } from "./tenants";
@@ -55,6 +65,12 @@ export const skillReviews = pgTable(
   (table) => [
     uniqueIndex("skill_reviews_tenant_skill_unique").on(table.tenantId, table.skillId),
     index("skill_reviews_tenant_id_idx").on(table.tenantId),
+    pgPolicy("tenant_isolation", {
+      as: "restrictive",
+      for: "all",
+      using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+      withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+    }),
   ]
 );
 

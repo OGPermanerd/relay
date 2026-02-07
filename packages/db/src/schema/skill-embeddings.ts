@@ -1,4 +1,13 @@
-import { pgTable, text, integer, timestamp, index, uniqueIndex, customType } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  integer,
+  timestamp,
+  index,
+  uniqueIndex,
+  customType,
+  pgPolicy,
+} from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { skills } from "./skills";
 import { tenants } from "./tenants";
@@ -48,6 +57,12 @@ export const skillEmbeddings = pgTable(
     index("skill_embeddings_skill_id_idx").on(table.skillId),
     // HNSW index for fast cosine similarity search
     index("skill_embeddings_hnsw_idx").using("hnsw", sql`${table.embedding} vector_cosine_ops`),
+    pgPolicy("tenant_isolation", {
+      as: "restrictive",
+      for: "all",
+      using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+      withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+    }),
   ]
 );
 

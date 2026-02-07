@@ -1,4 +1,14 @@
-import { pgTable, text, boolean, integer, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  boolean,
+  integer,
+  timestamp,
+  uniqueIndex,
+  index,
+  pgPolicy,
+} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { tenants } from "./tenants";
 
 /**
@@ -22,6 +32,12 @@ export const siteSettings = pgTable(
   (table) => [
     uniqueIndex("site_settings_tenant_id_unique").on(table.tenantId),
     index("site_settings_tenant_id_idx").on(table.tenantId),
+    pgPolicy("tenant_isolation", {
+      as: "restrictive",
+      for: "all",
+      using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+      withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+    }),
   ]
 );
 

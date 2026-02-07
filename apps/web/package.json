@@ -21,7 +21,7 @@
     "@relay/db": "workspace:*",
     "@relay/storage": "workspace:*",
     "@relay/ui": "workspace:*",
-    "drizzle-orm": "^0.38.0",
+    "drizzle-orm": "^0.42.0",
     "jszip": "^3.10.1",
     "mcp-handler": "^1.0.7",
     "next": "^16.1.6",

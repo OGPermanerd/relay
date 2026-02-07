@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, index, pgPolicy } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { users } from "./users";
 import { tenants } from "./tenants";
 
@@ -28,6 +29,12 @@ export const apiKeys = pgTable(
     index("api_keys_key_hash_idx").on(table.keyHash),
     index("api_keys_user_id_idx").on(table.userId),
     index("api_keys_tenant_id_idx").on(table.tenantId),
+    pgPolicy("tenant_isolation", {
+      as: "restrictive",
+      for: "all",
+      using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+      withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+    }),
   ]
 );
 

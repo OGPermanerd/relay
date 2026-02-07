@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@relay/core": "workspace:*",
-    "drizzle-orm": "^0.38.0",
+    "drizzle-orm": "^0.42.0",
     "postgres": "^3.4.0",
     "zod": "^3.25.0"
   },
