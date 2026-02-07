@@ -1,0 +1,12 @@
+*.everyskill.ai, everyskill.ai {
+    tls {
+        dns hetzner {env.HETZNER_DNS_API_TOKEN}
+    }
+
+    reverse_proxy web:2000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
