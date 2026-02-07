@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 26 Auth & Subdomain Routing -- Plan 01 complete, Plans 02-03 remaining
+**Current focus:** Phase 26 Auth & Subdomain Routing -- Plans 01-02 complete, Plan 03 remaining
 
 ## Current Position
 
 Phase: 26 of 33 (Auth & Subdomain Routing)
-Plan: 1 of 3 in current phase
-Status: In progress. Plan 26-01 complete (foundation layer). 85/86 E2E tests pass.
-Last activity: 2026-02-07 -- Completed 26-01-PLAN.md (tenant service, type augmentation, auth config)
+Plan: 2 of 3 in current phase
+Status: In progress. Plans 26-01 and 26-02 complete. 85/86 E2E tests pass.
+Last activity: 2026-02-07 -- Completed 26-02-PLAN.md (multi-tenant auth callbacks)
 
-Progress: [██████░░░░░░░░░░░░░░░░░░] ~9% (v1.5 -- 10 of ~TBD plans)
+Progress: [███████░░░░░░░░░░░░░░░░░] ~10% (v1.5 -- 11 of ~TBD plans)
 
 ## Milestones
 
@@ -28,12 +28,12 @@ Progress: [██████░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 104
+- Total plans completed: 105
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.5 hours
 
 **Cumulative:**
-- 104 plans across 26 phases and 5 milestones
+- 105 plans across 26 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -73,6 +73,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 25-09 | DEFAULT_TENANT_ID constant in action files | Blocking fix for build; each file gets hardcoded constant with TODO for dynamic resolution |
 | 26-01 | CSRF token without __Secure- prefix | CSRF tokens must be readable by client-side JavaScript |
 | 26-01 | Domain scoping only in production | localhost does not support domain cookies; undefined domain allows local dev |
+| 26-02 | Resolve tenant from email domain at sign-in | Email domain is natural tenant identifier for Google OAuth; each org has distinct domain |
+| 26-02 | Update user.tenantId in DB during jwt callback | DrizzleAdapter creates user with default tenant; first sign-in corrects to real tenant |
 
 ### Pending Todos
 
@@ -91,6 +93,6 @@ All decisions logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-02-07T18:37:51Z
-Stopped at: Completed 26-01-PLAN.md (auth foundation layer)
-Resume file: .planning/phases/26-auth-subdomain-routing/26-02-PLAN.md
+Last session: 2026-02-07T18:46:03Z
+Stopped at: Completed 26-02-PLAN.md (multi-tenant auth callbacks)
+Resume file: .planning/phases/26-auth-subdomain-routing/26-03-PLAN.md
