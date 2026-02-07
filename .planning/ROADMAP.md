@@ -140,9 +140,9 @@ Plans:
   5. Sessions expire after 8 hours (reduced from 30 days)
 **Plans:** 3 plans
 Plans:
-- [ ] 26-01-PLAN.md — Tenant DB service, NextAuth type augmentation, auth.config.ts cookies/session
-- [ ] 26-02-PLAN.md — Auth.ts callbacks rewrite (signIn, jwt, session, redirect)
-- [ ] 26-03-PLAN.md — Middleware rewrite (unwrapped subdomain extraction) + login page update
+- [x] 26-01-PLAN.md — Tenant DB service, NextAuth type augmentation, auth.config.ts cookies/session
+- [x] 26-02-PLAN.md — Auth.ts callbacks rewrite (signIn, jwt, session, redirect)
+- [x] 26-03-PLAN.md — Middleware rewrite (unwrapped subdomain extraction) + login page update
 
 ### Phase 27: Production Docker Deployment
 **Goal**: Relay runs in production on a Hetzner VPS with automatic HTTPS, encrypted storage, and automated backups
@@ -238,7 +238,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
 | 25. Multi-Tenancy Schema | v1.5 | 9/9 | Complete | 2026-02-07 |
-| 26. Auth & Subdomain Routing | v1.5 | 0/3 | Planned | - |
+| 26. Auth & Subdomain Routing | v1.5 | 3/3 | Complete | 2026-02-07 |
 | 27. Docker Deployment | v1.5 | 0/TBD | Not started | - |
 | 28. Hook-Based Tracking | v1.5 | 0/TBD | Not started | - |
 | 29. Tenant Analytics & MCP | v1.5 | 0/TBD | Not started | - |
@@ -247,7 +247,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 32. Admin Panel | v1.5 | 0/TBD | Not started | - |
 | 33. Email & Notifications | v1.5 | 0/TBD | Not started | - |
 
-**Total: 103 plans completed across 25 phases and 5 milestones (v1.0-v1.5 Phase 25)**
+**Total: 107 plans completed across 26 phases and 5 milestones (v1.0-v1.5 Phase 26)**
 
 ---
 *Roadmap created: 2026-01-31*
