@@ -74,7 +74,16 @@ function ShowOnceKeyDisplay({ rawKey, onDone }: { rawKey: string; onDone: () => 
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback: select text for manual copy
+      const textarea = document.createElement("textarea");
+      textarea.value = rawKey;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   }, [rawKey]);
 

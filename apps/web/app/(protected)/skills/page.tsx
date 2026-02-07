@@ -4,7 +4,7 @@ import { getLeaderboard } from "@/lib/leaderboard";
 import { TwoPanelLayout } from "@/components/two-panel-layout";
 import { SkillsTable } from "@/components/skills-table";
 import { LeaderboardTable } from "@/components/leaderboard-table";
-import { SearchInput } from "@/components/search-input";
+import { SearchWithDropdown } from "@/components/search-with-dropdown";
 import { SkillTypeFilter } from "@/components/skill-type-filter";
 import { getCategoriesToFilter } from "@/lib/skill-type-utils";
 import { EmptyState } from "@/components/empty-state";
@@ -48,7 +48,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
       <div className="mx-auto max-w-7xl px-4 py-6">
         <div className="flex items-center gap-4">
           <div className="flex-1">
-            <SearchInput />
+            <SearchWithDropdown mode="filter" initialQuery={query} />
           </div>
           <SkillTypeFilter />
         </div>

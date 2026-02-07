@@ -38,7 +38,7 @@ test.describe("Authentication Flow", () => {
 
 // Authenticated home page tests (use default authenticated storage state)
 test.describe("Home Page Tabs", () => {
-  test("should show Browse Skills tab by default", async ({ page }) => {
+  test("should show Browse Skills tab by default with CTAs", async ({ page }) => {
     await page.goto("/");
 
     // Check for Browse Skills tab button
@@ -46,6 +46,12 @@ test.describe("Home Page Tabs", () => {
 
     // The browse content should be visible (e.g., "Trending Skills" heading)
     await expect(page.getByText("Trending Skills")).toBeVisible();
+
+    // CTA cards should be visible
+    await expect(page.getByText("Create Leverage")).toBeVisible();
+    await expect(page.getByText("Get Leverage")).toBeVisible();
+    await expect(page.getByText("Share a Skill")).toBeVisible();
+    await expect(page.getByText("Install a Skill")).toBeVisible();
   });
 
   test("should show My Leverage tab when clicked", async ({ page }) => {

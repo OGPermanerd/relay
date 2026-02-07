@@ -9,7 +9,7 @@ import { z } from "zod";
 
 // Zod schema for rating form validation
 const ratingSchema = z.object({
-  skillId: z.string().uuid("Invalid skill ID"),
+  skillId: z.string().min(1, "Skill ID is required"),
   skillSlug: z.string().min(1, "Skill slug is required"),
   rating: z.coerce
     .number()

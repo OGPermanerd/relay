@@ -50,7 +50,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
               </Link>
               {isAdmin(user.email) && (
                 <Link
-                  href="/admin/keys"
+                  href="/admin/settings"
                   className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
                 >
                   Admin
@@ -61,7 +61,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
           {/* User Menu */}
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
+            <Link href="/profile" className="flex items-center gap-3 transition hover:opacity-80">
               {user.image ? (
                 <Image
                   src={user.image}
@@ -76,7 +76,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
                 </div>
               )}
               <span className="hidden text-sm font-medium text-gray-700 sm:block">{user.name}</span>
-            </div>
+            </Link>
             <SignOutButton />
           </div>
         </div>

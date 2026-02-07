@@ -1,5 +1,5 @@
 import { db } from "@relay/db";
-import { skills, users } from "@relay/db/schema";
+import { skills, users, ratings } from "@relay/db/schema";
 import { sql, eq, isNotNull } from "drizzle-orm";
 
 export interface PlatformStats {
@@ -7,6 +7,7 @@ export interface PlatformStats {
   totalDownloads: number;
   totalUses: number;
   totalFteDaysSaved: number;
+  averageRating: number;
 }
 
 /**
@@ -28,11 +29,12 @@ export async function getPlatformStats(): Promise<PlatformStats> {
       totalDownloads: 0,
       totalUses: 0,
       totalFteDaysSaved: 0,
+      averageRating: 0,
     };
   }
 
-  // Run two parallel queries
-  const [skillStats, userStats] = await Promise.all([
+  // Run three parallel queries
+  const [skillStats, userStats, ratingStats] = await Promise.all([
     // Query 1: Aggregate skill metrics from published skills
     db
       .select({
@@ -50,17 +52,26 @@ export async function getPlatformStats(): Promise<PlatformStats> {
       .from(users)
       .innerJoin(skills, eq(skills.authorId, users.id))
       .where(isNotNull(skills.publishedVersionId)),
+
+    // Query 3: Average rating across all ratings
+    db
+      .select({
+        avgRating: sql<number>`COALESCE(AVG(${ratings.rating})::float, 0)`,
+      })
+      .from(ratings),
   ]);
 
   const totalUses = Number(skillStats[0]?.totalUses ?? 0);
   const rawFteDays = Number(skillStats[0]?.totalFteDays ?? 0);
   const totalFteDaysSaved = Math.round(rawFteDays * 10) / 10;
   const totalContributors = Number(userStats[0]?.totalContributors ?? 0);
+  const averageRating = Math.round(Number(ratingStats[0]?.avgRating ?? 0) * 10) / 10;
 
   return {
     totalContributors,
     totalDownloads: totalUses,
     totalUses,
     totalFteDaysSaved,
+    averageRating,
   };
 }

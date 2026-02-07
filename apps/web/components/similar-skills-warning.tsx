@@ -63,9 +63,7 @@ export function SimilarSkillsWarning({
                   </Link>
                   <div className="flex items-center gap-2">
                     {skill.similarityPct != null && (
-                      <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-sm font-medium text-blue-800">
-                        {skill.similarityPct}% match
-                      </span>
+                      <span className="text-sm text-gray-500">{skill.similarityPct}% match</span>
                     )}
                     <span
                       className={`rounded-full px-3 py-1 text-sm font-medium ${

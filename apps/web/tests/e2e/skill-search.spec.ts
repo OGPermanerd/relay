@@ -141,4 +141,38 @@ test.describe("Skill Search and Browse", () => {
     await expect(page).toHaveURL(/q=combined/);
     await expect(page).toHaveURL(/type=ai-prompt/);
   });
+
+  test("should show live search dropdown with results", async ({ page }) => {
+    await page.goto("/skills");
+
+    // Wait for page to load
+    await page.waitForLoadState("networkidle");
+
+    // Get a skill name from the table to search for
+    const firstSkillLink = page.locator("table a").first();
+    const skillName = await firstSkillLink.textContent();
+
+    if (!skillName) {
+      test.skip();
+      return;
+    }
+
+    // Type the first few characters into search
+    const searchInput = page.locator('input[type="search"]');
+    await searchInput.fill(skillName.slice(0, 5));
+
+    // Wait for dropdown to appear (debounce + server round trip)
+    const dropdown = page.locator(".absolute.z-50");
+    await expect(dropdown).toBeVisible({ timeout: 5000 });
+
+    // Dropdown should contain at least one result
+    const dropdownButtons = dropdown.locator("button");
+    await expect(dropdownButtons.first()).toBeVisible();
+
+    // Click the first result
+    await dropdownButtons.first().click();
+
+    // Should navigate to a skill detail page
+    await expect(page).toHaveURL(/\/skills\//);
+  });
 });
