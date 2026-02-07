@@ -58,16 +58,10 @@ ALTER TABLE skill_reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 
--- FORCE RLS so even table owners see filtered rows
-ALTER TABLE users FORCE ROW LEVEL SECURITY;
-ALTER TABLE skills FORCE ROW LEVEL SECURITY;
-ALTER TABLE ratings FORCE ROW LEVEL SECURITY;
-ALTER TABLE usage_events FORCE ROW LEVEL SECURITY;
-ALTER TABLE skill_versions FORCE ROW LEVEL SECURITY;
-ALTER TABLE skill_embeddings FORCE ROW LEVEL SECURITY;
-ALTER TABLE skill_reviews FORCE ROW LEVEL SECURITY;
-ALTER TABLE api_keys FORCE ROW LEVEL SECURITY;
-ALTER TABLE site_settings FORCE ROW LEVEL SECURITY;
+-- NOTE: FORCE RLS is intentionally omitted during single-tenant phase.
+-- The app connects as table owner, so RLS is bypassed by default (ENABLE without FORCE).
+-- Phase 26+ will introduce a dedicated app role that is NOT the table owner,
+-- at which point ENABLE RLS will enforce policies automatically.
 
 -- Create RLS policies for tenant isolation
 -- Policy: rows are visible/writable only when tenant_id matches the session variable

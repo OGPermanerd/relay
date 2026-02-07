@@ -45,13 +45,11 @@ test.describe("Home Page Tabs", () => {
     await expect(page.getByRole("button", { name: /Browse Skills/i })).toBeVisible();
 
     // The browse content should be visible (e.g., "Trending Skills" heading)
-    await expect(page.getByText("Trending Skills")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Trending Skills" })).toBeVisible();
 
-    // CTA cards should be visible
-    await expect(page.getByText("Create Leverage")).toBeVisible();
-    await expect(page.getByText("Get Leverage")).toBeVisible();
-    await expect(page.getByText("Share a Skill")).toBeVisible();
-    await expect(page.getByText("Install a Skill")).toBeVisible();
+    // CTA cards should be visible (use link roles to avoid matching empty-state text)
+    await expect(page.getByRole("link", { name: /Create Leverage.*Share a Skill/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Get Leverage.*Install a Skill/i })).toBeVisible();
   });
 
   test("should show My Leverage tab when clicked", async ({ page }) => {
@@ -112,7 +110,7 @@ test.describe("Home Page Tabs", () => {
     await page.getByRole("button", { name: /Browse Skills/i }).click();
 
     // Browse content should now be visible
-    await expect(page.getByText("Trending Skills")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Trending Skills" })).toBeVisible();
 
     // Leverage-specific content should not be visible
     await expect(page.getByText("Years Saved", { exact: true })).not.toBeVisible();

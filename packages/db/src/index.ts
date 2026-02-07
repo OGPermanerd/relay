@@ -3,7 +3,7 @@
  */
 
 // Re-export client
-export { db, isDatabaseConfigured } from "./client";
+export { db, isDatabaseConfigured, DEFAULT_TENANT_ID } from "./client";
 
 // Re-export all schema tables and types
 export * from "./schema";

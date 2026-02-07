@@ -21,6 +21,10 @@ const globalForDb = globalThis as unknown as {
 // Connection string from environment
 const connectionString = process.env.DATABASE_URL;
 
+// Default tenant ID used during single-tenant phase.
+// Phase 26+ will resolve tenant from session/subdomain and use withTenant() instead.
+export const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
+
 function createClient() {
   if (!connectionString) return { client: null, drizzleDb: null };
 
@@ -29,7 +33,14 @@ function createClient() {
     return { client: globalForDb._pgClient, drizzleDb: globalForDb._drizzle };
   }
 
-  const client = postgres(connectionString);
+  const client = postgres(connectionString, {
+    // Set default tenant context on every new connection so RLS policies work
+    // during single-tenant phase. Each connection starts with this setting.
+    onnotice: () => {},
+    connection: {
+      "app.current_tenant_id": DEFAULT_TENANT_ID,
+    },
+  });
   const drizzleDb = drizzle(client, { schema: { ...schema, ...relations } });
 
   globalForDb._pgClient = client;
