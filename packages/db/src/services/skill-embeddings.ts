@@ -3,6 +3,7 @@ import { skillEmbeddings } from "../schema/skill-embeddings";
 import { eq } from "drizzle-orm";
 
 export interface UpsertSkillEmbeddingParams {
+  tenantId: string;
   skillId: string;
   embedding: number[];
   modelName: string;
@@ -20,6 +21,7 @@ export async function upsertSkillEmbedding(params: UpsertSkillEmbeddingParams): 
   await db
     .insert(skillEmbeddings)
     .values({
+      tenantId: params.tenantId,
       skillId: params.skillId,
       embedding: params.embedding,
       modelName: params.modelName,
@@ -28,7 +30,7 @@ export async function upsertSkillEmbedding(params: UpsertSkillEmbeddingParams): 
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({
-      target: skillEmbeddings.skillId,
+      target: [skillEmbeddings.tenantId, skillEmbeddings.skillId],
       set: {
         embedding: params.embedding,
         modelName: params.modelName,

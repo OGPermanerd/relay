@@ -14,3 +14,5 @@ export * from "./skill-reviews";
 export * from "./api-keys";
 export * from "./site-settings";
 export * from "./skill-embeddings";
+export * from "./tenants";
+export * from "./audit-logs";

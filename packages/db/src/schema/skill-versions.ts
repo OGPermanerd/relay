@@ -1,6 +1,7 @@
-import { pgTable, text, timestamp, integer, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, jsonb, index } from "drizzle-orm/pg-core";
 import { skills } from "./skills";
 import { users } from "./users";
+import { tenants } from "./tenants";
 
 /**
  * Skill versions table - immutable records of skill content at a point in time
@@ -10,6 +11,7 @@ export const skillVersions = pgTable("skill_versions", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
+  tenantId: text("tenant_id").notNull().references(() => tenants.id),
   skillId: text("skill_id")
     .notNull()
     .references(() => skills.id, { onDelete: "cascade" }),
@@ -22,7 +24,9 @@ export const skillVersions = pgTable("skill_versions", {
   metadata: jsonb("metadata").$type<Record<string, unknown>>(), // Format-specific data
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true, precision: 3 }).notNull().defaultNow(),
-});
+}, (table) => [
+  index("skill_versions_tenant_id_idx").on(table.tenantId),
+]);
 
 export type SkillVersion = typeof skillVersions.$inferSelect;
 export type NewSkillVersion = typeof skillVersions.$inferInsert;

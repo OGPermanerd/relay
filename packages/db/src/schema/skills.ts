@@ -1,6 +1,7 @@
-import { pgTable, text, timestamp, integer, index, customType } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, index, uniqueIndex, customType } from "drizzle-orm/pg-core";
 import { sql, SQL } from "drizzle-orm";
 import { users } from "./users";
+import { tenants } from "./tenants";
 
 // Custom tsvector column type for PostgreSQL full-text search
 const tsvector = customType<{ data: string }>({
@@ -25,8 +26,9 @@ export const skills = pgTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
+    tenantId: text("tenant_id").notNull().references(() => tenants.id),
     name: text("name").notNull(),
-    slug: text("slug").notNull().unique(),
+    slug: text("slug").notNull(),
     description: text("description").notNull(),
     category: text("category").notNull(), // prompt, workflow, agent, mcp
     tags: text("tags").array().default([]),
@@ -57,7 +59,11 @@ export const skills = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (table) => [index("skills_search_idx").using("gin", table.searchVector)]
+  (table) => [
+    index("skills_search_idx").using("gin", table.searchVector),
+    uniqueIndex("skills_tenant_slug_unique").on(table.tenantId, table.slug),
+    index("skills_tenant_id_idx").on(table.tenantId),
+  ]
 );
 
 export type Skill = typeof skills.$inferSelect;

@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, uuid, index } from "drizzle-orm/pg-core";
 import { users } from "./users";
+import { tenants } from "./tenants";
 
 /**
  * API keys table for authenticating MCP tool invocations
@@ -9,6 +10,9 @@ export const apiKeys = pgTable(
   "api_keys",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -23,6 +27,7 @@ export const apiKeys = pgTable(
   (table) => [
     index("api_keys_key_hash_idx").on(table.keyHash),
     index("api_keys_user_id_idx").on(table.userId),
+    index("api_keys_tenant_id_idx").on(table.tenantId),
   ]
 );
 

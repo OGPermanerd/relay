@@ -19,6 +19,10 @@ import { skillVersions, type NewSkillVersion } from "./schema/skill-versions";
 import { ratings } from "./schema/ratings";
 import { usageEvents } from "./schema/usage-events";
 import { users, type NewUser } from "./schema/users";
+import { tenants } from "./schema/tenants";
+
+// Default tenant for seed data
+const DEFAULT_TENANT_ID = "tenant-seed-001";
 
 // Verify DATABASE_URL is set
 const connectionString = process.env.DATABASE_URL;
@@ -34,26 +38,26 @@ const db = drizzle(client);
 
 // 20 test users with realistic names
 const testUsers: NewUser[] = [
-  { id: "user-001", email: "sarah.chen@company.com", name: "Sarah Chen" },
-  { id: "user-002", email: "marcus.johnson@company.com", name: "Marcus Johnson" },
-  { id: "user-003", email: "emily.rodriguez@company.com", name: "Emily Rodriguez" },
-  { id: "user-004", email: "david.kim@company.com", name: "David Kim" },
-  { id: "user-005", email: "jessica.patel@company.com", name: "Jessica Patel" },
-  { id: "user-006", email: "michael.oconnor@company.com", name: "Michael O'Connor" },
-  { id: "user-007", email: "amanda.wright@company.com", name: "Amanda Wright" },
-  { id: "user-008", email: "james.thompson@company.com", name: "James Thompson" },
-  { id: "user-009", email: "olivia.martinez@company.com", name: "Olivia Martinez" },
-  { id: "user-010", email: "william.garcia@company.com", name: "William Garcia" },
-  { id: "user-011", email: "sophia.lee@company.com", name: "Sophia Lee" },
-  { id: "user-012", email: "benjamin.clark@company.com", name: "Benjamin Clark" },
-  { id: "user-013", email: "isabella.lewis@company.com", name: "Isabella Lewis" },
-  { id: "user-014", email: "alexander.hall@company.com", name: "Alexander Hall" },
-  { id: "user-015", email: "mia.young@company.com", name: "Mia Young" },
-  { id: "user-016", email: "ethan.allen@company.com", name: "Ethan Allen" },
-  { id: "user-017", email: "charlotte.king@company.com", name: "Charlotte King" },
-  { id: "user-018", email: "daniel.scott@company.com", name: "Daniel Scott" },
-  { id: "user-019", email: "ava.green@company.com", name: "Ava Green" },
-  { id: "user-020", email: "noah.baker@company.com", name: "Noah Baker" },
+  { id: "user-001", tenantId: DEFAULT_TENANT_ID, email: "sarah.chen@company.com", name: "Sarah Chen" },
+  { id: "user-002", tenantId: DEFAULT_TENANT_ID, email: "marcus.johnson@company.com", name: "Marcus Johnson" },
+  { id: "user-003", tenantId: DEFAULT_TENANT_ID, email: "emily.rodriguez@company.com", name: "Emily Rodriguez" },
+  { id: "user-004", tenantId: DEFAULT_TENANT_ID, email: "david.kim@company.com", name: "David Kim" },
+  { id: "user-005", tenantId: DEFAULT_TENANT_ID, email: "jessica.patel@company.com", name: "Jessica Patel" },
+  { id: "user-006", tenantId: DEFAULT_TENANT_ID, email: "michael.oconnor@company.com", name: "Michael O'Connor" },
+  { id: "user-007", tenantId: DEFAULT_TENANT_ID, email: "amanda.wright@company.com", name: "Amanda Wright" },
+  { id: "user-008", tenantId: DEFAULT_TENANT_ID, email: "james.thompson@company.com", name: "James Thompson" },
+  { id: "user-009", tenantId: DEFAULT_TENANT_ID, email: "olivia.martinez@company.com", name: "Olivia Martinez" },
+  { id: "user-010", tenantId: DEFAULT_TENANT_ID, email: "william.garcia@company.com", name: "William Garcia" },
+  { id: "user-011", tenantId: DEFAULT_TENANT_ID, email: "sophia.lee@company.com", name: "Sophia Lee" },
+  { id: "user-012", tenantId: DEFAULT_TENANT_ID, email: "benjamin.clark@company.com", name: "Benjamin Clark" },
+  { id: "user-013", tenantId: DEFAULT_TENANT_ID, email: "isabella.lewis@company.com", name: "Isabella Lewis" },
+  { id: "user-014", tenantId: DEFAULT_TENANT_ID, email: "alexander.hall@company.com", name: "Alexander Hall" },
+  { id: "user-015", tenantId: DEFAULT_TENANT_ID, email: "mia.young@company.com", name: "Mia Young" },
+  { id: "user-016", tenantId: DEFAULT_TENANT_ID, email: "ethan.allen@company.com", name: "Ethan Allen" },
+  { id: "user-017", tenantId: DEFAULT_TENANT_ID, email: "charlotte.king@company.com", name: "Charlotte King" },
+  { id: "user-018", tenantId: DEFAULT_TENANT_ID, email: "daniel.scott@company.com", name: "Daniel Scott" },
+  { id: "user-019", tenantId: DEFAULT_TENANT_ID, email: "ava.green@company.com", name: "Ava Green" },
+  { id: "user-020", tenantId: DEFAULT_TENANT_ID, email: "noah.baker@company.com", name: "Noah Baker" },
 ];
 
 // 45 skills across different categories
@@ -61,6 +65,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   // Development Tools (15)
   {
     id: "skill-001",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Code Review Assistant",
     slug: "code-review-assistant",
     description:
@@ -73,6 +78,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-002",
+    tenantId: DEFAULT_TENANT_ID,
     name: "API Documentation Generator",
     slug: "api-documentation-generator",
     description:
@@ -84,6 +90,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-003",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Test Writer",
     slug: "test-writer",
     description:
@@ -95,6 +102,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-004",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Git Commit Composer",
     slug: "git-commit-composer",
     description: "Creates semantic, well-structured commit messages from your staged changes.",
@@ -105,6 +113,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-005",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Refactoring Guide",
     slug: "refactoring-guide",
     description: "Suggests refactoring opportunities and provides step-by-step migration guides.",
@@ -115,6 +124,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-006",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Debug Detective",
     slug: "debug-detective",
     description: "Analyzes error logs and stack traces to identify root causes and suggest fixes.",
@@ -125,6 +135,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-007",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Performance Profiler",
     slug: "performance-profiler",
     description: "Identifies performance bottlenecks and suggests optimizations for your code.",
@@ -135,6 +146,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-008",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Database Schema Designer",
     slug: "database-schema-designer",
     description: "Designs normalized database schemas from requirements with migration scripts.",
@@ -145,6 +157,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-009",
+    tenantId: DEFAULT_TENANT_ID,
     name: "API Client Generator",
     slug: "api-client-generator",
     description: "Generates typed API clients from OpenAPI specs or API responses.",
@@ -155,6 +168,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-010",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Regex Builder",
     slug: "regex-builder",
     description: "Creates and explains regular expressions from natural language descriptions.",
@@ -165,6 +179,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-011",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Docker Composer",
     slug: "docker-composer",
     description: "Creates optimized Dockerfiles and docker-compose configurations.",
@@ -175,6 +190,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-012",
+    tenantId: DEFAULT_TENANT_ID,
     name: "CI/CD Pipeline Builder",
     slug: "cicd-pipeline-builder",
     description: "Generates GitHub Actions, GitLab CI, or Jenkins pipelines from requirements.",
@@ -185,6 +201,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-013",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Security Auditor",
     slug: "security-auditor",
     description: "Scans code for security vulnerabilities and suggests remediations.",
@@ -195,6 +212,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-014",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Dependency Updater",
     slug: "dependency-updater",
     description: "Analyzes dependencies for updates and breaking changes with upgrade guides.",
@@ -205,6 +223,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-015",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Code Translator",
     slug: "code-translator",
     description: "Translates code between programming languages while maintaining logic.",
@@ -217,6 +236,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   // Content & Writing (10)
   {
     id: "skill-016",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Technical Writer",
     slug: "technical-writer",
     description: "Creates clear technical documentation, READMEs, and user guides.",
@@ -227,6 +247,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-017",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Blog Post Generator",
     slug: "blog-post-generator",
     description: "Generates engaging blog posts from topics or outlines with SEO optimization.",
@@ -237,6 +258,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-018",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Email Composer",
     slug: "email-composer",
     description: "Drafts professional emails for various contexts with appropriate tone.",
@@ -247,6 +269,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-019",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Meeting Notes Summarizer",
     slug: "meeting-notes-summarizer",
     description: "Transforms meeting transcripts into structured notes with action items.",
@@ -257,6 +280,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-020",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Proposal Writer",
     slug: "proposal-writer",
     description: "Creates compelling project proposals and business cases.",
@@ -267,6 +291,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-021",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Release Notes Generator",
     slug: "release-notes-generator",
     description: "Generates user-friendly release notes from commit history and PRs.",
@@ -277,6 +302,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-022",
+    tenantId: DEFAULT_TENANT_ID,
     name: "FAQ Builder",
     slug: "faq-builder",
     description: "Creates comprehensive FAQs from product documentation and support tickets.",
@@ -287,6 +313,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-023",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Changelog Formatter",
     slug: "changelog-formatter",
     description: "Formats and organizes changelogs following Keep a Changelog conventions.",
@@ -297,6 +324,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-024",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Tutorial Creator",
     slug: "tutorial-creator",
     description: "Develops step-by-step tutorials with code examples and screenshots.",
@@ -307,6 +335,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-025",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Slide Deck Outliner",
     slug: "slide-deck-outliner",
     description: "Creates presentation outlines with speaker notes and visual suggestions.",
@@ -319,6 +348,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   // Data & Analytics (8)
   {
     id: "skill-026",
+    tenantId: DEFAULT_TENANT_ID,
     name: "SQL Query Builder",
     slug: "sql-query-builder",
     description: "Generates complex SQL queries from natural language descriptions.",
@@ -329,6 +359,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-027",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Data Analyzer",
     slug: "data-analyzer",
     description: "Analyzes datasets and provides insights with visualization suggestions.",
@@ -339,6 +370,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-028",
+    tenantId: DEFAULT_TENANT_ID,
     name: "CSV Transformer",
     slug: "csv-transformer",
     description: "Transforms and cleans CSV data with complex mapping rules.",
@@ -349,6 +381,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-029",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Report Generator",
     slug: "report-generator",
     description: "Creates formatted reports from raw data with charts and summaries.",
@@ -359,6 +392,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-030",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Metrics Dashboard Designer",
     slug: "metrics-dashboard-designer",
     description: "Designs metrics dashboards with KPI selection and layout recommendations.",
@@ -369,6 +403,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-031",
+    tenantId: DEFAULT_TENANT_ID,
     name: "A/B Test Analyzer",
     slug: "ab-test-analyzer",
     description: "Analyzes A/B test results and provides statistical significance assessments.",
@@ -379,6 +414,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-032",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Log Parser",
     slug: "log-parser",
     description: "Parses and analyzes log files to extract patterns and anomalies.",
@@ -389,6 +425,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-033",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Data Model Documenter",
     slug: "data-model-documenter",
     description: "Documents data models with entity relationships and field descriptions.",
@@ -401,6 +438,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   // Design & UX (6)
   {
     id: "skill-034",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Component Spec Writer",
     slug: "component-spec-writer",
     description: "Creates detailed component specifications with props, states, and behaviors.",
@@ -411,6 +449,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-035",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Accessibility Checker",
     slug: "accessibility-checker",
     description: "Reviews UI code for accessibility issues and WCAG compliance.",
@@ -421,6 +460,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-036",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Color Palette Generator",
     slug: "color-palette-generator",
     description: "Generates harmonious color palettes with accessibility considerations.",
@@ -431,6 +471,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-037",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Responsive Design Helper",
     slug: "responsive-design-helper",
     description: "Suggests responsive breakpoints and CSS strategies for layouts.",
@@ -441,6 +482,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-038",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Animation Scripter",
     slug: "animation-scripter",
     description: "Creates smooth CSS and JavaScript animations from descriptions.",
@@ -451,6 +493,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-039",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Design Token Generator",
     slug: "design-token-generator",
     description: "Generates design tokens from Figma or design specs for code.",
@@ -463,6 +506,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   // Project Management (6)
   {
     id: "skill-040",
+    tenantId: DEFAULT_TENANT_ID,
     name: "User Story Writer",
     slug: "user-story-writer",
     description: "Creates well-structured user stories with acceptance criteria.",
@@ -473,6 +517,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-041",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Sprint Planner",
     slug: "sprint-planner",
     description: "Helps plan sprints by estimating effort and identifying dependencies.",
@@ -483,6 +528,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-042",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Retrospective Facilitator",
     slug: "retrospective-facilitator",
     description: "Generates retrospective templates and synthesizes feedback into actions.",
@@ -493,6 +539,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-043",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Risk Assessor",
     slug: "risk-assessor",
     description: "Identifies project risks and suggests mitigation strategies.",
@@ -503,6 +550,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-044",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Stakeholder Update Writer",
     slug: "stakeholder-update-writer",
     description: "Creates clear project updates for different stakeholder audiences.",
@@ -513,6 +561,7 @@ const testSkills: Omit<NewSkill, "authorId">[] = [
   },
   {
     id: "skill-045",
+    tenantId: DEFAULT_TENANT_ID,
     name: "Estimation Helper",
     slug: "estimation-helper",
     description: "Breaks down tasks and provides effort estimates with confidence levels.",
@@ -576,7 +625,18 @@ async function seed() {
     await db.delete(skillVersions);
     await db.delete(skills);
     await db.delete(users);
+    await db.delete(tenants);
     console.log("  [+] Cleared all existing data\n");
+
+    // 1.5 Create seed tenant
+    console.log("Creating seed tenant...");
+    await db.insert(tenants).values({
+      id: DEFAULT_TENANT_ID,
+      name: "Seed Company",
+      slug: "seed-company",
+      domain: "company.com",
+    });
+    console.log("  [+] Seed Company tenant created\n");
 
     // 2. Insert users
     console.log("Creating 20 users...");
@@ -588,7 +648,7 @@ async function seed() {
     // 3. Insert skills
     console.log("\nCreating 45 skills...");
     const assignedSkills = assignSkillsToUsers();
-    const insertedSkills: { id: string; slug: string; name: string; authorId: string }[] = [];
+    const insertedSkills: { id: string; slug: string; name: string; authorId: string | null }[] = [];
 
     for (const skill of assignedSkills) {
       const [result] = await db.insert(skills).values(skill).returning({
@@ -608,6 +668,7 @@ async function seed() {
       const versionId = `version-${skill.slug}-v1`;
       const version: NewSkillVersion = {
         id: versionId,
+        tenantId: DEFAULT_TENANT_ID,
         skillId: skill.id,
         version: 1,
         contentUrl: `skills/${skill.id}/v1/content`,
@@ -647,8 +708,9 @@ async function seed() {
           "This is exactly what I needed.",
         ];
         await db.insert(ratings).values({
+          tenantId: DEFAULT_TENANT_ID,
           skillId: skill.id,
-          userId: rater.id,
+          userId: rater.id!,
           rating,
           comment: comments[Math.floor(Math.random() * comments.length)],
           hoursSavedEstimate: 1 + Math.floor(Math.random() * 4),
@@ -678,6 +740,7 @@ async function seed() {
           eventTime.setMinutes(Math.floor(Math.random() * 60));
 
           await db.insert(usageEvents).values({
+            tenantId: DEFAULT_TENANT_ID,
             toolName: skill.slug,
             skillId: skill.id,
             userId: randomUser.id,

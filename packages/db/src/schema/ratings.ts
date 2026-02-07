@@ -1,6 +1,7 @@
-import { pgTable, text, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, index } from "drizzle-orm/pg-core";
 import { skills } from "./skills";
 import { users } from "./users";
+import { tenants } from "./tenants";
 
 /**
  * Ratings table - user ratings for skills
@@ -10,6 +11,7 @@ export const ratings = pgTable("ratings", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
+  tenantId: text("tenant_id").notNull().references(() => tenants.id),
   skillId: text("skill_id")
     .notNull()
     .references(() => skills.id, { onDelete: "cascade" }),
@@ -20,7 +22,9 @@ export const ratings = pgTable("ratings", {
   comment: text("comment"), // Optional review text
   hoursSavedEstimate: integer("hours_saved_estimate"), // User's estimate of time saved
   createdAt: timestamp("created_at", { withTimezone: true, precision: 3 }).notNull().defaultNow(),
-});
+}, (table) => [
+  index("ratings_tenant_id_idx").on(table.tenantId),
+]);
 
 export type Rating = typeof ratings.$inferSelect;
 export type NewRating = typeof ratings.$inferInsert;

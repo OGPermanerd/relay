@@ -1,6 +1,7 @@
-import { pgTable, text, integer, timestamp, index, customType } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, index, uniqueIndex, customType } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { skills } from "./skills";
+import { tenants } from "./tenants";
 
 // Custom vector column type for pgvector
 const vector = (name: string, dimensions: number) =>
@@ -28,9 +29,11 @@ export const skillEmbeddings = pgTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
+    tenantId: text("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
     skillId: text("skill_id")
       .notNull()
-      .unique()
       .references(() => skills.id, { onDelete: "cascade" }),
     embedding: vector("embedding", 768).notNull(),
     modelName: text("model_name").notNull(),
@@ -40,6 +43,8 @@ export const skillEmbeddings = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
+    uniqueIndex("skill_embeddings_tenant_skill_unique").on(table.tenantId, table.skillId),
+    index("skill_embeddings_tenant_id_idx").on(table.tenantId),
     index("skill_embeddings_skill_id_idx").on(table.skillId),
     // HNSW index for fast cosine similarity search
     index("skill_embeddings_hnsw_idx").using("hnsw", sql`${table.embedding} vector_cosine_ops`),
