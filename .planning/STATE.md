@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 25 of 33 (Multi-Tenancy Schema & Audit Foundation)
-Plan: 5 of 9 in current phase
+Plan: 8 of 9 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed 25-05-PLAN.md (tenant migration files)
+Last activity: 2026-02-07 — Completed 25-08-PLAN.md (audit log write service)
 
-Progress: [███░░░░░░░░░░░░░░░░░░░░░] ~5% (v1.5 — 5 of ~TBD plans)
+Progress: [████░░░░░░░░░░░░░░░░░░░░] ~7% (v1.5 — 8 of ~TBD plans)
 
 ## Milestones
 
@@ -28,7 +28,7 @@ Progress: [███░░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 97
+- Total plans completed: 98
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7 hours
 
@@ -60,6 +60,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 25-04 | Service files updated with tenantId immediately | Prevents compilation errors rather than deferring to later plans |
 | 25-05 | Deterministic default tenant UUID | Avoids subqueries in backfill migration; well-known ID referenceable across migrations |
 | 25-05 | Idempotent migration guards | IF NOT EXISTS, ON CONFLICT, WHERE IS NULL make all 3 migrations safe to re-run |
+| 25-08 | Fire-and-forget audit pattern | Catch errors and log to console, never propagate to callers |
+| 25-08 | Direct INSERT not transaction-scoped | audit_logs is append-only, no RLS needed |
 
 ### Pending Todos
 
@@ -76,6 +78,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-07T16:38:00Z
-Stopped at: Completed 25-04-PLAN.md (remaining schema tenantId + relations)
+Last session: 2026-02-07T16:43:30Z
+Stopped at: Completed 25-08-PLAN.md (audit log write service)
 Resume file: None
