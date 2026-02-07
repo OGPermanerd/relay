@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 25 complete -- ready for Phase 26+27 (parallel tracks)
+**Current focus:** Phase 26 Auth & Subdomain Routing -- Plan 01 complete, Plans 02-03 remaining
 
 ## Current Position
 
-Phase: 25 of 33 (Multi-Tenancy Schema & Audit Foundation) -- COMPLETE
-Plan: 9 of 9 in current phase
-Status: Phase 25 verified and committed. 85/86 E2E tests pass (1 pre-existing Ollama dep).
-Last activity: 2026-02-07 -- Phase 25 complete with RLS fix and E2E verification
+Phase: 26 of 33 (Auth & Subdomain Routing)
+Plan: 1 of 3 in current phase
+Status: In progress. Plan 26-01 complete (foundation layer). 85/86 E2E tests pass.
+Last activity: 2026-02-07 -- Completed 26-01-PLAN.md (tenant service, type augmentation, auth config)
 
-Progress: [█████░░░░░░░░░░░░░░░░░░░] ~8% (v1.5 -- 9 of ~TBD plans)
+Progress: [██████░░░░░░░░░░░░░░░░░░] ~9% (v1.5 -- 10 of ~TBD plans)
 
 ## Milestones
 
@@ -28,12 +28,12 @@ Progress: [█████░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 103
+- Total plans completed: 104
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.5 hours
 
 **Cumulative:**
-- 103 plans across 25 phases and 5 milestones
+- 104 plans across 26 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -71,6 +71,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 25-09 | drizzle-kit push for table creation, manual SQL for RLS | Push handles CREATE TABLE/FK/indexes; manual SQL needed for FORCE RLS and policy clauses |
 | 25-09 | users.tenantId gets .default() | Auth.js DrizzleAdapter createUser doesn't pass tenantId; default ensures OAuth login works |
 | 25-09 | DEFAULT_TENANT_ID constant in action files | Blocking fix for build; each file gets hardcoded constant with TODO for dynamic resolution |
+| 26-01 | CSRF token without __Secure- prefix | CSRF tokens must be readable by client-side JavaScript |
+| 26-01 | Domain scoping only in production | localhost does not support domain cookies; undefined domain allows local dev |
 
 ### Pending Todos
 
@@ -89,6 +91,6 @@ All decisions logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-02-07
-Stopped at: Phase 25 complete and verified -- ready for Phase 26+27
-Resume file: None
+Last session: 2026-02-07T18:37:51Z
+Stopped at: Completed 26-01-PLAN.md (auth foundation layer)
+Resume file: .planning/phases/26-auth-subdomain-routing/26-02-PLAN.md
