@@ -116,15 +116,17 @@ Total: 25 plans completed.
   3. Skills table has a composite unique constraint on (tenant_id, slug) — two tenants can have skills with the same slug
   4. PostgreSQL RLS policies are active on all tenant-scoped tables, preventing cross-tenant reads/writes at the database level
   5. An append-only audit_logs table records all security events (auth, admin actions, data modifications), and UPDATE/DELETE are revoked on it
-**Plans:** 7 plans
+**Plans:** 9 plans
 Plans:
 - [ ] 25-01-PLAN.md — Tenants + audit_logs table schemas
 - [ ] 25-02-PLAN.md — withTenant() helper module
-- [ ] 25-03-PLAN.md — Add tenant_id to all 9 schema files + relations
-- [ ] 25-04-PLAN.md — Custom SQL migrations (5 files: create tenants, add columns, backfill, enforce constraints, audit logs)
-- [ ] 25-05-PLAN.md — RLS pgPolicy definitions on all 9 tables + drizzle config
-- [ ] 25-06-PLAN.md — Audit log write service
-- [ ] 25-07-PLAN.md — Run migrations + end-to-end verification
+- [ ] 25-03-PLAN.md — Add tenant_id to 5 schema files (skills, users, ratings, usage-events, skill-versions) + schema index
+- [ ] 25-04-PLAN.md — Add tenant_id to 4 schema files (skill-embeddings, skill-reviews, api-keys, site-settings) + relations
+- [ ] 25-05-PLAN.md — SQL migrations 0002-0004 (create tenants, add columns, backfill)
+- [ ] 25-06-PLAN.md — SQL migrations 0005-0006 (enforce constraints + RLS, audit logs)
+- [ ] 25-07-PLAN.md — RLS pgPolicy definitions on all 9 tables + drizzle config
+- [ ] 25-08-PLAN.md — Audit log write service
+- [ ] 25-09-PLAN.md — Run migrations + end-to-end verification
 
 ### Phase 26: Auth & Subdomain Routing
 **Goal**: Users access their tenant via a subdomain and authenticate through domain-mapped Google SSO with proper session management
