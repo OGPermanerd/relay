@@ -64,6 +64,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 25-06 | FORCE RLS on all tenant tables | Even superuser/table-owner connections see filtered rows |
 | 25-06 | audit_logs NOT RLS-protected | Supports system-level and cross-tenant audit events |
 | 25-06 | Trigger-based append-only over REVOKE | Works regardless of DB role setup; REVOKE deferred to deployment |
+| 25-07 | Upgrade drizzle-orm 0.38.4 -> 0.42.0 | Required for pgPolicy API support (not available in 0.38.x) |
+| 25-07 | Restrictive pgPolicy without `to:` param | Applies to public role; combined with FORCE RLS covers all connections |
 | 25-08 | Fire-and-forget audit pattern | Catch errors and log to console, never propagate to callers |
 | 25-08 | Direct INSERT not transaction-scoped | audit_logs is append-only, no RLS needed |
 
@@ -82,6 +84,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-07T16:43:30Z
-Stopped at: Completed 25-08-PLAN.md (audit log write service)
+Last session: 2026-02-07T16:47:47Z
+Stopped at: Completed 25-07-PLAN.md (pgPolicy RLS declarations) and 25-08-PLAN.md (audit log write service)
 Resume file: None
