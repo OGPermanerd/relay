@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 25 complete -- ready for Phase 26
+**Current focus:** Phase 25 complete -- ready for Phase 26+27 (parallel tracks)
 
 ## Current Position
 
-Phase: 25 of 33 (Multi-Tenancy Schema & Audit Foundation)
+Phase: 25 of 33 (Multi-Tenancy Schema & Audit Foundation) -- COMPLETE
 Plan: 9 of 9 in current phase
-Status: Phase complete
-Last activity: 2026-02-07 -- Completed 25-09-PLAN.md (run migrations and verify)
+Status: Phase 25 verified and committed. 85/86 E2E tests pass (1 pre-existing Ollama dep).
+Last activity: 2026-02-07 -- Phase 25 complete with RLS fix and E2E verification
 
 Progress: [█████░░░░░░░░░░░░░░░░░░░] ~8% (v1.5 -- 9 of ~TBD plans)
 
@@ -28,14 +28,14 @@ Progress: [█████░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 99
+- Total plans completed: 103
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~7.25 hours
+- Total execution time: ~7.5 hours
 
 **Cumulative:**
-- 99 plans across 25 phases and 5 milestones
-- ~13,600 LOC TypeScript
-- 6 days total development time
+- 103 plans across 25 phases and 5 milestones
+- ~14,500 LOC TypeScript
+- 7 days total development time
 
 *Updated after each plan completion*
 
@@ -84,11 +84,11 @@ None.
 - [v1.5]: Hetzner server: Ubuntu 24.04, 8 CPU, 30GB RAM, Docker+Compose ready, Tailscale on :443, no native PostgreSQL
 - [v1.5]: User has domain ready to point, needs DNS A record setup
 - [v1.5]: REQUIREMENTS.md says 55 but actually contains 62 requirements -- roadmap maps all 62
-- [25-09]: RLS blocks ALL queries until app code wraps queries in withTenant() -- E2E tests fail at auth.setup
+- [25-09]: RESOLVED -- RLS fix: removed FORCE RLS, set connection-level app.current_tenant_id in client.ts
 - [25-09]: drizzle-kit push with `entities: { roles: true }` requires CREATEROLE permission -- workaround documented
 
 ## Session Continuity
 
-Last session: 2026-02-07T17:05:00Z
-Stopped at: Completed 25-09-PLAN.md -- Phase 25 complete
+Last session: 2026-02-07
+Stopped at: Phase 25 complete and verified -- ready for Phase 26+27
 Resume file: None

@@ -94,7 +94,7 @@ Total: 25 plans completed.
 
 **Milestone Goal:** Transform Relay from a single-tenant internal tool into a production-deployed, multi-tenant SaaS platform with deterministic usage tracking, SOC2 compliance foundations, white-label branding, enhanced skill management, and a notification system. 62 requirements across 9 categories deliver the infrastructure for enterprise-grade multi-organization deployment.
 
-- [ ] **Phase 25: Multi-Tenancy Schema & Audit Foundation** - Tenant isolation at the database level
+- [x] **Phase 25: Multi-Tenancy Schema & Audit Foundation** - Tenant isolation at the database level
 - [ ] **Phase 26: Auth & Subdomain Routing** - Users can log in to their tenant's subdomain
 - [ ] **Phase 27: Production Docker Deployment** - Single-command production deployment (parallel track)
 - [ ] **Phase 28: Hook-Based Usage Tracking** - Deterministic skill usage tracking via Claude Code hooks
@@ -118,15 +118,15 @@ Total: 25 plans completed.
   5. An append-only audit_logs table records all security events (auth, admin actions, data modifications), and UPDATE/DELETE are revoked on it
 **Plans:** 9 plans
 Plans:
-- [ ] 25-01-PLAN.md — Tenants + audit_logs table schemas
-- [ ] 25-02-PLAN.md — withTenant() helper module
-- [ ] 25-03-PLAN.md — Add tenant_id to 5 schema files (skills, users, ratings, usage-events, skill-versions) + schema index
-- [ ] 25-04-PLAN.md — Add tenant_id to 4 schema files (skill-embeddings, skill-reviews, api-keys, site-settings) + relations
-- [ ] 25-05-PLAN.md — SQL migrations 0002-0004 (create tenants, add columns, backfill)
-- [ ] 25-06-PLAN.md — SQL migrations 0005-0006 (enforce constraints + RLS, audit logs)
-- [ ] 25-07-PLAN.md — RLS pgPolicy definitions on all 9 tables + drizzle config
-- [ ] 25-08-PLAN.md — Audit log write service
-- [ ] 25-09-PLAN.md — Run migrations + end-to-end verification
+- [x] 25-01-PLAN.md — Tenants + audit_logs table schemas
+- [x] 25-02-PLAN.md — withTenant() helper module
+- [x] 25-03-PLAN.md — Add tenant_id to 5 schema files (skills, users, ratings, usage-events, skill-versions) + schema index
+- [x] 25-04-PLAN.md — Add tenant_id to 4 schema files (skill-embeddings, skill-reviews, api-keys, site-settings) + relations
+- [x] 25-05-PLAN.md — SQL migrations 0002-0004 (create tenants, add columns, backfill)
+- [x] 25-06-PLAN.md — SQL migrations 0005-0006 (enforce constraints + RLS, audit logs)
+- [x] 25-07-PLAN.md — RLS pgPolicy definitions on all 9 tables + drizzle config
+- [x] 25-08-PLAN.md — Audit log write service
+- [x] 25-09-PLAN.md — Run migrations + end-to-end verification
 
 ### Phase 26: Auth & Subdomain Routing
 **Goal**: Users access their tenant via a subdomain and authenticate through domain-mapped Google SSO with proper session management
@@ -233,7 +233,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 12-14 | v1.2 | 12/12 | Complete | 2026-02-02 |
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
-| 25. Multi-Tenancy Schema | v1.5 | 0/7 | Planned | - |
+| 25. Multi-Tenancy Schema | v1.5 | 9/9 | Complete | 2026-02-07 |
 | 26. Auth & Subdomain Routing | v1.5 | 0/TBD | Not started | - |
 | 27. Docker Deployment | v1.5 | 0/TBD | Not started | - |
 | 28. Hook-Based Tracking | v1.5 | 0/TBD | Not started | - |
@@ -243,7 +243,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 32. Admin Panel | v1.5 | 0/TBD | Not started | - |
 | 33. Email & Notifications | v1.5 | 0/TBD | Not started | - |
 
-**Total: 94 plans completed across 24 phases and 5 milestones (v1.0-v1.4)**
+**Total: 103 plans completed across 25 phases and 5 milestones (v1.0-v1.5 Phase 25)**
 
 ---
 *Roadmap created: 2026-01-31*
