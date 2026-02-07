@@ -8,6 +8,27 @@
       "when": 1769897710202,
       "tag": "0000_brainy_marvel_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770482038641,
+      "tag": "0002_add_tenants",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770482038642,
+      "tag": "0003_add_tenant_id_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770482038643,
+      "tag": "0004_backfill_tenant_id",
+      "breakpoints": true
     }
   ]
 }
