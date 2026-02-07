@@ -83,7 +83,9 @@ export async function findSimilarSkills(
   const { threshold = 0.7, limit = 10, excludeSkillId } = options;
 
   // Cosine distance is 1 - cosine_similarity, so similarity = 1 - distance
-  const similarity = sql<number>`1 - ${cosineDistance(skillEmbeddings.embedding, queryEmbedding)}`;
+  // Parentheses required: without them, `1 - embedding <=> $1` is parsed as
+  // `(1 - embedding) <=> $1` due to operator precedence, causing a type error.
+  const similarity = sql<number>`1 - (${cosineDistance(skillEmbeddings.embedding, queryEmbedding)})`;
 
   const query = db
     .select({

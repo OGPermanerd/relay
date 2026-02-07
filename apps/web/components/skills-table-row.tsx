@@ -91,13 +91,23 @@ export function SkillsTableRow({
   const daysSaved = Math.round((skill.totalUses * (skill.hoursSaved ?? 1)) / 8);
 
   // Format date as "MMM D, YYYY" (e.g., "Jan 15, 2026")
-  // Uses UTC to avoid hydration mismatches between server and client
-  const dateAdded = skill.createdAt.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  // Manual formatting avoids hydration mismatches from toLocaleDateString
+  const MONTHS = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const d = new Date(skill.createdAt);
+  const dateAdded = `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 
   // Row background: alternating + expanded state
   const rowBg = rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50";
@@ -140,7 +150,7 @@ export function SkillsTableRow({
           {daysSaved}
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
-          {skill.totalUses.toLocaleString()}
+          {String(skill.totalUses)}
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
           {dateAdded}

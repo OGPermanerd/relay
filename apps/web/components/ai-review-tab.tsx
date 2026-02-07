@@ -12,7 +12,7 @@ import type { ReviewCategories } from "@relay/db/schema";
 interface ExistingReview {
   categories: ReviewCategories;
   summary: string;
-  createdAt: Date;
+  createdAt: string;
   modelName: string;
   isVisible: boolean;
   reviewedContentHash: string;

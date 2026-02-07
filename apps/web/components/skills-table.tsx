@@ -19,7 +19,7 @@ export interface SkillTableRow {
   totalUses: number;
   averageRating: number | null;
   hoursSaved: number | null;
-  createdAt: Date;
+  createdAt: string;
   author: {
     id: string;
     name: string | null;
@@ -132,7 +132,7 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
           comparison = a.totalUses - b.totalUses;
           break;
         case "date":
-          comparison = a.createdAt.getTime() - b.createdAt.getTime();
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
           break;
         case "author":
           comparison = (a.author?.name ?? "").localeCompare(b.author?.name ?? "");

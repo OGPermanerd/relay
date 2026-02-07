@@ -41,9 +41,11 @@ function getCategoryLabel(key: keyof ReviewCategories): string {
 interface AiReviewDisplayProps {
   categories: ReviewCategories;
   summary: string;
-  reviewedAt: Date;
+  reviewedAt: string;
   modelName: string;
 }
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function AiReviewDisplay({
   categories,
@@ -51,11 +53,8 @@ export function AiReviewDisplay({
   reviewedAt,
   modelName,
 }: AiReviewDisplayProps) {
-  const formattedDate = reviewedAt.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const d = new Date(reviewedAt);
+  const formattedDate = `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 
   const categoryKeys = Object.keys(categoryLabels) as (keyof ReviewCategories)[];
 

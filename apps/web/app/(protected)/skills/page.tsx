@@ -63,7 +63,10 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
               {hasFilters && <ClearFiltersButton />}
             </>
           ) : (
-            <SkillsTable skills={skills} usageTrends={usageTrends} />
+            <SkillsTable
+              skills={skills.map((s) => ({ ...s, createdAt: s.createdAt.toISOString() }))}
+              usageTrends={usageTrends}
+            />
           )
         }
         right={<LeaderboardTable contributors={contributors} />}

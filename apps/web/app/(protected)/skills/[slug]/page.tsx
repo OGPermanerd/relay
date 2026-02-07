@@ -115,12 +115,12 @@ export default async function SkillPage(props: SkillPageProps) {
   // Determine if current user is the skill author
   const isAuthor = session?.user?.id === skill.authorId;
 
-  // Map review to props shape for AiReviewTab
+  // Map review to props shape for AiReviewTab (serialize Date to string for client component)
   const reviewProps = existingReview
     ? {
         categories: existingReview.categories,
         summary: existingReview.summary,
-        createdAt: existingReview.createdAt,
+        createdAt: existingReview.createdAt.toISOString(),
         modelName: existingReview.modelName,
         isVisible: existingReview.isVisible,
         reviewedContentHash: existingReview.reviewedContentHash,
