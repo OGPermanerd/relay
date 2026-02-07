@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 26 Auth & Subdomain Routing -- Plans 01-02 complete, Plan 03 remaining
+**Current focus:** Phase 26 Auth & Subdomain Routing -- COMPLETE (3/3 plans). Ready for Phase 27.
 
 ## Current Position
 
 Phase: 26 of 33 (Auth & Subdomain Routing)
-Plan: 2 of 3 in current phase
-Status: In progress. Plans 26-01 and 26-02 complete. 85/86 E2E tests pass.
-Last activity: 2026-02-07 -- Completed 26-02-PLAN.md (multi-tenant auth callbacks)
+Plan: 3 of 3 in current phase
+Status: Phase complete. All 3 plans done. 85/86 E2E tests pass.
+Last activity: 2026-02-07 -- Completed 26-03-PLAN.md (middleware rewrite + login page)
 
-Progress: [███████░░░░░░░░░░░░░░░░░] ~10% (v1.5 -- 11 of ~TBD plans)
+Progress: [████████░░░░░░░░░░░░░░░░] ~11% (v1.5 -- 12 of ~TBD plans)
 
 ## Milestones
 
@@ -28,12 +28,12 @@ Progress: [███████░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 105
+- Total plans completed: 106
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.5 hours
 
 **Cumulative:**
-- 105 plans across 26 phases and 5 milestones
+- 106 plans across 26 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -75,6 +75,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 26-01 | Domain scoping only in production | localhost does not support domain cookies; undefined domain allows local dev |
 | 26-02 | Resolve tenant from email domain at sign-in | Email domain is natural tenant identifier for Google OAuth; each org has distinct domain |
 | 26-02 | Update user.tenantId in DB during jwt callback | DrizzleAdapter creates user with default tenant; first sign-in corrects to real tenant |
+| 26-03 | Remove auth() wrapper from middleware | Auth.js v5 beta.30 rewrites req.url breaking subdomain routing; plain NextResponse middleware avoids this |
+| 26-03 | Cookie presence check for auth | Lightweight session-token cookie check sufficient for redirect logic; full validation in server components |
 
 ### Pending Todos
 
@@ -93,6 +95,6 @@ All decisions logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-02-07T18:46:03Z
-Stopped at: Completed 26-02-PLAN.md (multi-tenant auth callbacks)
-Resume file: .planning/phases/26-auth-subdomain-routing/26-03-PLAN.md
+Last session: 2026-02-07T18:47:49Z
+Stopped at: Completed 26-03-PLAN.md (middleware rewrite + login page). Phase 26 complete.
+Resume file: None (phase complete, ready for Phase 27)
