@@ -97,7 +97,7 @@ None beyond the SET LOCAL parameterization issue documented above.
 None - no external service configuration required.
 
 ## Next Phase Readiness
-- withTenant() is available for import from @relay/db
+- withTenant() is available for import from @everyskill/db
 - Ready for downstream plans to use in tenant-scoped queries and RLS policy integration
 - All subsequent multi-tenancy plans (25-03 through 25-09) can import and use this helper
 

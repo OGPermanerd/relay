@@ -1,6 +1,6 @@
-import { db } from "@relay/db";
-import { usageEvents, type NewUsageEvent } from "@relay/db/schema/usage-events";
-import { incrementSkillUses } from "@relay/db/services/skill-metrics";
+import { db } from "@everyskill/db";
+import { usageEvents, type NewUsageEvent } from "@everyskill/db/schema/usage-events";
+import { incrementSkillUses } from "@everyskill/db/services/skill-metrics";
 
 // TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
 const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";

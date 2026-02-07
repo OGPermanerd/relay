@@ -1,4 +1,4 @@
-import { getSiteSettings, upsertSkillEmbedding } from "@relay/db";
+import { getSiteSettings, upsertSkillEmbedding } from "@everyskill/db";
 import { generateEmbedding } from "./ollama";
 
 // TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented

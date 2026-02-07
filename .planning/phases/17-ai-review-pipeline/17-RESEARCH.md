@@ -372,8 +372,8 @@ Evaluate across all six categories with scores and suggestions.`;
 "use server";
 
 import { auth } from "@/auth";
-import { db, skills } from "@relay/db";
-import { skillReviews } from "@relay/db/schema/skill-reviews";
+import { db, skills } from "@everyskill/db";
+import { skillReviews } from "@everyskill/db/schema/skill-reviews";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { hashContent } from "@/lib/content-hash";

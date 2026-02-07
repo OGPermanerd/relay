@@ -33,11 +33,11 @@ expected: Clicking the "Copy" button copies the JSON config to clipboard. The bu
 result: pass
 
 ### 6. Download install script button (Claude Desktop only)
-expected: When "Claude Desktop" is selected, a "Download Install Script" button appears below the config. Clicking it downloads a script file (install-relay-mcp.sh on macOS/Linux, install-relay-mcp.ps1 on Windows).
+expected: When "Claude Desktop" is selected, a "Download Install Script" button appears below the config. Clicking it downloads a script file (install-everyskill-mcp.sh on macOS/Linux, install-everyskill-mcp.ps1 on Windows).
 result: pass
 
 ### 7. Run instructions shown after download
-expected: After downloading the install script, run instructions appear showing the command to execute (e.g., "chmod +x install-relay-mcp.sh && ./install-relay-mcp.sh") with its own copy button.
+expected: After downloading the install script, run instructions appear showing the command to execute (e.g., "chmod +x install-everyskill-mcp.sh && ./install-everyskill-mcp.sh") with its own copy button.
 result: pass
 
 ### 8. Modal stays open after copy/download

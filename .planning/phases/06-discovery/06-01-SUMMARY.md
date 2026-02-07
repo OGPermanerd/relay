@@ -126,7 +126,7 @@ None - no external service configuration required.
 - Supports query, category parameters (tags TODO in Plan 03)
 
 **Database schema changes:**
-- New searchVector column requires `pnpm --filter @relay/db db:push` when database is available
+- New searchVector column requires `pnpm --filter @everyskill/db db:push` when database is available
 - GIN index will be created automatically during schema push
 
 **Note:** Database push is manual operation (requires confirmation). Not blocking for code development.

@@ -18,10 +18,10 @@ Development infrastructure and tooling for Relay. Sets up Next.js 15+, PostgreSQ
 - **Apps:**
   - `apps/web` — Next.js web application
   - `apps/mcp-server` — MCP server for Claude integration
-- **Packages (scoped as @relay/*):**
-  - `@relay/core` — shared types, constants, utilities
-  - `@relay/db` — database schema, queries, migrations
-  - `@relay/ui` — shared React components
+- **Packages (scoped as @everyskill/*):**
+  - `@everyskill/core` — shared types, constants, utilities
+  - `@everyskill/db` — database schema, queries, migrations
+  - `@everyskill/ui` — shared React components
 - **Feature-based folder structure** within apps/web — colocate by domain (src/features/auth, src/features/skills)
 
 ### Development Workflow
@@ -50,7 +50,7 @@ Development infrastructure and tooling for Relay. Sets up Next.js 15+, PostgreSQ
 
 - Monorepo chosen specifically for future multi-tenant and cross-company deployment flexibility
 - Companies should be able to run just the MCP server with their own UI if needed
-- White-labeling should be possible by swapping out apps/web while keeping @relay/core
+- White-labeling should be possible by swapping out apps/web while keeping @everyskill/core
 
 </specifics>
 

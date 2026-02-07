@@ -69,7 +69,7 @@ gaps:
 | EmployeesTab | EmployeeDetailModal | State + onClick handler | ✓ WIRED | Modal fetches activity via server action |
 | SkillsTab | SkillAnalyticsModal | State + onClick handler | ✓ WIRED | Modal fetches trend via server action |
 | CsvExportButton | fetchExportData server action | async call + blob download | ✓ WIRED | CSV export works end-to-end |
-| analytics-queries.ts | @relay/db | sql template queries | ✓ WIRED | All queries use Drizzle sql`` templates |
+| analytics-queries.ts | @everyskill/db | sql template queries | ✓ WIRED | All queries use Drizzle sql`` templates |
 | TimeRangeSelector | analytics/page.tsx | nuqs searchParams | ✓ WIRED | URL state updates trigger re-render |
 | AnalyticsTabs | URL state | nuqs tab param | ✓ WIRED | Tab switching updates URL |
 

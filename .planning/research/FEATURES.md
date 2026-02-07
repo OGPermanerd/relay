@@ -18,7 +18,7 @@ Relay is an internal skill marketplace at v1.4. The current system is single-ten
 - Google Workspace SSO (Auth.js v5 with JWT strategy)
 - MCP server with stdio + Streamable HTTP dual transport
 - Analytics dashboard with org-wide trends (v1.4)
-- Skills deployed to `.claude/skills/{slug}.md` with YAML frontmatter embedding `relay_skill_id`
+- Skills deployed to `.claude/skills/{slug}.md` with YAML frontmatter embedding `everyskill_skill_id`
 - Web remote MCP via `/api/mcp/[transport]` route (v1.4)
 
 ---
@@ -170,31 +170,31 @@ hooks:
 **Current state (v1.4):** The `deploy_skill` tool already injects frontmatter:
 ```yaml
 ---
-relay_skill_id: {skill.id}
-relay_skill_name: {skill.name}
-relay_category: {skill.category}
-relay_hours_saved: {skill.hoursSaved}
+everyskill_skill_id: {skill.id}
+everyskill_skill_name: {skill.name}
+everyskill_category: {skill.category}
+everyskill_hours_saved: {skill.hoursSaved}
 ---
 ```
 
 **v1.5 enhancement -- add hooks to this frontmatter:**
 ```yaml
 ---
-relay_skill_id: abc-123
-relay_skill_name: code-review
-relay_category: workflow
-relay_hours_saved: 2
+everyskill_skill_id: abc-123
+everyskill_skill_name: code-review
+everyskill_category: workflow
+everyskill_hours_saved: 2
 hooks:
   PostToolUse:
     - matcher: ".*"
       hooks:
         - type: command
-          command: 'curl -s -X POST "https://acme.relay.example.com/api/track" -H "Content-Type: application/json" -H "Authorization: Bearer $RELAY_API_KEY" -d "$(echo $0 | jq -c \"{session_id: .session_id, skill_id: \\\"abc-123\\\", tool_name: .tool_name, event: \\\"post_tool_use\\\"}\")" > /dev/null 2>&1 || true'
+          command: 'curl -s -X POST "https://acme.relay.example.com/api/track" -H "Content-Type: application/json" -H "Authorization: Bearer $EVERYSKILL_API_KEY" -d "$(echo $0 | jq -c \"{session_id: .session_id, skill_id: \\\"abc-123\\\", tool_name: .tool_name, event: \\\"post_tool_use\\\"}\")" > /dev/null 2>&1 || true'
           async: true
   SessionStart:
     - hooks:
         - type: command
-          command: 'curl -s -X POST "https://acme.relay.example.com/api/track" -H "Content-Type: application/json" -H "Authorization: Bearer $RELAY_API_KEY" -d "{\"event\": \"session_start\", \"skill_id\": \"abc-123\"}" > /dev/null 2>&1 || true'
+          command: 'curl -s -X POST "https://acme.relay.example.com/api/track" -H "Content-Type: application/json" -H "Authorization: Bearer $EVERYSKILL_API_KEY" -d "{\"event\": \"session_start\", \"skill_id\": \"abc-123\"}" > /dev/null 2>&1 || true'
           once: true
 ---
 ```
@@ -206,7 +206,7 @@ hooks:
 | Feature | Why Expected | Complexity | Depends On |
 |---------|--------------|------------|------------|
 | POST /api/track endpoint | Receives hook callbacks from user machines | MEDIUM | API route |
-| API key authentication | Validate RELAY_API_KEY from Authorization header | LOW | Existing api_keys validation |
+| API key authentication | Validate EVERYSKILL_API_KEY from Authorization header | LOW | Existing api_keys validation |
 | Rate limiting | Prevent abuse from malformed hooks | MEDIUM | Rate limiter middleware |
 | Event schema validation | Reject malformed payloads | LOW | Zod schema |
 | Async event recording | Non-blocking DB writes | LOW | Existing trackUsage pattern |
@@ -475,7 +475,7 @@ Phase 4: Integration & Polish
 - [ ] Modify deploy_skill to inject hooks into YAML frontmatter
 - [ ] PostToolUse hook: async curl to /api/track with skill_id, session_id, tool_name
 - [ ] SessionStart hook: once-per-session heartbeat
-- [ ] Hooks use $RELAY_API_KEY env var for authentication
+- [ ] Hooks use $EVERYSKILL_API_KEY env var for authentication
 - [ ] Tracking URL derived from tenant subdomain
 
 **Tenant Admin Panel -- Build Last:**

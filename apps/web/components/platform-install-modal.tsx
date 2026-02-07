@@ -164,7 +164,7 @@ export function PlatformInstallModal({ onClose }: PlatformInstallModalProps) {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Install Relay MCP Server</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Install EverySkill MCP Server</h3>
             {mounted && (
               <p className="mt-0.5 text-sm text-gray-500">Detected: {osLabels[detectedOS]}</p>
             )}
@@ -363,7 +363,7 @@ export function PlatformInstallModal({ onClose }: PlatformInstallModalProps) {
 
             {/* Verification hint */}
             <p className="mt-4 text-xs italic text-gray-400">
-              After installing, restart your app and check for Relay in your MCP servers.
+              After installing, restart your app and check for EverySkill in your MCP servers.
             </p>
           </div>
         )}

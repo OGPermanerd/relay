@@ -59,7 +59,7 @@ human_verification:
 | 1 | Next.js 15+ application runs locally with hot reload | VERIFIED | `apps/web/package.json` has Next.js 15.1.0+, `pnpm dev` script configured, verified curl response shows correct HTML with "Relay" heading |
 | 2 | PostgreSQL database runs locally with migrations applied | VERIFIED (config) | `docker/docker-compose.yml` has PostgreSQL 16-alpine with healthcheck, Drizzle config points to schema, user table defined. Docker startup requires Docker environment. |
 | 3 | CI pipeline runs linting, type checking, and tests on push | VERIFIED | `.github/workflows/ci.yml` (75 lines) triggers on push/PR to main, runs lint, typecheck, test, build, e2e in sequence with PostgreSQL service |
-| 4 | Project structure follows monorepo pattern from research | VERIFIED | `pnpm-workspace.yaml` defines apps/* and packages/*, `turbo.json` configures task pipeline, packages exist at @relay/core, @relay/db, @relay/ui |
+| 4 | Project structure follows monorepo pattern from research | VERIFIED | `pnpm-workspace.yaml` defines apps/* and packages/*, `turbo.json` configures task pipeline, packages exist at @everyskill/core, @everyskill/db, @everyskill/ui |
 | 5 | Development documentation enables immediate contribution | VERIFIED | `README.md` (180 lines) covers tech stack, prerequisites, getting started (6 steps), monorepo architecture, all scripts, code style |
 | 6 | E2E test harness can validate served pages automatically | VERIFIED | `playwright.config.ts` (26 lines) with webServer auto-start, `home.spec.ts` (34 lines) with 2 tests validating page content and structure |
 
@@ -71,11 +71,11 @@ human_verification:
 |----------|----------|--------|---------|
 | `pnpm-workspace.yaml` | Workspace configuration | VERIFIED | 4 lines, defines apps/* and packages/* |
 | `turbo.json` | Turborepo pipeline | VERIFIED | 40 lines, contains build, lint, typecheck, dev, test, test:e2e tasks |
-| `apps/web/package.json` | Web app with workspace deps | VERIFIED | Has @relay/core, @relay/db, @relay/ui as workspace:* deps |
+| `apps/web/package.json` | Web app with workspace deps | VERIFIED | Has @everyskill/core, @everyskill/db, @everyskill/ui as workspace:* deps |
 | `apps/web/app/page.tsx` | Home page component | VERIFIED | 13 lines, renders "Relay" heading and marketplace content |
-| `packages/core/package.json` | @relay/core package | VERIFIED | Name "@relay/core", exports configured |
-| `packages/db/package.json` | @relay/db package | VERIFIED | Has drizzle-orm, postgres deps, db:* scripts |
-| `packages/ui/package.json` | @relay/ui package | VERIFIED | Has react peer deps, styles export |
+| `packages/core/package.json` | @everyskill/core package | VERIFIED | Name "@everyskill/core", exports configured |
+| `packages/db/package.json` | @everyskill/db package | VERIFIED | Has drizzle-orm, postgres deps, db:* scripts |
+| `packages/ui/package.json` | @everyskill/ui package | VERIFIED | Has react peer deps, styles export |
 | `docker/docker-compose.yml` | PostgreSQL container | VERIFIED | 21 lines, postgres:16-alpine, port 5432, healthcheck |
 | `packages/db/drizzle.config.ts` | Drizzle configuration | VERIFIED | Points to schema/index.ts, uses DATABASE_URL |
 | `packages/db/src/schema/users.ts` | User table schema | VERIFIED | 20 lines, pgTable with id, email, name, avatarUrl, timestamps |

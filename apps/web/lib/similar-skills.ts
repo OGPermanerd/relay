@@ -1,6 +1,6 @@
 "use server";
 
-import { db, skills, getSiteSettings, getSkillEmbedding } from "@relay/db";
+import { db, skills, getSiteSettings, getSkillEmbedding } from "@everyskill/db";
 import { sql, and, ne, or } from "drizzle-orm";
 import { generateEmbedding } from "./ollama";
 

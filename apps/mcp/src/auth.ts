@@ -1,7 +1,7 @@
-import { validateApiKey } from "@relay/db/services/api-keys";
+import { validateApiKey } from "@everyskill/db/services/api-keys";
 
 /**
- * MCP auth module — resolves userId from RELAY_API_KEY env var.
+ * MCP auth module — resolves userId from EVERYSKILL_API_KEY env var.
  * Provides anonymous usage nudge counter for unauthenticated users.
  *
  * IMPORTANT: All logging uses console.error (never console.log) to
@@ -14,7 +14,7 @@ let anonymousCallCount = 0;
 let firstAuthShown = false;
 
 /**
- * Resolve userId from RELAY_API_KEY environment variable.
+ * Resolve userId from EVERYSKILL_API_KEY environment variable.
  * Calls validateApiKey once and caches the result.
  * Must be called before server.connect() so userId is ready for first tool call.
  */
@@ -22,9 +22,9 @@ export async function resolveUserId(): Promise<string | null> {
   if (resolved) return cachedUserId;
   resolved = true;
 
-  const apiKey = process.env.RELAY_API_KEY;
+  const apiKey = process.env.EVERYSKILL_API_KEY;
   if (!apiKey) {
-    console.error("RELAY_API_KEY not set — running in anonymous mode");
+    console.error("EVERYSKILL_API_KEY not set — running in anonymous mode");
     return null;
   }
 
@@ -34,10 +34,10 @@ export async function resolveUserId(): Promise<string | null> {
       cachedUserId = result.userId;
       console.error("Authenticated as userId:", cachedUserId);
     } else {
-      console.error("RELAY_API_KEY is invalid or expired — running in anonymous mode");
+      console.error("EVERYSKILL_API_KEY is invalid or expired — running in anonymous mode");
     }
   } catch (error) {
-    console.error("Failed to validate RELAY_API_KEY:", error);
+    console.error("Failed to validate EVERYSKILL_API_KEY:", error);
   }
 
   return cachedUserId;

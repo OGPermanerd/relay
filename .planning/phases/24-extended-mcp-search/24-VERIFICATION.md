@@ -50,8 +50,8 @@ score: 6/6 must-haves verified
 | packages/db/src/services/search-skills.ts | packages/db/src/schema/skills.ts | import skills schema for ILIKE queries | ✓ WIRED | Line 3 imports skills from ../schema/skills |
 | packages/db/src/services/search-skills.ts | packages/db/src/schema/users.ts | import users schema for LEFT JOIN on authorId | ✓ WIRED | Line 4 imports users from ../schema/users |
 | packages/db/src/services/index.ts | packages/db/src/services/search-skills.ts | re-export | ✓ WIRED | Line 24 exports from ./search-skills |
-| apps/mcp/src/tools/search.ts | packages/db/src/services/search-skills.ts | import searchSkillsByQuery | ✓ WIRED | Line 3 imports from @relay/db/services/search-skills |
-| apps/web/app/api/mcp/[transport]/route.ts | packages/db/src/services/search-skills.ts | import searchSkillsByQuery | ✓ WIRED | Line 7 imports from @relay/db/services/search-skills |
+| apps/mcp/src/tools/search.ts | packages/db/src/services/search-skills.ts | import searchSkillsByQuery | ✓ WIRED | Line 3 imports from @everyskill/db/services/search-skills |
+| apps/web/app/api/mcp/[transport]/route.ts | packages/db/src/services/search-skills.ts | import searchSkillsByQuery | ✓ WIRED | Line 7 imports from @everyskill/db/services/search-skills |
 
 ### Requirements Coverage
 

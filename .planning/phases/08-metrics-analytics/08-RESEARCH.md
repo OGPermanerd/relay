@@ -164,8 +164,8 @@ const trending = await db.execute(sql`
 // Source: Existing codebase + Drizzle ORM aggregation patterns
 // apps/web/lib/platform-stats.ts
 import { sql } from "drizzle-orm";
-import { db } from "@relay/db";
-import { skills, users } from "@relay/db/schema";
+import { db } from "@everyskill/db";
+import { skills, users } from "@everyskill/db/schema";
 
 export async function getPlatformStats() {
   const [skillStats, userStats] = await Promise.all([
@@ -348,7 +348,7 @@ export default async function DashboardPage() {
 ### Complete Leaderboard Query with Rankings
 ```typescript
 // apps/web/lib/leaderboard.ts
-import { db } from "@relay/db";
+import { db } from "@everyskill/db";
 import { sql } from "drizzle-orm";
 
 export interface LeaderboardEntry {
@@ -405,7 +405,7 @@ export async function getLeaderboard(limit: number = 10): Promise<LeaderboardEnt
 ### Trending Skills Algorithm
 ```typescript
 // apps/web/lib/trending.ts
-import { db } from "@relay/db";
+import { db } from "@everyskill/db";
 import { sql } from "drizzle-orm";
 
 export interface TrendingSkill {
@@ -464,8 +464,8 @@ export async function getTrendingSkills(limit: number = 10): Promise<TrendingSki
 ### User Profile Statistics
 ```typescript
 // apps/web/lib/user-stats.ts
-import { db } from "@relay/db";
-import { skills } from "@relay/db/schema";
+import { db } from "@everyskill/db";
+import { skills } from "@everyskill/db/schema";
 import { sql, eq, and, isNotNull } from "drizzle-orm";
 
 export interface UserStats {

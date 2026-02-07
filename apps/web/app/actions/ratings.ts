@@ -1,8 +1,8 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db, ratings } from "@relay/db";
-import { updateSkillRating } from "@relay/db/services/skill-metrics";
+import { db, ratings } from "@everyskill/db";
+import { updateSkillRating } from "@everyskill/db/services/skill-metrics";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";

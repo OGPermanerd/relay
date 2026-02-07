@@ -6,7 +6,7 @@
  */
 import { NextResponse } from "next/server";
 import { encode } from "next-auth/jwt";
-import { db, users } from "@relay/db";
+import { db, users } from "@everyskill/db";
 
 // TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
 const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";

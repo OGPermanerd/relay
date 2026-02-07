@@ -15,8 +15,8 @@ gaps_closed:
       - "packages/db/src/seed.ts"
     pending:
       - "Docker: run docker compose up -d"
-      - "Docker: run pnpm --filter @relay/db db:push"
-      - "Docker: run pnpm --filter @relay/db db:seed"
+      - "Docker: run pnpm --filter @everyskill/db db:push"
+      - "Docker: run pnpm --filter @everyskill/db db:seed"
       - "Docker: verify 3 skills in database"
 ---
 
@@ -31,7 +31,7 @@ gaps_closed:
 
 ### Plan 03-05: MCP Integration Documentation (COMPLETE)
 
-Created documentation and configuration templates for integrating relay-mcp with Claude Desktop:
+Created documentation and configuration templates for integrating everyskill-mcp with Claude Desktop:
 
 | Artifact | Lines | Purpose |
 |----------|-------|---------|
@@ -92,7 +92,7 @@ The seed script:
 | `apps/mcp/src/tracking/events.ts` | trackUsage helper | ✓ EXISTS | 22 lines, inserts to usageEvents, graceful error handling |
 | `apps/mcp/test/tools.test.ts` | Tool unit tests | ✓ EXISTS | 187 lines, 12 tests passing |
 | `apps/mcp/README.md` | Installation documentation | ✓ EXISTS | 171 lines, complete installation guide |
-| `apps/mcp/claude_desktop_config.example.json` | Claude Desktop config template | ✓ EXISTS | 7 lines, mcpServers.relay-mcp configuration |
+| `apps/mcp/claude_desktop_config.example.json` | Claude Desktop config template | ✓ EXISTS | 7 lines, mcpServers.everyskill-mcp configuration |
 | `packages/db/src/seed.ts` | Database seed script | ✓ EXISTS | 161 lines, 3 test skills with upsert |
 | Database migrations | Skills and usageEvents tables | ✓ EXISTS | db:push executed successfully |
 | Seed data | Test skills in database | ✓ EXISTS | 3 skills verified in database |
@@ -106,7 +106,7 @@ The seed script:
 | list.ts | tracking/events.ts | trackUsage call | ✓ WIRED | Called at line 48 with metadata |
 | search.ts | tracking/events.ts | trackUsage call | ✓ WIRED | Called at line 57 with metadata |
 | deploy.ts | tracking/events.ts | trackUsage call | ✓ WIRED | Called at line 53 with skillId |
-| All tools | @relay/db | database queries | ✓ WIRED | db.query.skills.findMany used |
+| All tools | @everyskill/db | database queries | ✓ WIRED | db.query.skills.findMany used |
 | tracking/events.ts | usageEvents | db.insert | ✓ WIRED | db.insert(usageEvents).values called |
 | Claude Code | MCP server | stdio transport | ✓ DOCUMENTED | README + example config file created |
 
@@ -139,9 +139,9 @@ The following requires Docker to complete:
 
 **Steps (run when Docker is available):**
 1. `docker compose up -d` - Start PostgreSQL
-2. `pnpm --filter @relay/db db:push` - Create tables
-3. `pnpm --filter @relay/db db:seed` - Populate 3 test skills
-4. `docker exec relay-postgres psql -U postgres -d relay -c "SELECT name, slug, category FROM skills;"` - Verify
+2. `pnpm --filter @everyskill/db db:push` - Create tables
+3. `pnpm --filter @everyskill/db db:seed` - Populate 3 test skills
+4. `docker exec everyskill-postgres psql -U postgres -d relay -c "SELECT name, slug, category FROM skills;"` - Verify
 
 **Expected:** 3 rows showing Code Review Assistant, API Documentation Generator, Test Writer
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey } from "@relay/db/services/api-keys";
+import { validateApiKey } from "@everyskill/db/services/api-keys";
 
 /**
  * POST /api/auth/validate-key

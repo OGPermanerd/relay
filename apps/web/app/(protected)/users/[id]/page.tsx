@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { db, users, skills } from "@relay/db";
+import { db, users, skills } from "@everyskill/db";
 import { eq, and, isNotNull, desc } from "drizzle-orm";
 import { getUserStats } from "@/lib/user-stats";
 import { auth } from "@/auth";

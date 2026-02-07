@@ -44,7 +44,7 @@ score: 4/4 must-haves verified
 |------|----|-----|--------|---------|
 | `ai-review.ts` (lib) | `@anthropic-ai/sdk` | `new Anthropic({ apiKey })` + `client.messages.create` | WIRED | L1: `import Anthropic from "@anthropic-ai/sdk"`, L44: `new Anthropic({ apiKey })`, L100-105: `client.messages.create` with model, max_tokens, system, messages |
 | `actions/ai-review.ts` | `lib/ai-review.ts` | `generateSkillReview` call | WIRED | L13: imports `generateSkillReview, REVIEW_MODEL`, L81-86: calls with skill data |
-| `actions/ai-review.ts` | `services/skill-reviews.ts` | `upsertSkillReview` + `getSkillReview` | WIRED | L6-9: imports from `@relay/db/services/skill-reviews`, L73: calls `getSkillReview`, L91-98: calls `upsertSkillReview` |
+| `actions/ai-review.ts` | `services/skill-reviews.ts` | `upsertSkillReview` + `getSkillReview` | WIRED | L6-9: imports from `@everyskill/db/services/skill-reviews`, L73: calls `getSkillReview`, L91-98: calls `upsertSkillReview` |
 | `actions/ai-review.ts` | `lib/content-hash.ts` | `hashContent` for dedup | WIRED | L12: imports `hashContent`, L72: calls for content hash comparison |
 | `ai-review-tab.tsx` | `actions/ai-review.ts` | `useActionState(requestAiReview)` | WIRED | L4: imports both actions, L40-41: `useActionState` for both review and toggle |
 | `ai-review-tab.tsx` | `ai-review-display.tsx` | Renders `AiReviewDisplay` | WIRED | L5: imports component, L61-66: renders with categories, summary, reviewedAt, modelName props |

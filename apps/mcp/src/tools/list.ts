@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { server } from "../server.js";
-import { db } from "@relay/db";
+import { db } from "@everyskill/db";
 import { trackUsage } from "../tracking/events.js";
 import { getUserId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
 
@@ -76,7 +76,7 @@ export async function handleListSkills({
     if (shouldNudge()) {
       content.push({
         type: "text" as const,
-        text: "Tip: Set RELAY_API_KEY to track your usage and unlock analytics.",
+        text: "Tip: Set EVERYSKILL_API_KEY to track your usage and unlock analytics.",
       });
     }
   }
@@ -88,7 +88,7 @@ server.registerTool(
   "list_skills",
   {
     description:
-      "List all available skills in the Relay marketplace. Returns skill ID, name, description, category, and estimated hours saved.",
+      "List all available skills in the EverySkill marketplace. Returns skill ID, name, description, category, and estimated hours saved.",
     inputSchema: {
       category: z
         .enum(["prompt", "workflow", "agent", "mcp"])

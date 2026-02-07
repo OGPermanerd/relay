@@ -49,7 +49,7 @@ re_verification: false
 **Key Links:**
 | From | To | Via | Status | Details |
 |------|-----|-----|--------|---------|
-| auth.ts | @relay/db | DrizzleAdapter import | ✓ WIRED | `import { DrizzleAdapter } from "@auth/drizzle-adapter"` and `DrizzleAdapter(db, {...})` |
+| auth.ts | @everyskill/db | DrizzleAdapter import | ✓ WIRED | `import { DrizzleAdapter } from "@auth/drizzle-adapter"` and `DrizzleAdapter(db, {...})` |
 | auth.ts | auth.config.ts | config spread | ✓ WIRED | `import authConfig from "./auth.config"` and `...authConfig` spread in config |
 
 #### Plan 02-02: Middleware and Login

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ForkInfo } from "@relay/db/services";
+import type { ForkInfo } from "@everyskill/db/services";
 
 interface ForksSectionProps {
   forks: ForkInfo[];

@@ -306,7 +306,7 @@ Problems that look simple but have existing solutions:
   "mcpServers": {
     "skill-name": {
       "command": "npx",
-      "args": ["-y", "@relay/skill-name"]
+      "args": ["-y", "@everyskill/skill-name"]
     }
   }
 }
@@ -434,7 +434,7 @@ export function generateMcpConfig(skill: { name: string; slug: string }): string
     mcpServers: {
       [skill.slug]: {
         command: "npx",
-        args: ["-y", `@relay/${skill.slug}`],
+        args: ["-y", `@everyskill/${skill.slug}`],
       },
     },
   };
@@ -523,7 +523,7 @@ Things that couldn't be fully resolved:
    - Recommendation: Create separate `installCount` column or use analytics; defer to implementation phase
 
 2. **MCP Config Command Format**
-   - What we know: Example shows `npx -y @relay/skill-slug` format
+   - What we know: Example shows `npx -y @everyskill/skill-slug` format
    - What's unclear: Whether skills are published to npm or need different installation method
    - Recommendation: Use the example format; actual package publishing is separate concern
 

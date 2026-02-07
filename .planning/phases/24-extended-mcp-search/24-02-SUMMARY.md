@@ -36,7 +36,7 @@ key-decisions:
   - "Removed db import from MCP stdio search (only used for search query, no longer needed)"
 
 patterns-established:
-  - "MCP tools delegate to shared services: import service from @relay/db/services/*, call with params, use results"
+  - "MCP tools delegate to shared services: import service from @everyskill/db/services/*, call with params, use results"
 
 # Metrics
 duration: 2min
@@ -71,7 +71,7 @@ Each task was committed atomically:
 ## Files Created/Modified
 - `apps/mcp/src/tools/search.ts` - Replaced in-memory filter with searchSkillsByQuery call; removed db import; updated description and limit
 - `apps/web/app/api/mcp/[transport]/route.ts` - Added searchSkillsByQuery import; replaced inline search with service call; updated description and limit
-- `apps/mcp/test/setup.ts` - Added mock for @relay/db/services/search-skills
+- `apps/mcp/test/setup.ts` - Added mock for @everyskill/db/services/search-skills
 - `apps/mcp/test/tools.test.ts` - Imported mocked service; updated all search_skills tests to use service mock with call verification
 
 ## Decisions Made

@@ -36,12 +36,12 @@ key-files:
 
 key-decisions:
   - "In-memory filtering for list/search tools to avoid drizzle ESM/CJS type conflicts"
-  - "Split @relay/db imports to avoid re-export resolution issues with ESM loaders"
+  - "Split @everyskill/db imports to avoid re-export resolution issues with ESM loaders"
   - "Non-critical tracking failures (logged, not thrown)"
   - "Tool imports in index.ts after server export to fix circular dependency"
 
 patterns-established:
-  - "Import @relay/db/schema/* directly for schema tables in ESM contexts"
+  - "Import @everyskill/db/schema/* directly for schema tables in ESM contexts"
   - "Filter in JavaScript for small datasets vs. complex SQL to avoid type system issues"
 
 # Metrics
@@ -87,7 +87,7 @@ Each task was committed atomically:
 
 ## Decisions Made
 - Used in-memory filtering for list/search instead of SQL where clauses - drizzle operators had type conflicts between ESM and CJS module resolution modes in the monorepo
-- Split @relay/db imports: use main export for db client, direct path for schema tables - ESM re-export resolution was failing at runtime
+- Split @everyskill/db imports: use main export for db client, direct path for schema tables - ESM re-export resolution was failing at runtime
 - Moved tool registration imports from server.ts to index.ts to fix circular dependency issue (tools importing server before it was initialized)
 - trackUsage gracefully handles failures - logging errors but not throwing, ensuring tool calls succeed even if analytics fail
 
@@ -97,15 +97,15 @@ Each task was committed atomically:
 
 **1. [Rule 3 - Blocking] Fixed drizzle ESM/CJS type conflicts**
 - **Found during:** Task 3 (list_skills implementation)
-- **Issue:** Importing drizzle operators (eq, ilike, or) caused type errors due to different module resolution between @relay/db (bundler) and @relay/mcp (NodeNext)
+- **Issue:** Importing drizzle operators (eq, ilike, or) caused type errors due to different module resolution between @everyskill/db (bundler) and @everyskill/mcp (NodeNext)
 - **Fix:** Used in-memory filtering instead of SQL where clauses
 - **Files modified:** apps/mcp/src/tools/list.ts, apps/mcp/src/tools/search.ts
 - **Committed in:** 5d2a9d5 (Task 3 commit)
 
-**2. [Rule 3 - Blocking] Fixed @relay/db import resolution**
+**2. [Rule 3 - Blocking] Fixed @everyskill/db import resolution**
 - **Found during:** Task 3 (server startup)
-- **Issue:** ESM named imports from @relay/db failed at runtime with "export not found" error despite working at typecheck time
-- **Fix:** Split imports - use @relay/db for db client, @relay/db/schema/usage-events for schema
+- **Issue:** ESM named imports from @everyskill/db failed at runtime with "export not found" error despite working at typecheck time
+- **Fix:** Split imports - use @everyskill/db for db client, @everyskill/db/schema/usage-events for schema
 - **Files modified:** apps/mcp/src/tracking/events.ts
 - **Committed in:** 5d2a9d5 (Task 3 commit)
 

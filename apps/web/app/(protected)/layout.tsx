@@ -26,7 +26,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
           {/* Logo, Stats, and Navigation */}
           <div className="flex items-center gap-8">
             <Link href="/" className="text-xl font-bold text-gray-900">
-              Relay
+              EverySkill
             </Link>
             <HeaderStats totalDaysSaved={totalDaysSaved} trendData={trendData} />
             <nav className="hidden sm:flex sm:gap-6">

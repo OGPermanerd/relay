@@ -31,7 +31,7 @@ export function McpConnectButton({ serverUrl }: McpConnectButtonProps) {
     <div className="rounded-lg bg-white p-6 shadow-sm">
       <h3 className="text-base font-semibold text-gray-900">Connect to Claude.ai</h3>
       <p className="mt-1 text-sm text-gray-600">
-        Use this URL to connect your Relay account to Claude.ai as an MCP connector.
+        Use this URL to connect your EverySkill account to Claude.ai as an MCP connector.
       </p>
 
       <div className="mt-4 flex items-center gap-2">

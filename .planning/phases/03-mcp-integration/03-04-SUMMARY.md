@@ -29,12 +29,12 @@ key-files:
     - apps/mcp/package.json
 
 key-decisions:
-  - "Mock @relay/db for isolated testing without database connection"
+  - "Mock @everyskill/db for isolated testing without database connection"
   - "Test in-memory filter logic to verify tool behavior"
   - "Use vitest with globals for clean test syntax"
 
 patterns-established:
-  - "Database mocking: vi.mock('@relay/db') in setup.ts for all test files"
+  - "Database mocking: vi.mock('@everyskill/db') in setup.ts for all test files"
   - "Mock data: Separate mocks.ts file with typed test fixtures"
 
 # Metrics
@@ -76,7 +76,7 @@ Each task was committed atomically:
 - `apps/mcp/package.json` - Added test scripts and vitest dependency
 
 ## Decisions Made
-- Mock @relay/db at module level for consistent behavior across all tests
+- Mock @everyskill/db at module level for consistent behavior across all tests
 - Use MockSkill interface to match schema without direct import (avoid ESM/CJS issues)
 - Test in-memory filter logic that tools use to work around drizzle module issues
 

@@ -96,8 +96,8 @@ export default {
 // auth.ts - Full config with database
 import NextAuth from "next-auth"
 import { DrizzleAdapter } from "@auth/drizzle-adapter"
-import { db } from "@relay/db"
-import { users, accounts, sessions } from "@relay/db/schema"
+import { db } from "@everyskill/db"
+import { users, accounts, sessions } from "@everyskill/db/schema"
 import authConfig from "./auth.config"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({

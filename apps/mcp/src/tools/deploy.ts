@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { server } from "../server.js";
-import { db } from "@relay/db";
+import { db } from "@everyskill/db";
 import { trackUsage } from "../tracking/events.js";
 import { getUserId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
 
@@ -69,7 +69,7 @@ export async function handleDeploySkill({
   // For stdio transport, prepend YAML frontmatter so the skill ID travels with the content
   const contentWithFrontmatter =
     transport === "stdio"
-      ? `---\nrelay_skill_id: ${skill.id}\nrelay_skill_name: ${skill.name}\nrelay_category: ${skill.category}\nrelay_hours_saved: ${skill.hoursSaved}\n---\n${skill.content}`
+      ? `---\neveryskill_skill_id: ${skill.id}\neveryskill_skill_name: ${skill.name}\neveryskill_category: ${skill.category}\neveryskill_hours_saved: ${skill.hoursSaved}\n---\n${skill.content}`
       : skill.content;
 
   // Build response based on transport
@@ -97,7 +97,7 @@ export async function handleDeploySkill({
       `Save this skill to .claude/skills/${skill.slug}.md`,
       "After saving, call confirm_install with the skillId to log the installation",
       "When you use this skill in a conversation, call log_skill_usage with the skillId",
-      "The frontmatter contains relay_skill_id for future attribution",
+      "The frontmatter contains everyskill_skill_id for future attribution",
     ];
   }
 
@@ -119,7 +119,7 @@ export async function handleDeploySkill({
     if (shouldNudge()) {
       content.push({
         type: "text" as const,
-        text: "Tip: Set RELAY_API_KEY to track your usage and unlock analytics.",
+        text: "Tip: Set EVERYSKILL_API_KEY to track your usage and unlock analytics.",
       });
     }
   }
@@ -131,7 +131,7 @@ server.registerTool(
   "deploy_skill",
   {
     description:
-      "Deploy a skill from Relay to your local Claude environment. Returns the skill content and filename for you to save. Use the skill ID from list_skills or search_skills results.",
+      "Deploy a skill from EverySkill to your local Claude environment. Returns the skill content and filename for you to save. Use the skill ID from list_skills or search_skills results.",
     inputSchema: {
       skillId: z.string().describe("Skill ID from search/list results"),
     },

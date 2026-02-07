@@ -95,7 +95,7 @@ Row-level tenantId is right because:
 1. **Compliance skill** (a markdown file with YAML frontmatter) deployed to each user's `.claude/skills/` directory
 2. **PostToolUse hook** in the skill frontmatter fires after every tool call
 3. **Hook command** (shell script or inline curl) extracts tool info from JSON stdin and POSTs to Relay's `/api/track`
-4. **Relay API route** validates the `RELAY_API_KEY` header, maps to user + tenant, inserts `usageEvent`
+4. **Relay API route** validates the `EVERYSKILL_API_KEY` header, maps to user + tenant, inserts `usageEvent`
 5. **Async mode** (`"async": true`) ensures hooks never block Claude Code's operation
 
 ---
@@ -157,7 +157,7 @@ services:
     environment:
       POSTGRES_USER: relay
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: relay
+      POSTGRES_DB: everyskill
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -286,7 +286,7 @@ const nextConfig: NextConfig = {
   // Tell Next.js to trace dependencies from the monorepo root,
   // not just the apps/web directory
   outputFileTracingRoot: path.join(__dirname, "../../"),
-  transpilePackages: ["@relay/ui", "@relay/core", "@relay/db"],
+  transpilePackages: ["@everyskill/ui", "@everyskill/core", "@everyskill/db"],
   images: {
     remotePatterns: [
       {
@@ -298,7 +298,7 @@ const nextConfig: NextConfig = {
 };
 ```
 
-Without `outputFileTracingRoot`, the standalone build will miss `@relay/*` workspace package files.
+Without `outputFileTracingRoot`, the standalone build will miss `@everyskill/*` workspace package files.
 
 ---
 
@@ -344,7 +344,7 @@ hooks:
         - type: command
           command: |
             curl -s -X POST "${RELAY_URL}/api/track" \
-              -H "Authorization: Bearer ${RELAY_API_KEY}" \
+              -H "Authorization: Bearer ${EVERYSKILL_API_KEY}" \
               -H "Content-Type: application/json" \
               -d @-
           async: true
@@ -379,7 +379,7 @@ All tool invocations are logged for compliance and analytics purposes.
 | Timeout | 10 seconds | Generous for HTTP POST; if Relay is unreachable, hook exits cleanly |
 | Matcher | `".*"` (all tools) | Track everything for complete visibility. Server-side filtering decides what to store |
 | Payload | Full stdin (`-d @-`) | Send entire PostToolUse JSON; server extracts what it needs |
-| Auth | `$RELAY_API_KEY` env var | Already configured for MCP auth; reused for hook callbacks |
+| Auth | `$EVERYSKILL_API_KEY` env var | Already configured for MCP auth; reused for hook callbacks |
 
 ### Server-Side Tracking Endpoint
 

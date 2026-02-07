@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { server } from "../server.js";
-import { searchSkillsByQuery } from "@relay/db/services/search-skills";
+import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
 import { trackUsage } from "../tracking/events.js";
 import { getUserId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
 
@@ -53,7 +53,7 @@ export async function handleSearchSkills({
     if (shouldNudge()) {
       content.push({
         type: "text" as const,
-        text: "Tip: Set RELAY_API_KEY to track your usage and unlock analytics.",
+        text: "Tip: Set EVERYSKILL_API_KEY to track your usage and unlock analytics.",
       });
     }
   }
@@ -65,7 +65,7 @@ server.registerTool(
   "search_skills",
   {
     description:
-      "Search for skills in the Relay marketplace by query. Matches against name, description, author name, and tags.",
+      "Search for skills in the EverySkill marketplace by query. Matches against name, description, author name, and tags.",
     inputSchema: {
       query: z.string().min(1).describe("Search query (matches name, description, author, tags)"),
       category: z

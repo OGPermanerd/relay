@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { requestAiReview, toggleAiReviewVisibility } from "@/app/actions/ai-review";
 import { AiReviewDisplay } from "./ai-review-display";
-import type { ReviewCategories } from "@relay/db/schema";
+import type { ReviewCategories } from "@everyskill/db/schema";
 
 // ---------------------------------------------------------------------------
 // Types

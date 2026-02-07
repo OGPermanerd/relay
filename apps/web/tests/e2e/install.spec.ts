@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { db, skills, users } from "@relay/db";
+import { db, skills, users } from "@everyskill/db";
 
 const TEST_USER_ID = "e2e-test-user";
 const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
@@ -68,7 +68,7 @@ test.describe("Install Modal Flow", () => {
     await installButton.click();
 
     // Assert the platform install modal is visible
-    await expect(page.getByText("Install Relay MCP Server")).toBeVisible();
+    await expect(page.getByText("Install EverySkill MCP Server")).toBeVisible();
 
     // Assert 4 platform cards are visible (use role buttons with full accessible names)
     await expect(page.getByRole("button", { name: /Claude Desktop/i })).toBeVisible();
@@ -85,7 +85,7 @@ test.describe("Install Modal Flow", () => {
     await expect(table).toBeVisible({ timeout: 10000 });
     const installButton = page.locator("td").getByLabel("Install skill").first();
     await installButton.click();
-    await expect(page.getByText("Install Relay MCP Server")).toBeVisible();
+    await expect(page.getByText("Install EverySkill MCP Server")).toBeVisible();
 
     // Click on "Claude Code" platform card
     await page.getByRole("button", { name: /Claude Code/i }).click();
@@ -96,7 +96,7 @@ test.describe("Install Modal Flow", () => {
 
     // Assert the JSON contains expected content
     const configText = await preBlock.textContent();
-    expect(configText).toContain("relay-skills");
+    expect(configText).toContain("everyskill-skills");
     expect(configText).toContain("npx");
 
     // Assert a "Copy Config" button is visible
@@ -114,7 +114,7 @@ test.describe("Install Modal Flow", () => {
     await expect(table).toBeVisible({ timeout: 10000 });
     const installButton = page.locator("td").getByLabel("Install skill").first();
     await installButton.click();
-    await expect(page.getByText("Install Relay MCP Server")).toBeVisible();
+    await expect(page.getByText("Install EverySkill MCP Server")).toBeVisible();
 
     // Select a platform (Claude Desktop is pre-selected, but click to be sure)
     await page.getByRole("button", { name: /Claude Desktop/i }).click();
@@ -123,7 +123,7 @@ test.describe("Install Modal Flow", () => {
     await page.getByRole("button", { name: /copy config/i }).click();
 
     // Assert modal is still visible (not closed)
-    await expect(page.getByText("Install Relay MCP Server")).toBeVisible();
+    await expect(page.getByText("Install EverySkill MCP Server")).toBeVisible();
 
     // Assert button text changes to "Copied!" (clipboard feedback)
     await expect(page.getByText("Copied!")).toBeVisible();
@@ -140,7 +140,7 @@ test.describe("Install Modal Flow", () => {
     await installButton.click();
 
     // Assert the platform install modal is visible
-    await expect(page.getByText("Install Relay MCP Server")).toBeVisible();
+    await expect(page.getByText("Install EverySkill MCP Server")).toBeVisible();
   });
 
   test("detected OS label appears in modal", async ({ page }) => {

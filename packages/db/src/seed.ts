@@ -1,7 +1,7 @@
 /**
  * Database seed script for populating test data
  *
- * Run with: pnpm --filter @relay/db db:seed
+ * Run with: pnpm --filter @everyskill/db db:seed
  *
  * Creates:
  * - 20 users
@@ -38,26 +38,126 @@ const db = drizzle(client);
 
 // 20 test users with realistic names
 const testUsers: NewUser[] = [
-  { id: "user-001", tenantId: DEFAULT_TENANT_ID, email: "sarah.chen@company.com", name: "Sarah Chen" },
-  { id: "user-002", tenantId: DEFAULT_TENANT_ID, email: "marcus.johnson@company.com", name: "Marcus Johnson" },
-  { id: "user-003", tenantId: DEFAULT_TENANT_ID, email: "emily.rodriguez@company.com", name: "Emily Rodriguez" },
-  { id: "user-004", tenantId: DEFAULT_TENANT_ID, email: "david.kim@company.com", name: "David Kim" },
-  { id: "user-005", tenantId: DEFAULT_TENANT_ID, email: "jessica.patel@company.com", name: "Jessica Patel" },
-  { id: "user-006", tenantId: DEFAULT_TENANT_ID, email: "michael.oconnor@company.com", name: "Michael O'Connor" },
-  { id: "user-007", tenantId: DEFAULT_TENANT_ID, email: "amanda.wright@company.com", name: "Amanda Wright" },
-  { id: "user-008", tenantId: DEFAULT_TENANT_ID, email: "james.thompson@company.com", name: "James Thompson" },
-  { id: "user-009", tenantId: DEFAULT_TENANT_ID, email: "olivia.martinez@company.com", name: "Olivia Martinez" },
-  { id: "user-010", tenantId: DEFAULT_TENANT_ID, email: "william.garcia@company.com", name: "William Garcia" },
-  { id: "user-011", tenantId: DEFAULT_TENANT_ID, email: "sophia.lee@company.com", name: "Sophia Lee" },
-  { id: "user-012", tenantId: DEFAULT_TENANT_ID, email: "benjamin.clark@company.com", name: "Benjamin Clark" },
-  { id: "user-013", tenantId: DEFAULT_TENANT_ID, email: "isabella.lewis@company.com", name: "Isabella Lewis" },
-  { id: "user-014", tenantId: DEFAULT_TENANT_ID, email: "alexander.hall@company.com", name: "Alexander Hall" },
-  { id: "user-015", tenantId: DEFAULT_TENANT_ID, email: "mia.young@company.com", name: "Mia Young" },
-  { id: "user-016", tenantId: DEFAULT_TENANT_ID, email: "ethan.allen@company.com", name: "Ethan Allen" },
-  { id: "user-017", tenantId: DEFAULT_TENANT_ID, email: "charlotte.king@company.com", name: "Charlotte King" },
-  { id: "user-018", tenantId: DEFAULT_TENANT_ID, email: "daniel.scott@company.com", name: "Daniel Scott" },
-  { id: "user-019", tenantId: DEFAULT_TENANT_ID, email: "ava.green@company.com", name: "Ava Green" },
-  { id: "user-020", tenantId: DEFAULT_TENANT_ID, email: "noah.baker@company.com", name: "Noah Baker" },
+  {
+    id: "user-001",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "sarah.chen@company.com",
+    name: "Sarah Chen",
+  },
+  {
+    id: "user-002",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "marcus.johnson@company.com",
+    name: "Marcus Johnson",
+  },
+  {
+    id: "user-003",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "emily.rodriguez@company.com",
+    name: "Emily Rodriguez",
+  },
+  {
+    id: "user-004",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "david.kim@company.com",
+    name: "David Kim",
+  },
+  {
+    id: "user-005",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "jessica.patel@company.com",
+    name: "Jessica Patel",
+  },
+  {
+    id: "user-006",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "michael.oconnor@company.com",
+    name: "Michael O'Connor",
+  },
+  {
+    id: "user-007",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "amanda.wright@company.com",
+    name: "Amanda Wright",
+  },
+  {
+    id: "user-008",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "james.thompson@company.com",
+    name: "James Thompson",
+  },
+  {
+    id: "user-009",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "olivia.martinez@company.com",
+    name: "Olivia Martinez",
+  },
+  {
+    id: "user-010",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "william.garcia@company.com",
+    name: "William Garcia",
+  },
+  {
+    id: "user-011",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "sophia.lee@company.com",
+    name: "Sophia Lee",
+  },
+  {
+    id: "user-012",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "benjamin.clark@company.com",
+    name: "Benjamin Clark",
+  },
+  {
+    id: "user-013",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "isabella.lewis@company.com",
+    name: "Isabella Lewis",
+  },
+  {
+    id: "user-014",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "alexander.hall@company.com",
+    name: "Alexander Hall",
+  },
+  {
+    id: "user-015",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "mia.young@company.com",
+    name: "Mia Young",
+  },
+  {
+    id: "user-016",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "ethan.allen@company.com",
+    name: "Ethan Allen",
+  },
+  {
+    id: "user-017",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "charlotte.king@company.com",
+    name: "Charlotte King",
+  },
+  {
+    id: "user-018",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "daniel.scott@company.com",
+    name: "Daniel Scott",
+  },
+  {
+    id: "user-019",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "ava.green@company.com",
+    name: "Ava Green",
+  },
+  {
+    id: "user-020",
+    tenantId: DEFAULT_TENANT_ID,
+    email: "noah.baker@company.com",
+    name: "Noah Baker",
+  },
 ];
 
 // 45 skills across different categories
@@ -648,7 +748,8 @@ async function seed() {
     // 3. Insert skills
     console.log("\nCreating 45 skills...");
     const assignedSkills = assignSkillsToUsers();
-    const insertedSkills: { id: string; slug: string; name: string; authorId: string | null }[] = [];
+    const insertedSkills: { id: string; slug: string; name: string; authorId: string | null }[] =
+      [];
 
     for (const skill of assignedSkills) {
       const [result] = await db.insert(skills).values(skill).returning({

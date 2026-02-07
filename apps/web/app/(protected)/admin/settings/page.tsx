@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
-import { getSiteSettings } from "@relay/db";
+import { getSiteSettings } from "@everyskill/db";
 import { AdminSettingsForm } from "@/components/admin-settings-form";
 
 export default async function AdminSettingsPage() {

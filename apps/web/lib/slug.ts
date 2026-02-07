@@ -1,4 +1,4 @@
-import { db, skills } from "@relay/db";
+import { db, skills } from "@everyskill/db";
 import { like } from "drizzle-orm";
 
 /**

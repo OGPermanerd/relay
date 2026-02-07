@@ -525,7 +525,7 @@ Tool handlers receive userId, pass to trackUsage()
 The `trackUsage()` function in `apps/mcp/src/tracking/events.ts` already accepts an event object with an optional `userId` field. The `usage_events` schema already has a nullable `userId` column. The only missing piece is the identity context flowing from authentication into tool handlers.
 
 **For stdio MCP (existing):**
-- Add optional `--api-key` CLI flag or `RELAY_API_KEY` env var
+- Add optional `--api-key` CLI flag or `EVERYSKILL_API_KEY` env var
 - On startup, validate key against the web app's API route
 - Cache the resolved `userId` for the session lifetime
 - Pass `userId` into every `trackUsage()` call
@@ -538,7 +538,7 @@ The `trackUsage()` function in `apps/mcp/src/tracking/events.ts` already accepts
 
 | Component | Type | Change |
 |-----------|------|--------|
-| `apps/mcp/src/index.ts` | MODIFY | Parse --api-key / RELAY_API_KEY, validate on startup |
+| `apps/mcp/src/index.ts` | MODIFY | Parse --api-key / EVERYSKILL_API_KEY, validate on startup |
 | `apps/mcp/src/tracking/events.ts` | MODIFY | Accept userId parameter in all trackUsage calls |
 | `apps/mcp/src/tools/search.ts` | MODIFY | Pass userId from context into trackUsage |
 | `apps/mcp/src/tools/list.ts` | MODIFY | Same |
@@ -550,10 +550,10 @@ The `trackUsage()` function in `apps/mcp/src/tracking/events.ts` already accepts
 MCP startup (stdio mode):
     |
     v
-Read RELAY_API_KEY from env
+Read EVERYSKILL_API_KEY from env
     |
     v
-POST /api/auth/validate-key { key: RELAY_API_KEY }
+POST /api/auth/validate-key { key: EVERYSKILL_API_KEY }
     |
     +-- 200 { userId: "abc", userName: "Alice" }
     |       -> Store in memory, attach to all trackUsage() calls
@@ -730,7 +730,7 @@ This works because `usage_events.userId` will now be populated via MCP auth.
 |       v                                v                                 |
 |  apps/web/app/api/mcp/            apps/mcp/src/index.ts                  |
 |    [transport]/route.ts               StdioServerTransport               |
-|    (mcp-handler)                      + RELAY_API_KEY validation         |
+|    (mcp-handler)                      + EVERYSKILL_API_KEY validation         |
 |    + API key Bearer auth              |                                  |
 |       |                                |                                 |
 |       v                                v                                 |
@@ -759,9 +759,9 @@ import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 
 // Import shared handler functions from mcp package
-import { handleListSkills } from "@relay/mcp/tools/list";
-import { handleSearchSkills } from "@relay/mcp/tools/search";
-import { handleDeploySkill } from "@relay/mcp/tools/deploy";
+import { handleListSkills } from "@everyskill/mcp/tools/list";
+import { handleSearchSkills } from "@everyskill/mcp/tools/search";
+import { handleDeploySkill } from "@everyskill/mcp/tools/deploy";
 
 const handler = createMcpHandler(
   (server) => {
@@ -848,7 +848,7 @@ Users connecting from Claude.ai or other Streamable HTTP clients:
 ```json
 {
   "mcpServers": {
-    "relay-skills": {
+    "everyskill-skills": {
       "url": "https://relay.company.com/api/mcp/mcp",
       "headers": {
         "Authorization": "Bearer rl_<your-api-key>"
@@ -858,7 +858,7 @@ Users connecting from Claude.ai or other Streamable HTTP clients:
 }
 ```
 
-For stdio-only clients, the existing `npx @relay/mcp` continues to work with `RELAY_API_KEY` env var.
+For stdio-only clients, the existing `npx @everyskill/mcp` continues to work with `EVERYSKILL_API_KEY` env var.
 
 ### Feature 6: Extended Search
 
@@ -892,7 +892,7 @@ The MCP `search_skills` tool in `apps/mcp/src/tools/search.ts` uses in-memory fi
 | `packages/db/src/services/search.ts` | NEW | Move searchSkills() from apps/web/lib |
 | `packages/db/src/services/index.ts` | MODIFY | Export search service |
 | `apps/web/lib/search-skills.ts` | MODIFY | Re-export from packages/db service |
-| `apps/mcp/src/tools/search.ts` | MODIFY | Import searchSkills from @relay/db |
+| `apps/mcp/src/tools/search.ts` | MODIFY | Import searchSkills from @everyskill/db |
 
 ## New Components Summary
 
@@ -924,7 +924,7 @@ The MCP `search_skills` tool in `apps/mcp/src/tools/search.ts` uses in-memory fi
 | `packages/db/src/relations/index.ts` | Add user -> apiKeys, user -> installEvents |
 | `packages/db/src/services/index.ts` | Export api-keys service, search service |
 | `apps/mcp/src/index.ts` | Add API key validation on startup |
-| `apps/mcp/src/tools/search.ts` | Use shared searchSkills from @relay/db |
+| `apps/mcp/src/tools/search.ts` | Use shared searchSkills from @everyskill/db |
 | `apps/mcp/src/tools/list.ts` | Pass userId into trackUsage |
 | `apps/mcp/src/tools/deploy.ts` | Pass userId into trackUsage |
 | `apps/mcp/src/tracking/events.ts` | Accept userId parameter consistently |
@@ -953,7 +953,7 @@ Claude Code                              Claude.ai (browser)
     |                                         |
     v                                         v
 stdio MCP                              Streamable HTTP
-(RELAY_API_KEY env)                   (Bearer token in header)
+(EVERYSKILL_API_KEY env)                   (Bearer token in header)
     |                                         |
     v                                         v
 Validate key on startup              mcp-handler validates per-request
@@ -1064,7 +1064,7 @@ Phase 24: Extended Search
 
 | Variable | Purpose | Used By |
 |----------|---------|---------|
-| `RELAY_API_KEY` | MCP auth for stdio server | apps/mcp (optional env var) |
+| `EVERYSKILL_API_KEY` | MCP auth for stdio server | apps/mcp (optional env var) |
 
 No new server-side env vars needed for the web app -- API keys are stored in the database.
 
@@ -1178,7 +1178,7 @@ apps/web/
   lib/admin.ts          # Admin check via ADMIN_EMAILS env var
 
 apps/mcp/
-  src/auth.ts      # Resolves userId from RELAY_API_KEY env var (stdio transport)
+  src/auth.ts      # Resolves userId from EVERYSKILL_API_KEY env var (stdio transport)
   src/server.ts    # MCP server instance
   src/index.ts     # Stdio transport entry point
   src/tools/       # Tool handlers (list, search, deploy, confirm-install, log-usage)
@@ -1199,7 +1199,7 @@ Browser --> [Next.js Middleware (auth check)] --> [Server Actions / API routes]
                                                        v
                                                   [PostgreSQL]
 
-Claude Desktop --> [apps/mcp stdio] --> [RELAY_API_KEY --> userId] --> [packages/db]
+Claude Desktop --> [apps/mcp stdio] --> [EVERYSKILL_API_KEY --> userId] --> [packages/db]
 
 Claude.ai --> [apps/web/api/mcp/ Streamable HTTP] --> [Bearer token --> userId] --> [packages/db]
 ```
@@ -1747,12 +1747,12 @@ services:
 
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: relay-postgres
+    container_name: everyskill-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: relay
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: relay
+      POSTGRES_DB: everyskill
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -2059,7 +2059,7 @@ Wave 6: Hardening
 - `/home/dev/projects/relay/apps/web/lib/admin.ts` -- ADMIN_EMAILS env var pattern
 - `/home/dev/projects/relay/apps/web/app/api/mcp/[transport]/route.ts` -- Streamable HTTP MCP handler
 - `/home/dev/projects/relay/apps/web/app/api/install-callback/route.ts` -- Install callback endpoint
-- `/home/dev/projects/relay/apps/mcp/src/auth.ts` -- Stdio MCP auth (RELAY_API_KEY)
+- `/home/dev/projects/relay/apps/mcp/src/auth.ts` -- Stdio MCP auth (EVERYSKILL_API_KEY)
 - `/home/dev/projects/relay/apps/mcp/src/tracking/events.ts` -- Usage tracking
 - `/home/dev/projects/relay/docker/docker-compose.yml` -- Current dev compose (PostgreSQL only)
 

@@ -1,5 +1,5 @@
 {
-  "name": "@relay/ui",
+  "name": "@everyskill/ui",
   "version": "0.0.1",
   "private": true,
   "main": "./src/index.ts",
@@ -21,7 +21,7 @@
     "test": "echo 'No unit tests yet' && exit 0"
   },
   "dependencies": {
-    "@relay/core": "workspace:*"
+    "@everyskill/core": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

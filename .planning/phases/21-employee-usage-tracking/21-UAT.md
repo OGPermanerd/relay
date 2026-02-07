@@ -36,12 +36,12 @@ reported: "The powershell script failed install with JSON parse error: SyntaxErr
 severity: major
 
 ### 6. MCP Anonymous Nudge
-expected: When using MCP tools (search, list, deploy) without a RELAY_API_KEY configured, tools work normally (anonymous tracking). Every 5th anonymous call, a gentle nudge message appears suggesting the user set up an API key. When a key IS configured, a one-time confirmation message appears on first use.
+expected: When using MCP tools (search, list, deploy) without a EVERYSKILL_API_KEY configured, tools work normally (anonymous tracking). Every 5th anonymous call, a gentle nudge message appears suggesting the user set up an API key. When a key IS configured, a one-time confirmation message appears on first use.
 result: skipped
 reason: Cannot test until a skill is installed via MCP
 
 ### 7. MCP Employee Attribution
-expected: When RELAY_API_KEY is configured in the MCP environment, every tool call (search, list, deploy) records the employee's userId in usage_events. This data feeds into the My Leverage view and analytics dashboard.
+expected: When EVERYSKILL_API_KEY is configured in the MCP environment, every tool call (search, list, deploy) records the employee's userId in usage_events. This data feeds into the My Leverage view and analytics dashboard.
 result: skipped
 reason: Cannot test until a skill is installed via MCP
 
@@ -57,7 +57,7 @@ skipped: 2
 
 - truth: "Install callback is non-blocking — install succeeds even if the callback fails, with no visible errors"
   status: failed
-  reason: "User reported: PowerShell install script shows JSON parse error from node -e command when extracting RELAY_API_KEY from config. The config file likely has non-standard JSON (unquoted keys or comments). Error is visible to user even though install itself succeeds."
+  reason: "User reported: PowerShell install script shows JSON parse error from node -e command when extracting EVERYSKILL_API_KEY from config. The config file likely has non-standard JSON (unquoted keys or comments). Error is visible to user even though install itself succeeds."
   severity: major
   test: 5
   root_cause: "PowerShell word-splits unquoted $Existing variable when passing multi-line JSON to node -e. Line 53 of generated script uses $Existing without quotes, unlike bash which uses \"$EXISTING\"."

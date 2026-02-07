@@ -8,7 +8,7 @@
 
 Phase 22 adds an HTTP entry point to Relay's existing MCP tools (list, search, deploy) so Claude.ai browser users can access them. The existing tool handlers in `apps/mcp/src/tools/` are already factored into standalone functions (`handleListSkills`, `handleSearchSkills`, `handleDeploySkill`) separate from `server.registerTool()` calls, making them reusable from an HTTP route.
 
-The standard approach is `mcp-handler` (Vercel's MCP adapter, v1.0.7) which handles Streamable HTTP transport inside a Next.js dynamic route at `app/api/mcp/[transport]/route.ts`. It provides `createMcpHandler` for tool registration and `withMcpAuth` for bearer token verification. The existing `@modelcontextprotocol/sdk` (already at ^1.25.0 in the project) is a peer dependency. Authentication uses the existing `validateApiKey()` service from `@relay/db` inside a custom `withMcpAuth` verification callback.
+The standard approach is `mcp-handler` (Vercel's MCP adapter, v1.0.7) which handles Streamable HTTP transport inside a Next.js dynamic route at `app/api/mcp/[transport]/route.ts`. It provides `createMcpHandler` for tool registration and `withMcpAuth` for bearer token verification. The existing `@modelcontextprotocol/sdk` (already at ^1.25.0 in the project) is a peer dependency. Authentication uses the existing `validateApiKey()` service from `@everyskill/db` inside a custom `withMcpAuth` verification callback.
 
 The critical architectural insight is that the existing tool handlers import auth state from a module-level cache (`apps/mcp/src/auth.ts`) designed for long-lived stdio processes. For HTTP, auth is per-request via bearer token. The handlers must be adapted to accept a `userId` parameter rather than calling `getUserId()` from the cached auth module.
 
@@ -28,7 +28,7 @@ The critical architectural insight is that the existing tool handlers import aut
 
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| @relay/db (workspace) | workspace:* | API key validation, usage tracking | Bearer token validation via `validateApiKey()`, usage event recording |
+| @everyskill/db (workspace) | workspace:* | API key validation, usage tracking | Bearer token validation via `validateApiKey()`, usage event recording |
 
 ### Alternatives Considered
 
@@ -72,10 +72,10 @@ apps/web/app/
 // apps/web/app/api/mcp/[transport]/route.ts
 import { createMcpHandler, withMcpAuth } from "mcp-handler";
 import { z } from "zod";
-import { validateApiKey } from "@relay/db/services/api-keys";
-import { handleListSkills } from "@relay/mcp/tools/list"; // shared handler
-import { handleSearchSkills } from "@relay/mcp/tools/search";
-import { handleDeploySkill } from "@relay/mcp/tools/deploy";
+import { validateApiKey } from "@everyskill/db/services/api-keys";
+import { handleListSkills } from "@everyskill/mcp/tools/list"; // shared handler
+import { handleSearchSkills } from "@everyskill/mcp/tools/search";
+import { handleDeploySkill } from "@everyskill/mcp/tools/deploy";
 
 const handler = createMcpHandler(
   (server) => {
@@ -206,7 +206,7 @@ if (isAuthApi || isDevLogin || isInstallCallback || isMcpApi) {
 |---------|-------------|-------------|-----|
 | MCP Streamable HTTP transport | Custom HTTP-to-MCP adapter | mcp-handler | Handles transport detection, session management, protocol compliance |
 | MCP JSON-RPC protocol | Custom JSON-RPC parser | @modelcontextprotocol/sdk | Protocol is complex with notifications, error codes, capabilities negotiation |
-| API key validation | Custom hash-and-compare | Existing `validateApiKey()` from `@relay/db` | Already handles SHA-256 hashing, timing-safe comparison, expiry, revocation |
+| API key validation | Custom hash-and-compare | Existing `validateApiKey()` from `@everyskill/db` | Already handles SHA-256 hashing, timing-safe comparison, expiry, revocation |
 | Usage tracking | Custom event logging | Existing `trackUsage()` from `apps/mcp/src/tracking/events.ts` | Already handles DB insertion and skill metrics increment |
 | Bearer token extraction | Custom header parsing | `withMcpAuth` from mcp-handler | Handles Authorization header parsing, passes token to verification callback |
 
@@ -224,7 +224,7 @@ if (isAuthApi || isDevLogin || isInstallCallback || isMcpApi) {
 **What goes wrong:** The anonymous nudge counter (`incrementAnonymousCount`, `shouldNudge`) is meaningless in HTTP because auth is required. The counter would accumulate across different users' requests.
 **Why it happens:** The nudge logic was designed for stdio where anonymous usage is possible.
 **How to avoid:** Skip the nudge logic entirely for HTTP requests. HTTP requires bearer token auth, so anonymous access is not possible. This is a discretion area from CONTEXT.md -- recommendation is to skip the nudge for HTTP.
-**Warning signs:** HTTP responses containing "Tip: Set RELAY_API_KEY to track your usage" messages.
+**Warning signs:** HTTP responses containing "Tip: Set EVERYSKILL_API_KEY to track your usage" messages.
 
 ### Pitfall 3: CORS Preflight (OPTIONS) Not Handled
 **What goes wrong:** Browser sends OPTIONS preflight request, server returns 405 or redirect, Claude.ai cannot connect.
@@ -258,7 +258,7 @@ if (isAuthApi || isDevLogin || isInstallCallback || isMcpApi) {
 // apps/web/app/api/mcp/[transport]/route.ts
 import { createMcpHandler, withMcpAuth } from "mcp-handler";
 import { z } from "zod";
-import { validateApiKey } from "@relay/db/services/api-keys";
+import { validateApiKey } from "@everyskill/db/services/api-keys";
 
 const handler = createMcpHandler(
   (server) => {
@@ -425,7 +425,7 @@ const mcpServerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/mcp/mcp`;
 4. **Import path for shared tool handlers**
    - What we know: Handler functions are in `apps/mcp/src/tools/`. The web app needs to import them.
    - What's unclear: Whether cross-app imports work in this monorepo setup, or if handlers should be extracted to a shared package.
-   - Recommendation: Since `apps/web` already imports from `@relay/db`, the simplest approach is to either: (a) import directly from `@relay/mcp` if the package exports them, or (b) extract the handler functions into a shared location (e.g., `packages/mcp-tools/`). Option (a) is preferred if the monorepo resolution supports it.
+   - Recommendation: Since `apps/web` already imports from `@everyskill/db`, the simplest approach is to either: (a) import directly from `@everyskill/mcp` if the package exports them, or (b) extract the handler functions into a shared location (e.g., `packages/mcp-tools/`). Option (a) is preferred if the monorepo resolution supports it.
 
 ## Sources
 

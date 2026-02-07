@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { db } from "@relay/db";
+import { db } from "@everyskill/db";
 import { trackUsage } from "../src/tracking/events.js";
-import { incrementSkillUses } from "@relay/db/services/skill-metrics";
+import { incrementSkillUses } from "@everyskill/db/services/skill-metrics";
 
 const mockDb = vi.mocked(db);
 const mockIncrementSkillUses = vi.mocked(incrementSkillUses);

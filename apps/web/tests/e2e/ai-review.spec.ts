@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { db, skills, users } from "@relay/db";
-import { skillReviews } from "@relay/db/schema";
+import { db, skills, users } from "@everyskill/db";
+import { skillReviews } from "@everyskill/db/schema";
 import { eq } from "drizzle-orm";
 import { hashContent } from "@/lib/content-hash";
 

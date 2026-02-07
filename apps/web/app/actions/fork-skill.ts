@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db, skills } from "@relay/db";
+import { db, skills } from "@everyskill/db";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";

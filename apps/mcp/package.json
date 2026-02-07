@@ -1,10 +1,10 @@
 {
-  "name": "@relay/mcp",
+  "name": "@everyskill/mcp",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "bin": {
-    "relay-mcp": "./dist/index.js"
+    "everyskill-mcp": "./dist/index.js"
   },
   "scripts": {
     "dev": "tsx src/index.ts",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.3",
-    "@relay/db": "workspace:*",
+    "@everyskill/db": "workspace:*",
     "zod": "^3.25.0"
   },
   "devDependencies": {

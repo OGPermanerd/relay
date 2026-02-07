@@ -1,4 +1,4 @@
-import { db, skills, users } from "@relay/db";
+import { db, skills, users } from "@everyskill/db";
 import { sql, eq, desc, and } from "drizzle-orm";
 
 export interface SearchSkillResult {

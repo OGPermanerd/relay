@@ -7,12 +7,12 @@ tags: [postgresql, drizzle-orm, docker, postgres-js, schema]
 # Dependency graph
 requires:
   - phase: 01-project-foundation/01
-    provides: Monorepo structure with @relay/db package scaffold
+    provides: Monorepo structure with @everyskill/db package scaffold
 provides:
   - PostgreSQL Docker Compose configuration
   - Drizzle ORM setup with schema path
   - User table schema as foundation for auth
-  - Database client export from @relay/db
+  - Database client export from @everyskill/db
 affects: [02-auth, skill tables, any database-dependent features]
 
 # Tech tracking
@@ -64,7 +64,7 @@ completed: 2026-01-31
 - Docker Compose configuration for PostgreSQL 16 Alpine with healthcheck
 - Drizzle ORM configured with postgresql dialect and schema path
 - User table schema with id, email, name, avatarUrl, timestamps
-- Type-safe database client export from @relay/db package
+- Type-safe database client export from @everyskill/db package
 
 ## Task Commits
 
@@ -131,7 +131,7 @@ Each task was committed atomically:
 - Database container must be started manually when Docker is available:
   ```bash
   pnpm docker:up
-  pnpm --filter @relay/db db:push
+  pnpm --filter @everyskill/db db:push
   ```
 
 ## User Setup Required
@@ -139,12 +139,12 @@ Each task was committed atomically:
 When Docker is available, run:
 ```bash
 pnpm docker:up              # Start PostgreSQL container
-pnpm --filter @relay/db db:push  # Apply schema to database
+pnpm --filter @everyskill/db db:push  # Apply schema to database
 ```
 
 Verify with:
 ```bash
-docker exec relay-postgres psql -U postgres -d relay -c "\dt"
+docker exec everyskill-postgres psql -U postgres -d relay -c "\dt"
 # Should show: users table
 ```
 
@@ -153,7 +153,7 @@ docker exec relay-postgres psql -U postgres -d relay -c "\dt"
 - Database infrastructure configured and ready for container startup
 - User table prepared for Phase 2 authentication
 - All Drizzle scripts (db:push, db:studio, db:generate, db:migrate) configured
-- @relay/db exports typed client and schema for consuming packages
+- @everyskill/db exports typed client and schema for consuming packages
 
 ---
 *Phase: 01-project-foundation*

@@ -72,7 +72,7 @@ Previous:
 - ✓ OS auto-detection (macOS/Windows/Linux) — v1.3
 - ✓ Install scripts for Claude Desktop (bash/PowerShell) — v1.3
 - ✓ API key management with SHA-256 hashing, rotation, admin CRUD — v1.4
-- ✓ Per-employee usage tracking via RELAY_API_KEY with graceful anonymous fallback — v1.4
+- ✓ Per-employee usage tracking via EVERYSKILL_API_KEY with graceful anonymous fallback — v1.4
 - ✓ Install callback analytics (per platform, OS, employee, skill) — v1.4
 - ✓ Analytics dashboard with org-wide trends, per-employee tables, skill leaderboards, CSV export — v1.4
 - ✓ Web remote MCP via Streamable HTTP for Claude.ai browser access — v1.4

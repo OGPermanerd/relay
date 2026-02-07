@@ -16,14 +16,14 @@ The Corporate Document Branding skill (ID: a88232fd-80e9-4e2c-90fe-28e5c4bca703,
 1. Install skill via MCP `deploy_skill` on Windows Claude Desktop
 2. Verify `usage_events` row created with correct `skillId` and `userId`
 3. Verify `skills.totalUses` counter increments
-4. Confirm `userId` attribution works when `RELAY_API_KEY` is set
+4. Confirm `userId` attribution works when `EVERYSKILL_API_KEY` is set
 5. After Phase 22 ships: repeat test via web Claude (Streamable HTTP transport)
 
 ## Solution
 
 Manual testing steps:
 - Generate API key from profile page
-- Set `RELAY_API_KEY` in MCP config
+- Set `EVERYSKILL_API_KEY` in MCP config
 - Use MCP to `deploy_skill` the brand skill
 - Query DB to verify usage_events and totalUses
 - Test anonymous mode (no key) to confirm graceful degradation

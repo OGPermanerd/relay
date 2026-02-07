@@ -1,12 +1,12 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db, skills } from "@relay/db";
+import { db, skills } from "@everyskill/db";
 import {
   getSkillReview,
   upsertSkillReview,
   toggleReviewVisibility,
-} from "@relay/db/services/skill-reviews";
+} from "@everyskill/db/services/skill-reviews";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { hashContent } from "@/lib/content-hash";

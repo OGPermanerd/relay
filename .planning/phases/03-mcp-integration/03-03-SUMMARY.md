@@ -88,7 +88,7 @@ Each task was committed atomically:
 - **Issue:** `where: (skills, { eq }) => eq(skills.id, skillId)` caused TypeScript ESM/CJS type conflicts
 - **Fix:** Fetch all skills with `findMany()` and filter in-memory with `.find(s => s.id === skillId)`
 - **Files modified:** apps/mcp/src/tools/deploy.ts
-- **Verification:** `pnpm --filter @relay/mcp typecheck` passes
+- **Verification:** `pnpm --filter @everyskill/mcp typecheck` passes
 - **Committed in:** 56d8096 (Task 1 commit)
 
 ---

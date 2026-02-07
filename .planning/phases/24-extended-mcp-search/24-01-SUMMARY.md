@@ -84,7 +84,7 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 - searchSkillsByQuery is ready for MCP tool integration in plan 24-02
-- Service exports are accessible via `@relay/db` package
+- Service exports are accessible via `@everyskill/db` package
 
 ---
 *Phase: 24-extended-mcp-search*

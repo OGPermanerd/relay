@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { formatRating } from "@relay/db";
+import { formatRating } from "@everyskill/db";
 import { Sparkline } from "./sparkline";
 import { QualityBadge } from "./quality-badge";
 import { calculateQualityScore } from "../lib/quality-score";

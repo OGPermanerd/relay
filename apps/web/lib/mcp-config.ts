@@ -9,7 +9,7 @@ export function generateMcpConfig(skill: { name: string; slug: string }): string
     mcpServers: {
       [skill.slug]: {
         command: "npx",
-        args: ["-y", `@anthropic-ai/relay-${skill.slug}`],
+        args: ["-y", `@anthropic-ai/everyskill-${skill.slug}`],
       },
     },
   };
@@ -25,14 +25,14 @@ export type Platform = "claude-desktop" | "claude-code" | "other-ide" | "other-s
 /**
  * Generate a JSON config string for the given platform.
  *
- * All platforms use the same stdio config structure with `npx -y @relay/mcp`.
+ * All platforms use the same stdio config structure with `npx -y @everyskill/mcp`.
  */
 export function generatePlatformConfig(_platform: Platform, _origin: string): string {
   const config = {
     mcpServers: {
-      "relay-skills": {
+      "everyskill-skills": {
         command: "npx",
-        args: ["-y", "@relay/mcp"],
+        args: ["-y", "@everyskill/mcp"],
       },
     },
   };
@@ -70,7 +70,7 @@ export function getConfigInstructions(platform: Platform): string {
     case "claude-desktop":
       return "Add to your Claude Desktop config file, then restart Claude Desktop.";
     case "claude-code":
-      return "Add to ~/.claude.json or run: claude mcp add relay-skills -- npx -y @relay/mcp";
+      return "Add to ~/.claude.json or run: claude mcp add everyskill-skills -- npx -y @everyskill/mcp";
     case "other-ide":
       return "Add to your IDE's MCP configuration file.";
     case "other-systems":

@@ -9,7 +9,7 @@ requires: []
 provides:
   - Monorepo structure with Turborepo and pnpm workspaces
   - Next.js 15+ web application in apps/web
-  - Shared packages (@relay/core, @relay/db, @relay/ui)
+  - Shared packages (@everyskill/core, @everyskill/db, @everyskill/ui)
   - ESLint 9 flat config with TypeScript and Next.js rules
   - Husky pre-commit hooks with lint-staged
   - Tailwind v4 CSS-first configuration
@@ -69,7 +69,7 @@ completed: 2026-01-31
 
 # Phase 01 Plan 01: Monorepo Foundation Summary
 
-**Turborepo + pnpm monorepo with Next.js 15, shared packages (@relay/core, @relay/db, @relay/ui), ESLint 9 flat config, and Tailwind v4 CSS-first theming**
+**Turborepo + pnpm monorepo with Next.js 15, shared packages (@everyskill/core, @everyskill/db, @everyskill/ui), ESLint 9 flat config, and Tailwind v4 CSS-first theming**
 
 ## Performance
 
@@ -111,7 +111,7 @@ Each task was committed atomically:
 - `.husky/pre-commit` - Pre-commit hook running lint-staged
 - `apps/web/package.json` - Next.js app with workspace dependencies
 - `apps/web/next.config.ts` - Transpile workspace packages
-- `apps/web/tsconfig.json` - TypeScript paths for @relay/* packages
+- `apps/web/tsconfig.json` - TypeScript paths for @everyskill/* packages
 - `apps/web/app/layout.tsx` - Root layout with metadata
 - `apps/web/app/page.tsx` - Home page with placeholder content
 - `apps/web/app/globals.css` - Tailwind v4 theme configuration
@@ -124,7 +124,7 @@ Each task was committed atomically:
 
 ## Decisions Made
 
-1. **Inlined Tailwind theme in web app** - CSS imports from workspace packages via `@import "@relay/ui/styles/globals.css"` are not supported by Next.js build process. Duplicated theme variables in `apps/web/app/globals.css`. Future consideration: Extract to shared config that gets copied during build.
+1. **Inlined Tailwind theme in web app** - CSS imports from workspace packages via `@import "@everyskill/ui/styles/globals.css"` are not supported by Next.js build process. Duplicated theme variables in `apps/web/app/globals.css`. Future consideration: Extract to shared config that gets copied during build.
 
 2. **Used npx pnpm** - Global pnpm installation failed due to permission constraints. Using `npx pnpm@9.15.0` as workaround.
 
@@ -134,7 +134,7 @@ Each task was committed atomically:
 
 **1. [Rule 3 - Blocking] Fixed CSS import build failure**
 - **Found during:** Task 5 (verify development workflow)
-- **Issue:** `@import "@relay/ui/styles/globals.css"` caused webpack build failure
+- **Issue:** `@import "@everyskill/ui/styles/globals.css"` caused webpack build failure
 - **Fix:** Inlined Tailwind theme variables directly in apps/web/app/globals.css
 - **Files modified:** apps/web/app/globals.css
 - **Verification:** pnpm build succeeds

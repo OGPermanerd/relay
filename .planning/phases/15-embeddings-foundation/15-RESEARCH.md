@@ -98,7 +98,7 @@ export const skillEmbeddings = pgTable(
 ```typescript
 // In apps/web/app/actions/skills.ts
 import { generateEmbedding } from "@/lib/embeddings";
-import { createSkillEmbedding } from "@relay/db/services/skill-embeddings";
+import { createSkillEmbedding } from "@everyskill/db/services/skill-embeddings";
 
 // After skill insert succeeds
 const embeddingInput = `${name} ${description} ${content} ${tags.join(" ")}`;
@@ -113,7 +113,7 @@ await createSkillEmbedding(newSkill.id, embedding, "voyage-code-3", "1.0", embed
 ```typescript
 // Source: https://orm.drizzle.team/docs/guides/vector-similarity-search
 import { cosineDistance, desc, gt, sql } from "drizzle-orm";
-import { skillEmbeddings, skills } from "@relay/db/schema";
+import { skillEmbeddings, skills } from "@everyskill/db/schema";
 
 async function findSimilarSkills(queryEmbedding: number[], threshold = 0.7, limit = 10) {
   const similarity = sql<number>`1 - (${cosineDistance(skillEmbeddings.embedding, queryEmbedding)})`;
@@ -265,7 +265,7 @@ export async function generateEmbeddingsBatch(
 ### Insert Embedding with Drizzle
 ```typescript
 // Source: https://orm.drizzle.team/docs/guides/vector-similarity-search
-import { skillEmbeddings } from "@relay/db/schema";
+import { skillEmbeddings } from "@everyskill/db/schema";
 import { hashContent } from "@/lib/content-hash";
 
 export async function createSkillEmbedding(

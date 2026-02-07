@@ -42,7 +42,7 @@ Attribute every MCP tool call and install event to the employee who performed it
 - Every MCP tool call is a separate usage_event (search, list, deploy) — keep current granularity
 - FTE hours saved per employee: use the employee's own review estimate when available, fall back to creator's timeSavedMinutes
 - Creator impact: sum of ALL uses of their skills x timeSavedMinutes (including their own self-usage)
-- MCP server resolves API key to userId via DB service directly (import validateApiKey from @relay/db/services/api-keys) — no HTTP overhead
+- MCP server resolves API key to userId via DB service directly (import validateApiKey from @everyskill/db/services/api-keys) — no HTTP overhead
 
 ### Claude's Discretion
 - Exact stat card layout and which 3-4 summary metrics to show per section

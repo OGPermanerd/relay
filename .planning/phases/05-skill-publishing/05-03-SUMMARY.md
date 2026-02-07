@@ -76,7 +76,7 @@ Each task was committed atomically:
 ## Files Created/Modified
 - `apps/web/lib/content-hash.ts` - SHA-256 hash generation using Web Crypto API
 - `apps/web/app/actions/skills.ts` - Enhanced with R2 upload, version creation, and skill update
-- `apps/web/package.json` - Added @relay/storage dependency
+- `apps/web/package.json` - Added @everyskill/storage dependency
 
 ## Decisions Made
 - Use Web Crypto API for SHA-256 hashing instead of Node.js crypto module to ensure Edge runtime compatibility
@@ -89,10 +89,10 @@ Each task was committed atomically:
 
 ### Auto-fixed Issues
 
-**1. [Rule 3 - Blocking] Added @relay/storage dependency to web package**
+**1. [Rule 3 - Blocking] Added @everyskill/storage dependency to web package**
 - **Found during:** Task 2 (TypeScript compilation)
-- **Issue:** Import of @relay/storage failed - package not in dependencies
-- **Fix:** Added "@relay/storage": "workspace:*" to apps/web/package.json dependencies
+- **Issue:** Import of @everyskill/storage failed - package not in dependencies
+- **Fix:** Added "@everyskill/storage": "workspace:*" to apps/web/package.json dependencies
 - **Files modified:** apps/web/package.json, pnpm-lock.yaml
 - **Verification:** TypeScript compilation passes, Next.js build succeeds
 - **Committed in:** 9a14dab (Task 2 commit)
@@ -115,7 +115,7 @@ Add to `.env.local`:
 R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
 R2_ACCESS_KEY_ID=your-access-key
 R2_SECRET_ACCESS_KEY=your-secret-key
-R2_BUCKET_NAME=relay-skills
+R2_BUCKET_NAME=everyskill-skills
 ```
 
 ### Cloudflare R2 Setup

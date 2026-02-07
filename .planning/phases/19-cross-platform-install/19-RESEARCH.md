@@ -111,12 +111,12 @@ type OS = "macos" | "windows" | "linux";
 
 export function generatePlatformConfig(platform: Platform, origin: string): string {
   // The Relay MCP server is a local stdio process that needs DB access
-  // Config points to the local relay-mcp binary
+  // Config points to the local everyskill-mcp binary
   const baseConfig = {
     mcpServers: {
-      "relay-skills": {
+      "everyskill-skills": {
         command: "npx",
-        args: ["-y", "@relay/mcp"],
+        args: ["-y", "@everyskill/mcp"],
         env: {
           RELAY_URL: origin, // Dynamic based on window.location.origin
         },
@@ -230,7 +230,7 @@ Problems that look simple but have existing solutions:
 ### Pitfall 3: Install Script Destroys Existing MCP Config
 **What goes wrong:** Script overwrites the entire config file, removing other MCP servers.
 **Why it happens:** Script uses simple file write instead of read-merge-write.
-**How to avoid:** Scripts must: (1) Read existing config or create empty `{}`, (2) Parse JSON, (3) Add/update only the `relay-skills` key under `mcpServers`, (4) Write back complete config.
+**How to avoid:** Scripts must: (1) Read existing config or create empty `{}`, (2) Parse JSON, (3) Add/update only the `everyskill-skills` key under `mcpServers`, (4) Write back complete config.
 **Warning signs:** Users losing other MCP server configs after running the script.
 
 ### Pitfall 4: SSR Hydration Mismatch with OS Detection
@@ -264,9 +264,9 @@ Verified patterns from the existing codebase and official sources:
 // File: ~/Library/Application Support/Claude/claude_desktop_config.json
 {
   "mcpServers": {
-    "relay-skills": {
+    "everyskill-skills": {
       "command": "npx",
-      "args": ["-y", "@relay/mcp"]
+      "args": ["-y", "@everyskill/mcp"]
     }
   }
 }
@@ -278,9 +278,9 @@ Verified patterns from the existing codebase and official sources:
 // File: %APPDATA%\Claude\claude_desktop_config.json
 {
   "mcpServers": {
-    "relay-skills": {
+    "everyskill-skills": {
       "command": "npx",
-      "args": ["-y", "@relay/mcp"]
+      "args": ["-y", "@everyskill/mcp"]
     }
   }
 }
@@ -289,13 +289,13 @@ Verified patterns from the existing codebase and official sources:
 ### MCP Config for Claude Code
 ```json
 // Source: https://code.claude.com/docs/en/mcp
-// Added via: claude mcp add relay-skills --scope user
+// Added via: claude mcp add everyskill-skills --scope user
 // Or in ~/.claude.json under mcpServers key
 {
   "mcpServers": {
-    "relay-skills": {
+    "everyskill-skills": {
       "command": "npx",
-      "args": ["-y", "@relay/mcp"]
+      "args": ["-y", "@everyskill/mcp"]
     }
   }
 }
@@ -307,9 +307,9 @@ Verified patterns from the existing codebase and official sources:
 // Works with any MCP-compatible client
 {
   "mcpServers": {
-    "relay-skills": {
+    "everyskill-skills": {
       "command": "npx",
-      "args": ["-y", "@relay/mcp"]
+      "args": ["-y", "@everyskill/mcp"]
     }
   }
 }
@@ -319,7 +319,7 @@ Verified patterns from the existing codebase and official sources:
 ```bash
 #!/bin/bash
 # Relay MCP Server Install Script
-# Merges relay-skills into existing MCP config
+# Merges everyskill-skills into existing MCP config
 
 set -e
 
@@ -346,9 +346,9 @@ fi
 node -e "
   const existing = JSON.parse(process.argv[1]);
   if (!existing.mcpServers) existing.mcpServers = {};
-  existing.mcpServers['relay-skills'] = {
+  existing.mcpServers['everyskill-skills'] = {
     command: 'npx',
-    args: ['-y', '@relay/mcp']
+    args: ['-y', '@everyskill/mcp']
   };
   console.log(JSON.stringify(existing, null, 2));
 " "$EXISTING" > "$CONFIG_FILE"
@@ -361,7 +361,7 @@ echo 'Restart Claude Desktop to activate.'
 ### Install Script (Windows - PowerShell)
 ```powershell
 # Relay MCP Server Install Script
-# Merges relay-skills into existing MCP config
+# Merges everyskill-skills into existing MCP config
 
 $ErrorActionPreference = "Stop"
 
@@ -384,9 +384,9 @@ if (Test-Path $ConfigFile) {
 $MergeScript = @"
 const existing = JSON.parse(process.argv[1]);
 if (!existing.mcpServers) existing.mcpServers = {};
-existing.mcpServers['relay-skills'] = {
+existing.mcpServers['everyskill-skills'] = {
   command: 'npx',
-  args: ['-y', '@relay/mcp']
+  args: ['-y', '@everyskill/mcp']
 };
 console.log(JSON.stringify(existing, null, 2));
 "@
@@ -462,7 +462,7 @@ const { copyToClipboard, isCopied } = useClipboardCopy();
 
 | Old Approach | Current Approach | When Changed | Impact |
 |--------------|------------------|--------------|--------|
-| Per-skill npx config (`@anthropic-ai/relay-${slug}`) | Single relay server config (`@relay/mcp`) | This phase | One install covers all skills |
+| Per-skill npx config (`@anthropic-ai/relay-${slug}`) | Single relay server config (`@everyskill/mcp`) | This phase | One install covers all skills |
 | Direct clipboard copy on button click | Modal with platform selection first | This phase | Better UX for multi-platform users |
 | SSE transport for remote MCP | Streamable HTTP transport | 2025-2026 | SSE being deprecated, use HTTP for remote |
 | `navigator.platform` for OS detection | `navigator.userAgentData` + UA string fallback | 2024-2025 | `navigator.platform` deprecated |
@@ -481,7 +481,7 @@ Things that couldn't be fully resolved:
    - Recommendation: Treat "Claude Chat" as Claude Desktop (the desktop app), since INST-02 requires OS-specific paths which only apply to the desktop app. The claude.ai web connector flow could be covered under "Other Systems" or as a sub-option.
 
 2. **Remote vs Local MCP server for `window.location.origin`**
-   - What we know: Context says to use `window.location.origin` for the MCP server URL. The current MCP server (`@relay/mcp`) uses stdio transport and connects directly to the database.
+   - What we know: Context says to use `window.location.origin` for the MCP server URL. The current MCP server (`@everyskill/mcp`) uses stdio transport and connects directly to the database.
    - What's unclear: Whether the MCP server needs a remote transport (HTTP/SSE) endpoint, or if `window.location.origin` is used as an environment variable for the local server to know where the Relay API lives.
    - Recommendation: Use `window.location.origin` as the `RELAY_URL` environment variable in the config's `env` block. The local stdio server can use this to connect to the Relay web API. This avoids needing to build a remote MCP transport server.
 

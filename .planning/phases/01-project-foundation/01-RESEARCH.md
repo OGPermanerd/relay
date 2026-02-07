@@ -112,14 +112,14 @@ relay/
 │       │   └── index.ts
 │       └── package.json
 ├── packages/
-│   ├── core/                      # @relay/core - shared types, constants
+│   ├── core/                      # @everyskill/core - shared types, constants
 │   │   ├── src/
 │   │   │   ├── types/
 │   │   │   ├── constants/
 │   │   │   └── index.ts
 │   │   ├── tsconfig.json
 │   │   └── package.json
-│   ├── db/                        # @relay/db - database schema, queries
+│   ├── db/                        # @everyskill/db - database schema, queries
 │   │   ├── src/
 │   │   │   ├── schema/            # Drizzle schema files
 │   │   │   ├── migrations/        # Generated migrations
@@ -128,7 +128,7 @@ relay/
 │   │   │   └── index.ts
 │   │   ├── drizzle.config.ts
 │   │   └── package.json
-│   ├── ui/                        # @relay/ui - shared React components
+│   ├── ui/                        # @everyskill/ui - shared React components
 │   │   ├── src/
 │   │   │   ├── components/        # shadcn/ui components
 │   │   │   ├── hooks/
@@ -171,13 +171,13 @@ packages:
 ```json
 // packages/db/package.json
 {
-  "name": "@relay/db",
+  "name": "@everyskill/db",
   "version": "0.0.0",
   "private": true,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
-    "@relay/core": "workspace:*",
+    "@everyskill/core": "workspace:*",
     "drizzle-orm": "^0.40.0",
     "postgres": "^3.4.0"
   }
@@ -189,9 +189,9 @@ packages:
 {
   "name": "web",
   "dependencies": {
-    "@relay/core": "workspace:*",
-    "@relay/db": "workspace:*",
-    "@relay/ui": "workspace:*"
+    "@everyskill/core": "workspace:*",
+    "@everyskill/db": "workspace:*",
+    "@everyskill/ui": "workspace:*"
   }
 }
 ```
@@ -275,13 +275,13 @@ export default defineConfig({
 Migration workflow:
 ```bash
 # Generate migration from schema changes
-pnpm --filter @relay/db drizzle-kit generate
+pnpm --filter @everyskill/db drizzle-kit generate
 
 # Apply migrations to database
-pnpm --filter @relay/db drizzle-kit migrate
+pnpm --filter @everyskill/db drizzle-kit migrate
 
 # Or push directly (dev only)
-pnpm --filter @relay/db drizzle-kit push
+pnpm --filter @everyskill/db drizzle-kit push
 ```
 
 ### Pattern 4: Playwright E2E with webServer
@@ -393,7 +393,7 @@ Problems that look simple but have existing solutions:
 
 ### Pitfall 1: TypeScript Path Resolution in Monorepo
 
-**What goes wrong:** IDE shows "Cannot find module '@relay/core'" errors, or runtime imports fail despite correct `workspace:*` dependencies.
+**What goes wrong:** IDE shows "Cannot find module '@everyskill/core'" errors, or runtime imports fail despite correct `workspace:*` dependencies.
 **Why it happens:** TypeScript resolves paths differently than Node.js. The package's `main`/`exports` field must point to source files (not built), and `tsconfig.json` paths must be configured.
 **How to avoid:**
 1. Use `"main": "./src/index.ts"` in package.json (not `./dist/index.js`)
@@ -402,7 +402,7 @@ Problems that look simple but have existing solutions:
 {
   "compilerOptions": {
     "paths": {
-      "@relay/*": ["../../packages/*/src"]
+      "@everyskill/*": ["../../packages/*/src"]
     }
   }
 }
@@ -416,7 +416,7 @@ Problems that look simple but have existing solutions:
 **Why it happens:** Bug in pnpm 9's workspace detection logic.
 **How to avoid:**
 1. Ensure `pnpm-workspace.yaml` exists and correctly lists package globs
-2. Use explicit workspace protocol: `"@relay/core": "workspace:*"`
+2. Use explicit workspace protocol: `"@everyskill/core": "workspace:*"`
 3. If issues persist, consider pnpm 8 until bug is fixed
 **Warning signs:** "ERR_PNPM_NO_MATCHING_VERSION" for internal packages.
 
@@ -450,7 +450,7 @@ Problems that look simple but have existing solutions:
 3. Configure DATABASE_URL with appropriate host per environment:
 ```bash
 # .env.local (running Next.js locally, Postgres in Docker)
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/relay
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/everyskill
 
 # For running Next.js inside Docker
 DATABASE_URL=postgresql://postgres:postgres@postgres:5432/relay
@@ -500,7 +500,7 @@ Verified patterns from official sources:
     "test:e2e": "turbo test:e2e",
     "db:generate": "turbo db:generate",
     "db:migrate": "turbo db:migrate",
-    "db:studio": "pnpm --filter @relay/db drizzle-kit studio",
+    "db:studio": "pnpm --filter @everyskill/db drizzle-kit studio",
     "docker:up": "docker compose -f docker/docker-compose.yml up -d",
     "docker:down": "docker compose -f docker/docker-compose.yml down",
     "prepare": "husky"
@@ -517,12 +517,12 @@ version: "3.8"
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: relay-postgres
+    container_name: everyskill-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: relay
+      POSTGRES_DB: everyskill
     ports:
       - "5432:5432"
     volumes:
@@ -577,7 +577,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: relay_test
+          POSTGRES_DB: everyskill_test
         ports:
           - 5432:5432
         options: >-
@@ -624,7 +624,7 @@ jobs:
       - name: E2E tests
         run: pnpm test:e2e
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/relay_test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/everyskill_test
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -640,7 +640,7 @@ jobs:
 ```bash
 # .env.example
 # Database
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/relay
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/everyskill
 
 # Next.js
 NEXT_PUBLIC_APP_URL=http://localhost:3000

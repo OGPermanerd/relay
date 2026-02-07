@@ -14,7 +14,7 @@ dependency-graph:
     - Example configuration file
     - Troubleshooting guidance
   affects:
-    - End users setting up relay-mcp
+    - End users setting up everyskill-mcp
 
 tech-stack:
   added: []
@@ -37,7 +37,7 @@ metrics:
 
 # Phase 03 Plan 05: MCP Documentation Summary
 
-**One-liner:** Claude Desktop configuration example and comprehensive README for relay-mcp installation, setup, and troubleshooting.
+**One-liner:** Claude Desktop configuration example and comprehensive README for everyskill-mcp installation, setup, and troubleshooting.
 
 ## Tasks Completed
 
@@ -55,7 +55,7 @@ Created `apps/mcp/claude_desktop_config.example.json` with the standard MCP serv
 ```json
 {
   "mcpServers": {
-    "relay-mcp": {
+    "everyskill-mcp": {
       "command": "node",
       "args": ["/path/to/relay/apps/mcp/dist/index.js"]
     }
@@ -75,7 +75,7 @@ Created `apps/mcp/README.md` (171 lines) covering:
 - `deploy_skill` - Get skill content for deployment to .claude/skills/
 
 **Installation Guide:**
-1. Build the MCP server with `pnpm --filter @relay/mcp build`
+1. Build the MCP server with `pnpm --filter @everyskill/mcp build`
 2. Copy example config to `~/.claude/claude_desktop_config.json`
 3. Set DATABASE_URL environment variable
 4. Restart Claude Desktop
@@ -93,7 +93,7 @@ None - plan executed exactly as written.
 
 | Check | Result |
 |-------|--------|
-| Valid JSON with mcpServers.relay-mcp | PASS |
+| Valid JSON with mcpServers.everyskill-mcp | PASS |
 | Installation section in README | PASS (1 occurrence) |
 | claude_desktop_config referenced | PASS (3 occurrences) |
 | README at least 40 lines | PASS (171 lines) |

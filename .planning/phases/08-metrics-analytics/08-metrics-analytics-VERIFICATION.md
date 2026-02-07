@@ -49,10 +49,10 @@ re_verification: false
 | Dashboard page | trending.ts | getTrendingSkills import | ✓ WIRED | Line 98: `getTrendingSkills(6)` called in Promise.all, results passed to TrendingSection component line 200 |
 | Dashboard page | leaderboard.ts | getLeaderboard import | ✓ WIRED | Line 99: `getLeaderboard(5)` called in Promise.all, results passed to LeaderboardTable component line 206 |
 | Profile page | user-stats.ts | getUserStats import | ✓ WIRED | Line 16: `getUserStats(session.user.id)` called, results used in stats array lines 21-36 |
-| platform-stats.ts | @relay/db | Drizzle queries | ✓ WIRED | Line 42: `.from(skills)` queries skills table with SUM aggregations |
-| trending.ts | @relay/db | Raw SQL CTE | ✓ WIRED | Line 42: `db.execute(sql...)` with CTE query, joins usageEvents and skills tables |
-| leaderboard.ts | @relay/db | Raw SQL RANK() | ✓ WIRED | Line 43: `db.execute(sql...)` with RANK() OVER window function, joins users and skills |
-| user-stats.ts | @relay/db | Drizzle query | ✓ WIRED | Line 41: `.from(skills)` with aggregations filtered by authorId |
+| platform-stats.ts | @everyskill/db | Drizzle queries | ✓ WIRED | Line 42: `.from(skills)` queries skills table with SUM aggregations |
+| trending.ts | @everyskill/db | Raw SQL CTE | ✓ WIRED | Line 42: `db.execute(sql...)` with CTE query, joins usageEvents and skills tables |
+| leaderboard.ts | @everyskill/db | Raw SQL RANK() | ✓ WIRED | Line 43: `db.execute(sql...)` with RANK() OVER window function, joins users and skills |
+| user-stats.ts | @everyskill/db | Drizzle query | ✓ WIRED | Line 41: `.from(skills)` with aggregations filtered by authorId |
 | StatCard | Dashboard | Component import | ✓ WIRED | Used 4 times (lines 173-192) for platform stats display |
 | LeaderboardTable | Dashboard | Component import | ✓ WIRED | Line 206: receives `leaderboard` array, renders table with all metrics |
 | TrendingSection | Dashboard | Component import | ✓ WIRED | Line 200: receives `trending` array, renders grid of skill cards |

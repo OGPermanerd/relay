@@ -1,4 +1,4 @@
-import type { ReviewCategories } from "@relay/db/schema";
+import type { ReviewCategories } from "@everyskill/db/schema";
 
 // ---------------------------------------------------------------------------
 // Helpers

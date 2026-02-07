@@ -1,5 +1,5 @@
-import { db } from "@relay/db";
-import { skills, usageEvents } from "@relay/db/schema";
+import { db } from "@everyskill/db";
+import { skills, usageEvents } from "@everyskill/db/schema";
 import { sql, gte, eq } from "drizzle-orm";
 
 export interface TotalStats {

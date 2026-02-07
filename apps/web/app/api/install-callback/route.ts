@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey } from "@relay/db/services/api-keys";
-import { incrementSkillUses } from "@relay/db/services/skill-metrics";
-import { db } from "@relay/db";
-import { usageEvents } from "@relay/db/schema";
+import { validateApiKey } from "@everyskill/db/services/api-keys";
+import { incrementSkillUses } from "@everyskill/db/services/skill-metrics";
+import { db } from "@everyskill/db";
+import { usageEvents } from "@everyskill/db/schema";
 
 // TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
 const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";

@@ -1,12 +1,12 @@
-# @relay/mcp
+# @everyskill/mcp
 
-MCP server exposing Relay skill marketplace tools to Claude Desktop. Enables Claude Code to discover, search, and deploy skills from the Relay marketplace directly into your local development environment.
+MCP server exposing EverySkill skill marketplace tools to Claude Desktop. Enables Claude Code to discover, search, and deploy skills from the EverySkill marketplace directly into your local development environment.
 
 ## Available Tools
 
 ### list_skills
 
-List all available skills in the Relay marketplace.
+List all available skills in the EverySkill marketplace.
 
 **Parameters:**
 - `category` (optional): Filter by skill category - "prompt", "workflow", "agent", or "mcp"
@@ -49,7 +49,7 @@ From the repository root:
 
 ```bash
 pnpm install
-pnpm --filter @relay/mcp build
+pnpm --filter @everyskill/mcp build
 ```
 
 This creates the `dist/` directory with compiled JavaScript.
@@ -62,14 +62,14 @@ Copy the example configuration to your Claude Desktop config location:
 cp apps/mcp/claude_desktop_config.example.json ~/.claude/claude_desktop_config.json
 ```
 
-Edit `~/.claude/claude_desktop_config.json` and replace `/path/to/relay` with the absolute path to your relay repository:
+Edit `~/.claude/claude_desktop_config.json` and replace `/path/to/everyskill` with the absolute path to your everyskill repository:
 
 ```json
 {
   "mcpServers": {
-    "relay-mcp": {
+    "everyskill-mcp": {
       "command": "node",
-      "args": ["/absolute/path/to/relay/apps/mcp/dist/index.js"]
+      "args": ["/absolute/path/to/everyskill/apps/mcp/dist/index.js"]
     }
   }
 }
@@ -84,14 +84,14 @@ The MCP server requires a `DATABASE_URL` environment variable. You can either:
 
 ### 4. Restart Claude Desktop
 
-Restart Claude Desktop to load the new MCP server configuration. The relay-mcp tools should now be available.
+Restart Claude Desktop to load the new MCP server configuration. The everyskill-mcp tools should now be available.
 
 ### 5. Verify Installation
 
 In a Claude Desktop conversation, try using one of the tools:
 
-- Ask Claude to "list skills from relay"
-- Ask Claude to "search for authentication skills in relay"
+- Ask Claude to "list skills from everyskill"
+- Ask Claude to "search for authentication skills in everyskill"
 
 If tools aren't appearing, see Troubleshooting below.
 
@@ -99,16 +99,16 @@ If tools aren't appearing, see Troubleshooting below.
 
 ```bash
 # Run in development mode (watch)
-pnpm --filter @relay/mcp dev
+pnpm --filter @everyskill/mcp dev
 
 # Run tests
-pnpm --filter @relay/mcp test
+pnpm --filter @everyskill/mcp test
 
 # Type checking
-pnpm --filter @relay/mcp typecheck
+pnpm --filter @everyskill/mcp typecheck
 
 # Build for production
-pnpm --filter @relay/mcp build
+pnpm --filter @everyskill/mcp build
 ```
 
 ## Database Requirements
@@ -122,7 +122,7 @@ To set up the database:
 
 ```bash
 # Create tables (from monorepo root)
-pnpm --filter @relay/db db:push
+pnpm --filter @everyskill/db db:push
 ```
 
 ## Troubleshooting
@@ -150,10 +150,10 @@ pnpm --filter @relay/db db:push
    Verify with `psql -h localhost -U postgres`
 
 2. **Verify DATABASE_URL:**
-   Format: `postgresql://user:password@localhost:5432/relay`
+   Format: `postgresql://user:password@localhost:5432/everyskill`
 
 3. **Create tables if missing:**
-   Run `pnpm --filter @relay/db db:push`
+   Run `pnpm --filter @everyskill/db db:push`
 
 ### "Database not configured" error
 
@@ -165,7 +165,7 @@ The MCP server uses:
 
 - `@modelcontextprotocol/sdk` - Official MCP SDK
 - `stdio` transport - Universal client compatibility
-- `@relay/db` - Shared database client with drizzle ORM
+- `@everyskill/db` - Shared database client with drizzle ORM
 - `zod` - Input validation and schema definitions
 
 All tools track usage via the `usageEvents` table for analytics (FTE Days Saved metric).

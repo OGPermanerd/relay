@@ -26,14 +26,14 @@ metrics:
 
 # Phase 21 Plan 01: MCP Auth Module + Tool Wiring Summary
 
-MCP auth module resolving userId from RELAY_API_KEY via validateApiKey service, with anonymous nudge every 5th call and one-time auth confirmation.
+MCP auth module resolving userId from EVERYSKILL_API_KEY via validateApiKey service, with anonymous nudge every 5th call and one-time auth confirmation.
 
 ## What Was Done
 
 ### Task 1: Create MCP auth module and wire userId into tools
 
 Created `apps/mcp/src/auth.ts` with five exported functions:
-- `resolveUserId()` -- async, reads RELAY_API_KEY, calls validateApiKey, caches result with resolved-once flag
+- `resolveUserId()` -- async, reads EVERYSKILL_API_KEY, calls validateApiKey, caches result with resolved-once flag
 - `getUserId()` -- sync getter returning cached userId (string | null)
 - `incrementAnonymousCount()` -- increments and returns anonymous call counter
 - `shouldNudge()` -- returns true every 5th anonymous call

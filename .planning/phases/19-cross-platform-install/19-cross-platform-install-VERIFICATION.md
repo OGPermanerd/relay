@@ -55,7 +55,7 @@ score: 4/4 must-haves verified
 
 | Requirement | Status | Evidence |
 |-------------|--------|----------|
-| INST-01: User can copy MCP config for Claude Code | ✓ SATISFIED | Claude Code platform card renders, generates config JSON with npx -y @relay/mcp, copy button works (E2E test: "selecting a platform shows config JSON") |
+| INST-01: User can copy MCP config for Claude Code | ✓ SATISFIED | Claude Code platform card renders, generates config JSON with npx -y @everyskill/mcp, copy button works (E2E test: "selecting a platform shows config JSON") |
 | INST-02: User can copy MCP config for Claude Desktop with OS-specific paths | ✓ SATISFIED | getConfigFilePath returns OS-specific paths (macOS/Windows/Linux variants). Modal displays path above config. Download install script button available for Claude Desktop platform only |
 | INST-03: System detects user's OS for instructions | ✓ SATISFIED | detectOS() called in useEffect, sets detectedOS state. OS label shown in modal header. getConfigFilePath uses detectedOS to show correct path |
 | INST-04: Platform selection modal allows choosing target platform before copy | ✓ SATISFIED | Modal renders 4 platform cards. Clicking a card sets selectedPlatform state, reveals config section with platform-specific JSON. E2E test: "install button opens platform modal from skills table" verifies 4 cards visible |

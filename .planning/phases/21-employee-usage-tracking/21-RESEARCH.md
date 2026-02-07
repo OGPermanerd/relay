@@ -10,7 +10,7 @@ Phase 21 takes the API key infrastructure built in Phase 20 and activates it: ev
 
 The codebase is already 90% ready. The `usage_events` table has a `userId` column that is never populated. The `trackUsage()` function accepts `userId` in its event type but no caller passes it. The `validateApiKey()` DB service returns `{ userId, keyId }` and is already imported by the MCP package. The install scripts exist but have no callback step. The home page has stat cards and layout patterns to follow.
 
-The main work is: (1) read `RELAY_API_KEY` env var in the MCP server at startup, resolve it to a userId via DB service, pass userId into every `trackUsage()` call; (2) create an install callback API route + update install scripts; (3) build aggregation queries for the "My Skill Leverage" view; (4) add a tab UI to the home page with Skills Used and Skills Created sections.
+The main work is: (1) read `EVERYSKILL_API_KEY` env var in the MCP server at startup, resolve it to a userId via DB service, pass userId into every `trackUsage()` call; (2) create an install callback API route + update install scripts; (3) build aggregation queries for the "My Skill Leverage" view; (4) add a tab UI to the home page with Skills Used and Skills Created sections.
 
 **Primary recommendation:** Wire userId through MCP tools first (smallest change, immediate data collection), then build the install callback and UI in parallel.
 
@@ -40,7 +40,7 @@ All required functionality can be built with the existing stack. No new packages
 
 ```
 apps/mcp/src/
-├── auth.ts                          # NEW: Read RELAY_API_KEY, resolve userId via DB service
+├── auth.ts                          # NEW: Read EVERYSKILL_API_KEY, resolve userId via DB service
 ├── index.ts                         # MODIFY: Call resolveUserId() on startup
 ├── tools/
 │   ├── search.ts                    # MODIFY: Pass userId to trackUsage()
@@ -75,13 +75,13 @@ apps/web/
 
 ### Pattern 1: MCP userId Resolution (Direct DB Import)
 
-**What:** The MCP server reads `RELAY_API_KEY` from env, calls `validateApiKey()` directly (no HTTP), caches userId for the session lifetime.
+**What:** The MCP server reads `EVERYSKILL_API_KEY` from env, calls `validateApiKey()` directly (no HTTP), caches userId for the session lifetime.
 **When to use:** On MCP server startup, before any tool calls.
-**Why direct import:** The MCP server already imports `@relay/db` (see `apps/mcp/src/tracking/events.ts`). No HTTP overhead needed.
+**Why direct import:** The MCP server already imports `@everyskill/db` (see `apps/mcp/src/tracking/events.ts`). No HTTP overhead needed.
 
 ```typescript
 // apps/mcp/src/auth.ts
-import { validateApiKey } from "@relay/db/services/api-keys";
+import { validateApiKey } from "@everyskill/db/services/api-keys";
 
 let cachedUserId: string | null = null;
 let resolved = false;
@@ -90,9 +90,9 @@ export async function resolveUserId(): Promise<string | null> {
   if (resolved) return cachedUserId;
   resolved = true;
 
-  const apiKey = process.env.RELAY_API_KEY;
+  const apiKey = process.env.EVERYSKILL_API_KEY;
   if (!apiKey) {
-    console.error("No RELAY_API_KEY set — tracking anonymously");
+    console.error("No EVERYSKILL_API_KEY set — tracking anonymously");
     return null;
   }
 
@@ -101,7 +101,7 @@ export async function resolveUserId(): Promise<string | null> {
     cachedUserId = result.userId;
     console.error(`Authenticated as userId: ${result.userId}`);
   } else {
-    console.error("RELAY_API_KEY invalid or expired — tracking anonymously");
+    console.error("EVERYSKILL_API_KEY invalid or expired — tracking anonymously");
   }
   return cachedUserId;
 }
@@ -140,9 +140,9 @@ await trackUsage({
 ```typescript
 // apps/web/app/api/install-callback/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey } from "@relay/db/services/api-keys";
-import { db } from "@relay/db";
-import { usageEvents } from "@relay/db/schema";
+import { validateApiKey } from "@everyskill/db/services/api-keys";
+import { db } from "@everyskill/db";
+import { usageEvents } from "@everyskill/db/schema";
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -263,7 +263,7 @@ export function HomeTabs({ children }: { children: React.ReactNode }) {
 
 ```typescript
 // apps/web/lib/my-leverage.ts
-import { db } from "@relay/db";
+import { db } from "@everyskill/db";
 import { sql } from "drizzle-orm";
 
 export async function getSkillsUsed(userId: string, limit = 20, offset = 0) {
@@ -343,7 +343,7 @@ if (shouldNudge()) {
 
 ### Anti-Patterns to Avoid
 
-- **HTTP call from MCP to validate key:** The MCP server already has `@relay/db` as a dependency and DATABASE_URL in env. Calling an HTTP endpoint adds latency and a failure mode. Import `validateApiKey` directly.
+- **HTTP call from MCP to validate key:** The MCP server already has `@everyskill/db` as a dependency and DATABASE_URL in env. Calling an HTTP endpoint adds latency and a failure mode. Import `validateApiKey` directly.
 - **Separate install_events table:** The CONTEXT decision says install callbacks use `trackUsage()` and record into `usage_events`. Do NOT create a separate table. Use `toolName: "install_confirmed"` with platform/OS in metadata.
 - **Fetching all usage events client-side:** Use server-side aggregation with SQL. The home page is a Server Component. Fetch data server-side, render HTML.
 - **Breaking anonymous users:** Never add required auth. The `getUserId()` function returns null for anonymous users, and all existing code paths continue working.
@@ -354,7 +354,7 @@ if (shouldNudge()) {
 |---------|-------------|-------------|-----|
 | URL-synced tab state | Custom URL parsing + pushState | nuqs `useQueryState` with `parseAsStringLiteral` | Already in project, handles Next.js App Router edge cases |
 | Usage event aggregation | In-memory JS reduce over raw events | PostgreSQL CTEs via `db.execute(sql\`...\`)` | Database handles millions of rows; JS would OOM |
-| API key validation | Custom hash comparison | `validateApiKey()` from `@relay/db/services/api-keys` | Already handles timing-safe comparison, expiry, revocation |
+| API key validation | Custom hash comparison | `validateApiKey()` from `@everyskill/db/services/api-keys` | Already handles timing-safe comparison, expiry, revocation |
 | Stat cards | Custom card components | Existing `StatCard` component | Already supports sparklines, icons, suffixes |
 | Pagination | Custom offset tracking | SQL `LIMIT/OFFSET` with `COUNT(*) OVER()` | Window function gives total count in same query |
 
@@ -405,11 +405,11 @@ if (shouldNudge()) {
 ### Install Script Callback Addition (Bash)
 
 ```bash
-# Add to end of existing install-relay-mcp.sh, before success messages
+# Add to end of existing install-everyskill-mcp.sh, before success messages
 # Phone home (non-blocking, failure OK)
 curl -s -X POST "${RELAY_URL}/api/install-callback" \
   -H "Content-Type: application/json" \
-  -d "{\"key\":\"${RELAY_API_KEY}\",\"platform\":\"claude-desktop\",\"os\":\"$(uname -s | tr '[:upper:]' '[:lower:]')\"}" \
+  -d "{\"key\":\"${EVERYSKILL_API_KEY}\",\"platform\":\"claude-desktop\",\"os\":\"$(uname -s | tr '[:upper:]' '[:lower:]')\"}" \
   > /dev/null 2>&1 || true
 ```
 
@@ -419,7 +419,7 @@ curl -s -X POST "${RELAY_URL}/api/install-callback" \
 # Phone home (non-blocking, failure OK)
 try {
   $CallbackBody = @{
-    key = $env:RELAY_API_KEY
+    key = $env:EVERYSKILL_API_KEY
     platform = "claude-desktop"
     os = "windows"
   } | ConvertTo-Json
@@ -522,7 +522,7 @@ Note: The CONTEXT says to show this on "first authenticated use." This requires 
 
 3. **Install script modifications scope**
    - What we know: The CONTEXT says install scripts should POST to `/api/install-callback`
-   - What's unclear: Install scripts are downloaded and run on the user's machine. They currently don't have `RELAY_API_KEY` or `RELAY_URL` available because these env vars are only set in the MCP config, not during script execution.
+   - What's unclear: Install scripts are downloaded and run on the user's machine. They currently don't have `EVERYSKILL_API_KEY` or `RELAY_URL` available because these env vars are only set in the MCP config, not during script execution.
    - Recommendation: The install script itself sets up the env vars in the MCP config. The callback should happen AFTER the config is written, reading the just-configured values. Or, the script should receive the API key and URL as parameters from the download page.
 
 ## Sources

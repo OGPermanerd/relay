@@ -13,7 +13,7 @@ requires:
 provides:
   - MCP server scaffold with stdio transport
   - usageEvents schema for tool invocation tracking
-  - Entry point for relay-mcp binary
+  - Entry point for everyskill-mcp binary
 affects: [03-02-skills-crud, 03-03-skill-runner, 03-04-tool-generation, usage-analytics]
 
 # Tech tracking
@@ -59,7 +59,7 @@ completed: 2026-01-31
 - **Files modified:** 6
 
 ## Accomplishments
-- Created @relay/mcp package with MCP SDK and build tooling
+- Created @everyskill/mcp package with MCP SDK and build tooling
 - Implemented MCP server that starts on stdio and accepts connections
 - Added usageEvents table schema for tracking tool invocations
 - Established stdio logging pattern (console.error only)
@@ -70,12 +70,12 @@ Each task was committed atomically:
 
 1. **Task 1: Create apps/mcp package with MCP SDK** - `ff029f9` (feat)
 2. **Task 2: Implement MCP server with stdio transport** - `bb050b6` (feat)
-3. **Task 3: Add usageEvents schema to @relay/db** - `d6a1f0a` (feat)
+3. **Task 3: Add usageEvents schema to @everyskill/db** - `d6a1f0a` (feat)
 
 ## Files Created/Modified
 - `apps/mcp/package.json` - Package config with MCP SDK dependency and build scripts
 - `apps/mcp/tsconfig.json` - TypeScript config with NodeNext module resolution
-- `apps/mcp/src/server.ts` - McpServer instance configured as "relay-skills"
+- `apps/mcp/src/server.ts` - McpServer instance configured as "everyskill-skills"
 - `apps/mcp/src/index.ts` - Entry point with StdioServerTransport connection
 - `packages/db/src/schema/usage-events.ts` - Usage events table for analytics
 - `packages/db/src/schema/index.ts` - Re-export for usage-events
@@ -102,7 +102,7 @@ None - no external service configuration required.
 ## Next Phase Readiness
 - MCP server scaffold ready for tool registration (Plan 02)
 - usageEvents table ready for analytics queries
-- Entry point configured for `relay-mcp` binary
+- Entry point configured for `everyskill-mcp` binary
 
 ---
 *Phase: 03-mcp-integration*

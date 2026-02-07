@@ -1,8 +1,8 @@
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { db, isDatabaseConfigured } from "@relay/db";
-import { users, accounts, sessions, verificationTokens } from "@relay/db/schema";
+import { db, isDatabaseConfigured } from "@everyskill/db";
+import { users, accounts, sessions, verificationTokens } from "@everyskill/db/schema";
 import authConfig from "./auth.config";
 
 const ALLOWED_DOMAIN = process.env.AUTH_ALLOWED_DOMAIN || "company.com";

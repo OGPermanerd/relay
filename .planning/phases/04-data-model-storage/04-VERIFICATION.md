@@ -19,7 +19,7 @@ score: 20/20 must-haves verified
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
 | 1 | Database schema supports skills, versions, users, ratings, usage events | ✓ VERIFIED | All 5 schema files exist with complete table definitions, exports, and foreign keys |
-| 2 | Skill content stored in object storage (R2/S3) | ✓ VERIFIED | @relay/storage package implements presigned URL generation for uploads/downloads |
+| 2 | Skill content stored in object storage (R2/S3) | ✓ VERIFIED | @everyskill/storage package implements presigned URL generation for uploads/downloads |
 | 3 | System accepts Claude Code skills, prompts, workflows, agent configs | ✓ VERIFIED | Validation schemas support all 4 formats with discriminated union pattern |
 | 4 | Version model is immutable (new versions create records, never modify) | ✓ VERIFIED | skillVersions table has no update mechanisms, seed script creates new records only |
 | 5 | Usage tracking from MCP Phase 3 integrated into skill metrics | ✓ VERIFIED | incrementSkillUses() service updates denormalized totalUses counter from usageEvents |
@@ -198,7 +198,7 @@ Client merges relations with schema for relational query support.
 
 ### Package Verification
 
-#### @relay/db Package
+#### @everyskill/db Package
 
 **Dependencies:**
 - ✓ zod@^3.25.0 installed (node_modules/zod exists)
@@ -212,7 +212,7 @@ Client merges relations with schema for relational query support.
 - ✓ `export * from "./services"` — skill metrics functions
 - ✓ `export { db, isDatabaseConfigured } from "./client"` — database client
 
-#### @relay/storage Package
+#### @everyskill/storage Package
 
 **Dependencies:**
 - ✓ @aws-sdk/client-s3@^3.700.0 installed (node_modules/@aws-sdk/client-s3 exists)
@@ -268,8 +268,8 @@ All key links verified:
 
 ### Database Push Verification
 Confirmed via SUMMARY.md documentation:
-- Schema pushed successfully with `pnpm --filter @relay/db db:push`
-- Seed script executed successfully with `pnpm --filter @relay/db db:seed`
+- Schema pushed successfully with `pnpm --filter @everyskill/db db:push`
+- Seed script executed successfully with `pnpm --filter @everyskill/db db:seed`
 - All tables created and populated with test data
 
 ## Human Verification Required

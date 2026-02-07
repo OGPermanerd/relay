@@ -19,7 +19,7 @@ The core work is creating a shared search service in `packages/db/src/services/`
 |---------|---------|---------|--------------|
 | drizzle-orm | ^0.38.0 | SQL query builder | Already used across all db services |
 | postgres | ^3.4.0 | PostgreSQL driver | Already the project's Postgres client |
-| @relay/db | workspace:* | Shared DB package | Central place for schemas, services, and relations |
+| @everyskill/db | workspace:* | Shared DB package | Central place for schemas, services, and relations |
 
 ### Supporting
 | Library | Version | Purpose | When to Use |
@@ -196,7 +196,7 @@ export async function searchSkillsByQuery(
 ### Pitfall 1: TypeScript Module Resolution in MCP App
 **What goes wrong:** Importing `sql`, `eq`, `and` from `drizzle-orm` in `apps/mcp/src/` fails or causes build issues
 **Why it happens:** The MCP app uses `tsup` for building (`tsup src/index.ts --format cjs --dts`) and `moduleResolution: NodeNext`. Previous developers avoided drizzle-orm imports in MCP tool code for this reason.
-**How to avoid:** Put ALL drizzle-orm SQL logic in `packages/db/src/services/` where it compiles fine. MCP tools call the service function via `@relay/db` (or `@relay/db/services/search-skills`). This matches the existing pattern (`validateApiKey`, `incrementSkillUses`).
+**How to avoid:** Put ALL drizzle-orm SQL logic in `packages/db/src/services/` where it compiles fine. MCP tools call the service function via `@everyskill/db` (or `@everyskill/db/services/search-skills`). This matches the existing pattern (`validateApiKey`, `incrementSkillUses`).
 **Warning signs:** If you see `import { sql } from "drizzle-orm"` in `apps/mcp/src/`, it will likely break the build.
 
 ### Pitfall 2: Three Search Locations, Not Two
@@ -234,7 +234,7 @@ const likePattern = `%${escapeLike(query)}%`;
 
 ### Pitfall 6: Embedding Fallback Unavailable in MCP Stdio
 **What goes wrong:** Embedding fallback requires `VOYAGE_API_KEY` which the MCP stdio app doesn't have
-**Why it happens:** The MCP stdio app runs locally, configured only with `RELAY_API_KEY` and `DATABASE_URL`. Voyage AI is a web app concern.
+**Why it happens:** The MCP stdio app runs locally, configured only with `EVERYSKILL_API_KEY` and `DATABASE_URL`. Voyage AI is a web app concern.
 **How to avoid:** Make the embedding fallback opt-in. The service function works with ILIKE-only by default. Only callers with embedding access (web) pass the optional `queryEmbedding` parameter.
 **Warning signs:** MCP search crashes trying to call Voyage AI without an API key.
 
@@ -327,7 +327,7 @@ export async function searchSkillsByQuery(
 
 ```typescript
 // apps/mcp/src/tools/search.ts - AFTER refactor
-import { searchSkillsByQuery } from "@relay/db/services/search-skills";
+import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
 
 export async function handleSearchSkills({
   query, category, limit, userId, skipNudge,
@@ -350,7 +350,7 @@ export async function handleSearchSkills({
 ```typescript
 // apps/web/app/api/mcp/[transport]/route.ts - search_skills handler
 // Replace the inline in-memory search with:
-import { searchSkillsByQuery } from "@relay/db/services/search-skills";
+import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
 
 // Inside the search_skills handler:
 const results = await searchSkillsByQuery({ query, category, limit });
@@ -360,7 +360,7 @@ const results = await searchSkillsByQuery({ query, category, limit });
 
 ```typescript
 // apps/mcp/test/setup.ts - add service mock
-vi.mock("@relay/db/services/search-skills", () => ({
+vi.mock("@everyskill/db/services/search-skills", () => ({
   searchSkillsByQuery: vi.fn(),
 }));
 ```

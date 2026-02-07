@@ -1,8 +1,8 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db, skills } from "@relay/db";
-import { deleteSkill } from "@relay/db/services";
+import { db, skills } from "@everyskill/db";
+import { deleteSkill } from "@everyskill/db/services";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";

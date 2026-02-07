@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { db } from "@relay/db";
+import { db } from "@everyskill/db";
 import { mockSkills } from "./mocks.js";
 import { handleListSkills } from "../src/tools/list.js";
 import { handleSearchSkills } from "../src/tools/search.js";
 import { handleDeploySkill } from "../src/tools/deploy.js";
-import { searchSkillsByQuery } from "@relay/db/services/search-skills";
+import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
 
 const mockDb = vi.mocked(db);
 const mockSearchSkills = vi.mocked(searchSkillsByQuery);

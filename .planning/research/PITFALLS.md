@@ -399,7 +399,7 @@ The tables that need `tenant_id` added:
    echo "$EVENT" >> ~/.relay/pending-events.jsonl
    # Attempt send with timeout (fire-and-forget, don't block Claude Code)
    curl -s --max-time 5 -X POST "$RELAY_URL/api/track" \
-     -H "Authorization: Bearer $RELAY_API_KEY" \
+     -H "Authorization: Bearer $EVERYSKILL_API_KEY" \
      -d "$EVENT" &
    exit 0  # Always succeed - don't block Claude Code
    ```
@@ -527,14 +527,14 @@ Mistakes that cause delays, degraded UX, or technical debt.
 
 ### Pitfall 19: Hook PostToolUse Event Timing for MCP Tool Tracking
 
-**What goes wrong:** Claude Code hooks fire on specific events. For tracking MCP tool usage, you'd want `PostToolUse` with a matcher like `mcp__relay-skills__.*`. However, the hook receives `tool_input` (what was sent to the tool) but may not reliably receive the full `tool_output` (what the tool returned). If the hook script needs to know whether the tool call succeeded or what skill was used, the input alone may be insufficient.
+**What goes wrong:** Claude Code hooks fire on specific events. For tracking MCP tool usage, you'd want `PostToolUse` with a matcher like `mcp__everyskill-skills__.*`. However, the hook receives `tool_input` (what was sent to the tool) but may not reliably receive the full `tool_output` (what the tool returned). If the hook script needs to know whether the tool call succeeded or what skill was used, the input alone may be insufficient.
 
 **Why it happens:** PostToolUse fires after a successful tool call. PostToolUseFailure fires after a failure. The input data includes `tool_input` and `tool_name` but the output may be truncated or absent in the hook's stdin payload.
 
 **Prevention:**
 1. Design the tracking hook to work with `tool_input` only (skill name, search query, etc.) - don't depend on `tool_output`
 2. Use `PostToolUse` for success tracking and `PostToolUseFailure` for failure tracking
-3. Match specifically: `"matcher": "mcp__relay-skills__.*"` to only fire on Relay MCP tools
+3. Match specifically: `"matcher": "mcp__everyskill-skills__.*"` to only fire on Relay MCP tools
 4. Log the `session_id` from the hook input for correlation with server-side MCP logs
 
 **Which phase should address it:** Hook implementation phase.

@@ -1,4 +1,4 @@
-import { db } from "@relay/db";
+import { db } from "@everyskill/db";
 import { sql } from "drizzle-orm";
 
 // =============================================================================

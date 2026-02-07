@@ -54,7 +54,7 @@ completed: 2026-01-31
 - **Files modified:** 4
 
 ## Accomplishments
-- Added zod dependency to @relay/db for schema validation
+- Added zod dependency to @everyskill/db for schema validation
 - Created discriminated union schema supporting all four skill formats
 - Each format has specific metadata fields (variables for prompt, steps for workflow, capabilities for agent, tools for mcp)
 - Common base fields (name, description, tags, usageInstructions) validated for all formats

@@ -1,10 +1,10 @@
 import { createMcpHandler, withMcpAuth } from "mcp-handler";
 import { z } from "zod";
-import { validateApiKey } from "@relay/db/services/api-keys";
-import { db } from "@relay/db";
-import { usageEvents } from "@relay/db/schema/usage-events";
-import { incrementSkillUses } from "@relay/db/services/skill-metrics";
-import { searchSkillsByQuery } from "@relay/db/services/search-skills";
+import { validateApiKey } from "@everyskill/db/services/api-keys";
+import { db } from "@everyskill/db";
+import { usageEvents } from "@everyskill/db/schema/usage-events";
+import { incrementSkillUses } from "@everyskill/db/services/skill-metrics";
+import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
 
 // TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
 const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
@@ -104,7 +104,7 @@ const handler = createMcpHandler(
       "list_skills",
       {
         description:
-          "List all available skills in the Relay marketplace. Returns skill ID, name, description, category, and estimated hours saved.",
+          "List all available skills in the EverySkill marketplace. Returns skill ID, name, description, category, and estimated hours saved.",
         inputSchema: {
           category: z
             .enum(["prompt", "workflow", "agent", "mcp"])
@@ -169,7 +169,7 @@ const handler = createMcpHandler(
       "search_skills",
       {
         description:
-          "Search for skills in the Relay marketplace by query. Matches against name, description, author name, and tags.",
+          "Search for skills in the EverySkill marketplace by query. Matches against name, description, author name, and tags.",
         inputSchema: {
           query: z
             .string()
@@ -213,7 +213,7 @@ const handler = createMcpHandler(
       "deploy_skill",
       {
         description:
-          "Deploy a skill from Relay into this conversation. Returns the skill content for immediate use. Use the skill ID from list_skills or search_skills results.",
+          "Deploy a skill from EverySkill into this conversation. Returns the skill content for immediate use. Use the skill ID from list_skills or search_skills results.",
         inputSchema: {
           skillId: z.string().describe("Skill ID from search/list results"),
         },
@@ -366,7 +366,7 @@ const handler = createMcpHandler(
       "server_info",
       {
         description:
-          "Get information about this Relay Skills MCP server, including available categories and the authenticated user.",
+          "Get information about this EverySkill Skills MCP server, including available categories and the authenticated user.",
         inputSchema: {},
       },
       async (_args, extra) => {
@@ -380,7 +380,7 @@ const handler = createMcpHandler(
               type: "text" as const,
               text: JSON.stringify(
                 {
-                  name: "Relay Skills",
+                  name: "EverySkill Skills",
                   version: "1.0.0",
                   categories: ["prompt", "workflow", "agent", "mcp"],
                   user: { id: userId },
@@ -400,7 +400,7 @@ const handler = createMcpHandler(
     server.registerPrompt(
       "suggest_skills",
       {
-        description: "Suggest relevant Relay skills for the current conversation",
+        description: "Suggest relevant EverySkill skills for the current conversation",
       },
       () => ({
         messages: [
@@ -416,7 +416,7 @@ const handler = createMcpHandler(
     );
   },
   {
-    serverInfo: { name: "Relay Skills", version: "1.0.0" },
+    serverInfo: { name: "EverySkill Skills", version: "1.0.0" },
   },
   { basePath: "/api/mcp", maxDuration: 60 }
 );

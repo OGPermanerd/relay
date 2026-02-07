@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 
 // Mock the database module
-vi.mock("@relay/db", () => ({
+vi.mock("@everyskill/db", () => ({
   db: {
     query: {
       skills: {
@@ -16,16 +16,16 @@ vi.mock("@relay/db", () => ({
 }));
 
 // Mock the usage events schema
-vi.mock("@relay/db/schema/usage-events", () => ({
+vi.mock("@everyskill/db/schema/usage-events", () => ({
   usageEvents: { toolName: "tool_name", skillId: "skill_id" },
 }));
 
 // Mock the skill metrics service
-vi.mock("@relay/db/services/skill-metrics", () => ({
+vi.mock("@everyskill/db/services/skill-metrics", () => ({
   incrementSkillUses: vi.fn(),
 }));
 
 // Mock the search-skills service
-vi.mock("@relay/db/services/search-skills", () => ({
+vi.mock("@everyskill/db/services/search-skills", () => ({
   searchSkillsByQuery: vi.fn(),
 }));

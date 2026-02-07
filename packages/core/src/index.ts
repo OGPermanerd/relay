@@ -1,5 +1,5 @@
 /**
- * @relay/core - Shared business logic, types, and utilities
+ * @everyskill/core - Shared business logic, types, and utilities
  */
 
 export const RELAY_VERSION = "0.0.1";

@@ -3,7 +3,7 @@ import { Providers } from "@/components/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Relay - Internal Skill Marketplace",
+  title: "EverySkill - Internal Skill Marketplace",
   description: "Connect with colleagues who have the skills you need",
 };
 

@@ -730,7 +730,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="/backups/relay_${TIMESTAMP}.sql.gz"
 
 # Dump and compress
-docker exec relay-postgres pg_dump -U postgres relay | gzip > "$BACKUP_FILE"
+docker exec everyskill-postgres pg_dump -U postgres relay | gzip > "$BACKUP_FILE"
 
 # Encrypt the backup
 gpg --encrypt --recipient backup@company.com "$BACKUP_FILE"

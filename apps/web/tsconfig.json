@@ -20,12 +20,12 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@relay/core": ["../../packages/core/src"],
-      "@relay/core/*": ["../../packages/core/src/*"],
-      "@relay/db": ["../../packages/db/src"],
-      "@relay/db/*": ["../../packages/db/src/*"],
-      "@relay/ui": ["../../packages/ui/src"],
-      "@relay/ui/*": ["../../packages/ui/src/*"]
+      "@everyskill/core": ["../../packages/core/src"],
+      "@everyskill/core/*": ["../../packages/core/src/*"],
+      "@everyskill/db": ["../../packages/db/src"],
+      "@everyskill/db/*": ["../../packages/db/src/*"],
+      "@everyskill/ui": ["../../packages/ui/src"],
+      "@everyskill/ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": [

@@ -9,12 +9,12 @@
 1. **Updated function signature** -- `generateInstallScript(os, baseUrl)` now accepts a `baseUrl: string` parameter that gets interpolated into the generated script templates.
 
 2. **Bash script callback** -- Added a `curl -s -X POST` call to `${baseUrl}/api/install-callback` that:
-   - Extracts `RELAY_API_KEY` from the just-written config file using a `node -e` one-liner
+   - Extracts `EVERYSKILL_API_KEY` from the just-written config file using a `node -e` one-liner
    - Sends JSON payload with `key`, `platform`, and `os` fields
    - Is fully non-blocking (`|| true`, stderr/stdout suppressed)
 
 3. **PowerShell script callback** -- Added an `Invoke-WebRequest` call wrapped in `try/catch` that:
-   - Reads `RELAY_API_KEY` from the config via `ConvertFrom-Json`
+   - Reads `EVERYSKILL_API_KEY` from the config via `ConvertFrom-Json`
    - Posts the same JSON payload to the same endpoint
    - Silently swallows errors (empty catch block)
 

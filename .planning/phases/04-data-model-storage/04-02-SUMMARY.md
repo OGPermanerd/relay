@@ -9,7 +9,7 @@ requires:
   - phase: 01-project-foundation
     provides: Monorepo workspace structure
 provides:
-  - "@relay/storage package with R2 presigned URL generation"
+  - "@everyskill/storage package with R2 presigned URL generation"
   - "getR2Client() for S3Client configured for R2"
   - "isStorageConfigured() for checking R2 credentials"
   - "generateUploadUrl() and generateDownloadUrl() functions"
@@ -30,12 +30,12 @@ key-files:
   modified: []
 
 key-decisions:
-  - "Graceful null-handling pattern - functions return null when R2 not configured, matching @relay/db pattern"
+  - "Graceful null-handling pattern - functions return null when R2 not configured, matching @everyskill/db pattern"
   - "Lazy-initialized S3Client singleton - client created on first use, reused thereafter"
   - "Object key pattern: skills/{skillId}/v{version}/content"
 
 patterns-established:
-  - "R2 storage access via @relay/storage package exports"
+  - "R2 storage access via @everyskill/storage package exports"
   - "Check isStorageConfigured() before storage operations"
 
 # Metrics
@@ -45,7 +45,7 @@ completed: 2026-01-31
 
 # Phase 04 Plan 02: R2 Storage Package Summary
 
-**@relay/storage package with S3Client configured for Cloudflare R2 and presigned URL generation for skill content uploads/downloads**
+**@everyskill/storage package with S3Client configured for Cloudflare R2 and presigned URL generation for skill content uploads/downloads**
 
 ## Performance
 
@@ -56,7 +56,7 @@ completed: 2026-01-31
 - **Files created:** 5
 
 ## Accomplishments
-- Created @relay/storage package with proper monorepo integration
+- Created @everyskill/storage package with proper monorepo integration
 - Implemented lazy-initialized S3Client configured for Cloudflare R2
 - Added presigned URL generation for uploads (PUT) and downloads (GET)
 - Graceful null handling when R2 credentials not configured
@@ -78,7 +78,7 @@ _Note: Task 2 files were included in a previous plan's commit due to git stash t
 - `packages/storage/src/presigned-urls.ts` - Upload and download URL generation
 
 ## Decisions Made
-- **Graceful null-handling:** Functions return null when R2 not configured, matching @relay/db pattern for optional services
+- **Graceful null-handling:** Functions return null when R2 not configured, matching @everyskill/db pattern for optional services
 - **Lazy-initialized singleton:** S3Client created on first use and reused to avoid repeated configuration
 - **Object key pattern:** `skills/{skillId}/v{version}/content` for organized storage structure
 - **1 hour expiry:** Default presigned URL expiration of 3600 seconds
@@ -98,7 +98,7 @@ None.
 - `R2_ENDPOINT` - Cloudflare R2 S3 API endpoint (format: https://<account-id>.r2.cloudflarestorage.com)
 - `R2_ACCESS_KEY_ID` - R2 API token access key
 - `R2_SECRET_ACCESS_KEY` - R2 API token secret key
-- `R2_BUCKET_NAME` - R2 bucket name (e.g., 'relay-skills')
+- `R2_BUCKET_NAME` - R2 bucket name (e.g., 'everyskill-skills')
 
 Dashboard configuration:
 1. Create R2 bucket at Cloudflare Dashboard -> R2 -> Create bucket

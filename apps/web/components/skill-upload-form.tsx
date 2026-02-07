@@ -43,9 +43,9 @@ export function SkillUploadForm() {
       usageInstructions: data.usageInstructions || prev.usageInstructions,
       content: data.content || prev.content,
     }));
-    if (data.relaySkillId) {
-      setVariationOfId(data.relaySkillId);
-      setReuploadSkillId(data.relaySkillId);
+    if (data.everyskillSkillId) {
+      setVariationOfId(data.everyskillSkillId);
+      setReuploadSkillId(data.everyskillSkillId);
     } else {
       setReuploadSkillId(null);
     }
@@ -100,7 +100,7 @@ export function SkillUploadForm() {
 
       {reuploadSkillId && (
         <div className="rounded-md bg-blue-50 p-4 text-blue-700 text-sm">
-          This file was previously deployed from Relay. It will be linked as a variation of the
+          This file was previously deployed from EverySkill. It will be linked as a variation of the
           original skill.
         </div>
       )}

@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
-import { db, skills, updateSiteSettings, getSiteSettings } from "@relay/db";
+import { db, skills, updateSiteSettings, getSiteSettings } from "@everyskill/db";
 import { testOllamaConnection, startOllama, stopOllama } from "@/lib/ollama";
 import { generateSkillEmbedding } from "@/lib/embedding-generator";
 import { revalidatePath } from "next/cache";

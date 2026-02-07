@@ -1,9 +1,9 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db, skills } from "@relay/db";
-import { skillVersions } from "@relay/db/schema/skill-versions";
-import { generateUploadUrl } from "@relay/storage";
+import { db, skills } from "@everyskill/db";
+import { skillVersions } from "@everyskill/db/schema/skill-versions";
+import { generateUploadUrl } from "@everyskill/storage";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -13,10 +13,10 @@ import { hashContent } from "@/lib/content-hash";
 import { generateSkillEmbedding } from "@/lib/embedding-generator";
 
 // ---------------------------------------------------------------------------
-// Relay frontmatter helpers
+// EverySkill frontmatter helpers
 // ---------------------------------------------------------------------------
 
-function buildRelayFrontmatter(fields: {
+function buildEverySkillFrontmatter(fields: {
   skillId: string;
   name: string;
   category: string;
@@ -24,19 +24,19 @@ function buildRelayFrontmatter(fields: {
 }): string {
   return [
     "---",
-    `relay_skill_id: ${fields.skillId}`,
-    `relay_skill_name: ${fields.name}`,
-    `relay_category: ${fields.category}`,
-    `relay_hours_saved: ${fields.hoursSaved}`,
+    `everyskill_skill_id: ${fields.skillId}`,
+    `everyskill_skill_name: ${fields.name}`,
+    `everyskill_category: ${fields.category}`,
+    `everyskill_hours_saved: ${fields.hoursSaved}`,
     "---",
     "",
   ].join("\n");
 }
 
-function stripRelayFrontmatter(content: string): string {
+function stripEverySkillFrontmatter(content: string): string {
   const match = content.match(/^---\n([\s\S]*?)\n---\n/);
   if (!match) return content;
-  // Only strip if the frontmatter contains a relay_ field
+  // Only strip if the frontmatter contains a everyskill_ field
   if (/^relay_/m.test(match[1])) {
     return content.slice(match[0].length);
   }
@@ -142,7 +142,7 @@ export async function checkAndCreateSkill(
 
   // Step 2: create the skill
   const { name, description, category, hoursSaved } = parsed.data;
-  const rawContent = stripRelayFrontmatter(parsed.data.content);
+  const rawContent = stripEverySkillFrontmatter(parsed.data.content);
   const slug = await generateUniqueSlug(name, db);
 
   if (!db) {
@@ -176,7 +176,7 @@ export async function checkAndCreateSkill(
 
   // Build content with embedded frontmatter for storage and R2
   const contentWithFrontmatter =
-    buildRelayFrontmatter({ skillId: newSkill.id, name, category, hoursSaved }) + rawContent;
+    buildEverySkillFrontmatter({ skillId: newSkill.id, name, category, hoursSaved }) + rawContent;
 
   // Update skill content to include frontmatter
   await db
@@ -307,7 +307,7 @@ export async function createSkill(
     tags: _tags,
     usageInstructions: _usageInstructions,
   } = parsed.data;
-  const rawContent = stripRelayFrontmatter(parsed.data.content);
+  const rawContent = stripEverySkillFrontmatter(parsed.data.content);
 
   // Generate unique slug
   const slug = await generateUniqueSlug(name, db);
@@ -350,7 +350,7 @@ export async function createSkill(
 
   // Build content with embedded frontmatter for storage and R2
   const contentWithFrontmatter =
-    buildRelayFrontmatter({ skillId: newSkill.id, name, category, hoursSaved }) + rawContent;
+    buildEverySkillFrontmatter({ skillId: newSkill.id, name, category, hoursSaved }) + rawContent;
 
   // Update skill content to include frontmatter
   await db

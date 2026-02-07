@@ -6,7 +6,7 @@
 
 ## Summary
 
-This phase implements user ratings and reviews for skills, building on the existing infrastructure established in prior phases. The `ratings` table already exists (created in Phase 4) with the exact schema needed: `id`, `skillId`, `userId`, `rating`, `comment`, `hoursSavedEstimate`, `createdAt`. The `updateSkillRating` service in `@relay/db` already calculates and denormalizes the average rating to the skills table.
+This phase implements user ratings and reviews for skills, building on the existing infrastructure established in prior phases. The `ratings` table already exists (created in Phase 4) with the exact schema needed: `id`, `skillId`, `userId`, `rating`, `comment`, `hoursSavedEstimate`, `createdAt`. The `updateSkillRating` service in `@everyskill/db` already calculates and denormalizes the average rating to the skills table.
 
 The main implementation work involves:
 1. Creating a rating form component on the skill detail page
@@ -28,15 +28,15 @@ The established libraries/tools for this domain:
 | Next.js | ^15.1.0 | Server Actions, form handling | Already in project |
 | React | ^19.0.0 | `useActionState` for form state | Already in project |
 | Zod | ^3.25.0 | Server-side validation | Already in project |
-| @relay/db | workspace | Database operations, ratings schema | Existing infrastructure |
+| @everyskill/db | workspace | Database operations, ratings schema | Existing infrastructure |
 
 ### Already Available (No Installation Needed)
 | Capability | Location | Notes |
 |------------|----------|-------|
-| Ratings table schema | `@relay/db/src/schema/ratings.ts` | Complete with rating, comment, hoursSavedEstimate |
-| Ratings relations | `@relay/db/src/relations/index.ts` | skill, user relations defined |
-| updateSkillRating service | `@relay/db/src/services/skill-metrics.ts` | Recalculates averageRating from ratings table |
-| formatRating utility | `@relay/db/src/services/skill-metrics.ts` | Converts integer to display string |
+| Ratings table schema | `@everyskill/db/src/schema/ratings.ts` | Complete with rating, comment, hoursSavedEstimate |
+| Ratings relations | `@everyskill/db/src/relations/index.ts` | skill, user relations defined |
+| updateSkillRating service | `@everyskill/db/src/services/skill-metrics.ts` | Recalculates averageRating from ratings table |
+| formatRating utility | `@everyskill/db/src/services/skill-metrics.ts` | Converts integer to display string |
 | getSkillStats | `apps/web/lib/skill-stats.ts` | Already queries totalRatings count |
 | Skill detail page | `apps/web/app/(protected)/skills/[slug]/page.tsx` | Where rating form will be added |
 | Server Action pattern | `apps/web/app/actions/skills.ts` | Template for new rating action |
@@ -76,7 +76,7 @@ apps/web/
 'use server'
 
 import { auth } from '@/auth'
-import { db, ratings, updateSkillRating } from '@relay/db'
+import { db, ratings, updateSkillRating } from '@everyskill/db'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { eq, and } from 'drizzle-orm'

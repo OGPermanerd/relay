@@ -91,7 +91,7 @@ None
 
 ## User Setup Required
 
-None - no external service configuration required. Schema changes will be applied via `pnpm --filter @relay/db db:push` when database is available.
+None - no external service configuration required. Schema changes will be applied via `pnpm --filter @everyskill/db db:push` when database is available.
 
 ## Next Phase Readiness
 - Schema ready for Plan 04-02 (Relations and Indexes)

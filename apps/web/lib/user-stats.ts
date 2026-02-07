@@ -1,5 +1,5 @@
-import { db } from "@relay/db";
-import { skills } from "@relay/db/schema";
+import { db } from "@everyskill/db";
+import { skills } from "@everyskill/db/schema";
 import { sql, eq, and, isNotNull } from "drizzle-orm";
 
 export interface UserStats {

@@ -153,13 +153,13 @@ async function rotateKey(userId: string, newKeyName: string) {
 
 ### Pattern 4: Validation Endpoint (Public Route)
 **What:** POST endpoint that accepts a raw key, returns userId if valid
-**When to use:** Called by MCP server (stdio) to resolve RELAY_API_KEY to a userId
+**When to use:** Called by MCP server (stdio) to resolve EVERYSKILL_API_KEY to a userId
 **Example:**
 ```typescript
 // apps/web/app/api/auth/validate-key/route.ts
 // This route must be EXCLUDED from Auth.js middleware
 import { NextRequest, NextResponse } from "next/server";
-import { validateApiKey } from "@relay/db/services/api-keys";
+import { validateApiKey } from "@everyskill/db/services/api-keys";
 
 export async function POST(req: NextRequest) {
   const { key } = await req.json();
@@ -295,8 +295,8 @@ export type NewApiKey = typeof apiKeys.$inferInsert;
 "use server";
 
 import { auth } from "@/auth";
-import { db } from "@relay/db";
-import { apiKeys } from "@relay/db/schema/api-keys";
+import { db } from "@everyskill/db";
+import { apiKeys } from "@everyskill/db/schema/api-keys";
 import { generateRawApiKey, hashApiKey, extractPrefix } from "@/lib/api-key-crypto";
 import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { db, skills, users } from "@relay/db";
+import { db, skills, users } from "@everyskill/db";
 import { ne } from "drizzle-orm";
 
 // We need a skill from a DIFFERENT author than the test user to rate it

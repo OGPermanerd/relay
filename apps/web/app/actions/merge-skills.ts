@@ -1,8 +1,8 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db, skills } from "@relay/db";
-import { mergeSkills } from "@relay/db/services";
+import { db, skills } from "@everyskill/db";
+import { mergeSkills } from "@everyskill/db/services";
 import { isAdmin } from "@/lib/admin";
 import { revalidatePath } from "next/cache";
 import { ilike, or, sql } from "drizzle-orm";

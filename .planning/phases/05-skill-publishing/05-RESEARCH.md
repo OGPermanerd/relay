@@ -6,7 +6,7 @@
 
 ## Summary
 
-This phase implements skill uploading and viewing functionality using Next.js 15 Server Actions with React 19's `useActionState` hook. The existing infrastructure provides a solid foundation: `@relay/db` has complete schemas for `skills`, `skillVersions`, `ratings`, and `usageEvents`; `@relay/storage` has R2 presigned URL helpers; and Zod validation schemas for all four skill formats are already implemented.
+This phase implements skill uploading and viewing functionality using Next.js 15 Server Actions with React 19's `useActionState` hook. The existing infrastructure provides a solid foundation: `@everyskill/db` has complete schemas for `skills`, `skillVersions`, `ratings`, and `usageEvents`; `@everyskill/storage` has R2 presigned URL helpers; and Zod validation schemas for all four skill formats are already implemented.
 
 The main implementation work involves:
 1. Creating a skill upload form with multi-field validation using existing Zod schemas
@@ -14,7 +14,7 @@ The main implementation work involves:
 3. Creating dynamic skill detail pages at `/skills/[slug]` with usage statistics
 4. Aggregating real usage data from the `usageEvents` table
 
-**Primary recommendation:** Use Server Actions with `useActionState` for the upload form, generate content hashes with Web Crypto API, and leverage existing `@relay/storage` presigned URL helpers for R2 uploads.
+**Primary recommendation:** Use Server Actions with `useActionState` for the upload form, generate content hashes with Web Crypto API, and leverage existing `@everyskill/storage` presigned URL helpers for R2 uploads.
 
 ## Standard Stack
 
@@ -25,9 +25,9 @@ The established libraries/tools for this domain:
 |---------|---------|---------|--------------|
 | Next.js | ^15.1.0 | App Router, Server Actions, dynamic routes | Already in project |
 | React | ^19.0.0 | `useActionState` for form state | Already in project |
-| Zod | ^3.25.0 | Server-side validation | Already in @relay/db |
-| @relay/db | workspace | Database operations, skill schemas | Existing infrastructure |
-| @relay/storage | workspace | R2 presigned URLs | Existing infrastructure |
+| Zod | ^3.25.0 | Server-side validation | Already in @everyskill/db |
+| @everyskill/db | workspace | Database operations, skill schemas | Existing infrastructure |
+| @everyskill/storage | workspace | R2 presigned URLs | Existing infrastructure |
 
 ### Supporting
 | Library | Version | Purpose | When to Use |
@@ -38,10 +38,10 @@ The established libraries/tools for this domain:
 ### Already Available (No Installation Needed)
 | Capability | Location | Notes |
 |------------|----------|-------|
-| Skill validation schemas | `@relay/db/src/validation/skill-formats.ts` | Discriminated union for all 4 formats |
-| Presigned upload URLs | `@relay/storage/src/presigned-urls.ts` | `generateUploadUrl(skillId, version, contentType)` |
-| Presigned download URLs | `@relay/storage/src/presigned-urls.ts` | `generateDownloadUrl(objectKey)` |
-| Skill metrics | `@relay/db/src/services/skill-metrics.ts` | `incrementSkillUses`, `updateSkillRating`, `formatRating` |
+| Skill validation schemas | `@everyskill/db/src/validation/skill-formats.ts` | Discriminated union for all 4 formats |
+| Presigned upload URLs | `@everyskill/storage/src/presigned-urls.ts` | `generateUploadUrl(skillId, version, contentType)` |
+| Presigned download URLs | `@everyskill/storage/src/presigned-urls.ts` | `generateDownloadUrl(objectKey)` |
+| Skill metrics | `@everyskill/db/src/services/skill-metrics.ts` | `incrementSkillUses`, `updateSkillRating`, `formatRating` |
 | Usage tracking | `apps/mcp/src/tracking/events.ts` | `usageEvents` table with skillId |
 
 **Installation:** No new packages required. All dependencies are already in place.
@@ -78,7 +78,7 @@ apps/web/
 'use server'
 
 import { z } from 'zod'
-import { skillMetadataSchema } from '@relay/db'
+import { skillMetadataSchema } from '@everyskill/db'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -146,7 +146,7 @@ export function SkillUploadForm() {
 // app/(protected)/skills/[slug]/page.tsx
 
 import { notFound } from 'next/navigation'
-import { db } from '@relay/db'
+import { db } from '@everyskill/db'
 import { eq } from 'drizzle-orm'
 
 interface SkillPageProps {
@@ -182,7 +182,7 @@ export default async function SkillPage({ params }: SkillPageProps) {
 ```typescript
 // Server Action to get upload URL
 'use server'
-import { generateUploadUrl } from '@relay/storage'
+import { generateUploadUrl } from '@everyskill/storage'
 
 export async function getSkillUploadUrl(skillId: string, version: number) {
   const result = await generateUploadUrl(skillId, version, 'text/markdown')
@@ -253,7 +253,7 @@ export function generateUniqueSlug(name: string, existingSlugs: string[]): strin
 ```typescript
 // Source: https://orm.drizzle.team/docs/select
 import { sql, eq, count } from 'drizzle-orm'
-import { usageEvents, skills, ratings } from '@relay/db'
+import { usageEvents, skills, ratings } from '@everyskill/db'
 
 interface SkillStats {
   totalUses: number
@@ -313,14 +313,14 @@ Problems that look simple but have existing solutions:
 
 | Problem | Don't Build | Use Instead | Why |
 |---------|-------------|-------------|-----|
-| Presigned URLs | Custom S3 signing | `@relay/storage` helpers | Already implemented, tested |
-| Skill validation | Custom validators | `@relay/db` Zod schemas | Discriminated union handles all 4 formats |
+| Presigned URLs | Custom S3 signing | `@everyskill/storage` helpers | Already implemented, tested |
+| Skill validation | Custom validators | `@everyskill/db` Zod schemas | Discriminated union handles all 4 formats |
 | Rating calculations | Manual SQL | `skill-metrics.ts` service | `updateSkillRating` already exists |
 | Usage tracking | Custom counters | `incrementSkillUses` | Atomic increment, race-condition safe |
 | Form state | Custom state management | `useActionState` | React 19 standard, handles pending/errors |
 | Slug uniqueness | Manual checking | Database unique constraint + retry | Let DB enforce, catch error and retry with suffix |
 
-**Key insight:** The `@relay/db` and `@relay/storage` packages have most of the heavy lifting done. This phase is primarily UI work connecting existing infrastructure.
+**Key insight:** The `@everyskill/db` and `@everyskill/storage` packages have most of the heavy lifting done. This phase is primarily UI work connecting existing infrastructure.
 
 ## Common Pitfalls
 
@@ -371,8 +371,8 @@ Verified patterns from official sources:
 'use server'
 
 import { auth } from '@/auth'
-import { db, skills, skillVersions } from '@relay/db'
-import { generateUploadUrl } from '@relay/storage'
+import { db, skills, skillVersions } from '@everyskill/db'
+import { generateUploadUrl } from '@everyskill/storage'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
@@ -465,7 +465,7 @@ export async function createSkill(
 ```typescript
 // app/(protected)/skills/[slug]/page.tsx
 import { notFound } from 'next/navigation'
-import { db, skills, usageEvents, ratings, formatRating } from '@relay/db'
+import { db, skills, usageEvents, ratings, formatRating } from '@everyskill/db'
 import { eq, sql } from 'drizzle-orm'
 
 interface PageProps {

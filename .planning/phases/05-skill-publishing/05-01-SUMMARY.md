@@ -113,7 +113,7 @@ Each task was committed atomically:
 
 **1. [Rule 3 - Blocking] Added drizzle-orm dependency to web package**
 - **Found during:** Task 1 (TypeScript compilation)
-- **Issue:** TypeScript couldn't find drizzle-orm types when importing from slug.ts, even though @relay/db exports db instance
+- **Issue:** TypeScript couldn't find drizzle-orm types when importing from slug.ts, even though @everyskill/db exports db instance
 - **Fix:** Added drizzle-orm ^0.38.0 to apps/web/package.json dependencies
 - **Files modified:** apps/web/package.json, pnpm-lock.yaml
 - **Verification:** TypeScript compilation passed
@@ -121,7 +121,7 @@ Each task was committed atomically:
 
 **2. [Rule 3 - Blocking] Added zod dependency to web package**
 - **Found during:** Task 2 (TypeScript compilation)
-- **Issue:** TypeScript couldn't find zod types when importing in Server Action, even though @relay/db has zod dependency
+- **Issue:** TypeScript couldn't find zod types when importing in Server Action, even though @everyskill/db has zod dependency
 - **Fix:** Added zod ^3.25.0 to apps/web/package.json dependencies
 - **Files modified:** apps/web/package.json, pnpm-lock.yaml
 - **Verification:** TypeScript compilation passed

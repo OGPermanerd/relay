@@ -28,18 +28,18 @@ Task 2 is a **blocking checkpoint** that requires Docker to execute database set
 
 2. **Push database schema:**
    ```bash
-   pnpm --filter @relay/db db:push
+   pnpm --filter @everyskill/db db:push
    ```
    (Accept interactive confirmation for schema changes)
 
 3. **Run seed script:**
    ```bash
-   pnpm --filter @relay/db db:seed
+   pnpm --filter @everyskill/db db:seed
    ```
 
 4. **Verify tables and data:**
    ```bash
-   docker exec -it relay-postgres psql -U postgres -d relay -c "SELECT name, slug, category FROM skills;"
+   docker exec -it everyskill-postgres psql -U postgres -d relay -c "SELECT name, slug, category FROM skills;"
    ```
    Expected: 3 rows (Code Review Assistant, API Documentation Generator, Test Writer)
 
@@ -47,7 +47,7 @@ Task 2 is a **blocking checkpoint** that requires Docker to execute database set
 
 - [x] File exists at packages/db/src/seed.ts (161 lines > 30 min)
 - [x] packages/db/package.json has "db:seed" script
-- [x] `pnpm --filter @relay/db typecheck` passes
+- [x] `pnpm --filter @everyskill/db typecheck` passes
 - [x] Database has skills and usage_events tables
 - [x] 3 test skills exist in database
 

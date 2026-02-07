@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { db, skills } from "@relay/db";
+import { db, skills } from "@everyskill/db";
 import { eq, desc, sql } from "drizzle-orm";
 import { MySkillsList, type MySkillItem } from "@/components/my-skills-list";
 import Link from "next/link";

@@ -32,7 +32,7 @@ key-files:
     - apps/web/lib/mcp-config.ts
 
 key-decisions:
-  - "All 4 platforms use identical MCP config (npx -y @relay/mcp stdio)"
+  - "All 4 platforms use identical MCP config (npx -y @everyskill/mcp stdio)"
   - "Claude Desktop pre-selected as default for all detected OS"
   - "Install script download only shown for claude-desktop platform"
   - "PowerShell (.ps1) for Windows, bash (.sh) for macOS/Linux"
@@ -62,7 +62,7 @@ completed: 2026-02-04
 ## Accomplishments
 - OS detection utility that checks userAgentData then UA string with SSR-safe default
 - Platform-specific MCP config generation with file paths, instructions, and JSON output per platform+OS combo
-- Install scripts (bash + PowerShell) that safely merge relay-skills into existing config via node JSON merge
+- Install scripts (bash + PowerShell) that safely merge everyskill-skills into existing config via node JSON merge
 - PlatformInstallModal component (373 lines) with card grid, config display, copy feedback, and download flow
 
 ## Task Commits

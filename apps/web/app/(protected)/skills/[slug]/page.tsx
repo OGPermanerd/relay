@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { db, skills } from "@relay/db";
-import { ratings } from "@relay/db/schema";
-import { getSkillReview, getForkCount, getTopForks, getParentSkill } from "@relay/db/services";
+import { db, skills } from "@everyskill/db";
+import { ratings } from "@everyskill/db/schema";
+import { getSkillReview, getForkCount, getTopForks, getParentSkill } from "@everyskill/db/services";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { SkillDetail } from "@/components/skill-detail";
 import { SimilarSkillsSection } from "@/components/similar-skills-section";

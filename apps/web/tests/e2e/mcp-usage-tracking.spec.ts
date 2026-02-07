@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { createHash } from "crypto";
-import { db, users, skills } from "@relay/db";
-import { apiKeys } from "@relay/db/schema/api-keys";
-import { usageEvents } from "@relay/db/schema/usage-events";
+import { db, users, skills } from "@everyskill/db";
+import { apiKeys } from "@everyskill/db/schema/api-keys";
+import { usageEvents } from "@everyskill/db/schema/usage-events";
 import { eq, and, desc, gt } from "drizzle-orm";
 
 // ---------------------------------------------------------------------------
@@ -149,7 +149,7 @@ test.describe("MCP Usage Tracking", () => {
     expect(inner.protocolVersion).toBeTruthy();
 
     const serverInfo = inner.serverInfo as Record<string, string>;
-    expect(serverInfo.name).toBe("Relay Skills");
+    expect(serverInfo.name).toBe("EverySkill Skills");
   });
 
   test("should log usage event when calling list_skills", async ({ request }) => {
@@ -422,7 +422,7 @@ test.describe("MCP Usage Tracking", () => {
     const inner = result.result as { content: { type: string; text: string }[] };
 
     const serverInfo = JSON.parse(inner.content[0].text);
-    expect(serverInfo.name).toBe("Relay Skills");
+    expect(serverInfo.name).toBe("EverySkill Skills");
     expect(serverInfo.version).toBe("1.0.0");
     expect(serverInfo.categories).toEqual(["prompt", "workflow", "agent", "mcp"]);
     expect(serverInfo.user.id).toBe(TEST_USER_ID);

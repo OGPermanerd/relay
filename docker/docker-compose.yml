@@ -1,11 +1,11 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: relay-postgres
+    container_name: everyskill-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: relay
+      POSTGRES_DB: everyskill
     ports:
       - "5432:5432"
     volumes:

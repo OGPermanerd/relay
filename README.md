@@ -1,8 +1,8 @@
-# Relay
+# EverySkill
 
 Internal Skill Marketplace - Connect with colleagues who have the skills you need.
 
-Relay enables knowledge transfer and skill sharing within organizations. Skills improve as they pass through more hands, with real metrics proving that value.
+EverySkill enables knowledge transfer and skill sharing within organizations. Skills improve as they pass through more hands, with real metrics proving that value.
 
 ## Tech Stack
 
@@ -24,7 +24,7 @@ Relay enables knowledge transfer and skill sharing within organizations. Skills 
 
 ```bash
 git clone <repository-url>
-cd relay
+cd everyskill
 ```
 
 ### 2. Install dependencies
@@ -66,7 +66,7 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 ## Monorepo Architecture
 
 ```
-relay/
+everyskill/
 ├── apps/
 │   └── web/              # Next.js web application
 ├── packages/
@@ -81,10 +81,10 @@ relay/
 
 | Package | Description | Dependencies |
 |---------|-------------|--------------|
-| `apps/web` | Next.js 15 web application | @relay/core, @relay/db, @relay/ui |
-| `@relay/core` | Shared types, constants, and utilities | - |
-| `@relay/db` | Drizzle ORM schema and database client | @relay/core, drizzle-orm, postgres |
-| `@relay/ui` | Shared React components and Tailwind styles | @relay/core, react |
+| `apps/web` | Next.js 15 web application | @everyskill/core, @everyskill/db, @everyskill/ui |
+| `@everyskill/core` | Shared types, constants, and utilities | - |
+| `@everyskill/db` | Drizzle ORM schema and database client | @everyskill/core, drizzle-orm, postgres |
+| `@everyskill/ui` | Shared React components and Tailwind styles | @everyskill/core, react |
 
 ## Available Scripts
 

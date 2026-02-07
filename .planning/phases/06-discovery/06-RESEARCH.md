@@ -296,7 +296,7 @@ export async function searchSkills(query: string, category?: string, tags?: stri
 ```typescript
 // Source: https://github.com/borisyankov/react-sparklines
 import { Sparklines, SparklinesLine } from 'react-sparklines';
-import { formatRating } from '@relay/db';
+import { formatRating } from '@everyskill/db';
 
 interface SkillCardProps {
   skill: {

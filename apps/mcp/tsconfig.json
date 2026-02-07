@@ -12,8 +12,8 @@
     "noEmit": true,
     "isolatedModules": true,
     "paths": {
-      "@relay/db": ["../../packages/db/src"],
-      "@relay/db/*": ["../../packages/db/src/*"]
+      "@everyskill/db": ["../../packages/db/src"],
+      "@everyskill/db/*": ["../../packages/db/src/*"]
     }
   },
   "include": ["src/**/*"],

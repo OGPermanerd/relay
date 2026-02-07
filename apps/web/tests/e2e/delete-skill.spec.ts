@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { db, skills, users } from "@relay/db";
+import { db, skills, users } from "@everyskill/db";
 import { eq } from "drizzle-orm";
 
 const TEST_USER_ID = "e2e-test-user";

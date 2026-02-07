@@ -1,5 +1,5 @@
 /**
- * @relay/db - Database schema and Drizzle client
+ * @everyskill/db - Database schema and Drizzle client
  */
 
 // Re-export client

@@ -81,7 +81,7 @@ The existing stack (Next.js 16.1.6, PostgreSQL, Drizzle ORM ^0.38.0, Auth.js 5.0
 - PostgreSQL exposed only within Docker network (no host port mapping)
 - Auth.js cookies set with `domain: '.relay.example.com'` for cross-subdomain sharing
 - API keys scoped to tenantId, validation returns `{ userId, tenantId, keyId }`
-- MCP auth resolves userId from `RELAY_API_KEY` env var, caches tenantId for session
+- MCP auth resolves userId from `EVERYSKILL_API_KEY` env var, caches tenantId for session
 
 **Data flow for tracking:**
 ```

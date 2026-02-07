@@ -31,7 +31,7 @@ key-files:
     - apps/web/playwright.config.ts
 
 key-decisions:
-  - "Use @relay/db instead of direct postgres import for type safety"
+  - "Use @everyskill/db instead of direct postgres import for type safety"
   - "authjs.session-token cookie name matches NextAuth v5 development mode"
   - "24-hour JWT expiry for test session tokens"
 
@@ -69,7 +69,7 @@ Each task was committed atomically:
 
 1. **Task 1: Create auth.setup.ts with test user seeding and JWT session** - `a73ea9f` (feat)
 2. **Task 2: Update playwright.config.ts with setup project** - `db16f4d` (feat)
-3. **Task 3: Validate auth setup runs successfully** - `1007503` (fix - refactored to use @relay/db)
+3. **Task 3: Validate auth setup runs successfully** - `1007503` (fix - refactored to use @everyskill/db)
 
 ## Files Created/Modified
 
@@ -80,10 +80,10 @@ Each task was committed atomically:
 
 ## Decisions Made
 
-1. **Use @relay/db instead of direct postgres import**
+1. **Use @everyskill/db instead of direct postgres import**
    - Original plan specified direct postgres/drizzle imports
    - apps/web doesn't have postgres as direct dependency
-   - Using shared db client from @relay/db is cleaner and type-safe
+   - Using shared db client from @everyskill/db is cleaner and type-safe
 
 2. **authjs.session-token cookie name**
    - NextAuth v5 uses "authjs.session-token" in development
@@ -97,10 +97,10 @@ Each task was committed atomically:
 
 ### Auto-fixed Issues
 
-**1. [Rule 3 - Blocking] Refactored imports to use @relay/db**
+**1. [Rule 3 - Blocking] Refactored imports to use @everyskill/db**
 - **Found during:** Task 1 (TypeScript compilation)
 - **Issue:** Plan specified `import postgres from 'postgres'` and `import { drizzle } from 'drizzle-orm/postgres-js'`, but these modules aren't dependencies of apps/web
-- **Fix:** Changed to `import { db, users } from '@relay/db'` to use the existing shared database client
+- **Fix:** Changed to `import { db, users } from '@everyskill/db'` to use the existing shared database client
 - **Files modified:** apps/web/tests/e2e/auth.setup.ts
 - **Verification:** TypeScript compilation passes
 - **Committed in:** 1007503 (Task 3 commit)

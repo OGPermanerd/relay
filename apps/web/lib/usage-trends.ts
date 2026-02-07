@@ -1,5 +1,5 @@
-import { db } from "@relay/db";
-import { usageEvents, skills } from "@relay/db/schema";
+import { db } from "@everyskill/db";
+import { usageEvents, skills } from "@everyskill/db/schema";
 import { sql, inArray, gte, and, eq } from "drizzle-orm";
 
 interface DailyDaysSaved {

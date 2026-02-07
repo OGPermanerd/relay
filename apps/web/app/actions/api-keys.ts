@@ -3,8 +3,8 @@
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
 import { generateRawApiKey, hashApiKey, extractPrefix } from "@/lib/api-key-crypto";
-import { db, apiKeys, users } from "@relay/db";
-import { revokeApiKey, listUserKeys, setKeyExpiry } from "@relay/db/services/api-keys";
+import { db, apiKeys, users } from "@everyskill/db";
+import { revokeApiKey, listUserKeys, setKeyExpiry } from "@everyskill/db/services/api-keys";
 import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";

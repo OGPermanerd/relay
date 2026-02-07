@@ -1,5 +1,5 @@
 {
-  "name": "@relay/db",
+  "name": "@everyskill/db",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -26,7 +26,7 @@
     "db:seed": "tsx src/seed.ts"
   },
   "dependencies": {
-    "@relay/core": "workspace:*",
+    "@everyskill/core": "workspace:*",
     "drizzle-orm": "^0.42.0",
     "postgres": "^3.4.0",
     "zod": "^3.25.0"

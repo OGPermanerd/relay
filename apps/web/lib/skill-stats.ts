@@ -1,7 +1,7 @@
-import { db } from "@relay/db";
-import { usageEvents, ratings, skills } from "@relay/db/schema";
+import { db } from "@everyskill/db";
+import { usageEvents, ratings, skills } from "@everyskill/db/schema";
 import { sql, eq } from "drizzle-orm";
-import { formatRating } from "@relay/db";
+import { formatRating } from "@everyskill/db";
 
 export interface SkillStats {
   totalUses: number;
