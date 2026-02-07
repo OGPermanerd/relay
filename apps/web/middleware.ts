@@ -1,36 +1,85 @@
-import NextAuth from "next-auth";
-import authConfig from "./auth.config";
+import { NextRequest, NextResponse } from "next/server";
 
-const { auth } = NextAuth(authConfig);
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "everyskill.ai";
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth;
-  const isLoginPage = req.nextUrl.pathname === "/login";
-  const isAuthApi = req.nextUrl.pathname.startsWith("/api/auth");
-  const isDevLogin = req.nextUrl.pathname === "/api/dev-login";
-  const isInstallCallback = req.nextUrl.pathname.startsWith("/api/install-callback");
-  const isMcpApi = req.nextUrl.pathname.startsWith("/api/mcp");
+function extractSubdomain(host: string, rootDomain: string): string | null {
+  const hostname = host.split(":")[0]; // Remove port
 
-  // Allow auth API routes, dev login, install callback, and MCP API
-  if (isAuthApi || isDevLogin || isInstallCallback || isMcpApi) {
-    return;
+  // Development: acme.localhost
+  if (hostname.endsWith("localhost")) {
+    const parts = hostname.split(".");
+    // "acme.localhost" => ["acme", "localhost"]
+    if (parts.length >= 2 && parts[parts.length - 1] === "localhost") {
+      const sub = parts.slice(0, -1).join(".");
+      return sub === "www" ? null : sub || null;
+    }
+    return null;
   }
 
-  // Redirect unauthenticated users to login
-  if (!isLoggedIn && !isLoginPage) {
-    const loginUrl = new URL("/login", req.nextUrl.origin);
-    // Preserve the original URL as callback
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
-    return Response.redirect(loginUrl);
+  // Production: acme.everyskill.ai
+  if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
+    return null; // Apex or www = no subdomain
+  }
+  if (hostname.endsWith(`.${rootDomain}`)) {
+    const sub = hostname.replace(`.${rootDomain}`, "");
+    return sub === "www" ? null : sub || null;
+  }
+
+  return null;
+}
+
+export default async function middleware(req: NextRequest) {
+  const host = req.headers.get("host") || "";
+  const pathname = req.nextUrl.pathname;
+
+  // === Exempt paths: skip entirely ===
+  // Auth API routes must be accessible for OAuth flow
+  // Also exempt: dev-login, install-callback, MCP, validate-key
+  if (
+    pathname.startsWith("/api/auth") ||
+    pathname === "/api/dev-login" ||
+    pathname.startsWith("/api/install-callback") ||
+    pathname.startsWith("/api/mcp") ||
+    pathname === "/api/validate-key"
+  ) {
+    return NextResponse.next();
+  }
+
+  // === Extract subdomain ===
+  const subdomain = extractSubdomain(host, ROOT_DOMAIN);
+
+  // === Set tenant context headers ===
+  const requestHeaders = new Headers(req.headers);
+  if (subdomain) {
+    requestHeaders.set("x-tenant-slug", subdomain);
+  }
+
+  // === Auth check via cookie presence ===
+  // Check for session token cookie (conditional name based on environment)
+  const sessionToken =
+    req.cookies.get("__Secure-authjs.session-token")?.value ||
+    req.cookies.get("authjs.session-token")?.value;
+
+  const isLoginPage = pathname === "/login";
+
+  // Redirect unauthenticated users to login (except login page itself)
+  if (!sessionToken && !isLoginPage) {
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   // Redirect authenticated users away from login page
-  if (isLoggedIn && isLoginPage) {
-    return Response.redirect(new URL("/", req.nextUrl.origin));
+  if (sessionToken && isLoginPage) {
+    return NextResponse.redirect(new URL("/", req.url));
   }
-});
+
+  // Forward request with tenant headers
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+}
 
 export const config = {
-  // Match all routes except static files, images, and auth API
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };
