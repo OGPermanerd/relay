@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 25 of 33 (Multi-Tenancy Schema & Audit Foundation)
-Plan: 2 of 9 in current phase
+Plan: 5 of 9 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed 25-02-PLAN.md (withTenant helper)
+Last activity: 2026-02-07 — Completed 25-05-PLAN.md (tenant migration files)
 
-Progress: [██░░░░░░░░░░░░░░░░░░░░░░] ~2% (v1.5 — 2 of ~TBD plans)
+Progress: [███░░░░░░░░░░░░░░░░░░░░░] ~5% (v1.5 — 5 of ~TBD plans)
 
 ## Milestones
 
@@ -28,12 +28,12 @@ Progress: [██░░░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 96
+- Total plans completed: 97
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7 hours
 
 **Cumulative:**
-- 96 plans across 25 phases and 5 milestones
+- 97 plans across 25 phases and 5 milestones
 - ~13,500 LOC TypeScript
 - 6 days total development time
 
@@ -52,6 +52,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 25-01 | Nullable tenantId/actorId on audit_logs | Supports system-level and cross-tenant events |
 | 25-02 | set_config() over SET LOCAL | SET LOCAL does not support parameterized values; set_config() with is_local=true is equivalent and works with Drizzle sql templates |
 | 25-02 | Cast tx to typeof db in withTenant | Gives callers full Drizzle query builder API without narrower transaction type |
+| 25-05 | Deterministic default tenant UUID | Avoids subqueries in backfill migration; well-known ID referenceable across migrations |
+| 25-05 | Idempotent migration guards | IF NOT EXISTS, ON CONFLICT, WHERE IS NULL make all 3 migrations safe to re-run |
 
 ### Pending Todos
 
@@ -68,6 +70,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-07T16:30:03Z
-Stopped at: Completed 25-02-PLAN.md (withTenant helper)
+Last session: 2026-02-07T16:36:41Z
+Stopped at: Completed 25-05-PLAN.md (tenant migration files)
 Resume file: None
