@@ -2,3 +2,5 @@
 import "./list.js";
 import "./search.js";
 import "./deploy.js";
+import "./confirm-install.js";
+import "./log-usage.js";

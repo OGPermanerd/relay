@@ -6,7 +6,10 @@ import { incrementSkillUses } from "@relay/db/services/skill-metrics";
  * Track MCP tool usage for analytics
  * Called within each tool handler after successful execution
  */
-export async function trackUsage(event: Omit<NewUsageEvent, "id" | "createdAt">): Promise<void> {
+export async function trackUsage(
+  event: Omit<NewUsageEvent, "id" | "createdAt">,
+  { skipIncrement = false }: { skipIncrement?: boolean } = {}
+): Promise<void> {
   try {
     if (!db) {
       console.error("Database not configured, skipping usage tracking");
@@ -15,7 +18,7 @@ export async function trackUsage(event: Omit<NewUsageEvent, "id" | "createdAt">)
     await db.insert(usageEvents).values(event);
 
     // Increment skill usage counter for denormalized totalUses
-    if (event.skillId) {
+    if (event.skillId && !skipIncrement) {
       await incrementSkillUses(event.skillId);
     }
   } catch (error) {

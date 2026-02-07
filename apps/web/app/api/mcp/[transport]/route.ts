@@ -44,16 +44,19 @@ function checkRateLimit(keyId: string): boolean {
 // ---------------------------------------------------------------------------
 // Usage tracking helper (inline — cannot import from apps/mcp)
 // ---------------------------------------------------------------------------
-async function trackUsage(event: {
-  toolName: string;
-  skillId?: string;
-  userId?: string;
-  metadata?: Record<string, unknown>;
-}) {
+async function trackUsage(
+  event: {
+    toolName: string;
+    skillId?: string;
+    userId?: string;
+    metadata?: Record<string, unknown>;
+  },
+  { skipIncrement = false }: { skipIncrement?: boolean } = {}
+) {
   try {
     if (!db) return;
     await db.insert(usageEvents).values(event);
-    if (event.skillId) await incrementSkillUses(event.skillId);
+    if (event.skillId && !skipIncrement) await incrementSkillUses(event.skillId);
   } catch (e) {
     console.error("Failed to track usage:", e);
   }
@@ -274,11 +277,79 @@ const handler = createMcpHandler(
                     hoursSaved: skill.hoursSaved,
                   },
                   message:
-                    "This skill is now available in this conversation. You can use it directly.",
+                    "This skill is now available in this conversation. When you use it, call log_skill_usage with the skillId to track usage.",
                 },
                 null,
                 2
               ),
+            },
+          ],
+        };
+      }
+    );
+
+    // -----------------------------------------------------------------------
+    // confirm_install
+    // -----------------------------------------------------------------------
+    server.registerTool(
+      "confirm_install",
+      {
+        description:
+          "Confirm that a skill has been saved/installed locally. Call this after saving a deployed skill file to log the installation.",
+        inputSchema: {
+          skillId: z.string().describe("The skill ID that was installed"),
+        },
+      },
+      async ({ skillId }, extra) => {
+        const userId = extractUserId(extra);
+        const keyId = extractKeyId(extra);
+        if (keyId && !checkRateLimit(keyId)) return rateLimitError();
+
+        await trackUsage({ toolName: "confirm_install", skillId, userId }, { skipIncrement: true });
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ success: true, message: "Installation confirmed" }),
+            },
+          ],
+        };
+      }
+    );
+
+    // -----------------------------------------------------------------------
+    // log_skill_usage
+    // -----------------------------------------------------------------------
+    server.registerTool(
+      "log_skill_usage",
+      {
+        description:
+          "Log that a skill is being used in a conversation. Call this when you actually use a deployed skill to track real usage.",
+        inputSchema: {
+          skillId: z.string().describe("The skill ID being used"),
+          action: z
+            .string()
+            .optional()
+            .default("use")
+            .describe("The action being performed (defaults to 'use')"),
+        },
+      },
+      async ({ skillId, action }, extra) => {
+        const userId = extractUserId(extra);
+        const keyId = extractKeyId(extra);
+        if (keyId && !checkRateLimit(keyId)) return rateLimitError();
+
+        await trackUsage(
+          { toolName: "log_skill_usage", skillId, userId, metadata: { action } },
+          { skipIncrement: true }
+        );
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify({ success: true, message: "Usage logged" }),
             },
           ],
         };
@@ -318,6 +389,27 @@ const handler = createMcpHandler(
           ],
         };
       }
+    );
+
+    // -----------------------------------------------------------------------
+    // suggest_skills prompt
+    // -----------------------------------------------------------------------
+    server.registerPrompt(
+      "suggest_skills",
+      {
+        description: "Suggest relevant Relay skills for the current conversation",
+      },
+      () => ({
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: "Search Relay for skills relevant to the current conversation. Use search_skills with a query matching the user's task, then present the top results with descriptions.",
+            },
+          },
+        ],
+      })
     );
   },
   {

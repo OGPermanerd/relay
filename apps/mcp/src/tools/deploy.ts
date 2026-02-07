@@ -66,13 +66,19 @@ export async function handleDeploySkill({
     },
   });
 
+  // For stdio transport, prepend YAML frontmatter so the skill ID travels with the content
+  const contentWithFrontmatter =
+    transport === "stdio"
+      ? `---\nrelay_skill_id: ${skill.id}\nrelay_skill_name: ${skill.name}\nrelay_category: ${skill.category}\nrelay_hours_saved: ${skill.hoursSaved}\n---\n${skill.content}`
+      : skill.content;
+
   // Build response based on transport
   const skillPayload: Record<string, unknown> = {
     id: skill.id,
     name: skill.name,
     category: skill.category,
     filename: `${skill.slug}.md`,
-    content: skill.content,
+    content: contentWithFrontmatter,
     hoursSaved: skill.hoursSaved,
   };
 
@@ -84,13 +90,14 @@ export async function handleDeploySkill({
   if (transport === "http") {
     // HTTP transport: skill is used in-conversation, no file-save instructions
     responseBody.message =
-      "This skill is now available in this conversation. You can use it directly.";
+      "This skill is now available in this conversation. When you use it, call log_skill_usage with the skillId to track usage.";
   } else {
     // Stdio transport: Claude Code will save the file locally
     responseBody.instructions = [
-      `Save this skill to your project's .claude/skills/ directory`,
-      `Suggested path: .claude/skills/${skill.slug}.md`,
-      `After saving, the skill will be available in your Claude Code session`,
+      `Save this skill to .claude/skills/${skill.slug}.md`,
+      "After saving, call confirm_install with the skillId to log the installation",
+      "When you use this skill in a conversation, call log_skill_usage with the skillId",
+      "The frontmatter contains relay_skill_id for future attribution",
     ];
   }
 

@@ -419,4 +419,202 @@ test.describe("MCP Usage Tracking", () => {
     expect(serverInfo.categories).toEqual(["prompt", "workflow", "agent", "mcp"]);
     expect(serverInfo.user.id).toBe(TEST_USER_ID);
   });
+
+  test("should log confirm_install event without incrementing totalUses", async ({ request }) => {
+    if (!db) throw new Error("Database required");
+
+    // Record totalUses before
+    const skillBefore = await db.query.skills.findFirst({
+      where: eq(skills.id, TEST_SKILL_ID),
+      columns: { totalUses: true },
+    });
+    const usesBefore = skillBefore!.totalUses;
+
+    const beforeCall = new Date();
+
+    const { status, body } = await mcpRequest(request, {
+      jsonrpc: "2.0",
+      method: "tools/call",
+      params: {
+        name: "confirm_install",
+        arguments: { skillId: TEST_SKILL_ID },
+      },
+      id: 30,
+    });
+
+    expect(status).toBe(200);
+    const result = body as Record<string, unknown>;
+    const inner = result.result as { content: { type: string; text: string }[] };
+    const output = JSON.parse(inner.content[0].text);
+    expect(output.success).toBe(true);
+    expect(output.message).toBe("Installation confirmed");
+
+    // Wait for tracking
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Verify usage event was logged
+    const events = await db.query.usageEvents.findMany({
+      where: and(
+        eq(usageEvents.toolName, "confirm_install"),
+        eq(usageEvents.userId, TEST_USER_ID),
+        gt(usageEvents.createdAt, beforeCall)
+      ),
+      orderBy: desc(usageEvents.createdAt),
+      limit: 1,
+    });
+
+    expect(events.length).toBe(1);
+    expect(events[0].toolName).toBe("confirm_install");
+    expect(events[0].skillId).toBe(TEST_SKILL_ID);
+    expect(events[0].userId).toBe(TEST_USER_ID);
+
+    // Verify totalUses was NOT incremented
+    const skillAfter = await db.query.skills.findFirst({
+      where: eq(skills.id, TEST_SKILL_ID),
+      columns: { totalUses: true },
+    });
+    expect(skillAfter!.totalUses).toBe(usesBefore);
+  });
+
+  test("should log log_skill_usage event without incrementing totalUses", async ({ request }) => {
+    if (!db) throw new Error("Database required");
+
+    const skillBefore = await db.query.skills.findFirst({
+      where: eq(skills.id, TEST_SKILL_ID),
+      columns: { totalUses: true },
+    });
+    const usesBefore = skillBefore!.totalUses;
+
+    const beforeCall = new Date();
+
+    const { status, body } = await mcpRequest(request, {
+      jsonrpc: "2.0",
+      method: "tools/call",
+      params: {
+        name: "log_skill_usage",
+        arguments: { skillId: TEST_SKILL_ID },
+      },
+      id: 31,
+    });
+
+    expect(status).toBe(200);
+    const result = body as Record<string, unknown>;
+    const inner = result.result as { content: { type: string; text: string }[] };
+    const output = JSON.parse(inner.content[0].text);
+    expect(output.success).toBe(true);
+    expect(output.message).toBe("Usage logged");
+
+    // Wait for tracking
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Verify usage event was logged with correct metadata
+    const events = await db.query.usageEvents.findMany({
+      where: and(
+        eq(usageEvents.toolName, "log_skill_usage"),
+        eq(usageEvents.userId, TEST_USER_ID),
+        gt(usageEvents.createdAt, beforeCall)
+      ),
+      orderBy: desc(usageEvents.createdAt),
+      limit: 1,
+    });
+
+    expect(events.length).toBe(1);
+    expect(events[0].toolName).toBe("log_skill_usage");
+    expect(events[0].skillId).toBe(TEST_SKILL_ID);
+    expect(events[0].userId).toBe(TEST_USER_ID);
+
+    const metadata = events[0].metadata as Record<string, unknown>;
+    expect(metadata.action).toBe("use");
+
+    // Verify totalUses was NOT incremented
+    const skillAfter = await db.query.skills.findFirst({
+      where: eq(skills.id, TEST_SKILL_ID),
+      columns: { totalUses: true },
+    });
+    expect(skillAfter!.totalUses).toBe(usesBefore);
+  });
+
+  test("should track full lifecycle: deploy → confirm_install → log_skill_usage", async ({
+    request,
+  }) => {
+    if (!db) throw new Error("Database required");
+
+    const beforeLifecycle = new Date();
+
+    // Step 1: Deploy
+    const { status: deployStatus } = await mcpRequest(request, {
+      jsonrpc: "2.0",
+      method: "tools/call",
+      params: { name: "deploy_skill", arguments: { skillId: TEST_SKILL_ID } },
+      id: 40,
+    });
+    expect(deployStatus).toBe(200);
+
+    // Step 2: Confirm install
+    const { status: confirmStatus } = await mcpRequest(request, {
+      jsonrpc: "2.0",
+      method: "tools/call",
+      params: { name: "confirm_install", arguments: { skillId: TEST_SKILL_ID } },
+      id: 41,
+    });
+    expect(confirmStatus).toBe(200);
+
+    // Step 3: Log usage
+    const { status: usageStatus } = await mcpRequest(request, {
+      jsonrpc: "2.0",
+      method: "tools/call",
+      params: {
+        name: "log_skill_usage",
+        arguments: { skillId: TEST_SKILL_ID, action: "apply" },
+      },
+      id: 42,
+    });
+    expect(usageStatus).toBe(200);
+
+    // Wait for all tracking to complete
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // Verify all 3 events were logged with correct skillId
+    const events = await db.query.usageEvents.findMany({
+      where: and(
+        eq(usageEvents.skillId, TEST_SKILL_ID),
+        eq(usageEvents.userId, TEST_USER_ID),
+        gt(usageEvents.createdAt, beforeLifecycle)
+      ),
+      orderBy: desc(usageEvents.createdAt),
+    });
+
+    const toolNames = events.map((e) => e.toolName).sort();
+    expect(toolNames).toContain("deploy_skill");
+    expect(toolNames).toContain("confirm_install");
+    expect(toolNames).toContain("log_skill_usage");
+
+    // Verify the log_skill_usage event has the custom action
+    const usageEvent = events.find((e) => e.toolName === "log_skill_usage");
+    expect(usageEvent).toBeTruthy();
+    const metadata = usageEvent!.metadata as Record<string, unknown>;
+    expect(metadata.action).toBe("apply");
+  });
+
+  test("should include log_skill_usage instruction in HTTP deploy response", async ({
+    request,
+  }) => {
+    const { status, body } = await mcpRequest(request, {
+      jsonrpc: "2.0",
+      method: "tools/call",
+      params: {
+        name: "deploy_skill",
+        arguments: { skillId: TEST_SKILL_ID },
+      },
+      id: 50,
+    });
+
+    expect(status).toBe(200);
+    const result = body as Record<string, unknown>;
+    const inner = result.result as { content: { type: string; text: string }[] };
+    const deployOutput = JSON.parse(inner.content[0].text);
+
+    // HTTP transport should include log_skill_usage mention in message
+    expect(deployOutput.message).toContain("log_skill_usage");
+  });
 });
