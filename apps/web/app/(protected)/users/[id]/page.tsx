@@ -57,7 +57,7 @@ export default async function UserPage(props: UserPageProps) {
     { label: "Skills Shared", value: userStats.skillsShared.toString() },
     { label: "Total Uses", value: userStats.totalUses.toString() },
     { label: "Avg Rating", value: userStats.avgRating ?? "-" },
-    { label: "FTE Days Saved", value: userStats.fteDaysSaved.toString() },
+    { label: "FTE Years Saved", value: (userStats.fteDaysSaved / 365).toFixed(1) },
   ];
 
   const isOwnProfile = session?.user?.id === user.id;
@@ -118,7 +118,7 @@ export default async function UserPage(props: UserPageProps) {
         {userSkills.length > 0 ? (
           <div className="space-y-3">
             {userSkills.map((skill) => {
-              const daysSaved = Math.round((skill.totalUses * (skill.hoursSaved ?? 1)) / 8);
+              const yearsSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / 8 / 365).toFixed(2);
               const rating = skill.averageRating ? (skill.averageRating / 100).toFixed(1) : null;
 
               return (
@@ -141,7 +141,7 @@ export default async function UserPage(props: UserPageProps) {
                     </div>
                     <div className="ml-4 flex shrink-0 items-center gap-4 text-sm text-gray-500">
                       <div className="text-right">
-                        <p className="font-medium text-blue-600">{daysSaved} days</p>
+                        <p className="font-medium text-blue-600">{yearsSaved} yrs</p>
                         <p className="text-xs">saved</p>
                       </div>
                       <div className="text-right">

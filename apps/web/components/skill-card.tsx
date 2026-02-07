@@ -37,8 +37,8 @@ interface SkillCardProps {
  * - Author avatar and name
  */
 export function SkillCard({ skill, usageTrend }: SkillCardProps) {
-  // Calculate FTE Days Saved: (totalUses * hoursSaved) / 8
-  const fteDaysSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / 8).toFixed(1);
+  // Calculate FTE Years Saved: (totalUses * hoursSaved) / 8 / 365
+  const fteYearsSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / 8 / 365).toFixed(2);
 
   // Calculate quality tier for badge
   const { tier } = calculateQualityScore({
@@ -73,7 +73,7 @@ export function SkillCard({ skill, usageTrend }: SkillCardProps) {
             : "No ratings"}
         </span>
         <div className="flex items-center gap-1">
-          <span>{fteDaysSaved} days</span>
+          <span>{fteYearsSaved} yrs</span>
           <Sparkline data={usageTrend} />
         </div>
       </div>

@@ -24,13 +24,13 @@ test.describe("User Profile Page", () => {
     await expect(page.locator("text=Skills Shared")).toBeVisible();
     await expect(page.locator("text=Total Uses")).toBeVisible();
     await expect(page.locator("text=Avg Rating")).toBeVisible();
-    await expect(page.locator("text=FTE Days Saved")).toBeVisible();
+    await expect(page.locator("text=FTE Years Saved")).toBeVisible();
 
     // Check for stat descriptions
     await expect(page.locator("text=Skills you've contributed")).toBeVisible();
     await expect(page.locator("text=Times your skills were used")).toBeVisible();
     await expect(page.locator("text=Average rating received")).toBeVisible();
-    await expect(page.locator("text=Days saved for the org")).toBeVisible();
+    await expect(page.locator("text=Years saved for the org")).toBeVisible();
   });
 
   test("should display account information section", async ({ page }) => {

@@ -51,7 +51,7 @@ export interface SkillsTableProps {
 // Human-readable column names for screen reader announcements
 const COLUMN_LABELS: Record<string, string> = {
   name: "Skill Name",
-  days_saved: "Days Saved",
+  days_saved: "Years Saved",
   installs: "Installs",
   date: "Date Added",
   author: "Author",
@@ -165,13 +165,13 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
             <th
               scope="col"
               className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500"
-              title="Days saved over last 14 days"
+              title="Years saved over last 14 days"
             >
               Trend
             </th>
             <SortableColumnHeader
               column="days_saved"
-              label="Days Saved"
+              label="Years Saved"
               currentSort={sortBy}
               direction={sortDir}
               onSort={toggleSort}

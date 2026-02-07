@@ -162,8 +162,8 @@ export default async function HomePage() {
       {/* Platform Stats */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="FTE Days Saved"
-          value={stats.totalFteDaysSaved.toLocaleString()}
+          label="FTE Years Saved"
+          value={(stats.totalFteDaysSaved / 365).toFixed(1)}
           icon={<ClockIcon />}
           trendData={trends.fteDaysTrend}
           trendColor="#3b82f6"

@@ -102,8 +102,8 @@ export function SkillDetail({ skill, stats, trends, forkCount, parentSkill }: Sk
       {/* Stats grid */}
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
-          label="FTE Days Saved"
-          value={stats.fteDaysSaved}
+          label="FTE Years Saved"
+          value={(Number(stats.fteDaysSaved) / 365).toFixed(2)}
           trendData={trends.daysSavedTrend}
           trendColor="#10b981"
         />

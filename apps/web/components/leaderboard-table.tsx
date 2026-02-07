@@ -55,7 +55,7 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
                   scope="col"
                   className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
                 >
-                  Days
+                  Years
                 </th>
               </tr>
             </thead>
@@ -89,7 +89,7 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
                     </Link>
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 text-right text-sm font-medium text-blue-600">
-                    {Math.round(contributor.fteDaysSaved).toLocaleString()}
+                    {(contributor.fteDaysSaved / 365).toFixed(1)}
                   </td>
                 </tr>
               ))}

@@ -123,7 +123,10 @@ export function MyLeverageView({
         {/* Stats Grid */}
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Skills Used" value={skillsUsedStats.totalSkills} />
-          <StatCard label="FTE Hours Saved" value={skillsUsedStats.totalHoursSaved.toFixed(1)} />
+          <StatCard
+            label="Years Saved"
+            value={(skillsUsedStats.totalHoursSaved / 8 / 365).toFixed(2)}
+          />
           <StatCard label="Total Actions" value={skillsUsedStats.totalActions} />
           <StatCard label="Most Used" value={skillsUsedStats.mostUsedSkill || "None yet"} />
         </div>
@@ -179,8 +182,8 @@ export function MyLeverageView({
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Skills Published" value={skillsCreatedStats.skillsPublished} />
           <StatCard
-            label="Hours Saved by Others"
-            value={skillsCreatedStats.hoursSavedByOthers.toFixed(1)}
+            label="Years Saved by Others"
+            value={(skillsCreatedStats.hoursSavedByOthers / 8 / 365).toFixed(2)}
           />
           <StatCard label="Unique Users" value={skillsCreatedStats.uniqueUsers} />
           <StatCard

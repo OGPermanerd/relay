@@ -92,13 +92,13 @@ test.describe("Home Page Tabs", () => {
 
     // StatCard labels from the MyLeverageView component
     // Skills Used section stat cards
-    await expect(page.getByText("FTE Hours Saved")).toBeVisible();
+    await expect(page.getByText("Years Saved", { exact: true })).toBeVisible();
     await expect(page.getByText("Total Actions")).toBeVisible();
     await expect(page.getByText("Most Used")).toBeVisible();
 
     // Skills Created section stat cards
     await expect(page.getByText("Skills Published")).toBeVisible();
-    await expect(page.getByText("Hours Saved by Others")).toBeVisible();
+    await expect(page.getByText("Years Saved by Others")).toBeVisible();
     await expect(page.getByText("Unique Users")).toBeVisible();
   });
 
@@ -106,7 +106,7 @@ test.describe("Home Page Tabs", () => {
     await page.goto("/?view=leverage");
 
     // Verify leverage content is showing
-    await expect(page.getByText("FTE Hours Saved")).toBeVisible();
+    await expect(page.getByText("Years Saved", { exact: true })).toBeVisible();
 
     // Click Browse Skills tab
     await page.getByRole("button", { name: /Browse Skills/i }).click();
@@ -115,6 +115,6 @@ test.describe("Home Page Tabs", () => {
     await expect(page.getByText("Trending Skills")).toBeVisible();
 
     // Leverage-specific content should not be visible
-    await expect(page.getByText("FTE Hours Saved")).not.toBeVisible();
+    await expect(page.getByText("Years Saved", { exact: true })).not.toBeVisible();
   });
 });

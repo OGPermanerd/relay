@@ -87,8 +87,8 @@ export function SkillsTableRow({
     (rowRef as React.MutableRefObject<HTMLTableRowElement | null>).current = el;
     registerRef(el);
   };
-  // Calculate FTE Days Saved: (totalUses * hoursSaved) / 8, rounded to whole number
-  const daysSaved = Math.round((skill.totalUses * (skill.hoursSaved ?? 1)) / 8);
+  // Calculate FTE Years Saved: (totalUses * hoursSaved) / 8 / 365
+  const yearsSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / 8 / 365).toFixed(2);
 
   // Format date as "MMM D, YYYY" (e.g., "Jan 15, 2026")
   // Manual formatting avoids hydration mismatches from toLocaleDateString
@@ -147,7 +147,7 @@ export function SkillsTableRow({
           </div>
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
-          {daysSaved}
+          {yearsSaved}
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
           {String(skill.totalUses)}

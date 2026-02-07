@@ -41,9 +41,9 @@ export default async function ProfilePage() {
       description: "Average rating received",
     },
     {
-      label: "FTE Days Saved",
-      value: userStats.fteDaysSaved.toString(),
-      description: "Days saved for the org",
+      label: "FTE Years Saved",
+      value: (userStats.fteDaysSaved / 365).toFixed(1),
+      description: "Years saved for the org",
     },
   ];
 
@@ -105,6 +105,20 @@ export default async function ProfilePage() {
             </div>
           </dl>
         </div>
+      </div>
+
+      {/* My Skills */}
+      <div className="mt-8">
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">My Skills</h2>
+        <p className="mb-4 text-sm text-gray-600">
+          Manage skills you&apos;ve created and published
+        </p>
+        <a
+          href="/my-skills"
+          className="inline-block text-sm font-medium text-blue-600 hover:text-blue-500"
+        >
+          Go to My Skills &rarr;
+        </a>
       </div>
 
       {/* API Keys */}
