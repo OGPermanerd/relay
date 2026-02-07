@@ -1,4 +1,5 @@
 import { signIn } from "@/auth";
+import { headers } from "next/headers";
 
 interface LoginPageProps {
   searchParams: Promise<{
@@ -12,18 +13,26 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const callbackUrl = params.callbackUrl || "/";
   const error = params.error;
 
+  const headersList = await headers();
+  const tenantSlug = headersList.get("x-tenant-slug");
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">EverySkill</h1>
-          <p className="mt-2 text-gray-600">Internal Skill Marketplace</p>
+          <p className="mt-2 text-gray-600">Skills Marketplace</p>
+          {tenantSlug && (
+            <p className="mt-1 text-sm text-gray-500">
+              Signing in to <span className="font-medium text-gray-700">{tenantSlug}</span>
+            </p>
+          )}
         </div>
 
         {error === "AccessDenied" && (
           <div className="rounded-md bg-red-50 p-4">
             <p className="text-sm text-red-700">
-              Access denied. Please sign in with a company email address.
+              Access denied. Your email domain is not associated with any organization.
             </p>
           </div>
         )}
@@ -68,7 +77,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500">Use your company email to sign in</p>
+        <p className="text-center text-sm text-gray-500">Sign in with your organization email</p>
       </div>
     </div>
   );
