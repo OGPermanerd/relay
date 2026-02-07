@@ -60,6 +60,10 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 25-04 | Service files updated with tenantId immediately | Prevents compilation errors rather than deferring to later plans |
 | 25-05 | Deterministic default tenant UUID | Avoids subqueries in backfill migration; well-known ID referenceable across migrations |
 | 25-05 | Idempotent migration guards | IF NOT EXISTS, ON CONFLICT, WHERE IS NULL make all 3 migrations safe to re-run |
+| 25-06 | RLS uses current_setting('app.current_tenant_id', true) | Missing setting returns NULL = zero rows (secure default) |
+| 25-06 | FORCE RLS on all tenant tables | Even superuser/table-owner connections see filtered rows |
+| 25-06 | audit_logs NOT RLS-protected | Supports system-level and cross-tenant audit events |
+| 25-06 | Trigger-based append-only over REVOKE | Works regardless of DB role setup; REVOKE deferred to deployment |
 | 25-08 | Fire-and-forget audit pattern | Catch errors and log to console, never propagate to callers |
 | 25-08 | Direct INSERT not transaction-scoped | audit_logs is append-only, no RLS needed |
 
