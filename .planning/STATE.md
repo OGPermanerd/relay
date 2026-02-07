@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 27 Production Docker Deployment -- in progress (1/4 plans complete).
+**Current focus:** Phase 27 Production Docker Deployment -- in progress (2/4 plans complete).
 
 ## Current Position
 
 Phase: 27 of 33 (Production Docker Deployment)
-Plan: 2 of 4 in current phase
-Status: In progress. Plan 27-02 complete (Dockerfiles + Caddyfile).
-Last activity: 2026-02-07 -- Completed 27-02-PLAN.md (Dockerfiles and Caddyfile)
+Plan: 3 of 4 in current phase
+Status: In progress. Plan 27-03 complete (backup/restore scripts + LUKS runbook).
+Last activity: 2026-02-07 -- Completed 27-03-PLAN.md (backup, restore, LUKS runbook)
 
 Progress: [████████░░░░░░░░░░░░░░░░] ~11% (v1.5 -- 12 of ~TBD plans)
 
@@ -28,12 +28,12 @@ Progress: [████████░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 108
+- Total plans completed: 109
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.5 hours
 
 **Cumulative:**
-- 108 plans across 27 phases and 5 milestones
+- 109 plans across 27 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -77,6 +77,9 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 26-02 | Update user.tenantId in DB during jwt callback | DrizzleAdapter creates user with default tenant; first sign-in corrects to real tenant |
 | 26-03 | Remove auth() wrapper from middleware | Auth.js v5 beta.30 rewrites req.url breaking subdomain routing; plain NextResponse middleware avoids this |
 | 26-03 | Cookie presence check for auth | Lightweight session-token cookie check sufficient for redirect logic; full validation in server components |
+| 27-03 | Streaming dump-compress-encrypt pipeline | No unencrypted temp files touch disk; SOC2 data-at-rest compliance |
+| 27-03 | Separate LUKS and backup passphrases | Defense in depth; compromising one does not expose the other |
+| 27-03 | Dropbear on port 2222 for remote LUKS unlock | Avoids conflict with post-boot SSH daemon |
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ All decisions logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-02-07T19:23:05Z
-Stopped at: Completed 27-02-PLAN.md (Dockerfiles and Caddyfile)
+Last session: 2026-02-07T19:25:21Z
+Stopped at: Completed 27-03-PLAN.md (backup, restore, LUKS runbook)
 Resume file: None
