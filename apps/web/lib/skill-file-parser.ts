@@ -6,6 +6,7 @@ export interface ParsedSkillData {
   usageInstructions?: string;
   content?: string;
   parseMessage?: string;
+  relaySkillId?: string;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -42,15 +43,19 @@ function parseMarkdownFile(filename: string, text: string): ParsedSkillData {
   const baseName = filename.replace(/\.md$/i, "");
   const isClaude = baseName.toLowerCase() === "claude";
 
-  const heading = extractFirstHeading(text);
+  // Extract and strip relay frontmatter if present
+  const { content: cleanedText, relaySkillId } = extractRelayFrontmatter(text);
+
+  const heading = extractFirstHeading(cleanedText);
   const name = heading || titleCase(baseName);
-  const description = extractFirstParagraph(text);
+  const description = extractFirstParagraph(cleanedText);
 
   return {
     name,
     description,
     category: isClaude ? "agent" : "prompt",
-    content: text,
+    content: cleanedText,
+    relaySkillId,
     parseMessage: `Imported "${filename}" as ${isClaude ? "agent" : "prompt"} skill.`,
   };
 }
@@ -238,6 +243,22 @@ async function parseZipFile(file: File): Promise<ParsedSkillData> {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+function extractRelayFrontmatter(text: string): { content: string; relaySkillId?: string } {
+  const match = text.match(/^---\n([\s\S]*?)\n---\n/);
+  if (!match) return { content: text };
+
+  const frontmatter = match[1];
+  // Only process if it contains relay_ fields
+  if (!/^relay_/m.test(frontmatter)) return { content: text };
+
+  const idMatch = frontmatter.match(/^relay_skill_id:\s*(.+)$/m);
+  const relaySkillId = idMatch?.[1]?.trim();
+
+  // Strip relay frontmatter from content
+  const content = text.slice(match[0].length);
+  return { content, relaySkillId };
+}
 
 function titleCase(str: string): string {
   return str

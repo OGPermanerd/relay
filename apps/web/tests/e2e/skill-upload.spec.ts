@@ -53,7 +53,9 @@ test.describe("Skill Upload Flow", () => {
     });
 
     // Verify we landed on the skill detail page with the correct name
-    await expect(page.getByText(new RegExp(skillName, "i"))).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: new RegExp(skillName, "i") })).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("should fill and submit the skill creation form", async ({ page }) => {

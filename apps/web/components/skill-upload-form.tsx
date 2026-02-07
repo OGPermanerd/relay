@@ -31,6 +31,8 @@ export function SkillUploadForm() {
     setFields((prev) => ({ ...prev, [name]: value }));
   }, []);
 
+  const [reuploadSkillId, setReuploadSkillId] = useState<string | null>(null);
+
   const handleFileParsed = useCallback((data: ParsedSkillData) => {
     setFields((prev) => ({
       ...prev,
@@ -41,6 +43,12 @@ export function SkillUploadForm() {
       usageInstructions: data.usageInstructions || prev.usageInstructions,
       content: data.content || prev.content,
     }));
+    if (data.relaySkillId) {
+      setVariationOfId(data.relaySkillId);
+      setReuploadSkillId(data.relaySkillId);
+    } else {
+      setReuploadSkillId(null);
+    }
   }, []);
 
   // When server returns similar skills, show warning
@@ -89,6 +97,13 @@ export function SkillUploadForm() {
       <input type="hidden" name="_variationOf" value={variationOfId || ""} />
 
       {message && <div className="rounded-md bg-red-50 p-4 text-red-700">{message}</div>}
+
+      {reuploadSkillId && (
+        <div className="rounded-md bg-blue-50 p-4 text-blue-700 text-sm">
+          This file was previously deployed from Relay. It will be linked as a variation of the
+          original skill.
+        </div>
+      )}
 
       {showWarning && state.similarSkills && state.similarSkills.length > 0 && (
         <SimilarSkillsWarning
