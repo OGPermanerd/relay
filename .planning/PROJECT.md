@@ -78,9 +78,19 @@ Previous:
 - ✓ Web remote MCP via Streamable HTTP for Claude.ai browser access — v1.4
 - ✓ Extended MCP search matching author name and tags with field-weighted scoring — v1.4
 
-### Active
+### Active — v1.5 Production, Multi-Tenancy & Reliable Usage Tracking
 
-(No active milestone — next milestone not yet defined)
+- [ ] Production deployment via Docker Compose on Hetzner (PostgreSQL, Next.js, Caddy/SSL)
+- [ ] Public domain with SSL + Tailscale access
+- [ ] Full multi-tenancy with subdomain routing (tenant1.domain.com)
+- [ ] Tenant isolation — separate admin, users, skills per tenant
+- [ ] tenant_id across all DB tables, scoped queries
+- [ ] Domain-based Google SSO mapping to tenants
+- [ ] Compliance skill with PostToolUse hooks for deterministic MCP tool tracking
+- [ ] Tracking endpoint that receives hook callbacks from user machines
+- [ ] Auto-injection of tracking hooks into skill frontmatter on upload (invisible to uploader)
+- [ ] Deploy-time compliance checking — verify tracker harness, nudge if missing
+- [ ] Session heartbeat on MCP startup
 
 ### Out of Scope
 
@@ -99,12 +109,14 @@ Previous:
 
 **FTE Days Saved is the core metric:** This is the primary measure of Relay's value to the organization. It's calculated per-version and aggregated across the platform. Creator provides initial estimate (or asks Relay to estimate), but user-submitted estimates from reviews take precedence once available.
 
-**Scale:** Enterprise-wide rollout targeting 500+ users in year one.
+**Scale:** Enterprise-wide rollout targeting 500+ users in year one. Multi-tenant architecture enables multiple organizations to run isolated instances on shared infrastructure.
+
+**Reliable usage tracking:** The honor-system `log_skill_usage` MCP tool is insufficient. v1.5 introduces deterministic tracking via Claude Code hooks embedded in a mandatory compliance skill and auto-injected into deployed skill files. Hooks fire PostToolUse callbacks to the production tracking endpoint.
 
 ## Constraints
 
 - **Tech stack**: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5 — established in v1.0
-- **Authentication**: Google Workspace SSO only, restricted to company domain — no public access
+- **Authentication**: Google Workspace SSO only, domain maps to tenant — no public registration
 - **MCP compatibility**: Must work with Claude Code's MCP server architecture
 - **Skill format flexibility**: System must handle heterogeneous skill types without forcing a single format
 
@@ -150,4 +162,4 @@ Previous:
 | mcp-handler for Streamable HTTP | Handles MCP protocol negotiation for Next.js routes | ✓ Good |
 
 ---
-*Last updated: 2026-02-06 after v1.4 milestone completed*
+*Last updated: 2026-02-07 after v1.5 milestone started*
