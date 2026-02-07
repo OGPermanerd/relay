@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 26 Auth & Subdomain Routing -- COMPLETE (3/3 plans). Ready for Phase 27.
+**Current focus:** Phase 27 Production Docker Deployment -- in progress (1/4 plans complete).
 
 ## Current Position
 
-Phase: 26 of 33 (Auth & Subdomain Routing)
-Plan: 3 of 3 in current phase
-Status: Phase complete. All 3 plans done. 85/86 E2E tests pass.
-Last activity: 2026-02-07 -- Completed 26-03-PLAN.md (middleware rewrite + login page)
+Phase: 27 of 33 (Production Docker Deployment)
+Plan: 2 of 4 in current phase
+Status: In progress. Plan 27-02 complete (Dockerfiles + Caddyfile).
+Last activity: 2026-02-07 -- Completed 27-02-PLAN.md (Dockerfiles and Caddyfile)
 
 Progress: [████████░░░░░░░░░░░░░░░░] ~11% (v1.5 -- 12 of ~TBD plans)
 
@@ -28,12 +28,12 @@ Progress: [████████░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 107
+- Total plans completed: 108
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.5 hours
 
 **Cumulative:**
-- 107 plans across 26 phases and 5 milestones
+- 108 plans across 27 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -95,6 +95,6 @@ All decisions logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-02-07T18:47:49Z
-Stopped at: Completed 26-03-PLAN.md (middleware rewrite + login page). Phase 26 complete.
-Resume file: None (phase complete, ready for Phase 27)
+Last session: 2026-02-07T19:23:05Z
+Stopped at: Completed 27-02-PLAN.md (Dockerfiles and Caddyfile)
+Resume file: None
