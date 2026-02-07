@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 25 of 33 (Multi-Tenancy Schema & Audit Foundation)
-Plan: 1 of 9 in current phase
+Plan: 2 of 9 in current phase
 Status: In progress
-Last activity: 2026-02-07 — Completed 25-01-PLAN.md (tenants + audit_logs schema)
+Last activity: 2026-02-07 — Completed 25-02-PLAN.md (withTenant helper)
 
-Progress: [█░░░░░░░░░░░░░░░░░░░░░░░] ~1% (v1.5 — 1 of ~TBD plans)
+Progress: [██░░░░░░░░░░░░░░░░░░░░░░] ~2% (v1.5 — 2 of ~TBD plans)
 
 ## Milestones
 
@@ -28,12 +28,12 @@ Progress: [█░░░░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 95
+- Total plans completed: 96
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7 hours
 
 **Cumulative:**
-- 95 plans across 25 phases and 5 milestones
+- 96 plans across 25 phases and 5 milestones
 - ~13,500 LOC TypeScript
 - 6 days total development time
 
@@ -50,6 +50,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 25-01 | uuid PK for audit_logs, text PK for tenants | uuid better for high-volume append-only; text consistent with existing schema |
 | 25-01 | withTimezone: true on audit_logs.createdAt | SOC2 compliance requires precise timezone tracking |
 | 25-01 | Nullable tenantId/actorId on audit_logs | Supports system-level and cross-tenant events |
+| 25-02 | set_config() over SET LOCAL | SET LOCAL does not support parameterized values; set_config() with is_local=true is equivalent and works with Drizzle sql templates |
+| 25-02 | Cast tx to typeof db in withTenant | Gives callers full Drizzle query builder API without narrower transaction type |
 
 ### Pending Todos
 
@@ -66,6 +68,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-07T16:28:33Z
-Stopped at: Completed 25-01-PLAN.md (tenants + audit_logs schema)
+Last session: 2026-02-07T16:30:03Z
+Stopped at: Completed 25-02-PLAN.md (withTenant helper)
 Resume file: None
