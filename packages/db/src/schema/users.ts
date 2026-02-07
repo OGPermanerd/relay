@@ -14,6 +14,7 @@ export const users = pgTable(
       .$defaultFn(() => crypto.randomUUID()),
     tenantId: text("tenant_id")
       .notNull()
+      .default("default-tenant-000-0000-000000000000")
       .references(() => tenants.id),
     email: text("email").notNull().unique(),
     name: text("name"),

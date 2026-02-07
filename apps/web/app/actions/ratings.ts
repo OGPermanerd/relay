@@ -7,6 +7,9 @@ import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
+
 // Zod schema for rating form validation
 const ratingSchema = z.object({
   skillId: z.string().min(1, "Skill ID is required"),
@@ -89,6 +92,7 @@ export async function submitRating(
     } else {
       // Insert new rating
       await db.insert(ratings).values({
+        tenantId: DEFAULT_TENANT_ID,
         skillId,
         userId: session.user.id,
         rating,

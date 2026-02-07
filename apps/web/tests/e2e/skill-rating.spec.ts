@@ -6,6 +6,7 @@ import { ne } from "drizzle-orm";
 // Test user ID is "e2e-test-user"
 const TEST_USER_ID = "e2e-test-user";
 const OTHER_AUTHOR_ID = "e2e-other-author";
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
 
 test.describe("Skill Rating Flow", () => {
   let testSkillSlug: string;
@@ -19,6 +20,7 @@ test.describe("Skill Rating Flow", () => {
     await db
       .insert(users)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         id: OTHER_AUTHOR_ID,
         email: "other-author@company.com",
         name: "Other Author",
@@ -38,6 +40,7 @@ test.describe("Skill Rating Flow", () => {
       const [newSkill] = await db
         .insert(skills)
         .values({
+          tenantId: DEFAULT_TENANT_ID,
           name: "Skill To Rate",
           slug: `skill-to-rate-${Date.now()}`,
           description: "A skill from another author for rating E2E tests",

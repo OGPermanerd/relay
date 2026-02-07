@@ -8,6 +8,9 @@ import { test as setup } from "@playwright/test";
 import { encode } from "next-auth/jwt";
 import { db, users } from "@relay/db";
 
+// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
+
 // Test user constants
 const TEST_USER = {
   id: "e2e-test-user",
@@ -34,6 +37,7 @@ setup("authenticate", async ({ page }) => {
   await db
     .insert(users)
     .values({
+      tenantId: DEFAULT_TENANT_ID,
       id: TEST_USER.id,
       email: TEST_USER.email,
       name: TEST_USER.name,

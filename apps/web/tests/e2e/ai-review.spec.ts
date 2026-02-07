@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { hashContent } from "@/lib/content-hash";
 
 const TEST_USER_ID = "e2e-test-user";
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
 
 test.describe("AI Review Display", () => {
   test.describe.configure({ mode: "serial" });
@@ -21,6 +22,7 @@ test.describe("AI Review Display", () => {
     await db
       .insert(users)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         id: TEST_USER_ID,
         email: "e2e-test@company.com",
         name: "E2E Test User",
@@ -34,6 +36,7 @@ test.describe("AI Review Display", () => {
     const [newSkill] = await db
       .insert(skills)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         name: "AI Review Test Skill",
         slug,
         description: "A skill for testing the AI review display",
@@ -51,6 +54,7 @@ test.describe("AI Review Display", () => {
     const contentHash = await hashContent(content);
 
     await db.insert(skillReviews).values({
+      tenantId: DEFAULT_TENANT_ID,
       skillId: testSkillId,
       requestedBy: TEST_USER_ID,
       categories: {

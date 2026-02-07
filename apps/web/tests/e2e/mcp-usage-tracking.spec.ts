@@ -12,6 +12,7 @@ const TEST_RAW_KEY = "rlk_e2e_mcp_usage_test_key_1234567890abcdef";
 const TEST_KEY_HASH = createHash("sha256").update(TEST_RAW_KEY).digest("hex");
 const TEST_USER_ID = "e2e-test-user";
 const TEST_SKILL_ID = "mcp-usage-test-skill";
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
 
 /** MCP JSON-RPC headers required by mcp-handler */
 const mcpHeaders = {
@@ -64,7 +65,12 @@ test.describe("MCP Usage Tracking", () => {
     // Ensure test user exists
     await db
       .insert(users)
-      .values({ id: TEST_USER_ID, email: "e2e-test@company.com", name: "E2E Test User" })
+      .values({
+        tenantId: DEFAULT_TENANT_ID,
+        id: TEST_USER_ID,
+        email: "e2e-test@company.com",
+        name: "E2E Test User",
+      })
       .onConflictDoUpdate({
         target: users.id,
         set: { email: "e2e-test@company.com", name: "E2E Test User" },
@@ -77,6 +83,7 @@ test.describe("MCP Usage Tracking", () => {
 
     if (!existing) {
       await db.insert(apiKeys).values({
+        tenantId: DEFAULT_TENANT_ID,
         userId: TEST_USER_ID,
         keyHash: TEST_KEY_HASH,
         keyPrefix: TEST_RAW_KEY.slice(0, 8),
@@ -91,6 +98,7 @@ test.describe("MCP Usage Tracking", () => {
     await db
       .insert(skills)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         id: TEST_SKILL_ID,
         name: "MCP Usage Test Skill",
         slug: "mcp-usage-test-skill",

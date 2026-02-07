@@ -3,6 +3,7 @@ import { db, skills, users } from "@relay/db";
 import { eq } from "drizzle-orm";
 
 const TEST_USER_ID = "e2e-test-user";
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
 
 test.describe("Delete Skill", () => {
   test.describe.configure({ mode: "serial" });
@@ -16,6 +17,7 @@ test.describe("Delete Skill", () => {
     await db
       .insert(users)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         id: TEST_USER_ID,
         email: "e2e-test@company.com",
         name: "E2E Test User",
@@ -26,6 +28,7 @@ test.describe("Delete Skill", () => {
     const [skill] = await db
       .insert(skills)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         name: "Skill To Delete",
         slug,
         description: "A skill for delete E2E testing",

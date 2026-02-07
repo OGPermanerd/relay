@@ -77,6 +77,9 @@ const createSkillSchema = z.object({
 import { checkSimilarSkills } from "@/lib/similar-skills";
 import type { SimilarSkillResult } from "@/lib/similar-skills";
 
+// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
+
 export type CreateSkillState = {
   errors?: Record<string, string[]>;
   message?: string;
@@ -151,6 +154,7 @@ export async function checkAndCreateSkill(
     const [inserted] = await db
       .insert(skills)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         name,
         slug,
         description,
@@ -194,6 +198,7 @@ export async function checkAndCreateSkill(
       const [version] = await db
         .insert(skillVersions)
         .values({
+          tenantId: DEFAULT_TENANT_ID,
           skillId: newSkill.id,
           version: 1,
           contentUrl: uploadResult.objectKey,
@@ -320,6 +325,7 @@ export async function createSkill(
     const [inserted] = await db
       .insert(skills)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         name,
         slug,
         description,
@@ -371,6 +377,7 @@ export async function createSkill(
       const [version] = await db
         .insert(skillVersions)
         .values({
+          tenantId: DEFAULT_TENANT_ID,
           skillId: newSkill.id,
           version: 1,
           contentUrl: uploadResult.objectKey,

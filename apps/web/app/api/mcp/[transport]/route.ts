@@ -6,6 +6,9 @@ import { usageEvents } from "@relay/db/schema/usage-events";
 import { incrementSkillUses } from "@relay/db/services/skill-metrics";
 import { searchSkillsByQuery } from "@relay/db/services/search-skills";
 
+// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
+
 // ---------------------------------------------------------------------------
 // CORS
 // ---------------------------------------------------------------------------
@@ -55,7 +58,7 @@ async function trackUsage(
 ) {
   try {
     if (!db) return;
-    await db.insert(usageEvents).values(event);
+    await db.insert(usageEvents).values({ tenantId: DEFAULT_TENANT_ID, ...event });
     if (event.skillId && !skipIncrement) await incrementSkillUses(event.skillId);
   } catch (e) {
     console.error("Failed to track usage:", e);

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 
 const TEST_USER_ID = "e2e-test-user";
 const SECOND_USER_ID = "e2e-fork-author";
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
 
 test.describe("Fork Skill", () => {
   test.describe.configure({ mode: "serial" });
@@ -20,6 +21,7 @@ test.describe("Fork Skill", () => {
     await db
       .insert(users)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         id: TEST_USER_ID,
         email: "e2e-test@company.com",
         name: "E2E Test User",
@@ -29,6 +31,7 @@ test.describe("Fork Skill", () => {
     await db
       .insert(users)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         id: SECOND_USER_ID,
         email: "e2e-fork-author@company.com",
         name: "Fork Author",
@@ -40,6 +43,7 @@ test.describe("Fork Skill", () => {
     const [parent] = await db
       .insert(skills)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         name: "Fork Parent Skill",
         slug,
         description: "A skill to be forked in E2E tests",
@@ -59,6 +63,7 @@ test.describe("Fork Skill", () => {
     const [fork] = await db
       .insert(skills)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         name: "Fork Parent Skill (Fork)",
         slug: forkSlug,
         description: "A skill to be forked in E2E tests",

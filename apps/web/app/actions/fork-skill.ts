@@ -8,6 +8,9 @@ import { redirect } from "next/navigation";
 import { generateUniqueSlug } from "@/lib/slug";
 import { generateSkillEmbedding } from "@/lib/embedding-generator";
 
+// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
+
 export type ForkSkillState = {
   error?: string;
 };
@@ -56,6 +59,7 @@ export async function forkSkill(
     const [inserted] = await db
       .insert(skills)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         name: forkName,
         slug,
         description: parent.description,

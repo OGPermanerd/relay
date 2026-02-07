@@ -4,6 +4,9 @@ import { incrementSkillUses } from "@relay/db/services/skill-metrics";
 import { db } from "@relay/db";
 import { usageEvents } from "@relay/db/schema";
 
+// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
+
 /**
  * POST /api/install-callback
  *
@@ -53,6 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     await db.insert(usageEvents).values({
+      tenantId: DEFAULT_TENANT_ID,
       toolName: "install_confirmed",
       skillId: resolvedSkillId,
       userId,

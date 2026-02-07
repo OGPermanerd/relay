@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { db, skills, users } from "@relay/db";
 
 const TEST_USER_ID = "e2e-test-user";
+const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
 
 test.describe("Install Modal Flow", () => {
   test.describe.configure({ mode: "serial" });
@@ -16,6 +17,7 @@ test.describe("Install Modal Flow", () => {
     await db
       .insert(users)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         id: TEST_USER_ID,
         email: "e2e-test@company.com",
         name: "E2E Test User",
@@ -27,6 +29,7 @@ test.describe("Install Modal Flow", () => {
     const [skill] = await db
       .insert(skills)
       .values({
+        tenantId: DEFAULT_TENANT_ID,
         name: "Install Test Skill",
         slug,
         description: "A skill for testing the install modal flow",
