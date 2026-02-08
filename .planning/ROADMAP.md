@@ -96,7 +96,7 @@ Total: 25 plans completed.
 
 - [x] **Phase 25: Multi-Tenancy Schema & Audit Foundation** - Tenant isolation at the database level
 - [x] **Phase 26: Auth & Subdomain Routing** - Users can log in to their tenant's subdomain
-- [ ] **Phase 27: Production Docker Deployment** - Single-command production deployment (parallel track)
+- [x] **Phase 27: Production Docker Deployment** - Single-command production deployment (parallel track)
 - [ ] **Phase 28: Hook-Based Usage Tracking** - Deterministic skill usage tracking via Claude Code hooks
 - [ ] **Phase 29: Tenant-Scoped Analytics & MCP** - Analytics and MCP respect tenant boundaries
 - [ ] **Phase 30: Branding & Navigation** - White-label tenant branding and improved navigation
@@ -156,10 +156,10 @@ Plans:
   5. A backup script performs pg_dump with gzip compression, GPG encryption, and off-site storage — hourly incremental and daily full with 90-day retention
 **Plans:** 4 plans
 Plans:
-- [ ] 27-01-PLAN.md — Next.js standalone config + /api/health endpoint + .dockerignore
-- [ ] 27-02-PLAN.md — Dockerfile (4-stage turbo prune) + Dockerfile.caddy + Caddyfile
-- [ ] 27-03-PLAN.md — Backup/restore scripts + LUKS encryption runbook
-- [ ] 27-04-PLAN.md — docker-compose.prod.yml + .env.example
+- [x] 27-01-PLAN.md — Next.js standalone config + /api/health endpoint + .dockerignore
+- [x] 27-02-PLAN.md — Dockerfile (4-stage turbo prune) + Dockerfile.caddy + Caddyfile
+- [x] 27-03-PLAN.md — Backup/restore scripts + LUKS encryption runbook
+- [x] 27-04-PLAN.md — docker-compose.prod.yml + .env.example
 
 ### Phase 28: Hook-Based Usage Tracking
 **Goal**: Every Claude Code tool invocation against a deployed skill is deterministically tracked via PostToolUse hooks firing to the production endpoint
@@ -244,7 +244,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
 | 25. Multi-Tenancy Schema | v1.5 | 9/9 | Complete | 2026-02-07 |
 | 26. Auth & Subdomain Routing | v1.5 | 3/3 | Complete | 2026-02-07 |
-| 27. Docker Deployment | v1.5 | 0/4 | Planned | - |
+| 27. Docker Deployment | v1.5 | 4/4 | Complete | 2026-02-08 |
 | 28. Hook-Based Tracking | v1.5 | 0/TBD | Not started | - |
 | 29. Tenant Analytics & MCP | v1.5 | 0/TBD | Not started | - |
 | 30. Branding & Navigation | v1.5 | 0/TBD | Not started | - |
@@ -252,7 +252,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 32. Admin Panel | v1.5 | 0/TBD | Not started | - |
 | 33. Email & Notifications | v1.5 | 0/TBD | Not started | - |
 
-**Total: 107 plans completed across 26 phases and 5 milestones (v1.0-v1.5 Phase 26)**
+**Total: 113 plans completed across 27 phases and 5 milestones (v1.0-v1.5 Phase 27)**
 
 ---
 *Roadmap created: 2026-01-31*
