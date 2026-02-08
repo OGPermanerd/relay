@@ -119,7 +119,7 @@ Total: 55 plans completed.
 - [x] **Phase 35: AI Review Integration** - Auto AI review on submission, MCP review tools, auto-approve threshold ✓
 - [x] **Phase 36: Admin Review UI** - Queue, diff view, approve/reject/request-changes actions, audit trail ✓
 - [x] **Phase 37: Review Notifications** - 7 new notification types for the review lifecycle ✓
-- [ ] **Phase 38: Conversational MCP Discovery** - Semantic search, recommend, describe, and guide tools
+- [x] **Phase 38: Conversational MCP Discovery** - Semantic search, recommend, describe, and guide tools ✓
 - [ ] **Phase 39: Fork Detection** - Hash comparison, update_skill, web UI drift indicators
 
 ## Phase Details
@@ -205,10 +205,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 38-01-PLAN.md -- Semantic search service + Ollama client for MCP
-- [ ] 38-02-PLAN.md -- recommend_skills MCP tool with semantic search + ILIKE fallback
-- [ ] 38-03-PLAN.md -- describe_skill + guide_skill MCP tools
-- [ ] 38-04-PLAN.md -- Enhanced search_skills with rating/usage/tier metadata
+- [x] 38-01-PLAN.md -- Semantic search service + Ollama client for MCP
+- [x] 38-02-PLAN.md -- recommend_skills MCP tool with semantic search + ILIKE fallback
+- [x] 38-03-PLAN.md -- describe_skill + guide_skill MCP tools
+- [x] 38-04-PLAN.md -- Enhanced search_skills with rating/usage/tier metadata
 
 ### Phase 39: Fork Detection
 **Goal**: Users know when their local skill copy has diverged from the published version and can push changes back or create forks
@@ -240,10 +240,10 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 35. AI Review Integration | v2.0 | 3/3 | Complete | 2026-02-08 |
 | 36. Admin Review UI | v2.0 | 3/3 | Complete | 2026-02-08 |
 | 37. Review Notifications | v2.0 | 4/4 | Complete | 2026-02-08 |
-| 38. Conversational MCP Discovery | v2.0 | 0/4 | Not started | - |
+| 38. Conversational MCP Discovery | v2.0 | 4/4 | Complete | 2026-02-08 |
 | 39. Fork Detection | v2.0 | 0/TBD | Not started | - |
 
-**Total: 167 plans completed across 37 phases and 7 milestones (v1.0-v1.5, v2.0 in progress).**
+**Total: 171 plans completed across 38 phases and 7 milestones (v1.0-v1.5, v2.0 in progress).**
 
 ---
 *Roadmap created: 2026-01-31*

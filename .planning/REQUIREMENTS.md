@@ -46,12 +46,12 @@ Requirements for the Skill Ecosystem milestone. Each maps to roadmap phases star
 
 ### MCP Discovery
 
-- [ ] **DISC-01**: `recommend_skills` MCP tool performs semantic search using Ollama embeddings + pgvector cosine similarity
-- [ ] **DISC-02**: `describe_skill` MCP tool returns full skill details including AI review scores, ratings, usage stats, and similar skills
-- [ ] **DISC-03**: `guide_skill` MCP tool returns usage guidance and contextual instructions after skill installation
-- [ ] **DISC-04**: `search_skills` enhanced with richer metadata (ratings, quality tier, install count) in responses
-- [ ] **DISC-05**: Semantic search falls back gracefully to ILIKE text search when Ollama is unavailable
-- [ ] **DISC-06**: Semantic search only returns published skills (status filter in vector queries)
+- [x] **DISC-01**: `recommend_skills` MCP tool performs semantic search using Ollama embeddings + pgvector cosine similarity
+- [x] **DISC-02**: `describe_skill` MCP tool returns full skill details including AI review scores, ratings, usage stats, and similar skills
+- [x] **DISC-03**: `guide_skill` MCP tool returns usage guidance and contextual instructions after skill installation
+- [x] **DISC-04**: `search_skills` enhanced with richer metadata (ratings, quality tier, install count) in responses
+- [x] **DISC-05**: Semantic search falls back gracefully to ILIKE text search when Ollama is unavailable
+- [x] **DISC-06**: Semantic search only returns published skills (status filter in vector queries)
 
 ### MCP Review Tools
 
@@ -143,12 +143,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RVNT-05 | Phase 37 | Done |
 | RVNT-06 | Phase 37 | Done |
 | RVNT-07 | Phase 37 | Done |
-| DISC-01 | Phase 38 | Pending |
-| DISC-02 | Phase 38 | Pending |
-| DISC-03 | Phase 38 | Pending |
-| DISC-04 | Phase 38 | Pending |
-| DISC-05 | Phase 38 | Pending |
-| DISC-06 | Phase 38 | Pending |
+| DISC-01 | Phase 38 | Done |
+| DISC-02 | Phase 38 | Done |
+| DISC-03 | Phase 38 | Done |
+| DISC-04 | Phase 38 | Done |
+| DISC-05 | Phase 38 | Done |
+| DISC-06 | Phase 38 | Done |
 | MCPR-01 | Phase 35 | Done |
 | MCPR-02 | Phase 35 | Done |
 | MCPR-03 | Phase 35 | Done |
