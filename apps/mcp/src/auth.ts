@@ -9,6 +9,7 @@ import { validateApiKey } from "@everyskill/db/services/api-keys";
  */
 
 let cachedUserId: string | null = null;
+let cachedTenantId: string | null = null;
 let resolved = false;
 let anonymousCallCount = 0;
 let firstAuthShown = false;
@@ -32,7 +33,8 @@ export async function resolveUserId(): Promise<string | null> {
     const result = await validateApiKey(apiKey);
     if (result) {
       cachedUserId = result.userId;
-      console.error("Authenticated as userId:", cachedUserId);
+      cachedTenantId = result.tenantId;
+      console.error("Authenticated as userId:", cachedUserId, "tenantId:", cachedTenantId);
     } else {
       console.error("EVERYSKILL_API_KEY is invalid or revoked — running in anonymous mode");
     }
@@ -49,6 +51,14 @@ export async function resolveUserId(): Promise<string | null> {
  */
 export function getUserId(): string | null {
   return cachedUserId;
+}
+
+/**
+ * Synchronous getter for cached tenantId.
+ * Returns null if not authenticated or resolveUserId() hasn't been called.
+ */
+export function getTenantId(): string | null {
+  return cachedTenantId;
 }
 
 /**

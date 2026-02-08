@@ -1,8 +1,9 @@
 import { db } from "@everyskill/db";
 import { usageEvents, type NewUsageEvent } from "@everyskill/db/schema/usage-events";
 import { incrementSkillUses } from "@everyskill/db/services/skill-metrics";
+import { getTenantId } from "../auth.js";
 
-// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
+// Fallback tenant ID for anonymous MCP usage (no API key configured)
 const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
 
 /**
@@ -18,7 +19,8 @@ export async function trackUsage(
       console.error("Database not configured, skipping usage tracking");
       return;
     }
-    await db.insert(usageEvents).values({ tenantId: DEFAULT_TENANT_ID, ...event });
+    const tenantId = event.tenantId || getTenantId() || DEFAULT_TENANT_ID;
+    await db.insert(usageEvents).values({ ...event, tenantId });
 
     // Increment skill usage counter for denormalized totalUses
     if (event.skillId && !skipIncrement) {
