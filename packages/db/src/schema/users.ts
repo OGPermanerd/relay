@@ -1,6 +1,11 @@
-import { pgTable, text, timestamp, index, pgPolicy } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, text, timestamp, index, pgPolicy } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { tenants } from "./tenants";
+
+/**
+ * User role enum: admin has full tenant management, member is default
+ */
+export const userRoleEnum = pgEnum("user_role", ["admin", "member"]);
 
 /**
  * User table schema
@@ -17,6 +22,7 @@ export const users = pgTable(
       .default("default-tenant-000-0000-000000000000")
       .references(() => tenants.id),
     email: text("email").notNull().unique(),
+    role: userRoleEnum("role").notNull().default("member"),
     name: text("name"),
     emailVerified: timestamp("email_verified", { mode: "date" }),
     image: text("image"),
