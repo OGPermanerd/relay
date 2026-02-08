@@ -66,3 +66,4 @@ export {
   type CreateReviewDecisionParams,
   type DecisionWithReviewer,
 } from "./review-decisions";
+export { semanticSearchSkills, type SemanticSearchResult } from "./semantic-search";
