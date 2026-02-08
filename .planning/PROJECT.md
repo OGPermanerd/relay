@@ -10,14 +10,28 @@ Skills get better as they pass through more hands, with real metrics proving tha
 
 ## Current State
 
-**v1.4 shipped 2026-02-06** — Employee-level usage attribution, analytics dashboard, web remote MCP for Claude.ai, and extended search matching authors and tags.
+**v1.5 shipped 2026-02-08** — Production deployment, multi-tenancy, subdomain routing, RBAC, branding, email notifications, reliable usage tracking.
+
+## Current Milestone: v2.0 Skill Ecosystem
+
+**Goal:** Transform skill publishing from instant-publish to a quality-gated pipeline with AI review, author revision, and admin approval — plus conversational discovery via MCP and fork-on-modify detection.
+
+**Target features:**
+- Review pipeline: AI review → author incorporation → admin approval
+- Review UX across all 3 modalities (in-app page, notification+modal, MCP-first)
+- Full admin review page with queue, diff, approve/reject/request-changes
+- Semantic conversational discovery via MCP (search → recommend → describe → install → guide)
+- Fork-on-modify detection (MCP tool + web UI)
+- `update_skill` MCP tool for pushing local changes back
 
 Tech stack: Next.js 16.1.6, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, mcp-handler, Playwright, vitest, nuqs, react-swipeable, Recharts, Voyage AI, pgvector, Anthropic SDK
-LOC: ~13,500 TypeScript across 280+ files
+LOC: ~14,700 TypeScript across 290+ files
 
 Previous:
+- v1.5 shipped 2026-02-08 — Production deployment, multi-tenancy, RBAC, branding, email notifications
+- v1.4 shipped 2026-02-06 — Employee analytics, remote MCP, extended search
 - v1.3 shipped 2026-02-04 — AI-driven skill review, semantic similarity, fork-based versioning, cross-platform install
-- v1.2 shipped 2026-02-02 — Two-panel UI redesign with sortable table, inline expansion, keyboard navigation, mobile accessibility
+- v1.2 shipped 2026-02-02 — Two-panel UI redesign with sortable table, inline expansion, keyboard navigation
 - v1.1 shipped 2026-02-01 — Quality scorecards and comprehensive E2E test coverage
 - v1.0 shipped 2026-01-31 — Full internal skill marketplace with MCP integration
 
@@ -78,26 +92,41 @@ Previous:
 - ✓ Web remote MCP via Streamable HTTP for Claude.ai browser access — v1.4
 - ✓ Extended MCP search matching author name and tags with field-weighted scoring — v1.4
 
-### Active — v1.5 Production, Multi-Tenancy & Reliable Usage Tracking
+### Active — v2.0 Skill Ecosystem
 
-- [ ] Production deployment via Docker Compose on Hetzner (PostgreSQL, Next.js, Caddy/SSL)
-- [ ] Public domain with SSL + Tailscale access
-- [ ] Full multi-tenancy with subdomain routing (tenant1.domain.com)
-- [ ] Tenant isolation — separate admin, users, skills per tenant
-- [ ] tenant_id across all DB tables, scoped queries
-- [ ] Domain-based Google SSO mapping to tenants
-- [ ] Compliance skill with PostToolUse hooks for deterministic MCP tool tracking
-- [ ] Tracking endpoint that receives hook callbacks from user machines
-- [ ] Auto-injection of tracking hooks into skill frontmatter on upload (invisible to uploader)
-- [ ] Deploy-time compliance checking — verify tracker harness, nudge if missing
-- [ ] Session heartbeat on MCP startup
+- [ ] Skill creation puts skill into `pending_review` status (not immediately published)
+- [ ] AI review analyzes skill quality, clarity, completeness and suggests improvements
+- [ ] Author receives AI review feedback and can incorporate or ignore suggestions
+- [ ] Author resubmits revised skill for tenant admin approval
+- [ ] Tenant admin reviews skill with full diff view, approves/rejects/requests changes
+- [ ] Review UX: in-app review page, notification+modal, and MCP-first (Claude returns review results)
+- [ ] Full `/admin/reviews` page with queue, diff view, approve/reject/request-changes
+- [ ] Semantic search via MCP with conversational discovery (search → recommend → describe → install → guide)
+- [ ] Guided implementation flow after skill install
+- [ ] Fork-on-modify detection via MCP tool (compares local file hash against DB version)
+- [ ] Fork detection also invocable from web UI on skills page
+- [ ] `update_skill` MCP tool for pushing local modifications back as new version/fork
+
+### Validated — v1.5 Production, Multi-Tenancy & Reliable Usage Tracking
+
+- ✓ Production deployment via Docker Compose on Hetzner (PostgreSQL, Next.js, Caddy/SSL) — v1.5
+- ✓ Public domain with SSL + Tailscale access — v1.5
+- ✓ Full multi-tenancy with subdomain routing (tenant1.domain.com) — v1.5
+- ✓ Tenant isolation — separate admin, users, skills per tenant — v1.5
+- ✓ tenant_id across all DB tables, scoped queries — v1.5
+- ✓ Domain-based Google SSO mapping to tenants — v1.5
+- ✓ Compliance skill with PostToolUse hooks for deterministic MCP tool tracking — v1.5
+- ✓ Tracking endpoint that receives hook callbacks from user machines — v1.5
+- ✓ Auto-injection of tracking hooks into skill frontmatter on upload — v1.5
+- ✓ Deploy-time compliance checking — verify tracker harness, nudge if missing — v1.5
+- ✓ RBAC with admin/member roles and tenant-scoped admin panel — v1.5
+- ✓ EverySkill branding with custom domain and tenant white-labeling — v1.5
+- ✓ Email notification system with preferences and cron digests — v1.5
 
 ### Out of Scope
 
 - Review prompts in Claude after skill use — adds MCP complexity, defer
-- Skill creation scaffolding via MCP — focus on deploy/track first
-- Approval gates or review process for new versions — metrics-driven quality model instead
-- Auto-review on every publish — cost scaling issues, use on-demand instead
+- Auto-review on every publish — cost scaling issues; AI review triggered on submission to review pipeline instead
 
 ## Context
 
@@ -162,4 +191,4 @@ Previous:
 | mcp-handler for Streamable HTTP | Handles MCP protocol negotiation for Next.js routes | ✓ Good |
 
 ---
-*Last updated: 2026-02-07 after v1.5 milestone started*
+*Last updated: 2026-02-08 after v2.0 milestone started*

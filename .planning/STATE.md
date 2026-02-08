@@ -2,19 +2,19 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-07)
+See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 33 Email Notifications -- in progress.
+**Current focus:** v2.0 Skill Ecosystem — defining requirements.
 
 ## Current Position
 
-Phase: 33 of 33 (Email Notifications)
-Plan: 7 of 7 in phase 33 (33-01 through 33-07 complete)
-Status: Phase complete
-Last activity: 2026-02-08 -- Completed 33-07-PLAN.md (cron digests and admin notifications)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-08 — Milestone v2.0 started
 
-Progress: [████████████████████████] ~100% (v1.5 -- 148 plans total)
+Progress: [                        ] 0% (v2.0 — requirements phase)
 
 ## Milestones
 
@@ -23,20 +23,20 @@ Progress: [███████████████████████
 - v1.2 UI Redesign - 12 plans - shipped 2026-02-02
 - v1.3 AI Quality & Cross-Platform - 15 plans - shipped 2026-02-04
 - v1.4 Employee Analytics & Remote MCP - 25 plans - shipped 2026-02-06
-- v1.5 Production, Multi-Tenancy & Reliable Usage Tracking - 9 phases (25-33) - in progress
+- v1.5 Production, Multi-Tenancy & Reliable Usage Tracking - 9 phases (25-33), 55 plans - shipped 2026-02-08
+- v2.0 Skill Ecosystem — in progress
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 148
-- Phase 33: 7 PLANS COMPLETE (notifications schema, email infrastructure, notification services, bell+actions, preferences UI, grouping proposals, cron digests)
+- Total plans completed: 149
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~8.8 hours
+- Total execution time: ~8.9 hours
 
 **Cumulative:**
-- 148 plans across 33 phases and 5 milestones
+- 149 plans across 33 phases and 6 milestones
 - ~14,700 LOC TypeScript
-- 7 days total development time
+- 8 days total development time
 
 *Updated after each plan completion*
 
@@ -161,5 +161,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 33, Plan 05 complete (notification preferences UI) -- Phase 33 COMPLETE
-Resume file: .planning/phases/33-email-notifications/33-05-SUMMARY.md
+Stopped at: v2.0 Milestone started — defining requirements
+Resume file: .planning/REQUIREMENTS.md (when created)
