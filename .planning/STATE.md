@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 31 of 33 (Skills Upload Enhancements)
-Plan: 4 of 6 in phase 31 (31-01, 31-02, 31-03, 31-04 complete)
+Plan: 5 of 6 in phase 31 (31-01, 31-02, 31-03, 31-04, 31-05 complete)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 31-02-PLAN.md (RelativeTime platform rollout)
+Last activity: 2026-02-08 -- Completed 31-05-PLAN.md (SimilarityPane + embedding enrichment)
 
-Progress: [████████████████████░░░░] ~36% (v1.5 -- 134 plans total)
+Progress: [████████████████████░░░░] ~37% (v1.5 -- 135 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 134
-- Phase 31: 31-01, 31-02, 31-03, 31-04 complete (relative timestamp utility, RelativeTime rollout, AI review enhancement, skill messages data layer)
+- Total plans completed: 135
+- Phase 31: 31-01, 31-02, 31-03, 31-04, 31-05 complete (relative timestamp utility, RelativeTime rollout, AI review enhancement, skill messages data layer, similarity pane + embedding enrichment)
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~8.0 hours
+- Total execution time: ~8.3 hours
 
 **Cumulative:**
-- 134 plans across 31 phases and 5 milestones
+- 135 plans across 31 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -108,6 +108,9 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 31-04 | Migration 0009 instead of 0010 for skill_messages | 31-03 not yet executed so 0009 was next available number |
 | 31-02 | Expiry dates kept as absolute UTC format | Future dates as relative time ("45d from now") are confusing for API key expiry |
 | 31-02 | Server component passes date.toISOString() to RelativeTime | Proper Date serialization across server/client boundary |
+| 31-05 | Form visible alongside SimilarityPane (not hidden) | Better UX for editing while reviewing similarity matches |
+| 31-05 | _messageTarget underscore prefix for unused state | ESLint compliance; setter used now, value consumed in Plan 06 |
+| 31-05 | Enriched embedding fires after AI review completes | Benefits future uploads only; avoids blocking current upload flow |
 
 ### Pending Todos
 
@@ -127,5 +130,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 31 plan 02 complete -- RelativeTime platform rollout
-Resume file: .planning/phases/31-skills-upload-enhancements/31-02-SUMMARY.md
+Stopped at: Phase 31 plan 05 complete -- SimilarityPane + embedding enrichment
+Resume file: .planning/phases/31-skills-upload-enhancements/31-05-SUMMARY.md
