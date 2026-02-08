@@ -40,7 +40,8 @@ export default async function middleware(req: NextRequest) {
     pathname === "/api/dev-login" ||
     pathname.startsWith("/api/install-callback") ||
     pathname.startsWith("/api/mcp") ||
-    pathname === "/api/validate-key"
+    pathname === "/api/validate-key" ||
+    pathname === "/api/health"
   ) {
     return NextResponse.next();
   }

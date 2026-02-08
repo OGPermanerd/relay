@@ -1,0 +1,17 @@
+node_modules
+.next
+.turbo
+dist
+.env
+.env.*
+.env.local
+.git
+.gitignore
+.planning
+playwright-report
+test-results
+coverage
+docker
+.vscode
+.idea
+*.tsbuildinfo
