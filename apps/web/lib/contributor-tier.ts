@@ -14,7 +14,7 @@ const TIER_THRESHOLDS = {
   Bronze: 0,
 } as const;
 
-export function getContributorTier(input: TierInput): ContributorTier {
+export function getContributorTier(input: TierInput): ContributorTier | null {
   // Normalize each metric to 0-25 points (max 100 total)
   const skillsScore = Math.min(input.skillsShared * 5, 25);
   const daysScore = Math.min(input.daysSaved * 2, 25);
@@ -23,6 +23,7 @@ export function getContributorTier(input: TierInput): ContributorTier {
 
   const total = skillsScore + daysScore + ratingScore + usageScore;
 
+  if (total === 0) return null;
   if (total >= TIER_THRESHOLDS.Platinum) return "Platinum";
   if (total >= TIER_THRESHOLDS.Gold) return "Gold";
   if (total >= TIER_THRESHOLDS.Silver) return "Silver";

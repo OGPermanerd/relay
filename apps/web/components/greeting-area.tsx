@@ -24,8 +24,12 @@ export async function GreetingArea({ userId, userName }: GreetingAreaProps) {
       <span className="font-semibold text-gray-900">
         {displayDays} {displayDays === 1 ? "Day" : "Days"} Saved
       </span>
-      <span className="text-gray-300">|</span>
-      <span className={`font-semibold ${TIER_COLORS[tier]}`}>{tier} Contributor</span>
+      {tier && (
+        <>
+          <span className="text-gray-300">|</span>
+          <span className={`font-semibold ${TIER_COLORS[tier]}`}>{tier} Contributor</span>
+        </>
+      )}
     </div>
   );
 }
