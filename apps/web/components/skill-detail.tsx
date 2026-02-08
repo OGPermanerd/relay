@@ -7,6 +7,7 @@ import { calculateQualityScore } from "@/lib/quality-score";
 import { QualityBadge } from "./quality-badge";
 import { QualityBreakdown } from "./quality-breakdown";
 import { ForkAttribution } from "./fork-attribution";
+import { DriftIndicator } from "./drift-indicator";
 import { RelativeTime } from "@/components/relative-time";
 import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
 
@@ -41,9 +42,19 @@ interface SkillDetailProps {
   trends: SkillDetailTrends;
   forkCount?: number;
   parentSkill?: ParentSkillInfo | null;
+  driftStatus?: "diverged" | "current" | "unknown";
+  compareSlug?: string;
 }
 
-export function SkillDetail({ skill, stats, trends, forkCount, parentSkill }: SkillDetailProps) {
+export function SkillDetail({
+  skill,
+  stats,
+  trends,
+  forkCount,
+  parentSkill,
+  driftStatus,
+  compareSlug,
+}: SkillDetailProps) {
   // Calculate quality score for badge and breakdown
   const { score, tier, breakdown } = calculateQualityScore({
     totalUses: skill.totalUses,
@@ -67,6 +78,7 @@ export function SkillDetail({ skill, stats, trends, forkCount, parentSkill }: Sk
           <QualityBadge tier={tier} size="md" />
         </div>
         {parentSkill && <ForkAttribution parentSkill={parentSkill} />}
+        {driftStatus && <DriftIndicator driftStatus={driftStatus} compareSlug={compareSlug} />}
         <QualityBreakdown breakdown={breakdown} tier={tier} score={score} />
         {skill.author && (
           <div className="mt-4 flex items-center gap-3">

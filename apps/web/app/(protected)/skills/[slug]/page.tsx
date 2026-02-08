@@ -86,6 +86,19 @@ export default async function SkillPage(props: SkillPageProps) {
     skill.forkedFromId ? getParentSkill(skill.forkedFromId) : Promise.resolve(null),
   ]);
 
+  // Compute drift status for fork skills
+  let driftStatus: "diverged" | "current" | "unknown" | undefined;
+  if (skill.forkedFromId && skill.forkedAtContentHash) {
+    const stripFm = (c: string) => {
+      const m = c.match(/^---\n[\s\S]*?\n---\n/);
+      return m ? c.slice(m[0].length) : c;
+    };
+    const currentBodyHash = await hashContent(stripFm(skill.content));
+    driftStatus = currentBodyHash === skill.forkedAtContentHash ? "current" : "diverged";
+  } else if (skill.forkedFromId && !skill.forkedAtContentHash) {
+    driftStatus = "unknown";
+  }
+
   // Query user's existing rating (if logged in)
   const existingRating =
     session?.user?.id && db
@@ -179,6 +192,8 @@ export default async function SkillPage(props: SkillPageProps) {
             trends={trends}
             forkCount={forkCount}
             parentSkill={parentSkill}
+            driftStatus={driftStatus}
+            compareSlug={skill.forkedFromId ? skill.slug : undefined}
           />
 
           {/* Install, Fork, and Delete buttons */}
