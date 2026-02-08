@@ -11,6 +11,8 @@ import { z } from "zod";
 import { generateUniqueSlug } from "@/lib/slug";
 import { hashContent } from "@/lib/content-hash";
 import { generateSkillEmbedding } from "@/lib/embedding-generator";
+import { generateSkillReview, REVIEW_MODEL } from "@/lib/ai-review";
+import { upsertSkillReview } from "@everyskill/db/services/skill-reviews";
 
 // ---------------------------------------------------------------------------
 // EverySkill frontmatter helpers
@@ -100,6 +102,38 @@ import type { SimilarSkillResult } from "@/lib/similar-skills";
 
 // TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
 const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
+
+/**
+ * Fire-and-forget AI review generation after skill creation.
+ * Failures are intentionally swallowed -- review is advisory, not blocking.
+ */
+async function autoGenerateReview(
+  skillId: string,
+  name: string,
+  description: string,
+  content: string,
+  category: string,
+  userId: string,
+  tenantId: string
+): Promise<void> {
+  try {
+    const reviewOutput = await generateSkillReview(name, description, content, category);
+    const { summary, suggestedDescription, ...categories } = reviewOutput;
+    const contentHash = await hashContent(content);
+    await upsertSkillReview({
+      skillId,
+      tenantId,
+      requestedBy: userId,
+      categories,
+      summary,
+      suggestedDescription,
+      reviewedContentHash: contentHash,
+      modelName: REVIEW_MODEL,
+    });
+  } catch {
+    // Intentionally swallowed -- review is fire-and-forget
+  }
+}
 
 export type CreateSkillState = {
   errors?: Record<string, string[]>;
@@ -247,6 +281,17 @@ export async function checkAndCreateSkill(
 
   // Fire-and-forget: generate embedding for semantic similarity
   generateSkillEmbedding(newSkill.id, name, description).catch(() => {});
+
+  // Fire-and-forget: auto-generate AI review
+  autoGenerateReview(
+    newSkill.id,
+    name,
+    description || "",
+    rawContent,
+    category,
+    session.user.id,
+    DEFAULT_TENANT_ID
+  ).catch(() => {});
 
   revalidatePath("/skills");
   revalidatePath("/");
@@ -430,6 +475,17 @@ export async function createSkill(
 
   // Fire-and-forget: generate embedding for semantic similarity
   generateSkillEmbedding(newSkill.id, name, description).catch(() => {});
+
+  // Fire-and-forget: auto-generate AI review
+  autoGenerateReview(
+    newSkill.id,
+    name,
+    description || "",
+    rawContent,
+    category,
+    session.user.id,
+    DEFAULT_TENANT_ID
+  ).catch(() => {});
 
   // Revalidate relevant paths
   revalidatePath("/skills");
