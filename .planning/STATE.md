@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v2.0 Skill Ecosystem -- Phase 36 Complete
+**Current focus:** v2.0 Skill Ecosystem -- Phase 37 In Progress
 
 ## Current Position
 
 Phase: 37 of 39 (Review Notifications)
-Plan: 00 of TBD
-Status: Not started
-Last activity: 2026-02-08 -- Phase 36 verified PASSED (8/8 must-haves, 9/9 requirements)
+Plan: 02 of TBD
+Status: In progress
+Last activity: 2026-02-08 -- Completed 37-02-PLAN.md (Email Template and Dispatch)
 
 Progress: [████████████░░░░░░░░░░░░] 59% (v2.0 -- 26/44 requirements delivered)
 
@@ -71,6 +71,9 @@ Recent decisions affecting current work:
 - [36-03]: Used diff npm package (diffLines) for line-level content comparison in review detail page
 - [36-03]: previousContent fetched from most recent review_decisions record (separate query, not loaded with every decision)
 - [36-03]: Two-column layout: skill content (2/3) + AI review and actions (1/3)
+- [37-02]: Notes quote block shown for approved, rejected, and changes_requested types (not submitted or published)
+- [37-02]: Single toggle pair (reviewNotificationsInApp/reviewNotificationsEmail) controls all 5 review event types per RVNT-06
+- [37-02]: buildReviewActionUrl routes: submitted -> /admin/reviews, rejected/changes -> /my-skills, approved/published -> /skills/{slug}
 
 ### Pending Todos
 
@@ -86,5 +89,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 36 verified PASSED -- ready for Phase 37 (Review Notifications)
-Resume file: .planning/phases/37-review-notifications/ (needs planning)
+Stopped at: Completed 37-02 (Email Template and Dispatch) -- continue with remaining Phase 37 plans
+Resume file: .planning/phases/37-review-notifications/
