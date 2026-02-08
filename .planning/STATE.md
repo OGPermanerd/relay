@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 Phase: 37 of 39 (Review Notifications)
 Plan: 02 of TBD
 Status: In progress
-Last activity: 2026-02-08 -- Completed 37-02-PLAN.md (Email Template and Dispatch)
+Last activity: 2026-02-08 -- Completed 37-01-PLAN.md (Review Notification DB Infrastructure)
 
 Progress: [████████████░░░░░░░░░░░░] 59% (v2.0 -- 26/44 requirements delivered)
 
@@ -29,12 +29,12 @@ Progress: [████████████░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 163
+- Total plans completed: 164
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~9.6 hours
 
 **Cumulative:**
-- 163 plans across 36 phases and 7 milestones
+- 164 plans across 37 phases and 7 milestones
 - ~15,600 LOC TypeScript
 - 8 days total development time
 
@@ -71,6 +71,8 @@ Recent decisions affecting current work:
 - [36-03]: Used diff npm package (diffLines) for line-level content comparison in review detail page
 - [36-03]: previousContent fetched from most recent review_decisions record (separate query, not loaded with every decision)
 - [36-03]: Two-column layout: skill content (2/3) + AI review and actions (1/3)
+- [37-01]: Applied migration via psql directly -- drizzle-kit push prompted about unrelated vanity_domain constraint
+- [37-01]: getAdminsInTenant returns id, email, name -- minimal projection for notification dispatch
 - [37-02]: Notes quote block shown for approved, rejected, and changes_requested types (not submitted or published)
 - [37-02]: Single toggle pair (reviewNotificationsInApp/reviewNotificationsEmail) controls all 5 review event types per RVNT-06
 - [37-02]: buildReviewActionUrl routes: submitted -> /admin/reviews, rejected/changes -> /my-skills, approved/published -> /skills/{slug}
@@ -89,5 +91,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 37-02 (Email Template and Dispatch) -- continue with remaining Phase 37 plans
+Stopped at: Completed 37-01 (Review Notification DB Infrastructure) -- continue with remaining Phase 37 plans
 Resume file: .planning/phases/37-review-notifications/
