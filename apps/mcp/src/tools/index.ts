@@ -10,3 +10,4 @@ import "./check-review-status.js";
 import "./submit-for-review.js";
 import "./recommend.js";
 import "./describe.js";
+import "./guide.js";
