@@ -9,6 +9,7 @@ import {
   type SortDirection,
 } from "@/hooks/use-analytics-sort";
 import { EmployeeDetailModal } from "./employee-detail-modal";
+import { RelativeTime } from "@/components/relative-time";
 
 interface EmployeeRow {
   id: string;
@@ -190,7 +191,7 @@ export function EmployeesTab({ data }: EmployeesTabProps) {
                   {employee.hoursSaved.toFixed(1)}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                  {new Date(employee.lastActive).toLocaleDateString()}
+                  <RelativeTime date={employee.lastActive} />
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
                   {employee.topSkill || "-"}

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { RelativeTime } from "@/components/relative-time";
 
 interface Review {
   id: string;
@@ -52,9 +53,7 @@ export function ReviewsList({ reviews }: ReviewsListProps) {
                   {"☆".repeat(5 - Math.min(review.rating, 5))}
                 </span>
                 {/* Date */}
-                <span className="text-sm text-gray-500">
-                  {review.createdAt.toLocaleDateString()}
-                </span>
+                <RelativeTime date={review.createdAt} className="text-sm text-gray-500" />
               </div>
             </div>
           </div>

@@ -7,6 +7,7 @@ import {
   rotateApiKey,
   listApiKeysAction,
 } from "@/app/actions/api-keys";
+import { RelativeTime } from "@/components/relative-time";
 
 interface ApiKeyData {
   id: string;
@@ -50,20 +51,11 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expiring" }) 
   );
 }
 
-function formatRelativeDate(date: Date | string): string {
-  const now = new Date();
-  const d = new Date(date);
-  const diffMs = now.getTime() - d.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  if (diffSeconds < 60) return "just now";
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 30) return `${diffDays}d ago`;
-  return d.toLocaleDateString();
+function formatAbsoluteDate(date: Date | string): string {
+  const d = new Date(date);
+  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 }
 
 function ShowOnceKeyDisplay({ rawKey, onDone }: { rawKey: string; onDone: () => void }) {
@@ -329,13 +321,15 @@ export function ApiKeyManager({ initialKeys }: ApiKeyManagerProps) {
                     <StatusBadge status={status} />
                   </div>
                   <div className="mt-1 flex items-center gap-4 text-xs text-gray-500">
-                    <span>Created {new Date(key.createdAt).toLocaleDateString()}</span>
                     <span>
-                      Last used: {key.lastUsedAt ? formatRelativeDate(key.lastUsedAt) : "Never"}
+                      Created <RelativeTime date={key.createdAt} />
+                    </span>
+                    <span>
+                      Last used: {key.lastUsedAt ? <RelativeTime date={key.lastUsedAt} /> : "Never"}
                     </span>
                     {status === "expiring" && key.expiresAt && (
                       <span className="text-yellow-600">
-                        Expires {new Date(key.expiresAt).toLocaleDateString()}
+                        Expires {formatAbsoluteDate(key.expiresAt)}
                       </span>
                     )}
                   </div>

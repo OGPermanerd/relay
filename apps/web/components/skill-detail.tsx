@@ -7,6 +7,7 @@ import { calculateQualityScore } from "@/lib/quality-score";
 import { QualityBadge } from "./quality-badge";
 import { QualityBreakdown } from "./quality-breakdown";
 import { ForkAttribution } from "./fork-attribution";
+import { RelativeTime } from "@/components/relative-time";
 import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
 
 interface SkillWithAuthor {
@@ -43,12 +44,6 @@ interface SkillDetailProps {
 }
 
 export function SkillDetail({ skill, stats, trends, forkCount, parentSkill }: SkillDetailProps) {
-  const formattedDate = skill.createdAt.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-
   // Calculate quality score for badge and breakdown
   const { score, tier, breakdown } = calculateQualityScore({
     totalUses: skill.totalUses,
@@ -93,7 +88,9 @@ export function SkillDetail({ skill, stats, trends, forkCount, parentSkill }: Sk
                 <p className="font-medium group-hover:text-blue-600 transition-colors">
                   {skill.author.name || "Anonymous"}
                 </p>
-                <p className="text-sm text-gray-500">Created {formattedDate}</p>
+                <p className="text-sm text-gray-500">
+                  Created <RelativeTime date={skill.createdAt} />
+                </p>
               </div>
             </Link>
           </div>

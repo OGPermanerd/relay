@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { generateApiKey, revokeApiKeyAction, listAllApiKeysAction } from "@/app/actions/api-keys";
+import { RelativeTime } from "@/components/relative-time";
 
 interface AdminKeyData {
   id: string;
@@ -47,22 +48,6 @@ function StatusBadge({ status }: { status: "active" | "revoked" | "expiring" }) 
       {labels[status]}
     </span>
   );
-}
-
-function formatRelativeDate(date: Date | string): string {
-  const now = new Date();
-  const d = new Date(date);
-  const diffMs = now.getTime() - d.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffSeconds < 60) return "just now";
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 30) return `${diffDays}d ago`;
-  return d.toLocaleDateString();
 }
 
 function ShowOnceKeyDisplay({ rawKey, onDone }: { rawKey: string; onDone: () => void }) {
@@ -333,10 +318,10 @@ export function AdminKeyManager({ initialKeys, users }: AdminKeyManagerProps) {
                       <StatusBadge status={status} />
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                      {key.lastUsedAt ? formatRelativeDate(key.lastUsedAt) : "Never"}
+                      {key.lastUsedAt ? <RelativeTime date={key.lastUsedAt} /> : "Never"}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                      {new Date(key.createdAt).toLocaleDateString()}
+                      <RelativeTime date={key.createdAt} />
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">
                       {(status === "active" || status === "expiring") && (

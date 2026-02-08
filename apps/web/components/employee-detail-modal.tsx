@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTimeRange } from "./time-range-selector";
 import { fetchEmployeeActivity, type ActivityEvent } from "@/app/actions/get-employee-activity";
+import { RelativeTime } from "@/components/relative-time";
 
 interface EmployeeRow {
   id: string;
@@ -97,7 +98,7 @@ export function EmployeeDetailModal({ employee, onClose }: EmployeeDetailModalPr
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-4">
             <p className="text-2xl font-bold text-gray-900">
-              {new Date(employee.lastActive).toLocaleDateString()}
+              <RelativeTime date={employee.lastActive} />
             </p>
             <p className="text-sm text-gray-500">Last Active</p>
           </div>
@@ -152,11 +153,7 @@ export function EmployeeDetailModal({ employee, onClose }: EmployeeDetailModalPr
                       </span>
                     </div>
                     <p className="mt-0.5 text-xs text-gray-500">
-                      {new Date(event.date).toLocaleDateString()} at{" "}
-                      {new Date(event.date).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      <RelativeTime date={event.date} />
                     </p>
                   </div>
                   <div className="ml-4 text-right">
