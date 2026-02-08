@@ -49,11 +49,17 @@ skipped: 0
 ## Gaps
 
 - truth: "Greeting area shows contributor tier badge appropriate to user's activity level"
-  status: failed
+  status: fixed
   reason: "User reported: if there have been zero contributions then there should not be a badge/label"
   severity: minor
   test: 5
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "getContributorTier() returned 'Bronze' for score 0; GreetingArea rendered tier unconditionally"
+  artifacts:
+    - path: "apps/web/lib/contributor-tier.ts"
+      issue: "Returns Bronze instead of null when total score is 0"
+    - path: "apps/web/components/greeting-area.tsx"
+      issue: "Always renders tier badge without null check"
+  missing:
+    - "Return null from getContributorTier when score is 0"
+    - "Conditionally render tier badge in GreetingArea"
+  fix_commit: "ba20068"
