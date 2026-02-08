@@ -42,7 +42,8 @@ export default async function middleware(req: NextRequest) {
     pathname.startsWith("/api/mcp") ||
     pathname === "/api/validate-key" ||
     pathname === "/api/health" ||
-    pathname === "/api/track"
+    pathname === "/api/track" ||
+    pathname === "/api/check-domain"
   ) {
     return NextResponse.next();
   }
@@ -54,6 +55,21 @@ export default async function middleware(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   if (subdomain) {
     requestHeaders.set("x-tenant-slug", subdomain);
+  }
+
+  // === Vanity domain detection ===
+  // If no subdomain found and host doesn't match root domain patterns,
+  // treat as a potential vanity domain and set a header for downstream resolution
+  const hostname = host.split(":")[0];
+  if (
+    !subdomain &&
+    hostname !== "localhost" &&
+    !hostname.endsWith(".localhost") &&
+    hostname !== ROOT_DOMAIN &&
+    !hostname.endsWith(`.${ROOT_DOMAIN}`) &&
+    hostname !== `www.${ROOT_DOMAIN}`
+  ) {
+    requestHeaders.set("x-vanity-domain", hostname);
   }
 
   // === Auth check via cookie presence ===
