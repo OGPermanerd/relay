@@ -137,6 +137,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 33-04 | Optimistic UI updates for mark-read with server count reconciliation | Immediate UI feedback, corrected by server response |
 | 33-04 | Parallel Promise.all for notification data in layout | Avoids waterfall; unread count and notifications fetched simultaneously |
 | 33-04 | useTransition for non-blocking server action calls | Keeps UI responsive during network requests |
+| 33-06 | Fire-and-forget notification in nested try/catch inside action | Notification errors logged but never propagate to caller |
+| 33-06 | Preferences default to enabled (skip only if explicitly false) | New users get notifications by default without needing setup |
 | 33-07 | Per-user preference gating in platform update | Checks getOrCreatePreferences before each send; respects user opt-out |
 
 ### Pending Todos
@@ -157,5 +159,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 33, Plan 04 re-executed (notification bell UI) -- Phase 33 COMPLETE
-Resume file: .planning/phases/33-email-notifications/33-04-SUMMARY.md
+Stopped at: Phase 33, Plan 06 complete (notification dispatch wiring) -- Phase 33 COMPLETE
+Resume file: .planning/phases/33-email-notifications/33-06-SUMMARY.md
