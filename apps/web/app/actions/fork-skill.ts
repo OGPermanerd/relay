@@ -2,11 +2,13 @@
 
 import { auth } from "@/auth";
 import { db, skills } from "@everyskill/db";
+import { skillVersions } from "@everyskill/db/schema/skill-versions";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { generateUniqueSlug } from "@/lib/slug";
 import { generateSkillEmbedding } from "@/lib/embedding-generator";
+import { hashContent } from "@/lib/content-hash";
 
 // TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
 const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
@@ -54,6 +56,13 @@ export async function forkSkill(
   const forkName = `${parent.name} (Fork)`;
   const slug = await generateUniqueSlug(forkName, db);
 
+  // Compute forkedAtContentHash from stripped body (no frontmatter) for drift detection
+  const frontmatterMatch = parent.content.match(/^---\n[\s\S]*?\n---\n/);
+  const strippedBody = frontmatterMatch
+    ? parent.content.slice(frontmatterMatch[0].length)
+    : parent.content;
+  const parentBodyHash = await hashContent(strippedBody);
+
   let newSkill: { id: string; slug: string };
   try {
     const [inserted] = await db
@@ -68,6 +77,7 @@ export async function forkSkill(
         tags: parent.tags,
         hoursSaved: 0,
         forkedFromId: parent.id,
+        forkedAtContentHash: parentBodyHash,
         authorId: session.user.id,
         status: "draft",
       })
@@ -80,6 +90,39 @@ export async function forkSkill(
       console.error("Failed to fork skill:", error);
     }
     return { error: "Failed to fork skill. Please try again." };
+  }
+
+  // Create skill_versions record so the fork is not orphaned from the version system
+  try {
+    const versionId = crypto.randomUUID();
+    const contentHash = await hashContent(parent.content);
+    const [version] = await db
+      .insert(skillVersions)
+      .values({
+        id: versionId,
+        tenantId: DEFAULT_TENANT_ID,
+        skillId: newSkill.id,
+        version: 1,
+        contentUrl: "",
+        contentHash,
+        contentType: "text/markdown",
+        name: forkName,
+        description: parent.description,
+        createdBy: session.user.id,
+      })
+      .returning({ id: skillVersions.id });
+
+    // Set publishedVersionId on the fork
+    await db
+      .update(skills)
+      .set({ publishedVersionId: version.id })
+      .where(eq(skills.id, newSkill.id));
+  } catch (versionError) {
+    // Non-fatal: fork is still usable without version record (matches pattern in create.ts)
+    if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
+      console.error("Failed to create version record for fork:", versionError);
+    }
   }
 
   // Fire-and-forget: generate embedding for semantic similarity
