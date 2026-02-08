@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v2.0 Skill Ecosystem -- Phase 34 Complete, Phase 35 next
+**Current focus:** v2.0 Skill Ecosystem -- Phase 35 In Progress
 
 ## Current Position
 
 Phase: 35 of 39 (AI Review Integration)
-Plan: -- (not yet planned)
-Status: Ready to plan
-Last activity: 2026-02-08 -- Phase 34 complete (5/5 plans, 9/9 requirements, verified)
+Plan: 01 of 03
+Status: In progress
+Last activity: 2026-02-08 -- Completed 35-01-PLAN.md (schema + auto-approve logic)
 
 Progress: [█████░░░░░░░░░░░░░░░░░░░] 20% (v2.0 -- 9/44 requirements delivered)
 
@@ -29,12 +29,12 @@ Progress: [█████░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 154
+- Total plans completed: 155
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~9.2 hours
 
 **Cumulative:**
-- 154 plans across 34 phases and 6 milestones
+- 155 plans across 35 phases and 6 milestones
 - ~14,700 LOC TypeScript
 - 8 days total development time
 
@@ -54,6 +54,8 @@ Recent decisions affecting current work:
 - [34-03]: All 18 public query paths filter by status='published' -- pattern: every new public query must include status filter
 - [34-04]: Access control pattern: isPublished || isAuthor || isAdmin else 404 -- parallel session+skill fetch avoids waterfall
 - [34-05]: Integration verified: full build passes, 90/92 E2E tests green (2 pre-existing env-specific failures), all 91 skills remain 'published'
+- [35-01]: statusMessage is nullable TEXT, no default -- only populated on AI review failure
+- [35-01]: Auto-approve threshold defaults to 7/10 -- all 3 categories must meet threshold
 
 ### Pending Todos
 
@@ -69,5 +71,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 34 verified complete -- Phase 35 ready to plan
-Resume file: .planning/ROADMAP.md (ready for /gsd:plan-phase 35)
+Stopped at: Phase 35 plan 01 complete -- plans 02+03 ready to execute
+Resume file: .planning/phases/35-ai-review-integration/35-02-PLAN.md
