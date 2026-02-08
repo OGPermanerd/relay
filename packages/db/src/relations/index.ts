@@ -12,6 +12,7 @@ import {
   skillMessages,
   notifications,
   notificationPreferences,
+  reviewDecisions,
 } from "../schema";
 
 /**
@@ -53,6 +54,7 @@ export const skillsRelations = relations(skills, ({ one, many }) => ({
     relationName: "forks",
   }),
   forks: many(skills, { relationName: "forks" }),
+  reviewDecisions: many(reviewDecisions),
 }));
 
 /**
@@ -107,6 +109,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   apiKeys: many(apiKeys),
   notifications: many(notifications),
   notificationPreferences: many(notificationPreferences),
+  reviewDecisions: many(reviewDecisions),
 }));
 
 /**
@@ -159,6 +162,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   apiKeys: many(apiKeys),
   notifications: many(notifications),
   notificationPreferences: many(notificationPreferences),
+  reviewDecisions: many(reviewDecisions),
 }));
 
 /**
@@ -224,6 +228,27 @@ export const notificationPreferencesRelations = relations(notificationPreference
   }),
   user: one(users, {
     fields: [notificationPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * ReviewDecisions relations
+ * - tenant: many-to-one with tenants
+ * - skill: many-to-one with skills
+ * - reviewer: many-to-one with users
+ */
+export const reviewDecisionsRelations = relations(reviewDecisions, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [reviewDecisions.tenantId],
+    references: [tenants.id],
+  }),
+  skill: one(skills, {
+    fields: [reviewDecisions.skillId],
+    references: [skills.id],
+  }),
+  reviewer: one(users, {
+    fields: [reviewDecisions.reviewerId],
     references: [users.id],
   }),
 }));
