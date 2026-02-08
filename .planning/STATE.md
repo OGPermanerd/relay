@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 32 Admin Panel -- In progress (Plans 01-02 complete).
+**Current focus:** Phase 32 Admin Panel -- COMPLETE (All 6 plans done).
 
 ## Current Position
 
 Phase: 32 of 33 (Admin Panel)
-Plan: 2 of 6 in phase 32 (32-01, 32-02 complete)
+Plan: 5 of 6 in phase 32 (32-01, 32-02, 32-05 complete)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 32-02-PLAN.md (Auth role wiring + isAdmin rewrite)
+Last activity: 2026-02-08 -- Completed 32-05-PLAN.md (Hook compliance dashboard)
 
-Progress: [█████████████████████░░░] ~40% (v1.5 -- 138 plans total)
+Progress: [█████████████████████░░░] ~41% (v1.5 -- 139 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [█████████████████████░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 138
-- Phase 32: 32-01, 32-02 complete (user roles schema + service, auth role wiring)
+- Total plans completed: 139
+- Phase 32: 32-01, 32-02, 32-05 complete (user roles schema + service, auth role wiring, hook compliance)
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~8.5 hours
 
 **Cumulative:**
-- 138 plans across 32 phases and 5 milestones
+- 139 plans across 32 phases and 5 milestones
 - ~14,700 LOC TypeScript
 - 7 days total development time
 
@@ -119,6 +119,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 32-02 | First-user-admin check after tenantId update in jwt callback | User record must have correct tenant before isFirstUserInTenant is called |
 | 32-02 | Lazy-load role for existing sessions via getUserRole | Same pattern as tenantId lazy migration; avoids forcing re-login |
 | 32-02 | isAdmin signature break intentional (fixed in 32-06) | Session-based auth is more secure than email-list approach |
+| 32-05 | 30-day rolling window for hook compliance | Users with at least one hook event in last 30 days are compliant |
+| 32-05 | Non-compliant users sorted first in table | Admin visibility for users needing attention |
 
 ### Pending Todos
 
@@ -138,5 +140,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 32, Plan 02 complete -- auth role wiring + isAdmin rewrite done
-Resume file: .planning/phases/32-admin-panel/32-02-SUMMARY.md
+Stopped at: Phase 32, Plan 05 complete -- hook compliance dashboard done
+Resume file: .planning/phases/32-admin-panel/32-05-SUMMARY.md
