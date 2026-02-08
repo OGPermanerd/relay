@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 34 of 39 (Review Pipeline Foundation)
-Plan: 1 of 5 complete (34-01 done)
+Plan: 2 of 5 complete (34-01, 34-02 done)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 34-01-PLAN.md (skill status schema + state machine)
+Last activity: 2026-02-08 -- Completed 34-02-PLAN.md (draft status on all creation paths)
 
-Progress: [█░░░░░░░░░░░░░░░░░░░░░░░] 2% (v2.0 -- 1/44 requirements delivered)
+Progress: [██░░░░░░░░░░░░░░░░░░░░░░] 5% (v2.0 -- 2/44 requirements delivered)
 
 ## Milestones
 
@@ -29,12 +29,12 @@ Progress: [█░░░░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 150
+- Total plans completed: 151
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~8.9 hours
 
 **Cumulative:**
-- 150 plans across 34 phases and 6 milestones
+- 151 plans across 34 phases and 6 milestones
 - ~14,700 LOC TypeScript
 - 8 days total development time
 
@@ -50,6 +50,7 @@ Recent decisions affecting current work:
 - [v2.0 roadmap]: MCPR tools (review_skill, submit_for_review, check_review_status) placed in Phase 35 alongside AI review integration -- natural combination of review pipeline + MCP tooling
 - [v2.0 roadmap]: Phases 38 (MCP Discovery) and 39 (Fork Detection) are independent of review pipeline -- can execute in parallel with phases 36-37
 - [34-01]: Status column DEFAULT 'published' for backward compat -- state machine is pure function service (no DB dependency)
+- [34-02]: All 4 creation paths explicitly set status='draft' -- never rely on column DEFAULT for new skills
 
 ### Pending Todos
 
@@ -65,5 +66,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 34, plan 01 complete -- plans 02-05 remaining
-Resume file: .planning/phases/34-review-pipeline-foundation/ (34-02 next in wave 1)
+Stopped at: Phase 34, plan 02 complete -- plans 03-05 remaining
+Resume file: .planning/phases/34-review-pipeline-foundation/ (34-03 next in wave 2)
