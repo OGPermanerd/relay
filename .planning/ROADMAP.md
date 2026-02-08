@@ -118,7 +118,7 @@ Total: 55 plans completed.
 - [x] **Phase 34: Review Pipeline Foundation** - Status column, state machine, query guards, and author workflow ✓
 - [x] **Phase 35: AI Review Integration** - Auto AI review on submission, MCP review tools, auto-approve threshold ✓
 - [x] **Phase 36: Admin Review UI** - Queue, diff view, approve/reject/request-changes actions, audit trail ✓
-- [ ] **Phase 37: Review Notifications** - 7 new notification types for the review lifecycle
+- [x] **Phase 37: Review Notifications** - 7 new notification types for the review lifecycle ✓
 - [ ] **Phase 38: Conversational MCP Discovery** - Semantic search, recommend, describe, and guide tools
 - [ ] **Phase 39: Fork Detection** - Hash comparison, update_skill, web UI drift indicators
 
@@ -188,10 +188,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 37-01-PLAN.md -- Schema, migration, type union, getAdminsInTenant, preference service
-- [ ] 37-02-PLAN.md -- Email template and notifyReviewEvent dispatch function
-- [ ] 37-03-PLAN.md -- Wiring dispatch into submit-for-review and admin-reviews actions
-- [ ] 37-04-PLAN.md -- Preferences form UI and notification bell icons
+- [x] 37-01-PLAN.md -- Schema, migration, type union, getAdminsInTenant, preference service
+- [x] 37-02-PLAN.md -- Email template and notifyReviewEvent dispatch function
+- [x] 37-03-PLAN.md -- Wiring dispatch into submit-for-review and admin-reviews actions
+- [x] 37-04-PLAN.md -- Preferences form UI and notification bell icons
 
 ### Phase 38: Conversational MCP Discovery
 **Goal**: Users can discover skills through natural conversation in Claude -- semantic search, detailed descriptions, and post-install guidance
@@ -233,7 +233,7 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 34. Review Pipeline Foundation | v2.0 | 5/5 | Complete | 2026-02-08 |
 | 35. AI Review Integration | v2.0 | 3/3 | Complete | 2026-02-08 |
 | 36. Admin Review UI | v2.0 | 3/3 | Complete | 2026-02-08 |
-| 37. Review Notifications | v2.0 | 0/4 | Planning complete | - |
+| 37. Review Notifications | v2.0 | 4/4 | Complete | 2026-02-08 |
 | 38. Conversational MCP Discovery | v2.0 | 0/TBD | Not started | - |
 | 39. Fork Detection | v2.0 | 0/TBD | Not started | - |
 

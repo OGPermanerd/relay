@@ -36,13 +36,13 @@ Requirements for the Skill Ecosystem milestone. Each maps to roadmap phases star
 
 ### Review Notifications
 
-- [ ] **RVNT-01**: Admins notified (in-app + email) when a skill is submitted for review
-- [ ] **RVNT-02**: Author notified (in-app + email) when skill is approved
-- [ ] **RVNT-03**: Author notified (in-app + email) when skill is rejected (includes admin notes)
-- [ ] **RVNT-04**: Author notified (in-app + email) when changes are requested (includes admin feedback)
-- [ ] **RVNT-05**: Author notified (in-app + email) when skill is published
-- [ ] **RVNT-06**: Review notifications grouped under single preference toggle (reviewNotificationsEmail/InApp)
-- [ ] **RVNT-07**: Notification bell UI handles new review notification types with appropriate icons and action URLs
+- [x] **RVNT-01**: Admins notified (in-app + email) when a skill is submitted for review
+- [x] **RVNT-02**: Author notified (in-app + email) when skill is approved
+- [x] **RVNT-03**: Author notified (in-app + email) when skill is rejected (includes admin notes)
+- [x] **RVNT-04**: Author notified (in-app + email) when changes are requested (includes admin feedback)
+- [x] **RVNT-05**: Author notified (in-app + email) when skill is published
+- [x] **RVNT-06**: Review notifications grouped under single preference toggle (reviewNotificationsEmail/InApp)
+- [x] **RVNT-07**: Notification bell UI handles new review notification types with appropriate icons and action URLs
 
 ### MCP Discovery
 
@@ -136,13 +136,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ADMR-07 | Phase 36 | Done |
 | ADMR-08 | Phase 36 | Done |
 | ADMR-09 | Phase 36 | Done |
-| RVNT-01 | Phase 37 | Pending |
-| RVNT-02 | Phase 37 | Pending |
-| RVNT-03 | Phase 37 | Pending |
-| RVNT-04 | Phase 37 | Pending |
-| RVNT-05 | Phase 37 | Pending |
-| RVNT-06 | Phase 37 | Pending |
-| RVNT-07 | Phase 37 | Pending |
+| RVNT-01 | Phase 37 | Done |
+| RVNT-02 | Phase 37 | Done |
+| RVNT-03 | Phase 37 | Done |
+| RVNT-04 | Phase 37 | Done |
+| RVNT-05 | Phase 37 | Done |
+| RVNT-06 | Phase 37 | Done |
+| RVNT-07 | Phase 37 | Done |
 | DISC-01 | Phase 38 | Pending |
 | DISC-02 | Phase 38 | Pending |
 | DISC-03 | Phase 38 | Pending |
