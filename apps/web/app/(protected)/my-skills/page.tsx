@@ -25,6 +25,7 @@ export default async function MySkillsPage() {
       name: skills.name,
       slug: skills.slug,
       category: skills.category,
+      status: skills.status,
       totalUses: skills.totalUses,
       averageRating: skills.averageRating,
       createdAt: skills.createdAt,
@@ -44,7 +45,7 @@ export default async function MySkillsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Skills</h1>
-          <p className="mt-1 text-sm text-gray-600">Skills you&apos;ve created and published</p>
+          <p className="mt-1 text-sm text-gray-600">Skills you&apos;ve created</p>
         </div>
         <Link
           href="/skills/new"
