@@ -36,7 +36,7 @@ export const VALID_TRANSITIONS: Record<SkillStatus, SkillStatus[]> = {
   ai_reviewed: ["approved", "rejected", "changes_requested"],
   approved: ["published"],
   rejected: ["draft"],
-  changes_requested: ["draft"],
+  changes_requested: ["draft", "pending_review"],
   published: [],
 };
 
