@@ -115,18 +115,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RVPL-01 | Phase 34 | Pending |
-| RVPL-02 | Phase 34 | Pending |
+| RVPL-01 | Phase 34 | Done |
+| RVPL-02 | Phase 34 | Done |
 | RVPL-03 | Phase 35 | Pending |
 | RVPL-04 | Phase 35 | Pending |
-| RVPL-05 | Phase 34 | Pending |
-| RVPL-06 | Phase 34 | Pending |
-| RVPL-07 | Phase 34 | Pending |
-| RVPL-08 | Phase 34 | Pending |
-| RVPL-09 | Phase 34 | Pending |
-| RVPL-10 | Phase 34 | Pending |
+| RVPL-05 | Phase 34 | Done |
+| RVPL-06 | Phase 34 | Done |
+| RVPL-07 | Phase 34 | Done |
+| RVPL-08 | Phase 34 | Done |
+| RVPL-09 | Phase 34 | Done |
+| RVPL-10 | Phase 34 | Done |
 | RVPL-11 | Phase 35 | Pending |
-| RVPL-12 | Phase 34 | Pending |
+| RVPL-12 | Phase 34 | Done |
 | ADMR-01 | Phase 36 | Pending |
 | ADMR-02 | Phase 36 | Pending |
 | ADMR-03 | Phase 36 | Pending |

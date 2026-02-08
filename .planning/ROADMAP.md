@@ -115,7 +115,7 @@ Total: 55 plans completed.
 
 **Milestone Goal:** Transform skill publishing from instant-publish to a quality-gated pipeline with AI review, author revision, and admin approval -- plus conversational discovery via MCP and fork-on-modify detection. 44 requirements across 6 categories.
 
-- [ ] **Phase 34: Review Pipeline Foundation** - Status column, state machine, query guards, and author workflow
+- [x] **Phase 34: Review Pipeline Foundation** - Status column, state machine, query guards, and author workflow ✓
 - [ ] **Phase 35: AI Review Integration** - Auto AI review on submission, MCP review tools, auto-approve threshold
 - [ ] **Phase 36: Admin Review UI** - Queue, diff view, approve/reject/request-changes actions, audit trail
 - [ ] **Phase 37: Review Notifications** - 7 new notification types for the review lifecycle
@@ -137,11 +137,11 @@ Total: 55 plans completed.
 **Plans:** 5 plans
 
 Plans:
-- [ ] 34-01-PLAN.md -- Schema + state machine + migration
-- [ ] 34-02-PLAN.md -- Creation paths set status='draft'
-- [ ] 34-03-PLAN.md -- Query guards (18 public query paths)
-- [ ] 34-04-PLAN.md -- Access control, My Skills badges, submit-for-review
-- [ ] 34-05-PLAN.md -- Build verification and E2E tests
+- [x] 34-01-PLAN.md -- Schema + state machine + migration
+- [x] 34-02-PLAN.md -- Creation paths set status='draft'
+- [x] 34-03-PLAN.md -- Query guards (18 public query paths)
+- [x] 34-04-PLAN.md -- Access control, My Skills badges, submit-for-review
+- [x] 34-05-PLAN.md -- Build verification and E2E tests
 
 ### Phase 35: AI Review Integration
 **Goal**: Submitting a skill for review automatically triggers AI analysis with explicit error handling, and authors/admins can trigger and check reviews via MCP
@@ -214,14 +214,14 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
-| 34. Review Pipeline Foundation | v2.0 | 0/5 | Planned | - |
+| 34. Review Pipeline Foundation | v2.0 | 5/5 | Complete | 2026-02-08 |
 | 35. AI Review Integration | v2.0 | 0/TBD | Not started | - |
 | 36. Admin Review UI | v2.0 | 0/TBD | Not started | - |
 | 37. Review Notifications | v2.0 | 0/TBD | Not started | - |
 | 38. Conversational MCP Discovery | v2.0 | 0/TBD | Not started | - |
 | 39. Fork Detection | v2.0 | 0/TBD | Not started | - |
 
-**Total: 149 plans completed across 33 phases and 6 milestones (v1.0-v1.5). v2.0 phases 34-39 planned.**
+**Total: 154 plans completed across 34 phases and 7 milestones (v1.0-v1.5, v2.0 in progress).**
 
 ---
 *Roadmap created: 2026-01-31*
@@ -231,3 +231,4 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 *v1.4 completed: 2026-02-06*
 *v1.5 completed: 2026-02-08*
 *v2.0 roadmap added: 2026-02-08*
+*Phase 34 completed: 2026-02-08*
