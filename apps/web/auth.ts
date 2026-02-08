@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@everyskill/db";
 import { users, accounts, sessions, verificationTokens } from "@everyskill/db/schema";
 import { getTenantByDomain } from "@everyskill/db/services/tenant";
+import { isFirstUserInTenant, getUserRole, setUserRole } from "@everyskill/db";
 import authConfig from "./auth.config";
 
 const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "everyskill.ai";
@@ -49,7 +50,7 @@ function createAuthConfig(): NextAuthConfig {
           token.id = user.id;
         }
 
-        // On initial sign-in (account present), resolve and inject tenantId
+        // On initial sign-in (account present), resolve and inject tenantId + role
         if (account && profile?.email) {
           const emailDomain = profile.email.split("@")[1];
           const tenant = await getTenantByDomain(emailDomain);
@@ -61,8 +62,14 @@ function createAuthConfig(): NextAuthConfig {
             if (user?.id) {
               try {
                 await db!.update(users).set({ tenantId: tenant.id }).where(eq(users.id, user.id));
+
+                // First-user-admin: if this is the first user in the tenant, promote to admin
+                const isFirst = await isFirstUserInTenant(tenant.id);
+                const role = isFirst ? ("admin" as const) : ("member" as const);
+                await setUserRole(user.id, role);
+                token.role = role;
               } catch (e) {
-                console.error("Failed to update user tenantId:", e);
+                console.error("Failed to update user tenantId/role:", e);
               }
             }
           }
@@ -84,6 +91,18 @@ function createAuthConfig(): NextAuthConfig {
           }
         }
 
+        // Lazy-load role for existing sessions that don't have it yet
+        if (!token.role && token.id) {
+          try {
+            const role = await getUserRole(token.id as string);
+            if (role) {
+              token.role = role;
+            }
+          } catch {
+            // Non-fatal — next request will retry
+          }
+        }
+
         return token;
       },
       async session({ session, token }) {
@@ -92,6 +111,9 @@ function createAuthConfig(): NextAuthConfig {
         }
         if (token.tenantId) {
           session.user.tenantId = token.tenantId as string;
+        }
+        if (token.role) {
+          session.user.role = token.role as "admin" | "member";
         }
         return session;
       },
