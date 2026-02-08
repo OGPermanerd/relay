@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 37 of 39 (Review Notifications)
-Plan: 02 of TBD
+Plan: 03 of TBD
 Status: In progress
-Last activity: 2026-02-08 -- Completed 37-01-PLAN.md (Review Notification DB Infrastructure)
+Last activity: 2026-02-08 -- Completed 37-03-PLAN.md (Notification Dispatch Wiring)
 
 Progress: [████████████░░░░░░░░░░░░] 59% (v2.0 -- 26/44 requirements delivered)
 
@@ -29,12 +29,12 @@ Progress: [████████████░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 164
+- Total plans completed: 167
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~9.6 hours
+- Total execution time: ~9.7 hours
 
 **Cumulative:**
-- 164 plans across 37 phases and 7 milestones
+- 167 plans across 37 phases and 7 milestones
 - ~15,600 LOC TypeScript
 - 8 days total development time
 
@@ -76,6 +76,10 @@ Recent decisions affecting current work:
 - [37-02]: Notes quote block shown for approved, rejected, and changes_requested types (not submitted or published)
 - [37-02]: Single toggle pair (reviewNotificationsInApp/reviewNotificationsEmail) controls all 5 review event types per RVNT-06
 - [37-02]: buildReviewActionUrl routes: submitted -> /admin/reviews, rejected/changes -> /my-skills, approved/published -> /skills/{slug}
+- [37-03]: Auto-approved skills send ONLY RVNT-05 (published) to author, NOT RVNT-01 to admins
+- [37-03]: approveSkillAction sends ONLY RVNT-05 (published), NOT RVNT-02 + RVNT-05, to avoid double notification
+- [37-03]: All notification dispatch happens AFTER DB transactions, never inside them
+- [37-03]: Nullable authorId guarded with if-check before eq() for Drizzle ORM type safety
 
 ### Pending Todos
 
@@ -91,5 +95,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 37-01 (Review Notification DB Infrastructure) -- continue with remaining Phase 37 plans
+Stopped at: Completed 37-03 (Notification Dispatch Wiring) -- continue with 37-04 plan
 Resume file: .planning/phases/37-review-notifications/
