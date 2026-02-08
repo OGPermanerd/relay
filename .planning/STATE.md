@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 32 Admin Panel -- In progress (Plan 01 complete).
+**Current focus:** Phase 32 Admin Panel -- In progress (Plans 01-02 complete).
 
 ## Current Position
 
 Phase: 32 of 33 (Admin Panel)
-Plan: 1 of 6 in phase 32 (32-01 complete)
+Plan: 2 of 6 in phase 32 (32-01, 32-02 complete)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 32-01-PLAN.md (User roles schema + service)
+Last activity: 2026-02-08 -- Completed 32-02-PLAN.md (Auth role wiring + isAdmin rewrite)
 
-Progress: [█████████████████████░░░] ~39% (v1.5 -- 137 plans total)
+Progress: [█████████████████████░░░] ~40% (v1.5 -- 138 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [█████████████████████░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 137
-- Phase 32: 32-01 complete (user roles schema + service)
+- Total plans completed: 138
+- Phase 32: 32-01, 32-02 complete (user roles schema + service, auth role wiring)
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~8.5 hours
 
 **Cumulative:**
-- 137 plans across 32 phases and 5 milestones
+- 138 plans across 32 phases and 5 milestones
 - ~14,700 LOC TypeScript
 - 7 days total development time
 
@@ -116,6 +116,9 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 32-01 | pgEnum over text column for user_role | Enforces valid values at DB level |
 | 32-01 | First user per tenant by created_at becomes admin | Deterministic backfill, no manual promotion needed |
 | 32-01 | Idempotent migration with DO block and IF NOT EXISTS | Safe to re-run without errors |
+| 32-02 | First-user-admin check after tenantId update in jwt callback | User record must have correct tenant before isFirstUserInTenant is called |
+| 32-02 | Lazy-load role for existing sessions via getUserRole | Same pattern as tenantId lazy migration; avoids forcing re-login |
+| 32-02 | isAdmin signature break intentional (fixed in 32-06) | Session-based auth is more secure than email-list approach |
 
 ### Pending Todos
 
@@ -135,5 +138,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 32, Plan 01 complete -- user roles schema + service done
-Resume file: .planning/phases/32-admin-panel/32-01-SUMMARY.md
+Stopped at: Phase 32, Plan 02 complete -- auth role wiring + isAdmin rewrite done
+Resume file: .planning/phases/32-admin-panel/32-02-SUMMARY.md
