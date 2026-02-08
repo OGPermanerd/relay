@@ -186,11 +186,11 @@ function fillMissingDates(
  * skills deployed, and highlights (most used skill, highest saver).
  * Uses COALESCE fallback chain: rating estimate -> creator estimate -> 1.
  *
- * @param orgId - Organization ID to filter by
+ * @param tenantId - Tenant ID to filter by
  * @param startDate - Start date for time filtering
  * @returns Overview statistics
  */
-export async function getOverviewStats(orgId: string, startDate: Date): Promise<OverviewStats> {
+export async function getOverviewStats(tenantId: string, startDate: Date): Promise<OverviewStats> {
   if (!db) {
     return {
       totalHoursSaved: 0,
@@ -213,9 +213,8 @@ export async function getOverviewStats(orgId: string, startDate: Date): Promise<
         SELECT s2.name
         FROM usage_events ue2
         LEFT JOIN skills s2 ON s2.id = ue2.skill_id
-        LEFT JOIN users u2 ON u2.id = ue2.user_id
         WHERE ue2.user_id IS NOT NULL
-          AND u2.email LIKE '%@' || (SELECT split_part(u3.email, '@', 2) FROM users u3 WHERE u3.id = ${orgId} LIMIT 1)
+          AND ue2.tenant_id = ${tenantId}
           AND ue2.created_at >= ${startDateStr}
         GROUP BY ue2.skill_id, s2.name
         ORDER BY COUNT(*) DESC
@@ -228,7 +227,7 @@ export async function getOverviewStats(orgId: string, startDate: Date): Promise<
         LEFT JOIN ratings r3 ON r3.skill_id = ue3.skill_id AND r3.user_id = ue3.user_id
         LEFT JOIN users u4 ON u4.id = ue3.user_id
         WHERE ue3.user_id IS NOT NULL
-          AND u4.email LIKE '%@' || (SELECT split_part(u5.email, '@', 2) FROM users u5 WHERE u5.id = ${orgId} LIMIT 1)
+          AND ue3.tenant_id = ${tenantId}
           AND ue3.created_at >= ${startDateStr}
         GROUP BY ue3.user_id, u4.name
         ORDER BY SUM(COALESCE(r3.hours_saved_estimate, s3.hours_saved, 1)) DESC
@@ -237,9 +236,8 @@ export async function getOverviewStats(orgId: string, startDate: Date): Promise<
     FROM usage_events ue
     LEFT JOIN skills s ON s.id = ue.skill_id
     LEFT JOIN ratings r ON r.skill_id = ue.skill_id AND r.user_id = ue.user_id
-    LEFT JOIN users u ON u.id = ue.user_id
     WHERE ue.user_id IS NOT NULL
-      AND u.email LIKE '%@' || (SELECT split_part(u6.email, '@', 2) FROM users u6 WHERE u6.id = ${orgId} LIMIT 1)
+      AND ue.tenant_id = ${tenantId}
       AND ue.created_at >= ${startDateStr}
   `);
 
@@ -262,13 +260,13 @@ export async function getOverviewStats(orgId: string, startDate: Date): Promise<
  * Returns hours saved per time period (day/week/month) for charting.
  * Fills missing periods with zero values.
  *
- * @param orgId - Organization ID to filter by
+ * @param tenantId - Tenant ID to filter by
  * @param startDate - Start date for time filtering
  * @param granularity - Time grouping: day, week, or month
  * @returns Array of usage trend data points
  */
 export async function getUsageTrend(
-  orgId: string,
+  tenantId: string,
   startDate: Date,
   granularity: Granularity
 ): Promise<UsageTrendPoint[]> {
@@ -285,9 +283,8 @@ export async function getUsageTrend(
     FROM usage_events ue
     LEFT JOIN skills s ON s.id = ue.skill_id
     LEFT JOIN ratings r ON r.skill_id = ue.skill_id AND r.user_id = ue.user_id
-    LEFT JOIN users u ON u.id = ue.user_id
     WHERE ue.user_id IS NOT NULL
-      AND u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId} LIMIT 1)
+      AND ue.tenant_id = ${tenantId}
       AND ue.created_at >= ${startDateStr}
     GROUP BY date_trunc(${gran}, ue.created_at)
     ORDER BY date_trunc(${gran}, ue.created_at)
@@ -313,12 +310,12 @@ export async function getUsageTrend(
  * Returns usage metrics for each employee in the org, including
  * skills used, usage frequency, hours saved, and top skill.
  *
- * @param orgId - Organization ID to filter by
+ * @param tenantId - Tenant ID to filter by
  * @param startDate - Start date for time filtering
  * @returns Array of employee usage rows
  */
 export async function getEmployeeUsage(
-  orgId: string,
+  tenantId: string,
   startDate: Date
 ): Promise<EmployeeUsageRow[]> {
   if (!db) {
@@ -350,7 +347,7 @@ export async function getEmployeeUsage(
     JOIN usage_events ue ON ue.user_id = u.id
     LEFT JOIN skills s ON s.id = ue.skill_id
     LEFT JOIN ratings r ON r.skill_id = ue.skill_id AND r.user_id = ue.user_id
-    WHERE u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId} LIMIT 1)
+    WHERE u.tenant_id = ${tenantId}
       AND ue.created_at >= ${startDateStr}
     GROUP BY u.id, u.name, u.email, u.image
     ORDER BY hours_saved DESC
@@ -377,11 +374,11 @@ export async function getEmployeeUsage(
  * Returns usage metrics for each skill used by the org, including
  * usage count, unique users, hours saved, and employee breakdown.
  *
- * @param orgId - Organization ID to filter by
+ * @param tenantId - Tenant ID to filter by
  * @param startDate - Start date for time filtering
  * @returns Array of skill usage rows
  */
-export async function getSkillUsage(orgId: string, startDate: Date): Promise<SkillUsageRow[]> {
+export async function getSkillUsage(tenantId: string, startDate: Date): Promise<SkillUsageRow[]> {
   if (!db) {
     return [];
   }
@@ -401,9 +398,8 @@ export async function getSkillUsage(orgId: string, startDate: Date): Promise<Ski
     FROM usage_events ue
     JOIN skills s ON s.id = ue.skill_id
     LEFT JOIN users author ON author.id = s.author_id
-    LEFT JOIN users u ON u.id = ue.user_id
     WHERE ue.user_id IS NOT NULL
-      AND u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId} LIMIT 1)
+      AND ue.tenant_id = ${tenantId}
       AND ue.created_at >= ${startDateStr}
     GROUP BY s.id, s.name, s.category, author.name
     ORDER BY usage_count DESC
@@ -431,7 +427,7 @@ export async function getSkillUsage(orgId: string, startDate: Date): Promise<Ski
     FROM usage_events ue
     JOIN users u ON u.id = ue.user_id
     WHERE ue.skill_id IN (${skillIdList})
-      AND u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId} LIMIT 1)
+      AND ue.tenant_id = ${tenantId}
       AND ue.created_at >= ${startDateStr}
     GROUP BY ue.skill_id, ue.user_id, u.name
     ORDER BY usage_count DESC
@@ -470,11 +466,11 @@ export async function getSkillUsage(orgId: string, startDate: Date): Promise<Ski
  *
  * Returns all usage events with details for export.
  *
- * @param orgId - Organization ID to filter by
+ * @param tenantId - Tenant ID to filter by
  * @param startDate - Start date for time filtering
  * @returns Array of export data rows
  */
-export async function getExportData(orgId: string, startDate: Date): Promise<ExportDataRow[]> {
+export async function getExportData(tenantId: string, startDate: Date): Promise<ExportDataRow[]> {
   if (!db) {
     return [];
   }
@@ -494,7 +490,7 @@ export async function getExportData(orgId: string, startDate: Date): Promise<Exp
     LEFT JOIN skills s ON s.id = ue.skill_id
     LEFT JOIN ratings r ON r.skill_id = ue.skill_id AND r.user_id = ue.user_id
     WHERE ue.user_id IS NOT NULL
-      AND u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId} LIMIT 1)
+      AND ue.tenant_id = ${tenantId}
       AND ue.created_at >= ${startDateStr}
     ORDER BY ue.created_at DESC
   `);
@@ -516,12 +512,15 @@ export async function getExportData(orgId: string, startDate: Date): Promise<Exp
  * Get recent activity for a specific employee (drill-down modal)
  *
  * Returns recent usage events for one employee, ordered by date.
+ * Includes tenantId for defense-in-depth tenant isolation.
  *
+ * @param tenantId - Tenant ID for defense-in-depth filtering
  * @param userId - User ID to get activity for
  * @param startDate - Start date for time filtering
  * @returns Array of activity entries
  */
 export async function getEmployeeActivity(
+  tenantId: string,
   userId: string,
   startDate: Date
 ): Promise<EmployeeActivityEntry[]> {
@@ -541,6 +540,7 @@ export async function getEmployeeActivity(
     LEFT JOIN skills s ON s.id = ue.skill_id
     LEFT JOIN ratings r ON r.skill_id = ue.skill_id AND r.user_id = ue.user_id
     WHERE ue.user_id = ${userId}
+      AND ue.tenant_id = ${tenantId}
       AND ue.created_at >= ${startDateStr}
     ORDER BY ue.created_at DESC
   `);
@@ -561,13 +561,16 @@ export async function getEmployeeActivity(
  *
  * Returns usage count per time period for one skill.
  * Fills missing periods with zero values.
+ * Includes tenantId for defense-in-depth tenant isolation.
  *
+ * @param tenantId - Tenant ID for defense-in-depth filtering
  * @param skillId - Skill ID to get trend for
  * @param startDate - Start date for time filtering
  * @param granularity - Time grouping: day, week, or month
  * @returns Array of skill trend data points
  */
 export async function getSkillTrend(
+  tenantId: string,
   skillId: string,
   startDate: Date,
   granularity: Granularity
@@ -584,6 +587,7 @@ export async function getSkillTrend(
       COUNT(*)::integer AS usage_count
     FROM usage_events ue
     WHERE ue.skill_id = ${skillId}
+      AND ue.tenant_id = ${tenantId}
       AND ue.created_at >= ${startDateStr}
     GROUP BY date_trunc(${gran}, ue.created_at)
     ORDER BY date_trunc(${gran}, ue.created_at)
