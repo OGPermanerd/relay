@@ -30,3 +30,4 @@ export {
   markMessageRead,
   updateMessageStatus,
 } from "./skill-messages";
+export { isFirstUserInTenant, getUserRole, setUserRole, getUsersInTenant } from "./user";
