@@ -169,7 +169,12 @@ Plans:
   3. Admin can approve (publishes the skill), reject (with required notes), or request changes (with feedback) -- each action is a single click plus optional/required notes
   4. Every review decision is stored immutably for audit trail (reviewer, action, timestamp, notes) and cannot be modified after the fact
   5. The admin sidebar shows the count of skills awaiting review
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 36-01-PLAN.md -- Review decisions schema, migration, service, and query functions
+- [ ] 36-02-PLAN.md -- Server actions, review queue page, and admin nav badge
+- [ ] 36-03-PLAN.md -- Review detail page with AI scores, diff view, and action forms
 
 ### Phase 37: Review Notifications
 **Goal**: Authors and admins receive timely in-app and email notifications at every stage of the review lifecycle
@@ -221,7 +226,7 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34. Review Pipeline Foundation | v2.0 | 5/5 | Complete | 2026-02-08 |
 | 35. AI Review Integration | v2.0 | 3/3 | Complete | 2026-02-08 |
-| 36. Admin Review UI | v2.0 | 0/TBD | Not started | - |
+| 36. Admin Review UI | v2.0 | 0/3 | Not started | - |
 | 37. Review Notifications | v2.0 | 0/TBD | Not started | - |
 | 38. Conversational MCP Discovery | v2.0 | 0/TBD | Not started | - |
 | 39. Fork Detection | v2.0 | 0/TBD | Not started | - |
