@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 28 of 33 (Hook-Based Usage Tracking)
-Plan: 28-02, 28-03 completed
+Plan: 28-01, 28-02, 28-03 completed
 Status: In progress
-Last activity: 2026-02-08 -- Completed 28-02-PLAN.md (rate limiter and HMAC utilities)
+Last activity: 2026-02-08 -- Completed 28-01-PLAN.md (validateApiKey soft expiry + tenantId)
 
-Progress: [██████████░░░░░░░░░░░░░░] ~15% (v1.5 -- 18 of ~TBD plans)
+Progress: [███████████░░░░░░░░░░░░░] ~16% (v1.5 -- 19 of ~TBD plans)
 
 ## Milestones
 
@@ -28,12 +28,12 @@ Progress: [██████████░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 116
+- Total plans completed: 117
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.6 hours
 
 **Cumulative:**
-- 116 plans across 28 phases and 5 milestones
+- 117 plans across 28 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -84,6 +84,7 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 28-03 | Fire-and-forget tracking with skill name enrichment | Consistent with audit.ts pattern; skill name resolved at insert time for self-contained metadata |
 | 28-02 | In-memory Map rate limiter over Redis | Single LXC container deployment; no Redis dependency needed |
 | 28-02 | timingSafeEqual with Buffer.from hex | Prevents timing attacks on HMAC string comparison |
+| 28-01 | Soft expiry returns isExpired flag instead of rejecting | Allows downstream usage tracking to decide how to handle expired keys |
 
 ### Pending Todos
 
@@ -102,6 +103,6 @@ All decisions logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-02-08T03:02:00Z
-Stopped at: Completed 28-02-PLAN.md (rate limiter and HMAC utilities)
+Last session: 2026-02-08T03:00:00Z
+Stopped at: Completed 28-01-PLAN.md (validateApiKey soft expiry + tenantId)
 Resume file: None
