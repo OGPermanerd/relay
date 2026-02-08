@@ -100,7 +100,7 @@ Total: 25 plans completed.
 - [x] **Phase 28: Hook-Based Usage Tracking** - Deterministic skill usage tracking via Claude Code hooks
 - [x] **Phase 29: Tenant-Scoped Analytics & MCP** - Analytics and MCP respect tenant boundaries
 - [x] **Phase 30: Branding & Navigation** - White-label tenant branding and improved navigation
-- [ ] **Phase 31: Skills & Upload Enhancements** - Richer upload experience with auto-review and similarity
+- [x] **Phase 31: Skills & Upload Enhancements** - Richer upload experience with auto-review and similarity
 - [ ] **Phase 32: Admin Panel** - Tenant administrators can manage their organization
 - [ ] **Phase 33: Email & Notifications** - Transactional email and in-app notification system
 
@@ -226,12 +226,12 @@ Plans:
   5. The uploader can "message author" to propose grouping their skill under an existing similar skill
 **Plans:** 6 plans
 Plans:
-- [ ] 31-01-PLAN.md — Relative timestamps: TDD utility + RelativeTime component
-- [ ] 31-02-PLAN.md — Relative timestamps: replace 13 locations across 11 files
-- [ ] 31-03-PLAN.md — AI review enhancement: suggestedDescription output + auto-trigger on upload
-- [ ] 31-04-PLAN.md — skill_messages DB table, schema, migration, and service functions
-- [ ] 31-05-PLAN.md — Rich similarity pane, hide match labels, wire AI review into similarity detection
-- [ ] 31-06-PLAN.md — Message author dialog, server action, and messages inbox page
+- [x] 31-01-PLAN.md — Relative timestamps: TDD utility + RelativeTime component
+- [x] 31-02-PLAN.md — Relative timestamps: replace 13 locations across 11 files
+- [x] 31-03-PLAN.md — AI review enhancement: suggestedDescription output + auto-trigger on upload
+- [x] 31-04-PLAN.md — skill_messages DB table, schema, migration, and service functions
+- [x] 31-05-PLAN.md — Rich similarity pane, hide match labels, wire AI review into similarity detection
+- [x] 31-06-PLAN.md — Message author dialog, server action, and messages inbox page
 
 ### Phase 32: Admin Panel
 **Goal**: Tenant administrators can manage their organization's settings, users, skills, and compliance status
@@ -275,11 +275,11 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 28. Hook-Based Tracking | v1.5 | 7/7 | Complete | 2026-02-08 |
 | 29. Tenant Analytics & MCP | v1.5 | 3/3 | Complete | 2026-02-08 |
 | 30. Branding & Navigation | v1.5 | 7/7 | Complete | 2026-02-08 |
-| 31. Skills & Upload | v1.5 | 0/6 | Not started | - |
+| 31. Skills & Upload | v1.5 | 6/6 | Complete | 2026-02-08 |
 | 32. Admin Panel | v1.5 | 0/TBD | Not started | - |
 | 33. Email & Notifications | v1.5 | 0/TBD | Not started | - |
 
-**Total: 130 plans completed across 30 phases and 5 milestones (v1.0-v1.5 Phase 30)**
+**Total: 136 plans completed across 31 phases and 5 milestones (v1.0-v1.5 Phase 31)**
 
 ---
 *Roadmap created: 2026-01-31*

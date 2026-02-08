@@ -132,5 +132,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 31 complete (6/6 plans) -- Message Author feature + messages inbox
-Resume file: .planning/phases/31-skills-upload-enhancements/31-06-SUMMARY.md
+Stopped at: Phase 31 verified (7/7 requirements) -- SKILL-06 gap fixed, all plans + verification complete
+Resume file: .planning/phases/31-skills-upload-enhancements/31-VERIFICATION.md
