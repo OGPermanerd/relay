@@ -85,6 +85,8 @@ Recent decisions affecting current work:
 - [38-01]: cosineDistance from drizzle-orm/sql/functions/vector for type-safe pgvector queries
 - [38-01]: MCP Ollama client is self-contained copy (no cross-app imports) for stdio protocol safety
 - [38-01]: Similarity score = 1 - cosineDistance for intuitive 0-1 range (higher = more similar)
+- [38-02]: Semantic search tried first, ILIKE fallback only when embedding null or zero results
+- [38-02]: searchMethod field in response JSON for client transparency (semantic vs text)
 - [38-04]: deriveQualityTier uses raw integer ratings (400=4.0 stars) matching DB storage format
 - [38-04]: displayRating computed in MCP layer (not DB service) to keep service return type clean
 
@@ -102,5 +104,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 38 plan 04 complete -- next: 38-02 (recommend_skills) and 38-03 (describe_skill) may be in progress
+Stopped at: Phase 38 plans 01, 02, 04 complete -- 38-03 (describe_skill) may be in progress
 Resume file: .planning/phases/38-conversational-mcp-discovery/
