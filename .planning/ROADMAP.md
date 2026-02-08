@@ -224,13 +224,14 @@ Plans:
   3. AI review runs automatically on upload (not on-demand) and suggests description modifications that the user can copy
   4. AI review results feed into duplicate/similarity detection for more accurate matching
   5. The uploader can "message author" to propose grouping their skill under an existing similar skill
-**Plans:** 5 plans
+**Plans:** 6 plans
 Plans:
-- [ ] 31-01-PLAN.md — Relative timestamps: TDD utility + RelativeTime component + replace 13 locations
-- [ ] 31-02-PLAN.md — AI review enhancement: suggestedDescription output + auto-trigger on upload
-- [ ] 31-03-PLAN.md — skill_messages DB table, schema, migration, and service functions
-- [ ] 31-04-PLAN.md — Rich similarity pane, hide match labels, wire AI review into similarity detection
-- [ ] 31-05-PLAN.md — Message author dialog, server action, and messages inbox page
+- [ ] 31-01-PLAN.md — Relative timestamps: TDD utility + RelativeTime component
+- [ ] 31-02-PLAN.md — Relative timestamps: replace 13 locations across 11 files
+- [ ] 31-03-PLAN.md — AI review enhancement: suggestedDescription output + auto-trigger on upload
+- [ ] 31-04-PLAN.md — skill_messages DB table, schema, migration, and service functions
+- [ ] 31-05-PLAN.md — Rich similarity pane, hide match labels, wire AI review into similarity detection
+- [ ] 31-06-PLAN.md — Message author dialog, server action, and messages inbox page
 
 ### Phase 32: Admin Panel
 **Goal**: Tenant administrators can manage their organization's settings, users, skills, and compliance status
@@ -274,7 +275,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 28. Hook-Based Tracking | v1.5 | 7/7 | Complete | 2026-02-08 |
 | 29. Tenant Analytics & MCP | v1.5 | 3/3 | Complete | 2026-02-08 |
 | 30. Branding & Navigation | v1.5 | 7/7 | Complete | 2026-02-08 |
-| 31. Skills & Upload | v1.5 | 0/5 | Not started | - |
+| 31. Skills & Upload | v1.5 | 0/6 | Not started | - |
 | 32. Admin Panel | v1.5 | 0/TBD | Not started | - |
 | 33. Email & Notifications | v1.5 | 0/TBD | Not started | - |
 
