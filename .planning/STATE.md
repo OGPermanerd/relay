@@ -11,10 +11,10 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 
 Phase: 38 of 39 (Conversational MCP Discovery)
 Plan: 04 of 04
-Status: In progress
-Last activity: 2026-02-08 -- Completed 38-04-PLAN.md (enhanced search metadata)
+Status: Phase complete
+Last activity: 2026-02-08 -- Completed 38-03-PLAN.md (describe_skill and guide_skill tools)
 
-Progress: [██████████████████░░░░░░] 80% (v2.0 -- 35/44 requirements delivered)
+Progress: [███████████████████░░░░░] 82% (v2.0 -- 36/44 requirements delivered)
 
 ## Milestones
 
@@ -29,12 +29,12 @@ Progress: [██████████████████░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 169
+- Total plans completed: 170
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~9.8 hours
 
 **Cumulative:**
-- 169 plans across 38 phases and 7 milestones
+- 170 plans across 38 phases and 7 milestones
 - ~15,900 LOC TypeScript
 - 8 days total development time
 
@@ -89,6 +89,10 @@ Recent decisions affecting current work:
 - [38-02]: searchMethod field in response JSON for client transparency (semantic vs text)
 - [38-04]: deriveQualityTier uses raw integer ratings (400=4.0 stars) matching DB storage format
 - [38-04]: displayRating computed in MCP layer (not DB service) to keep service return type clean
+- [38-03]: describe_skill aggregates 4 services in parallel: skill review, fork count, rating count, embedding
+- [38-03]: Quality tier: gold (>=400 rating, >=10 uses), silver (>=300, >=5), bronze (>=200)
+- [38-03]: Similar skills capped at 3, excludes current skill from embedding search
+- [38-03]: guide_skill returns category-specific guidance for prompt/workflow/agent/mcp types
 
 ### Pending Todos
 
@@ -104,5 +108,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 38 plans 01, 02, 04 complete -- 38-03 (describe_skill) may be in progress
+Stopped at: Phase 38 complete (all 4 plans done) -- next: Phase 39 (Fork Detection)
 Resume file: .planning/phases/38-conversational-mcp-discovery/
