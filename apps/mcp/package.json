@@ -14,8 +14,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.3",
+    "@anthropic-ai/sdk": "^0.72.1",
     "@everyskill/db": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.25.3",
     "drizzle-orm": "^0.42.0",
     "zod": "^3.25.0"
   },

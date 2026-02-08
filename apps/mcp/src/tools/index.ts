@@ -5,3 +5,5 @@ import "./deploy.js";
 import "./create.js";
 import "./confirm-install.js";
 import "./log-usage.js";
+import "./review-skill.js";
+import "./check-review-status.js";
