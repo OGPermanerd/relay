@@ -1,4 +1,4 @@
-import { db, skills, users } from "@everyskill/db";
+import { db, skills, users, reviewDecisions } from "@everyskill/db";
 import { eq, and, sql, desc, count } from "drizzle-orm";
 import { getSkillReview, getDecisionsForSkill } from "@everyskill/db";
 import type { DecisionWithReviewer } from "@everyskill/db";
@@ -80,6 +80,7 @@ export interface ReviewDetailResult {
   };
   aiReview: SkillReview | null;
   decisions: SerializedDecision[];
+  previousContent: string | null;
 }
 
 // =============================================================================
@@ -198,10 +199,16 @@ export async function getReviewDetail(
     return null;
   }
 
-  // Fetch AI review and decisions in parallel
-  const [aiReview, decisions] = await Promise.all([
+  // Fetch AI review, decisions, and most recent previous content in parallel
+  const [aiReview, decisions, previousContentRows] = await Promise.all([
     getSkillReview(skillId),
     getDecisionsForSkill(skillId),
+    db
+      .select({ previousContent: reviewDecisions.previousContent })
+      .from(reviewDecisions)
+      .where(eq(reviewDecisions.skillId, skillId))
+      .orderBy(desc(reviewDecisions.createdAt))
+      .limit(1),
   ]);
 
   // Serialize decisions dates
@@ -212,6 +219,9 @@ export async function getReviewDetail(
     reviewerName: d.reviewerName,
     createdAt: d.createdAt.toISOString(),
   }));
+
+  // Extract previous content from most recent decision (if any)
+  const previousContent = previousContentRows[0]?.previousContent ?? null;
 
   return {
     skill: {
@@ -236,6 +246,7 @@ export async function getReviewDetail(
     },
     aiReview,
     decisions: serializedDecisions,
+    previousContent,
   };
 }
 
