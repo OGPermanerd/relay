@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 31 Skills Upload Enhancements -- in progress.
+**Current focus:** Phase 31 Skills Upload Enhancements -- COMPLETE. Ready for Phase 32.
 
 ## Current Position
 
 Phase: 31 of 33 (Skills Upload Enhancements)
-Plan: 5 of 6 in phase 31 (31-01, 31-02, 31-03, 31-04, 31-05 complete)
-Status: In progress
-Last activity: 2026-02-08 -- Completed 31-05-PLAN.md (SimilarityPane + embedding enrichment)
+Plan: 6 of 6 in phase 31 (31-01 through 31-06 complete)
+Status: Phase complete
+Last activity: 2026-02-08 -- Completed 31-06-PLAN.md (Message Author feature + messages inbox)
 
-Progress: [████████████████████░░░░] ~37% (v1.5 -- 135 plans total)
+Progress: [█████████████████████░░░] ~38% (v1.5 -- 136 plans total)
 
 ## Milestones
 
@@ -28,14 +28,14 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 135
-- Phase 31: 31-01, 31-02, 31-03, 31-04, 31-05 complete (relative timestamp utility, RelativeTime rollout, AI review enhancement, skill messages data layer, similarity pane + embedding enrichment)
+- Total plans completed: 136
+- Phase 31: 31-01 through 31-06 complete (relative timestamp utility, RelativeTime rollout, AI review enhancement, skill messages data layer, similarity pane + embedding enrichment, message author feature + inbox)
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~8.3 hours
+- Total execution time: ~8.4 hours
 
 **Cumulative:**
-- 135 plans across 31 phases and 5 milestones
-- ~14,500 LOC TypeScript
+- 136 plans across 31 phases and 5 milestones
+- ~14,700 LOC TypeScript
 - 7 days total development time
 
 *Updated after each plan completion*
@@ -111,6 +111,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 31-05 | Form visible alongside SimilarityPane (not hidden) | Better UX for editing while reviewing similarity matches |
 | 31-05 | _messageTarget underscore prefix for unused state | ESLint compliance; setter used now, value consumed in Plan 06 |
 | 31-05 | Enriched embedding fires after AI review completes | Benefits future uploads only; avoids blocking current upload flow |
+| 31-06 | authorId type is string or null (not undefined) | Matches Drizzle nullable column inference from skills.author_id |
+| 31-06 | No nav link to /messages page | Nav changes out of scope; accessed via URL directly for now |
 
 ### Pending Todos
 
@@ -130,5 +132,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 31 plan 05 complete -- SimilarityPane + embedding enrichment
-Resume file: .planning/phases/31-skills-upload-enhancements/31-05-SUMMARY.md
+Stopped at: Phase 31 complete (6/6 plans) -- Message Author feature + messages inbox
+Resume file: .planning/phases/31-skills-upload-enhancements/31-06-SUMMARY.md
