@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 28 of 33 (Hook-Based Usage Tracking)
-Plan: 28-01, 28-02, 28-03, 28-04, 28-05 completed
+Plan: 28-01, 28-02, 28-03, 28-04, 28-05, 28-06 completed
 Status: In progress
-Last activity: 2026-02-08 -- Completed 28-04-PLAN.md (POST /api/track endpoint)
+Last activity: 2026-02-08 -- Completed 28-06-PLAN.md (deploy-time hook compliance and log_skill_usage deprecation)
 
-Progress: [███████████░░░░░░░░░░░░░] ~16% (v1.5 -- 19 of ~TBD plans)
+Progress: [███████████░░░░░░░░░░░░░] ~17% (v1.5 -- 20 of ~TBD plans)
 
 ## Milestones
 
@@ -28,12 +28,12 @@ Progress: [███████████░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 119
+- Total plans completed: 120
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.6 hours
 
 **Cumulative:**
-- 119 plans across 28 phases and 5 milestones
+- 120 plans across 28 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -88,6 +88,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 28-05 | jq with grep fallback for tool_name extraction | Handles environments without jq installed |
 | 28-05 | HMAC-SHA256 signature from full JSON payload | Tamper-proof tracking payloads verified by /api/track |
 | 28-05 | Retry once after 5s on non-200 | Balances reliability with not blocking Claude Code execution |
+| 28-06 | MCP deploy defaults to production tracking URL | MCP is production-facing; localhost fallback not appropriate |
+| 28-06 | log_skill_usage kept but deprecated | Backward compatibility with older MCP configurations |
 
 ### Pending Todos
 
@@ -106,6 +108,6 @@ All decisions logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-02-08T03:07:00Z
-Stopped at: Completed 28-04-PLAN.md (POST /api/track endpoint)
+Last session: 2026-02-08T03:12:00Z
+Stopped at: Completed 28-06-PLAN.md (deploy-time hook compliance and log_skill_usage deprecation)
 Resume file: None
