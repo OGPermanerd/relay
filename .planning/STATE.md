@@ -134,6 +134,9 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 33-03 | count() aggregate over results.length for unread count | Uses composite (userId, isRead) index efficiently |
 | 33-03 | ON CONFLICT DO NOTHING + re-fetch for getOrCreatePreferences | Handles concurrent insert race conditions cleanly |
 | 33-07 | CRON_SECRET graceful skip returns 200 with skipped=true | Allows safe deployment without cron setup |
+| 33-04 | Optimistic UI updates for mark-read with server count reconciliation | Immediate UI feedback, corrected by server response |
+| 33-04 | Parallel Promise.all for notification data in layout | Avoids waterfall; unread count and notifications fetched simultaneously |
+| 33-04 | useTransition for non-blocking server action calls | Keeps UI responsive during network requests |
 | 33-07 | Per-user preference gating in platform update | Checks getOrCreatePreferences before each send; respects user opt-out |
 
 ### Pending Todos
@@ -154,5 +157,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 33, Plan 07 complete (cron digests and admin notifications) -- Phase 33 COMPLETE
-Resume file: .planning/phases/33-email-notifications/33-07-SUMMARY.md
+Stopped at: Phase 33, Plan 04 re-executed (notification bell UI) -- Phase 33 COMPLETE
+Resume file: .planning/phases/33-email-notifications/33-04-SUMMARY.md
