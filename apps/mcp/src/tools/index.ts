@@ -12,3 +12,4 @@ import "./recommend.js";
 import "./describe.js";
 import "./guide.js";
 import "./check-skill-status.js";
+import "./update-skill.js";
