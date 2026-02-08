@@ -99,7 +99,7 @@ Total: 25 plans completed.
 - [x] **Phase 27: Production Docker Deployment** - Single-command production deployment (parallel track)
 - [x] **Phase 28: Hook-Based Usage Tracking** - Deterministic skill usage tracking via Claude Code hooks
 - [x] **Phase 29: Tenant-Scoped Analytics & MCP** - Analytics and MCP respect tenant boundaries
-- [ ] **Phase 30: Branding & Navigation** - White-label tenant branding and improved navigation
+- [x] **Phase 30: Branding & Navigation** - White-label tenant branding and improved navigation
 - [ ] **Phase 31: Skills & Upload Enhancements** - Richer upload experience with auto-review and similarity
 - [ ] **Phase 32: Admin Panel** - Tenant administrators can manage their organization
 - [ ] **Phase 33: Email & Notifications** - Transactional email and in-app notification system
@@ -206,13 +206,13 @@ Plans:
   4. The greeting area shows the user's name, their personal Days Saved total, and their composite contributor tier (Platinum/Gold/Silver/Bronze based on skills shared, days saved, ratings, and usage)
 **Plans:** 7 plans
 Plans:
-- [ ] 30-01-PLAN.md — Animated SVG logo component + CSS keyframes
-- [ ] 30-02-PLAN.md — NavLink component with active page underline indicator
-- [ ] 30-03-PLAN.md — Contributor tier computation + GreetingArea component
-- [ ] 30-04-PLAN.md — Tenant-aware branding (TenantBranding component)
-- [ ] 30-05-PLAN.md — Wire all new components into layout.tsx
-- [ ] 30-06-PLAN.md — Vanity domain schema + migration + service function
-- [ ] 30-07-PLAN.md — Middleware vanity domain support + check-domain API + Caddyfile
+- [x] 30-01-PLAN.md — Animated SVG logo component + CSS keyframes
+- [x] 30-02-PLAN.md — NavLink component with active page underline indicator
+- [x] 30-03-PLAN.md — Contributor tier computation + GreetingArea component
+- [x] 30-04-PLAN.md — Tenant-aware branding (TenantBranding component)
+- [x] 30-05-PLAN.md — Wire all new components into layout.tsx
+- [x] 30-06-PLAN.md — Vanity domain schema + migration + service function
+- [x] 30-07-PLAN.md — Middleware vanity domain support + check-domain API + Caddyfile
 
 ### Phase 31: Skills & Upload Enhancements
 **Goal**: Uploading a skill gives the author immediate AI feedback, rich similarity context, and the ability to propose grouping with existing skills
