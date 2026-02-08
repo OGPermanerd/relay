@@ -1,22 +1,40 @@
 import { auth } from "@/auth";
-import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
-import { getSiteSettings } from "@everyskill/db";
+import { db, tenants, getSiteSettings } from "@everyskill/db";
+import { eq } from "drizzle-orm";
 import { AdminSettingsForm } from "@/components/admin-settings-form";
+import { TenantSettingsForm } from "@/components/admin-settings-form";
 
 export default async function AdminSettingsPage() {
   const session = await auth();
-  if (!session?.user?.id || !isAdmin(session)) {
-    redirect("/");
-  }
 
   const settings = await getSiteSettings();
 
-  return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-bold text-gray-900">Admin Settings</h1>
-      <p className="mt-1 text-sm text-gray-600">Configure site-wide features and integrations</p>
+  // Query current tenant data
+  const tenantRows =
+    session?.user?.tenantId && db
+      ? await db.select().from(tenants).where(eq(tenants.id, session.user.tenantId)).limit(1)
+      : [];
+  const tenant = tenantRows.length > 0 ? tenantRows[0] : null;
 
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+      <p className="mt-1 text-sm text-gray-600">Configure tenant and site-wide features</p>
+
+      {/* Tenant Settings */}
+      {tenant && (
+        <div className="mt-8">
+          <TenantSettingsForm
+            initialTenant={{
+              name: tenant.name,
+              domain: tenant.domain,
+              logo: tenant.logo,
+            }}
+          />
+        </div>
+      )}
+
+      {/* Ollama / Similarity Settings */}
       <div className="mt-8">
         <AdminSettingsForm
           initialSettings={

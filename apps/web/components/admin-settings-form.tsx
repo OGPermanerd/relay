@@ -11,6 +11,7 @@ import type {
   TestConnectionState,
   BackfillState,
 } from "@/app/actions/admin-settings";
+import { updateTenantSettingsAction, type TenantSettingsState } from "@/app/actions/admin-tenant";
 import { RelativeTime } from "@/components/relative-time";
 
 interface AdminSettingsFormProps {
@@ -206,6 +207,99 @@ export function AdminSettingsForm({ initialSettings }: AdminSettingsFormProps) {
           </form>
         </div>
       </div>
+    </div>
+  );
+}
+
+interface TenantSettingsFormProps {
+  initialTenant: {
+    name: string;
+    domain: string | null;
+    logo: string | null;
+  };
+}
+
+export function TenantSettingsForm({ initialTenant }: TenantSettingsFormProps) {
+  const [state, action, pending] = useActionState<TenantSettingsState, FormData>(
+    updateTenantSettingsAction,
+    {}
+  );
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <h2 className="text-lg font-semibold text-gray-900">Tenant Settings</h2>
+      <p className="mt-1 text-sm text-gray-600">
+        Configure your organization name, domain, and logo.
+      </p>
+
+      <form
+        action={action}
+        className="mt-6 space-y-4"
+        key={`${initialTenant.name}-${initialTenant.domain}-${initialTenant.logo}`}
+      >
+        {/* Tenant Name */}
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            Organization Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            defaultValue={initialTenant.name}
+            required
+            maxLength={100}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Domain */}
+        <div>
+          <label htmlFor="domain" className="block text-sm font-medium text-gray-700">
+            Email Domain
+          </label>
+          <input
+            type="text"
+            id="domain"
+            name="domain"
+            defaultValue={initialTenant.domain ?? ""}
+            placeholder="company.com"
+            maxLength={100}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Used for automatic tenant matching during sign-in
+          </p>
+        </div>
+
+        {/* Logo URL */}
+        <div>
+          <label htmlFor="logo" className="block text-sm font-medium text-gray-700">
+            Logo URL
+          </label>
+          <input
+            type="text"
+            id="logo"
+            name="logo"
+            defaultValue={initialTenant.logo ?? ""}
+            placeholder="https://example.com/logo.png"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Save button */}
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+          >
+            {pending ? "Saving..." : "Save Tenant Settings"}
+          </button>
+          {state.success && <span className="text-sm text-green-600">Tenant settings saved</span>}
+          {state.error && <span className="text-sm text-red-600">{state.error}</span>}
+        </div>
+      </form>
     </div>
   );
 }
