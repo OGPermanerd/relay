@@ -7,7 +7,7 @@
 - ✅ **v1.2 UI Redesign** - Phases 12-14 (shipped 2026-02-02)
 - ✅ **v1.3 AI Quality & Cross-Platform** - Phases 15-19 (shipped 2026-02-04)
 - ✅ **v1.4 Employee Analytics & Remote MCP** - Phases 20-24 (shipped 2026-02-06)
-- 🚧 **v1.5 Production, Multi-Tenancy & Reliable Usage Tracking** - Phases 25-33 (in progress)
+- ✅ **v1.5 Production, Multi-Tenancy & Reliable Usage Tracking** - Phases 25-33 (shipped 2026-02-08)
 
 ## Phases
 
@@ -90,7 +90,7 @@ Total: 25 plans completed.
 
 </details>
 
-### 🚧 v1.5 Production, Multi-Tenancy & Reliable Usage Tracking (In Progress)
+### ✅ v1.5 Production, Multi-Tenancy & Reliable Usage Tracking (Shipped 2026-02-08)
 
 **Milestone Goal:** Transform Relay from a single-tenant internal tool into a production-deployed, multi-tenant SaaS platform with deterministic usage tracking, SOC2 compliance foundations, white-label branding, enhanced skill management, and a notification system. 62 requirements across 9 categories deliver the infrastructure for enterprise-grade multi-organization deployment.
 
@@ -102,7 +102,7 @@ Total: 25 plans completed.
 - [x] **Phase 30: Branding & Navigation** - White-label tenant branding and improved navigation
 - [x] **Phase 31: Skills & Upload Enhancements** - Richer upload experience with auto-review and similarity
 - [x] **Phase 32: Admin Panel** - Tenant administrators can manage their organization
-- [ ] **Phase 33: Email & Notifications** - Transactional email and in-app notification system
+- [x] **Phase 33: Email & Notifications** - Transactional email and in-app notification system
 
 ## Phase Details
 
@@ -191,9 +191,9 @@ Plans:
   3. FTE Years Saved calculation uses the standard 2,080 hours/year (USA FTE) and displays correctly across tenant-scoped views
 **Plans:** 3 plans
 Plans:
-- [ ] 29-01-PLAN.md — Analytics queries: replace email-domain matching with tenant_id filtering + update callers
-- [ ] 29-02-PLAN.md — MCP tenant scoping: auth tenantId caching + tool filtering + tracking
-- [ ] 29-03-PLAN.md — FTE constant: create shared constant + update 11 display locations
+- [x] 29-01-PLAN.md — Analytics queries: replace email-domain matching with tenant_id filtering + update callers
+- [x] 29-02-PLAN.md — MCP tenant scoping: auth tenantId caching + tool filtering + tracking
+- [x] 29-03-PLAN.md — FTE constant: create shared constant + update 11 display locations
 
 ### Phase 30: Branding & Navigation
 **Goal**: Each tenant has branded navigation with white-label options, and users see their personal impact and contributor tier at a glance
@@ -263,13 +263,13 @@ Plans:
   5. Trending skills digests (daily or weekly) and platform update notifications are delivered based on user preferences
 **Plans:** 7 plans
 Plans:
-- [ ] 33-01-PLAN.md — Notifications + notification_preferences DB schemas and migration 0012
-- [ ] 33-02-PLAN.md — Resend email client (stubbed) + React Email templates
-- [ ] 33-03-PLAN.md — Notification and preference DB service functions
-- [ ] 33-04-PLAN.md — Bell icon notification center with unread badge in header
-- [ ] 33-05-PLAN.md — Notification preferences settings page
-- [ ] 33-06-PLAN.md — Wire grouping proposal to create notifications + stubbed email
-- [ ] 33-07-PLAN.md — Cron digest endpoints + admin platform update action
+- [x] 33-01-PLAN.md — Notifications + notification_preferences DB schemas and migration 0012
+- [x] 33-02-PLAN.md — Resend email client (stubbed) + React Email templates
+- [x] 33-03-PLAN.md — Notification and preference DB service functions
+- [x] 33-04-PLAN.md — Bell icon notification center with unread badge in header
+- [x] 33-05-PLAN.md — Notification preferences settings page
+- [x] 33-06-PLAN.md — Wire grouping proposal to create notifications + stubbed email
+- [x] 33-07-PLAN.md — Cron digest endpoints + admin platform update action
 
 ## Progress
 
@@ -292,9 +292,9 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 30. Branding & Navigation | v1.5 | 7/7 | Complete | 2026-02-08 |
 | 31. Skills & Upload | v1.5 | 6/6 | Complete | 2026-02-08 |
 | 32. Admin Panel | v1.5 | 6/6 | Complete | 2026-02-08 |
-| 33. Email & Notifications | v1.5 | 0/7 | Not started | - |
+| 33. Email & Notifications | v1.5 | 7/7 | Complete | 2026-02-08 |
 
-**Total: 142 plans completed across 32 phases and 5 milestones (v1.0-v1.5 Phase 32)**
+**Total: 149 plans completed across 33 phases and 6 milestones (v1.0-v1.5)**
 
 ---
 *Roadmap created: 2026-01-31*
@@ -303,3 +303,4 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 *v1.3 completed: 2026-02-04*
 *v1.4 completed: 2026-02-06*
 *v1.5 roadmap added: 2026-02-07*
+*v1.5 completed: 2026-02-08*
