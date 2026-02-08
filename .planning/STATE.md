@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 29 Tenant-Scoped Analytics & MCP -- In progress (plan 03 complete).
+**Current focus:** Phase 29 Tenant-Scoped Analytics & MCP -- COMPLETE (all 3 plans done).
 
 ## Current Position
 
-Phase: 29 of 33 (Tenant-Scoped Analytics & MCP)
+Phase: 29 of 33 (Tenant-Scoped Analytics & MCP) -- COMPLETE
 Plan: 3 of 3 in phase 29 (29-01 through 29-03 complete)
-Status: In progress
-Last activity: 2026-02-08 -- Completed 29-03-PLAN.md (standardize FTE Years Saved to 2,080 hrs/yr)
+Status: Phase complete
+Last activity: 2026-02-08 -- Completed 29-01-PLAN.md (tenant-scoped analytics queries)
 
 Progress: [███████████████░░░░░░░░░] ~28% (v1.5 -- 26 of ~TBD plans)
 
@@ -93,6 +93,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 28-06 | log_skill_usage kept but deprecated | Backward compatibility with older MCP configurations |
 | 29-03 | FTE_HOURS_PER_YEAR = 2080 (40 hrs/wk * 52 wks) | USA FTE standard; corrects from implicit 2,920 hrs/yr (8 * 365) |
 | 29-03 | FTE_DAYS_PER_YEAR = 260 (2080 / 8) | Derived constant for pre-computed FTE days to years conversion |
+| 29-01 | Direct tenant_id filtering over email-domain subqueries | O(1) indexed lookup vs O(n) LIKE pattern matching; eliminates cross-tenant leakage |
+| 29-01 | Defense-in-depth tenantId on drill-down queries | getEmployeeActivity and getSkillTrend add tenant_id filter alongside userId/skillId |
 
 ### Pending Todos
 
@@ -112,5 +114,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 29 plan 03 complete, FTE constants standardized across 11 display locations
-Resume file: .planning/phases/29-tenant-scoped-analytics-mcp/29-03-SUMMARY.md
+Stopped at: Phase 29 complete (all 3 plans), analytics tenant-scoped, MCP tenant-filtered, FTE standardized
+Resume file: .planning/phases/29-tenant-scoped-analytics-mcp/29-01-SUMMARY.md
