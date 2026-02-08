@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 27 Production Docker Deployment -- COMPLETE (4/4 plans).
+**Current focus:** Phase 28 Hook-Based Usage Tracking -- in progress.
 
 ## Current Position
 
-Phase: 27 of 33 (Production Docker Deployment) -- COMPLETE
-Plan: 4 of 4 in current phase
-Status: Complete. All deployment infrastructure committed.
-Last activity: 2026-02-08 -- Completed 27-01 and 27-04 (standalone config, health endpoint, docker-compose, .env.example)
+Phase: 28 of 33 (Hook-Based Usage Tracking)
+Plan: 28-07 completed
+Status: In progress
+Last activity: 2026-02-08 -- Completed 28-07-PLAN.md (per-tenant key expiry config)
 
-Progress: [██████████░░░░░░░░░░░░░░] ~14% (v1.5 -- 16 of ~TBD plans)
+Progress: [██████████░░░░░░░░░░░░░░] ~15% (v1.5 -- 17 of ~TBD plans)
 
 ## Milestones
 
@@ -28,12 +28,12 @@ Progress: [██████████░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 113
+- Total plans completed: 114
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.6 hours
 
 **Cumulative:**
-- 113 plans across 27 phases and 5 milestones
+- 114 plans across 28 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -80,6 +80,7 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 27-03 | Streaming dump-compress-encrypt pipeline | No unencrypted temp files touch disk; SOC2 data-at-rest compliance |
 | 27-03 | Separate LUKS and backup passphrases | Defense in depth; compromising one does not expose the other |
 | 27-03 | Dropbear on port 2222 for remote LUKS unlock | Avoids conflict with post-boot SSH daemon |
+| 28-07 | 90-day default key expiry | SOC2-05 compliance requires bounded API key lifetimes; 90 days is industry standard |
 
 ### Pending Todos
 
@@ -98,6 +99,6 @@ All decisions logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-02-08T02:15:00Z
-Stopped at: Completed Phase 27 (all 4 plans -- production Docker deployment)
+Last session: 2026-02-08T03:00:00Z
+Stopped at: Completed 28-07-PLAN.md (per-tenant key expiry config)
 Resume file: None
