@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v2.0 Skill Ecosystem -- Phase 34 Review Pipeline Foundation
+**Current focus:** v2.0 Skill Ecosystem -- Phase 34 Complete, Phase 35 next
 
 ## Current Position
 
 Phase: 34 of 39 (Review Pipeline Foundation)
-Plan: 4 of 5 complete (34-01, 34-02, 34-03, 34-04 done)
-Status: In progress
-Last activity: 2026-02-08 -- Completed 34-04-PLAN.md (access control, status badges, submit-for-review)
+Plan: 5 of 5 complete (34-01 through 34-05 done)
+Status: Phase complete
+Last activity: 2026-02-08 -- Completed 34-05-PLAN.md (full build and integration verification)
 
-Progress: [████░░░░░░░░░░░░░░░░░░░░] 9% (v2.0 -- 4/44 requirements delivered)
+Progress: [█████░░░░░░░░░░░░░░░░░░░] 11% (v2.0 -- 5/44 requirements delivered)
 
 ## Milestones
 
@@ -29,12 +29,12 @@ Progress: [████░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 153
+- Total plans completed: 154
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~9.1 hours
+- Total execution time: ~9.2 hours
 
 **Cumulative:**
-- 153 plans across 34 phases and 6 milestones
+- 154 plans across 34 phases and 6 milestones
 - ~14,700 LOC TypeScript
 - 8 days total development time
 
@@ -53,6 +53,7 @@ Recent decisions affecting current work:
 - [34-02]: All 4 creation paths explicitly set status='draft' -- never rely on column DEFAULT for new skills
 - [34-03]: All 18 public query paths filter by status='published' -- pattern: every new public query must include status filter
 - [34-04]: Access control pattern: isPublished || isAuthor || isAdmin else 404 -- parallel session+skill fetch avoids waterfall
+- [34-05]: Integration verified: full build passes, 90/92 E2E tests green (2 pre-existing env-specific failures), all 91 skills remain 'published'
 
 ### Pending Todos
 
@@ -68,5 +69,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 34, plan 04 complete -- plan 05 remaining
-Resume file: .planning/phases/34-review-pipeline-foundation/ (34-05 next in wave 3)
+Stopped at: Phase 34 complete -- ready for Phase 35 (AI Review + MCP Tools)
+Resume file: .planning/phases/35-*/ (next phase)
