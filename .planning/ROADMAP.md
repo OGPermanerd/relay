@@ -8,7 +8,7 @@
 - ✅ **v1.3 AI Quality & Cross-Platform** - Phases 15-19 (shipped 2026-02-04)
 - ✅ **v1.4 Employee Analytics & Remote MCP** - Phases 20-24 (shipped 2026-02-06)
 - ✅ **v1.5 Production, Multi-Tenancy & Reliable Usage Tracking** - Phases 25-33 (shipped 2026-02-08)
-- 🚧 **v2.0 Skill Ecosystem** - Phases 34-39 (in progress)
+- ✅ **v2.0 Skill Ecosystem** - Phases 34-39 (shipped 2026-02-08)
 
 ## Phases
 
@@ -120,7 +120,7 @@ Total: 55 plans completed.
 - [x] **Phase 36: Admin Review UI** - Queue, diff view, approve/reject/request-changes actions, audit trail ✓
 - [x] **Phase 37: Review Notifications** - 7 new notification types for the review lifecycle ✓
 - [x] **Phase 38: Conversational MCP Discovery** - Semantic search, recommend, describe, and guide tools ✓
-- [ ] **Phase 39: Fork Detection** - Hash comparison, update_skill, web UI drift indicators
+- [x] **Phase 39: Fork Detection** - Hash comparison, update_skill, web UI drift indicators ✓
 
 ## Phase Details
 
@@ -222,10 +222,10 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 39-01-PLAN.md -- Schema migration + fork action update (forkedAtContentHash, skill_versions)
-- [ ] 39-02-PLAN.md -- check_skill_status MCP tool with frontmatter-stripping hash comparison
-- [ ] 39-03-PLAN.md -- update_skill MCP tool (author-update or non-author-fork)
-- [ ] 39-04-PLAN.md -- Web UI drift indicator + side-by-side comparison page
+- [x] 39-01-PLAN.md -- Schema migration + fork action update (forkedAtContentHash, skill_versions)
+- [x] 39-02-PLAN.md -- check_skill_status MCP tool with frontmatter-stripping hash comparison
+- [x] 39-03-PLAN.md -- update_skill MCP tool (author-update or non-author-fork)
+- [x] 39-04-PLAN.md -- Web UI drift indicator + side-by-side comparison page
 
 ## Progress
 
@@ -247,9 +247,9 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 36. Admin Review UI | v2.0 | 3/3 | Complete | 2026-02-08 |
 | 37. Review Notifications | v2.0 | 4/4 | Complete | 2026-02-08 |
 | 38. Conversational MCP Discovery | v2.0 | 4/4 | Complete | 2026-02-08 |
-| 39. Fork Detection | v2.0 | 0/4 | Not started | - |
+| 39. Fork Detection | v2.0 | 4/4 | Complete | 2026-02-08 |
 
-**Total: 171 plans completed across 38 phases and 7 milestones (v1.0-v1.5, v2.0 in progress).**
+**Total: 175 plans completed across 39 phases and 8 milestones (v1.0-v2.0).**
 
 ---
 *Roadmap created: 2026-01-31*
@@ -260,3 +260,4 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 *v1.5 completed: 2026-02-08*
 *v2.0 roadmap added: 2026-02-08*
 *Phase 34 completed: 2026-02-08*
+*v2.0 completed: 2026-02-08*

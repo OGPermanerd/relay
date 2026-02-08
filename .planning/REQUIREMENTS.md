@@ -61,13 +61,13 @@ Requirements for the Skill Ecosystem milestone. Each maps to roadmap phases star
 
 ### Fork Detection
 
-- [ ] **FORK-01**: `check_skill_status` MCP tool compares local file content hash against DB published version hash
-- [ ] **FORK-02**: Hash comparison strips YAML frontmatter before hashing (tracking hooks should not trigger false drift)
-- [ ] **FORK-03**: `update_skill` MCP tool pushes local modifications back as new version (if author) or creates fork (if not author)
-- [ ] **FORK-04**: `forkedAtContentHash` column stored on skills at fork time as anchor for modification detection
-- [ ] **FORK-05**: Fork creation updated to create skill_version record and set proper status (not orphaned)
-- [ ] **FORK-06**: Web UI on skill detail page shows drift indicator when fork has diverged from parent
-- [ ] **FORK-07**: Web UI side-by-side comparison page at `/skills/[slug]/compare` shows fork content vs parent content
+- [x] **FORK-01**: `check_skill_status` MCP tool compares local file content hash against DB published version hash
+- [x] **FORK-02**: Hash comparison strips YAML frontmatter before hashing (tracking hooks should not trigger false drift)
+- [x] **FORK-03**: `update_skill` MCP tool pushes local modifications back as new version (if author) or creates fork (if not author)
+- [x] **FORK-04**: `forkedAtContentHash` column stored on skills at fork time as anchor for modification detection
+- [x] **FORK-05**: Fork creation updated to create skill_version record and set proper status (not orphaned)
+- [x] **FORK-06**: Web UI on skill detail page shows drift indicator when fork has diverged from parent
+- [x] **FORK-07**: Web UI side-by-side comparison page at `/skills/[slug]/compare` shows fork content vs parent content
 
 ## Future Requirements
 
@@ -152,13 +152,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MCPR-01 | Phase 35 | Done |
 | MCPR-02 | Phase 35 | Done |
 | MCPR-03 | Phase 35 | Done |
-| FORK-01 | Phase 39 | Pending |
-| FORK-02 | Phase 39 | Pending |
-| FORK-03 | Phase 39 | Pending |
-| FORK-04 | Phase 39 | Pending |
-| FORK-05 | Phase 39 | Pending |
-| FORK-06 | Phase 39 | Pending |
-| FORK-07 | Phase 39 | Pending |
+| FORK-01 | Phase 39 | Done |
+| FORK-02 | Phase 39 | Done |
+| FORK-03 | Phase 39 | Done |
+| FORK-04 | Phase 39 | Done |
+| FORK-05 | Phase 39 | Done |
+| FORK-06 | Phase 39 | Done |
+| FORK-07 | Phase 39 | Done |
 
 **Coverage:**
 - v2.0 requirements: 44 total
