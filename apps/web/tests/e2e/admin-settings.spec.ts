@@ -15,7 +15,7 @@ test.describe("Admin Settings", () => {
       expect(url).not.toContain("/admin/settings");
     } else {
       // Admin user sees the page
-      await expect(page.getByRole("heading", { name: "Admin Settings" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
     }
   });
 
@@ -31,8 +31,8 @@ test.describe("Admin Settings", () => {
     }
 
     // Page header
-    await expect(page.getByRole("heading", { name: "Admin Settings" })).toBeVisible();
-    await expect(page.getByText("Configure site-wide features")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
+    await expect(page.getByText("Configure tenant and site-wide features")).toBeVisible();
 
     // Semantic Similarity section
     await expect(page.getByText("Semantic Similarity (Ollama)")).toBeVisible();
