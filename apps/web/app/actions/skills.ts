@@ -130,6 +130,11 @@ async function autoGenerateReview(
       reviewedContentHash: contentHash,
       modelName: REVIEW_MODEL,
     });
+
+    // SKILL-07: Enriched embedding improves future similarity detection.
+    // Current upload's check already completed before AI review ran.
+    // Re-embed with enriched text (description + review summary) for better matching.
+    generateSkillEmbedding(skillId, name, `${description} ${reviewOutput.summary}`).catch(() => {});
   } catch {
     // Intentionally swallowed -- review is fire-and-forget
   }

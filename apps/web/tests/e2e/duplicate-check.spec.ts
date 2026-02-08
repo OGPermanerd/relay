@@ -64,9 +64,9 @@ test.describe("Skill Duplicate Check", () => {
     await expect(page.getByRole("button", { name: /publish anyway/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /go back/i })).toBeVisible();
 
-    // Verify a match type badge is shown (could be "Name match" or "Semantic match")
-    const matchBadge = page.getByText(/Name match|Semantic match/);
-    await expect(matchBadge.first()).toBeVisible();
+    // Verify a similar skill name is shown in the SimilarityPane card
+    // Note: ILIKE matches any "Dup Check" skills from previous runs too
+    await expect(page.getByText(/Dup Check \d+/).first()).toBeVisible({ timeout: 5000 });
 
     // Verify "Create as Variation" button exists
     await expect(page.getByRole("button", { name: /create as variation/i }).first()).toBeVisible();
@@ -131,22 +131,16 @@ test.describe("Skill Duplicate Check", () => {
       timeout: 30000,
     });
 
-    // Expect warning with similar skills
+    // Expect warning with similar skills in the SimilarityPane
     await expect(page.getByText(/similar skills found/i)).toBeVisible({ timeout: 5000 });
 
-    // Hover over the first similar skill to reveal the popup
-    const skillRow = page.locator("li.group").first();
-    await skillRow.hover();
+    // The SimilarityPane shows description inline in the card (no hover needed)
+    const descText = page.getByText(/Special hover popup test description/i).first();
+    await expect(descText).toBeVisible({ timeout: 3000 });
 
-    // The popup should show the description text (scoped to the list, use first() since multiple matches may exist)
-    const popupDesc = page
-      .getByRole("list")
-      .getByText(/Special hover popup test description/i)
-      .first();
-    await expect(popupDesc).toBeVisible({ timeout: 3000 });
-
-    // The popup should show the category (scoped to list popup)
-    await expect(page.getByRole("list").getByText("workflow").first()).toBeVisible();
+    // The card should show a category badge
+    const categoryBadge = page.locator(".rounded-full.bg-gray-100").first();
+    await expect(categoryBadge).toBeVisible();
 
     // Cleanup: go back
     await page.getByRole("button", { name: /go back/i }).click();
