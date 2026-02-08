@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { PlatformInstallModal } from "./platform-install-modal";
 
+export interface SkillInfo {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+}
+
 interface InstallButtonProps {
   variant?: "full" | "icon";
+  skill?: SkillInfo;
 }
 
 /**
@@ -17,7 +25,7 @@ interface InstallButtonProps {
  * Self-contained: manages its own modal state internally.
  * Uses stopPropagation on all variants to prevent row navigation and event bubbling.
  */
-export function InstallButton({ variant = "full" }: InstallButtonProps) {
+export function InstallButton({ variant = "full", skill }: InstallButtonProps) {
   const [showModal, setShowModal] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -58,7 +66,7 @@ export function InstallButton({ variant = "full" }: InstallButtonProps) {
         </button>
       )}
 
-      {showModal && <PlatformInstallModal onClose={() => setShowModal(false)} />}
+      {showModal && <PlatformInstallModal onClose={() => setShowModal(false)} skill={skill} />}
     </>
   );
 }

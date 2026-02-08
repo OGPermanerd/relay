@@ -1,4 +1,7 @@
 import { z } from "zod";
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
 import { server } from "../server.js";
 import { db } from "@everyskill/db";
 import { trackUsage } from "../tracking/events.js";
@@ -152,7 +155,6 @@ export async function handleDeploySkill({
     name: skill.name,
     category: skill.category,
     filename: `${skill.slug}.md`,
-    content: contentWithFrontmatter,
     hoursSaved: skill.hoursSaved,
   };
 
@@ -161,22 +163,31 @@ export async function handleDeploySkill({
     skill: skillPayload,
   };
 
-  if (transport === "http") {
+  // Attempt to auto-save the skill file locally
+  if (transport === "stdio") {
+    const skillsDir = path.join(os.homedir(), ".claude", "skills");
+    const filePath = path.join(skillsDir, `${skill.slug}.md`);
+    try {
+      fs.mkdirSync(skillsDir, { recursive: true });
+      fs.writeFileSync(filePath, contentWithFrontmatter, "utf-8");
+      responseBody.savedTo = filePath;
+      responseBody.message = `Skill "${skill.name}" has been installed to ${filePath}. Usage tracking is automatic via PostToolUse hooks.`;
+    } catch {
+      // Auto-save failed — fall back to returning content for Claude to save
+      skillPayload.content = contentWithFrontmatter;
+      responseBody.message = `Could not auto-save to ${filePath}. Please save the skill content below to .claude/skills/${skill.slug}.md`;
+      responseBody.instructions = [
+        `Save the skill content to .claude/skills/${skill.slug}.md`,
+        "Usage tracking is automatic via PostToolUse hooks in the skill frontmatter",
+      ];
+    }
+  } else {
     // HTTP transport: skill is used in-conversation, no file-save instructions
+    skillPayload.content = contentWithFrontmatter;
     responseBody.message =
       "This skill is now available in this conversation. Usage tracking is automatic via PostToolUse hooks in the skill frontmatter.";
-  } else {
-    // Stdio transport: Claude Code will save the file locally
-    responseBody.instructions = [
-      `Save this skill to .claude/skills/${skill.slug}.md`,
-      "After saving, call confirm_install with the skillId to log the installation",
-      "Usage tracking is automatic via PostToolUse hooks in the skill frontmatter",
-      "The frontmatter contains everyskill_skill_id for future attribution",
-    ];
   }
 
-  // Return skill content for Claude to save
-  // Claude Code will handle file writing with user confirmation
   const content: Array<{ type: "text"; text: string }> = [
     {
       type: "text" as const,

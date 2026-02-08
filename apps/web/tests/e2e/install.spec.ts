@@ -53,7 +53,7 @@ test.describe("Install Modal Flow", () => {
     }
   });
 
-  test("install button opens platform modal from skills table", async ({ page }) => {
+  test("install button opens skill-aware modal from skills table", async ({ page }) => {
     await page.goto("/skills");
 
     // Wait for the table to load
@@ -67,17 +67,18 @@ test.describe("Install Modal Flow", () => {
     // Click the install button
     await installButton.click();
 
-    // Assert the platform install modal is visible
-    await expect(page.getByText("Install EverySkill MCP Server")).toBeVisible();
+    // Assert the skill-aware modal is visible (shows "Install {name}")
+    await expect(page.getByRole("heading", { name: /^Install\s/ })).toBeVisible();
 
-    // Assert 4 platform cards are visible (use role buttons with full accessible names)
-    await expect(page.getByRole("button", { name: /Claude Desktop/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Claude Code/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Other IDE/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Other Systems/i })).toBeVisible();
+    // Assert the copy prompt area is visible
+    await expect(page.getByText("Copy this and paste it into Claude:")).toBeVisible();
+
+    // Assert the prompt contains skill reference
+    const promptBox = page.locator(".font-mono").first();
+    await expect(promptBox).toContainText("skill from EverySkill");
   });
 
-  test("selecting a platform shows config JSON", async ({ page }) => {
+  test("skill-aware modal shows category badge and download link", async ({ page }) => {
     await page.goto("/skills");
 
     // Wait for the table and open the modal
@@ -85,10 +86,35 @@ test.describe("Install Modal Flow", () => {
     await expect(table).toBeVisible({ timeout: 10000 });
     const installButton = page.locator("td").getByLabel("Install skill").first();
     await installButton.click();
-    await expect(page.getByText("Install EverySkill MCP Server")).toBeVisible();
 
-    // Click on "Claude Code" platform card
-    await page.getByRole("button", { name: /Claude Code/i }).click();
+    // Assert skill-aware modal is visible
+    await expect(page.getByRole("heading", { name: /^Install\s/ })).toBeVisible();
+
+    // Assert download link is visible
+    await expect(page.getByText(/Or download.*\.md directly/)).toBeVisible();
+
+    // Assert the collapsible MCP setup section exists
+    await expect(page.getByText("First time? Set up EverySkill MCP server")).toBeVisible();
+  });
+
+  test("MCP setup section expands and shows config", async ({ page }) => {
+    await page.goto("/skills");
+
+    // Wait for the table and open the modal
+    const table = page.locator('table[role="grid"]');
+    await expect(table).toBeVisible({ timeout: 10000 });
+    const installButton = page.locator("td").getByLabel("Install skill").first();
+    await installButton.click();
+
+    // Assert skill-aware modal is visible
+    await expect(page.getByRole("heading", { name: /^Install\s/ })).toBeVisible();
+
+    // Expand the MCP setup section
+    await page.getByText("First time? Set up EverySkill MCP server").click();
+
+    // Assert platform cards are visible
+    await expect(page.getByRole("button", { name: /Claude Desktop/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Claude Code/i })).toBeVisible();
 
     // Assert a pre element with JSON config is visible
     const preBlock = page.locator("pre");
@@ -97,13 +123,12 @@ test.describe("Install Modal Flow", () => {
     // Assert the JSON contains expected content
     const configText = await preBlock.textContent();
     expect(configText).toContain("everyskill-skills");
-    expect(configText).toContain("npx");
 
-    // Assert a "Copy Config" button is visible
+    // Assert "Copy Config" button is visible
     await expect(page.getByRole("button", { name: /copy config/i })).toBeVisible();
   });
 
-  test("modal stays open after clicking copy", async ({ page, context }) => {
+  test("modal copy prompt button works", async ({ page, context }) => {
     // Grant clipboard permissions for the test
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 
@@ -114,22 +139,19 @@ test.describe("Install Modal Flow", () => {
     await expect(table).toBeVisible({ timeout: 10000 });
     const installButton = page.locator("td").getByLabel("Install skill").first();
     await installButton.click();
-    await expect(page.getByText("Install EverySkill MCP Server")).toBeVisible();
 
-    // Select a platform (Claude Desktop is pre-selected, but click to be sure)
-    await page.getByRole("button", { name: /Claude Desktop/i }).click();
+    // Assert skill-aware modal is visible
+    await expect(page.getByRole("heading", { name: /^Install\s/ })).toBeVisible();
 
-    // Click the Copy Config button
-    await page.getByRole("button", { name: /copy config/i }).click();
+    // Click the copy button (clipboard icon next to the prompt)
+    const copyButton = page.getByTitle("Copy prompt");
+    await copyButton.click();
 
     // Assert modal is still visible (not closed)
-    await expect(page.getByText("Install EverySkill MCP Server")).toBeVisible();
-
-    // Assert button text changes to "Copied!" (clipboard feedback)
-    await expect(page.getByText("Copied!")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Install\s/ })).toBeVisible();
   });
 
-  test("install button on skill detail page opens modal", async ({ page }) => {
+  test("install button on skill detail page opens skill-aware modal", async ({ page }) => {
     await page.goto(`/skills/${testSkillSlug}`);
 
     // Find the Install button on the detail page
@@ -139,11 +161,17 @@ test.describe("Install Modal Flow", () => {
     // Click it
     await installButton.click();
 
-    // Assert the platform install modal is visible
-    await expect(page.getByText("Install EverySkill MCP Server")).toBeVisible();
+    // Assert the skill-aware modal is visible with the test skill name
+    await expect(page.getByText("Install Install Test Skill")).toBeVisible();
+
+    // Assert the prompt contains the skill ID
+    await expect(page.locator(".font-mono").first()).toContainText(testSkillId);
+
+    // Assert download link references the slug
+    await expect(page.getByText(`Or download ${testSkillSlug}.md directly`)).toBeVisible();
   });
 
-  test("detected OS label appears in modal", async ({ page }) => {
+  test("close button dismisses modal", async ({ page }) => {
     await page.goto("/skills");
 
     // Wait for the table and open the modal
@@ -152,7 +180,13 @@ test.describe("Install Modal Flow", () => {
     const installButton = page.locator("td").getByLabel("Install skill").first();
     await installButton.click();
 
-    // Assert text matching "Detected:" is visible in the modal
-    await expect(page.getByText(/Detected:/)).toBeVisible();
+    // Assert modal is visible
+    await expect(page.getByRole("heading", { name: /^Install\s/ })).toBeVisible();
+
+    // Click the close button (X)
+    await page.locator('[class*="rounded-lg p-1 text-gray-400"]').click();
+
+    // Assert modal is gone
+    await expect(page.getByText("Copy this and paste it into Claude:")).not.toBeVisible();
   });
 });

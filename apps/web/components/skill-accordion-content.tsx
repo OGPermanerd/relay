@@ -69,7 +69,10 @@ export function SkillAccordionContent({
 
           {/* Install button - stopPropagation is handled internally by InstallButton */}
           <div className="mt-4" onClick={(e) => e.stopPropagation()}>
-            <InstallButton variant="full" />
+            <InstallButton
+              variant="full"
+              skill={{ id: skill.id, name: skill.name, slug: skill.slug, category: skill.category }}
+            />
           </div>
         </div>
       </td>

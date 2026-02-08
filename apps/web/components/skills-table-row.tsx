@@ -169,7 +169,10 @@ export function SkillsTableRow({
           )}
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-center">
-          <InstallButton variant="icon" />
+          <InstallButton
+            variant="icon"
+            skill={{ id: skill.id, name: skill.name, slug: skill.slug, category: skill.category }}
+          />
         </td>
       </tr>
 

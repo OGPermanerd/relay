@@ -174,7 +174,10 @@ export default async function SkillPage(props: SkillPageProps) {
 
           {/* Install, Fork, and Delete buttons */}
           <div className="mt-4 flex items-center gap-3">
-            <InstallButton variant="full" />
+            <InstallButton
+              variant="full"
+              skill={{ id: skill.id, name: skill.name, slug: skill.slug, category: skill.category }}
+            />
             {session?.user && (
               <ForkButton skillId={skill.id} skillName={skill.name} forkCount={forkCount} />
             )}
