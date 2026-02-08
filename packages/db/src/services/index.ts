@@ -45,3 +45,10 @@ export {
   type CreateNotificationParams,
 } from "./notifications";
 export { getOrCreatePreferences, updatePreferences } from "./notification-preferences";
+export {
+  canTransition,
+  getValidTransitions,
+  SKILL_STATUSES,
+  VALID_TRANSITIONS,
+  type SkillStatus,
+} from "./skill-status";
