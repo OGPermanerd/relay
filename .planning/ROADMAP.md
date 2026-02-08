@@ -101,7 +101,7 @@ Total: 25 plans completed.
 - [x] **Phase 29: Tenant-Scoped Analytics & MCP** - Analytics and MCP respect tenant boundaries
 - [x] **Phase 30: Branding & Navigation** - White-label tenant branding and improved navigation
 - [x] **Phase 31: Skills & Upload Enhancements** - Richer upload experience with auto-review and similarity
-- [ ] **Phase 32: Admin Panel** - Tenant administrators can manage their organization
+- [x] **Phase 32: Admin Panel** - Tenant administrators can manage their organization
 - [ ] **Phase 33: Email & Notifications** - Transactional email and in-app notification system
 
 ## Phase Details
@@ -244,12 +244,12 @@ Plans:
   4. Admins can view which users have compliance hooks installed and actively firing callbacks
 **Plans:** 6 plans
 Plans:
-- [ ] 32-01-PLAN.md — Role enum schema + migration + user DB service functions
-- [ ] 32-02-PLAN.md — Auth callback role assignment + isAdmin rewrite to session-based
-- [ ] 32-03-PLAN.md — Admin layout with sub-nav + tenant settings form and server action
-- [ ] 32-04-PLAN.md — Admin skills table with delete and multi-select bulk merge
-- [ ] 32-05-PLAN.md — Hook compliance dashboard with per-user status table
-- [ ] 32-06-PLAN.md — Migrate all isAdmin callers from email-based to session-based checks
+- [x] 32-01-PLAN.md — Role enum schema + migration + user DB service functions
+- [x] 32-02-PLAN.md — Auth callback role assignment + isAdmin rewrite to session-based
+- [x] 32-03-PLAN.md — Admin layout with sub-nav + tenant settings form and server action
+- [x] 32-04-PLAN.md — Admin skills table with delete and multi-select bulk merge
+- [x] 32-05-PLAN.md — Hook compliance dashboard with per-user status table
+- [x] 32-06-PLAN.md — Migrate all isAdmin callers from email-based to session-based checks
 
 ### Phase 33: Email & Notifications
 **Goal**: Users receive timely email and in-app notifications about skill activity, trends, and platform updates, with full control over their preferences
@@ -283,10 +283,10 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 29. Tenant Analytics & MCP | v1.5 | 3/3 | Complete | 2026-02-08 |
 | 30. Branding & Navigation | v1.5 | 7/7 | Complete | 2026-02-08 |
 | 31. Skills & Upload | v1.5 | 6/6 | Complete | 2026-02-08 |
-| 32. Admin Panel | v1.5 | 0/6 | Not started | - |
+| 32. Admin Panel | v1.5 | 6/6 | Complete | 2026-02-08 |
 | 33. Email & Notifications | v1.5 | 0/TBD | Not started | - |
 
-**Total: 136 plans completed across 31 phases and 5 milestones (v1.0-v1.5 Phase 31)**
+**Total: 142 plans completed across 32 phases and 5 milestones (v1.0-v1.5 Phase 32)**
 
 ---
 *Roadmap created: 2026-01-31*
