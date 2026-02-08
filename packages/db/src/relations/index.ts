@@ -10,6 +10,8 @@ import {
   tenants,
   auditLogs,
   skillMessages,
+  notifications,
+  notificationPreferences,
 } from "../schema";
 
 /**
@@ -103,6 +105,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   ratings: many(ratings),
   usageEvents: many(usageEvents),
   apiKeys: many(apiKeys),
+  notifications: many(notifications),
+  notificationPreferences: many(notificationPreferences),
 }));
 
 /**
@@ -153,6 +157,8 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   users: many(users),
   skills: many(skills),
   apiKeys: many(apiKeys),
+  notifications: many(notifications),
+  notificationPreferences: many(notificationPreferences),
 }));
 
 /**
@@ -187,6 +193,38 @@ export const skillMessagesRelations = relations(skillMessages, ({ one }) => ({
     fields: [skillMessages.proposedParentSkillId],
     references: [skills.id],
     relationName: "parentMessages",
+  }),
+}));
+
+/**
+ * Notifications relations
+ * - tenant: many-to-one with tenants
+ * - user: many-to-one with users
+ */
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [notifications.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * NotificationPreferences relations
+ * - tenant: many-to-one with tenants
+ * - user: many-to-one with users (one row per user)
+ */
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [notificationPreferences.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [notificationPreferences.userId],
+    references: [users.id],
   }),
 }));
 
