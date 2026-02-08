@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 31 Skills Upload Enhancements -- COMPLETE. Ready for Phase 32.
+**Current focus:** Phase 32 Admin Panel -- In progress (Plan 01 complete).
 
 ## Current Position
 
-Phase: 31 of 33 (Skills Upload Enhancements)
-Plan: 6 of 6 in phase 31 (31-01 through 31-06 complete)
-Status: Phase complete
-Last activity: 2026-02-08 -- Completed 31-06-PLAN.md (Message Author feature + messages inbox)
+Phase: 32 of 33 (Admin Panel)
+Plan: 1 of 6 in phase 32 (32-01 complete)
+Status: In progress
+Last activity: 2026-02-08 -- Completed 32-01-PLAN.md (User roles schema + service)
 
-Progress: [█████████████████████░░░] ~38% (v1.5 -- 136 plans total)
+Progress: [█████████████████████░░░] ~39% (v1.5 -- 137 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [█████████████████████░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 136
-- Phase 31: 31-01 through 31-06 complete (relative timestamp utility, RelativeTime rollout, AI review enhancement, skill messages data layer, similarity pane + embedding enrichment, message author feature + inbox)
+- Total plans completed: 137
+- Phase 32: 32-01 complete (user roles schema + service)
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~8.4 hours
+- Total execution time: ~8.5 hours
 
 **Cumulative:**
-- 136 plans across 31 phases and 5 milestones
+- 137 plans across 32 phases and 5 milestones
 - ~14,700 LOC TypeScript
 - 7 days total development time
 
@@ -113,6 +113,9 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 31-05 | Enriched embedding fires after AI review completes | Benefits future uploads only; avoids blocking current upload flow |
 | 31-06 | authorId type is string or null (not undefined) | Matches Drizzle nullable column inference from skills.author_id |
 | 31-06 | No nav link to /messages page | Nav changes out of scope; accessed via URL directly for now |
+| 32-01 | pgEnum over text column for user_role | Enforces valid values at DB level |
+| 32-01 | First user per tenant by created_at becomes admin | Deterministic backfill, no manual promotion needed |
+| 32-01 | Idempotent migration with DO block and IF NOT EXISTS | Safe to re-run without errors |
 
 ### Pending Todos
 
@@ -132,5 +135,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 31 verified (7/7 requirements) -- SKILL-06 gap fixed, all plans + verification complete
-Resume file: .planning/phases/31-skills-upload-enhancements/31-VERIFICATION.md
+Stopped at: Phase 32, Plan 01 complete -- user roles schema + service done
+Resume file: .planning/phases/32-admin-panel/32-01-SUMMARY.md
