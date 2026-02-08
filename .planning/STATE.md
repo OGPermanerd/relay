@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 31 of 33 (Skills Upload Enhancements)
-Plan: 4 of 6 in phase 31 (31-01, 31-04 complete)
+Plan: 3 of 6 in phase 31 (31-01, 31-03, 31-04 complete)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 31-04-PLAN.md (skill messages data layer)
+Last activity: 2026-02-08 -- Completed 31-03-PLAN.md (AI review enhancement + auto-trigger)
 
-Progress: [███████████████████░░░░░] ~34% (v1.5 -- 132 plans total)
+Progress: [███████████████████░░░░░] ~35% (v1.5 -- 133 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [███████████████████░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 132
-- Phase 31: 31-01, 31-04 complete (relative timestamp utility TDD, skill messages data layer)
+- Total plans completed: 133
+- Phase 31: 31-01, 31-03, 31-04 complete (relative timestamp utility, AI review enhancement, skill messages data layer)
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~7.9 hours
+- Total execution time: ~8.0 hours
 
 **Cumulative:**
-- 132 plans across 31 phases and 5 milestones
+- 133 plans across 31 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -103,6 +103,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 30-07 | Caddy ask endpoint validates before cert issuance | Prevents abuse of on-demand TLS by verifying domain ownership in DB |
 | 31-01 | useState('') for hydration-safe RelativeTime | Empty string on server matches empty string before useEffect fires on client |
 | 31-01 | 60-second refresh interval for RelativeTime | Keeps display current without excessive re-renders |
+| 31-03 | json_schema output_config over zodOutputFormat | zod 3.25.x lacks toJSONSchema export required by SDK helper |
+| 31-03 | tenant_id added to upsert SQL | ON CONFLICT (tenant_id, skill_id) requires tenant_id in INSERT |
 | 31-04 | Migration 0009 instead of 0010 for skill_messages | 31-03 not yet executed so 0009 was next available number |
 
 ### Pending Todos
@@ -123,5 +125,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 31 plan 04 complete -- skill messages data layer
-Resume file: .planning/phases/31-skills-upload-enhancements/31-04-SUMMARY.md
+Stopped at: Phase 31 plan 03 complete -- AI review enhancement + auto-trigger
+Resume file: .planning/phases/31-skills-upload-enhancements/31-03-SUMMARY.md
