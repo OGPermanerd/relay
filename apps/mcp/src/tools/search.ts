@@ -41,6 +41,11 @@ export async function handleSearchSkills({
     metadata: { query, category, resultCount: results.length },
   });
 
+  const enriched = results.map((r) => ({
+    ...r,
+    displayRating: r.averageRating !== null ? (r.averageRating / 100).toFixed(1) : null,
+  }));
+
   const content: Array<{ type: "text"; text: string }> = [
     {
       type: "text" as const,
@@ -48,7 +53,7 @@ export async function handleSearchSkills({
         {
           query,
           count: results.length,
-          skills: results,
+          skills: enriched,
         },
         null,
         2

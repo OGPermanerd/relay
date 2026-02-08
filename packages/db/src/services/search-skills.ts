@@ -24,6 +24,24 @@ export interface SearchSkillResult {
   description: string;
   category: string;
   hoursSaved: number | null;
+  slug: string;
+  averageRating: number | null;
+  totalUses: number;
+  qualityTier: string | null;
+}
+
+/**
+ * Derive a quality tier from rating and usage stats.
+ * Gold: 4.0+ stars (400+) with 10+ uses
+ * Silver: 3.0+ stars (300+) with 5+ uses
+ * Bronze: 2.0+ stars (200+)
+ * null: insufficient data
+ */
+function deriveQualityTier(averageRating: number | null, totalUses: number): string | null {
+  if (averageRating !== null && averageRating >= 400 && totalUses >= 10) return "gold";
+  if (averageRating !== null && averageRating >= 300 && totalUses >= 5) return "silver";
+  if (averageRating !== null && averageRating >= 200) return "bronze";
+  return null;
 }
 
 /**
@@ -84,13 +102,16 @@ export async function searchSkillsByQuery(
     + CASE WHEN array_to_string(${skills.tags}, ' ') ILIKE ${likePattern} THEN 1 ELSE 0 END
   )`;
 
-  const results = await db
+  const rows = await db
     .select({
       id: skills.id,
       name: skills.name,
       description: skills.description,
       category: skills.category,
       hoursSaved: skills.hoursSaved,
+      slug: skills.slug,
+      averageRating: skills.averageRating,
+      totalUses: skills.totalUses,
     })
     .from(skills)
     .leftJoin(users, eq(skills.authorId, users.id))
@@ -98,5 +119,8 @@ export async function searchSkillsByQuery(
     .orderBy(sql`${scoreSql} DESC`)
     .limit(limit);
 
-  return results;
+  return rows.map((r) => ({
+    ...r,
+    qualityTier: deriveQualityTier(r.averageRating, r.totalUses),
+  }));
 }
