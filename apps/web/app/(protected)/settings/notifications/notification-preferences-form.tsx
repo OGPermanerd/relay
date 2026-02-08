@@ -13,6 +13,8 @@ interface NotificationPreferencesFormProps {
     trendingDigest: "none" | "daily" | "weekly";
     platformUpdatesEmail: boolean;
     platformUpdatesInApp: boolean;
+    reviewNotificationsEmail: boolean;
+    reviewNotificationsInApp: boolean;
   };
 }
 
@@ -80,7 +82,7 @@ export function NotificationPreferencesForm({
         </div>
 
         {/* Section 3: Platform Updates */}
-        <div className="p-6">
+        <div className="border-b border-gray-200 p-6">
           <h2 className="text-base font-medium text-gray-900">Platform Updates</h2>
           <p className="mt-1 text-sm text-gray-500">Feature releases and platform improvements</p>
           <div className="mt-4 space-y-3">
@@ -98,6 +100,34 @@ export function NotificationPreferencesForm({
                 type="checkbox"
                 name="platformUpdatesInApp"
                 defaultChecked={initialPreferences.platformUpdatesInApp}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">In-app notifications</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Section 4: Review Notifications */}
+        <div className="p-6">
+          <h2 className="text-base font-medium text-gray-900">Review Notifications</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            When your skills are reviewed or when skills need your review
+          </p>
+          <div className="mt-4 space-y-3">
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                name="reviewNotificationsEmail"
+                defaultChecked={initialPreferences.reviewNotificationsEmail}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">Email notifications</span>
+            </label>
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                name="reviewNotificationsInApp"
+                defaultChecked={initialPreferences.reviewNotificationsInApp}
                 className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="text-sm text-gray-700">In-app notifications</span>

@@ -15,6 +15,8 @@ export type PreferencesResult = {
   trendingDigest: "none" | "daily" | "weekly";
   platformUpdatesEmail: boolean;
   platformUpdatesInApp: boolean;
+  reviewNotificationsEmail: boolean;
+  reviewNotificationsInApp: boolean;
 } | null;
 
 /**
@@ -35,6 +37,8 @@ export async function getMyPreferences(): Promise<PreferencesResult> {
     trendingDigest: prefs.trendingDigest,
     platformUpdatesEmail: prefs.platformUpdatesEmail,
     platformUpdatesInApp: prefs.platformUpdatesInApp,
+    reviewNotificationsEmail: prefs.reviewNotificationsEmail,
+    reviewNotificationsInApp: prefs.reviewNotificationsInApp,
   };
 }
 
@@ -60,6 +64,8 @@ export async function saveMyPreferences(formData: FormData): Promise<SavePrefere
       trendingDigest: (formData.get("trendingDigest") as "none" | "daily" | "weekly") || "none",
       platformUpdatesEmail: formData.get("platformUpdatesEmail") === "on",
       platformUpdatesInApp: formData.get("platformUpdatesInApp") === "on",
+      reviewNotificationsEmail: formData.get("reviewNotificationsEmail") === "on",
+      reviewNotificationsInApp: formData.get("reviewNotificationsInApp") === "on",
     };
 
     await updatePreferences(session.user.id, updates);

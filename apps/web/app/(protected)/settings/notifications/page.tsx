@@ -27,6 +27,8 @@ export default async function NotificationSettingsPage() {
               trendingDigest: "weekly" as const,
               platformUpdatesEmail: true,
               platformUpdatesInApp: true,
+              reviewNotificationsEmail: true,
+              reviewNotificationsInApp: true,
             }
           }
         />
