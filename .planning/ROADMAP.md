@@ -111,7 +111,7 @@ Total: 55 plans completed.
 
 </details>
 
-### 🚧 v2.0 Skill Ecosystem (In Progress)
+### v2.0 Skill Ecosystem (In Progress)
 
 **Milestone Goal:** Transform skill publishing from instant-publish to a quality-gated pipeline with AI review, author revision, and admin approval -- plus conversational discovery via MCP and fork-on-modify detection. 44 requirements across 6 categories.
 
@@ -185,7 +185,13 @@ Plans:
   2. When an admin approves, rejects, or requests changes on a skill, the author receives an in-app notification and email with the admin's notes
   3. All review notification types are grouped under a single preference toggle -- users can disable review notifications in one action
   4. The notification bell correctly renders new review notification types with appropriate icons and action URLs that link to the relevant skill or review page
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 37-01-PLAN.md -- Schema, migration, type union, getAdminsInTenant, preference service
+- [ ] 37-02-PLAN.md -- Email template and notifyReviewEvent dispatch function
+- [ ] 37-03-PLAN.md -- Wiring dispatch into submit-for-review and admin-reviews actions
+- [ ] 37-04-PLAN.md -- Preferences form UI and notification bell icons
 
 ### Phase 38: Conversational MCP Discovery
 **Goal**: Users can discover skills through natural conversation in Claude -- semantic search, detailed descriptions, and post-install guidance
@@ -227,7 +233,7 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 34. Review Pipeline Foundation | v2.0 | 5/5 | Complete | 2026-02-08 |
 | 35. AI Review Integration | v2.0 | 3/3 | Complete | 2026-02-08 |
 | 36. Admin Review UI | v2.0 | 3/3 | Complete | 2026-02-08 |
-| 37. Review Notifications | v2.0 | 0/TBD | Not started | - |
+| 37. Review Notifications | v2.0 | 0/4 | Planning complete | - |
 | 38. Conversational MCP Discovery | v2.0 | 0/TBD | Not started | - |
 | 39. Fork Detection | v2.0 | 0/TBD | Not started | - |
 
