@@ -1,13 +1,11 @@
 import { z } from "zod";
 import { server } from "../server.js";
-import { trackUsage } from "../tracking/events.js";
-import { getUserId } from "../auth.js";
 
 server.registerTool(
   "log_skill_usage",
   {
     description:
-      "Log that a skill is being used in a conversation. Call this when you actually use a deployed skill to track real usage.",
+      "[DEPRECATED] Usage is now tracked automatically via PostToolUse hooks. This tool is no longer needed. Kept for backward compatibility.",
     inputSchema: {
       skillId: z.string().describe("The skill ID being used"),
       action: z
@@ -17,19 +15,17 @@ server.registerTool(
         .describe("The action being performed (defaults to 'use')"),
     },
   },
-  async ({ skillId, action }) => {
-    const userId = getUserId() ?? undefined;
-
-    await trackUsage(
-      { toolName: "log_skill_usage", skillId, userId, metadata: { action } },
-      { skipIncrement: true }
-    );
-
+  async ({ skillId: _skillId, action: _action }) => {
     return {
       content: [
         {
           type: "text" as const,
-          text: JSON.stringify({ success: true, message: "Usage logged" }),
+          text: JSON.stringify({
+            success: true,
+            deprecated: true,
+            message:
+              "Usage is now tracked automatically via PostToolUse hooks in skill frontmatter. This tool is no longer needed.",
+          }),
         },
       ],
     };
