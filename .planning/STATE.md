@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 34 of 39 (Review Pipeline Foundation)
-Plan: 5 plans (34-01 through 34-05) in 3 waves
-Status: Planned -- ready to execute
-Last activity: 2026-02-08 -- Phase 34 planned (5 plans, verified)
+Plan: 1 of 5 complete (34-01 done)
+Status: In progress
+Last activity: 2026-02-08 -- Completed 34-01-PLAN.md (skill status schema + state machine)
 
-Progress: [                        ] 0% (v2.0 -- 0/44 requirements delivered)
+Progress: [█░░░░░░░░░░░░░░░░░░░░░░░] 2% (v2.0 -- 1/44 requirements delivered)
 
 ## Milestones
 
@@ -29,12 +29,12 @@ Progress: [                        ] 0% (v2.0 -- 0/44 requirements delivered)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 149
+- Total plans completed: 150
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~8.9 hours
 
 **Cumulative:**
-- 149 plans across 33 phases and 6 milestones
+- 150 plans across 34 phases and 6 milestones
 - ~14,700 LOC TypeScript
 - 8 days total development time
 
@@ -49,6 +49,7 @@ Recent decisions affecting current work:
 
 - [v2.0 roadmap]: MCPR tools (review_skill, submit_for_review, check_review_status) placed in Phase 35 alongside AI review integration -- natural combination of review pipeline + MCP tooling
 - [v2.0 roadmap]: Phases 38 (MCP Discovery) and 39 (Fork Detection) are independent of review pipeline -- can execute in parallel with phases 36-37
+- [34-01]: Status column DEFAULT 'published' for backward compat -- state machine is pure function service (no DB dependency)
 
 ### Pending Todos
 
@@ -64,5 +65,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 34 planned -- 5 plans in 3 waves, verified
-Resume file: .planning/phases/34-review-pipeline-foundation/ (ready for /gsd:execute-phase 34)
+Stopped at: Phase 34, plan 01 complete -- plans 02-05 remaining
+Resume file: .planning/phases/34-review-pipeline-foundation/ (34-02 next in wave 1)
