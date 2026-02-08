@@ -9,6 +9,7 @@ import {
   skillEmbeddings,
   tenants,
   auditLogs,
+  skillMessages,
 } from "../schema";
 
 /**
@@ -152,6 +153,41 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   users: many(users),
   skills: many(skills),
   apiKeys: many(apiKeys),
+}));
+
+/**
+ * SkillMessages relations
+ * - tenant: many-to-one with tenants
+ * - fromUser: many-to-one with users (sender)
+ * - toUser: many-to-one with users (recipient)
+ * - subjectSkill: many-to-one with skills (skill being discussed)
+ * - proposedParentSkill: many-to-one with skills (proposed parent, nullable)
+ */
+export const skillMessagesRelations = relations(skillMessages, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [skillMessages.tenantId],
+    references: [tenants.id],
+  }),
+  fromUser: one(users, {
+    fields: [skillMessages.fromUserId],
+    references: [users.id],
+    relationName: "sentMessages",
+  }),
+  toUser: one(users, {
+    fields: [skillMessages.toUserId],
+    references: [users.id],
+    relationName: "receivedMessages",
+  }),
+  subjectSkill: one(skills, {
+    fields: [skillMessages.subjectSkillId],
+    references: [skills.id],
+    relationName: "subjectMessages",
+  }),
+  proposedParentSkill: one(skills, {
+    fields: [skillMessages.proposedParentSkillId],
+    references: [skills.id],
+    relationName: "parentMessages",
+  }),
 }));
 
 /**

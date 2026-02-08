@@ -23,3 +23,10 @@ export { mergeSkills } from "./skill-merge";
 export { writeAuditLog, writeAuditLogs, type AuditEntry } from "./audit";
 export { getTenantBySlug, getTenantByDomain, type Tenant, type NewTenant } from "./tenant";
 export { insertTrackingEvent, type TrackingEventInput } from "./usage-tracking";
+export {
+  sendSkillMessage,
+  getMessagesForUser,
+  getUnreadCountForUser,
+  markMessageRead,
+  updateMessageStatus,
+} from "./skill-messages";
