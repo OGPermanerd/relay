@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 38 of 39 (Conversational MCP Discovery)
-Plan: 01 of 03
+Plan: 04 of 04
 Status: In progress
-Last activity: 2026-02-08 -- Completed 38-01-PLAN.md (semantic search foundation)
+Last activity: 2026-02-08 -- Completed 38-04-PLAN.md (enhanced search metadata)
 
-Progress: [█████████████████░░░░░░░] 77% (v2.0 -- 34/44 requirements delivered)
+Progress: [██████████████████░░░░░░] 80% (v2.0 -- 35/44 requirements delivered)
 
 ## Milestones
 
@@ -29,12 +29,12 @@ Progress: [█████████████████░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 168
+- Total plans completed: 169
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~9.8 hours
 
 **Cumulative:**
-- 168 plans across 38 phases and 7 milestones
+- 169 plans across 38 phases and 7 milestones
 - ~15,900 LOC TypeScript
 - 8 days total development time
 
@@ -85,6 +85,8 @@ Recent decisions affecting current work:
 - [38-01]: cosineDistance from drizzle-orm/sql/functions/vector for type-safe pgvector queries
 - [38-01]: MCP Ollama client is self-contained copy (no cross-app imports) for stdio protocol safety
 - [38-01]: Similarity score = 1 - cosineDistance for intuitive 0-1 range (higher = more similar)
+- [38-04]: deriveQualityTier uses raw integer ratings (400=4.0 stars) matching DB storage format
+- [38-04]: displayRating computed in MCP layer (not DB service) to keep service return type clean
 
 ### Pending Todos
 
@@ -100,5 +102,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 38 plan 01 complete -- next: 38-02 (recommend_skills tool) and 38-03 (describe_skill tool)
+Stopped at: Phase 38 plan 04 complete -- next: 38-02 (recommend_skills) and 38-03 (describe_skill) may be in progress
 Resume file: .planning/phases/38-conversational-mcp-discovery/
