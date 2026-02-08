@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 34 of 39 (Review Pipeline Foundation)
-Plan: 2 of 5 complete (34-01, 34-02 done)
+Plan: 3 of 5 complete (34-01, 34-02, 34-03 done)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 34-02-PLAN.md (draft status on all creation paths)
+Last activity: 2026-02-08 -- Completed 34-03-PLAN.md (published status filter on all public queries)
 
-Progress: [██░░░░░░░░░░░░░░░░░░░░░░] 5% (v2.0 -- 2/44 requirements delivered)
+Progress: [███░░░░░░░░░░░░░░░░░░░░░] 7% (v2.0 -- 3/44 requirements delivered)
 
 ## Milestones
 
@@ -29,12 +29,12 @@ Progress: [██░░░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 151
+- Total plans completed: 152
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~8.9 hours
+- Total execution time: ~9.0 hours
 
 **Cumulative:**
-- 151 plans across 34 phases and 6 milestones
+- 152 plans across 34 phases and 6 milestones
 - ~14,700 LOC TypeScript
 - 8 days total development time
 
@@ -51,6 +51,7 @@ Recent decisions affecting current work:
 - [v2.0 roadmap]: Phases 38 (MCP Discovery) and 39 (Fork Detection) are independent of review pipeline -- can execute in parallel with phases 36-37
 - [34-01]: Status column DEFAULT 'published' for backward compat -- state machine is pure function service (no DB dependency)
 - [34-02]: All 4 creation paths explicitly set status='draft' -- never rely on column DEFAULT for new skills
+- [34-03]: All 18 public query paths filter by status='published' -- pattern: every new public query must include status filter
 
 ### Pending Todos
 
@@ -66,5 +67,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 34, plan 02 complete -- plans 03-05 remaining
-Resume file: .planning/phases/34-review-pipeline-foundation/ (34-03 next in wave 2)
+Stopped at: Phase 34, plan 03 complete -- plans 04-05 remaining
+Resume file: .planning/phases/34-review-pipeline-foundation/ (34-04 next in wave 2)
