@@ -1,498 +1,473 @@
-# Feature Landscape: Multi-Tenancy, Reliable Usage Tracking, Production Deployment
+# Feature Landscape: v2.0 Skill Ecosystem
 
-**Domain:** Internal skill marketplace -- multi-tenant SaaS, deterministic usage tracking via Claude Code hooks, production infrastructure
-**Researched:** 2026-02-07
-**Confidence:** HIGH for multi-tenancy patterns, HIGH for Claude Code hooks (verified official docs), MEDIUM for production deployment specifics
+**Domain:** Internal AI skill marketplace -- review pipeline, conversational discovery, fork-on-modify detection, admin review UI
+**Researched:** 2026-02-08
+**Overall confidence:** HIGH (patterns well-established across App Store, GitHub PR, marketplace ecosystems; codebase primitives already exist)
 
 ## Context
 
-Relay is an internal skill marketplace at v1.4. The current system is single-tenant with honor-system usage tracking (`log_skill_usage` MCP tool that Claude sometimes forgets to call). v1.5 adds three capabilities:
+EverySkill is at v1.5 with a complete internal skill marketplace: CRUD, versioning, forking, AI review (on-demand, advisory-only), semantic similarity via pgvector/Ollama, MCP tools (list, search, deploy, create), star ratings, quality badges, admin panel, notifications, and PostToolUse hook-based usage tracking.
 
-1. **Multi-tenancy** -- Subdomain routing (tenant1.relay.example.com), tenant isolation across all tables, domain-based SSO mapping
-2. **Reliable usage tracking** -- Replace honor-system `log_skill_usage` with deterministic Claude Code hooks embedded in skill frontmatter that fire HTTP callbacks on every tool use
-3. **Production deployment** -- Docker Compose on Hetzner, Caddy for SSL, health checks, backups
+v2.0 extends the ecosystem with four capabilities:
+
+1. **Review pipeline** -- Transition from advisory AI review to gated publishing: create -> pending_review -> AI reviews -> author revises -> admin approves -> published
+2. **Review UX** -- In-app review page, notification+modal, and MCP-first review (Claude returns review results inline)
+3. **Conversational discovery** -- MCP semantic search -> recommend -> describe -> install -> guide usage, all within a conversation
+4. **Fork-on-modify detection** -- MCP tool compares local file hash vs DB hash, prompts fork when drift detected
 
 **Existing infrastructure being extended:**
-- `usage_events` table with userId column (now populated via API keys, v1.4)
-- `api_keys` table with SHA-256 hashing (v1.4)
-- Google Workspace SSO (Auth.js v5 with JWT strategy)
-- MCP server with stdio + Streamable HTTP dual transport
-- Analytics dashboard with org-wide trends (v1.4)
-- Skills deployed to `.claude/skills/{slug}.md` with YAML frontmatter embedding `everyskill_skill_id`
-- Web remote MCP via `/api/mcp/[transport]` route (v1.4)
+- `skill_reviews` table with AI-generated quality/clarity/completeness scores (1-10), SHA-256 content hash comparison
+- `skill_versions` table with immutable version records, content hashes, R2 storage URLs
+- `skill_embeddings` table with pgvector HNSW index (768-dim Voyage AI/Ollama vectors)
+- `notifications` table with type-based routing and email preferences
+- `skills.forkedFromId` self-referential FK for fork tracking
+- `skills.publishedVersionId` / `skills.draftVersionId` for draft/published lifecycle
+- MCP `search_skills` tool with ILIKE relevance scoring
+- MCP `deploy_skill` tool with frontmatter injection and local file save
+- MCP `create_skill` tool that auto-publishes immediately (needs gating)
+- `hashContent()` SHA-256 utility in `apps/web/lib/content-hash.ts`
+- `generateSkillReview()` in `apps/web/lib/ai-review.ts` using Claude Sonnet structured output
 
 ---
 
 ## Table Stakes
 
-Features users expect. Missing these means the product does not function as a multi-tenant SaaS with reliable tracking.
+Features users expect for a review pipeline, discovery flow, and fork detection system. Missing any of these means the v2.0 features feel incomplete.
 
-### 1. Tenant Isolation (tenant_id Across All Tables)
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| `tenant_id` column on all data tables | Data from tenant A must never leak to tenant B | HIGH | Schema migration |
-| Scoped queries -- all WHERE clauses include tenant_id | Application-level enforcement of isolation | HIGH | Every service function |
-| Tenant-aware session -- session carries tenantId | Auth must know which tenant the user belongs to | MEDIUM | Auth.js session callback |
-| Tenant table | Store tenant metadata (name, domain, slug, settings) | LOW | Schema |
-| User-to-tenant mapping | users belong to exactly one tenant | LOW | FK on users table |
-| Tenant creation/seeding | First tenant bootstrapped from existing data | LOW | Migration script |
-
-**Expected behavior:** Every database table that stores tenant-specific data gets a `tenant_id` column. All Drizzle queries filter by `tenant_id`. The session object carries `tenantId` resolved from the user's email domain. No data crosses tenant boundaries.
-
-**Tables requiring tenant_id:**
-- `skills` -- skills belong to a tenant
-- `skill_versions` -- versions inherit tenant from skill
-- `skill_reviews` -- reviews scoped to tenant
-- `skill_embeddings` -- embeddings scoped to tenant
-- `ratings` -- ratings scoped to tenant
-- `usage_events` -- usage scoped to tenant
-- `api_keys` -- keys scoped to tenant (user already scoped)
-- `site_settings` -- becomes `tenant_settings` (per-tenant config)
-
-**Tables NOT needing tenant_id:**
-- `users` -- users reference a tenant via FK, not a column on every row
-- `accounts`, `sessions`, `verification_tokens` -- Auth.js managed tables
-
-**Implementation pattern:** Shared database with tenant_id discriminator column. NOT PostgreSQL Row-Level Security (RLS) -- that adds complexity for marginal benefit at Relay's scale (hundreds of users, not millions). Application-level filtering is simpler to debug and sufficient for an internal tool.
-
-**Confidence:** HIGH -- This is the most common multi-tenancy pattern for shared-database SaaS. Sources: [WorkOS multi-tenant guide](https://workos.com/blog/developers-guide-saas-multi-tenant-architecture), [AWS RLS blog](https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/), [Crunchy Data RLS](https://www.crunchydata.com/blog/row-level-security-for-tenants-in-postgres).
-
-### 2. Subdomain Routing (tenant1.relay.example.com)
+### 1. Review Pipeline State Machine
 
 | Feature | Why Expected | Complexity | Depends On |
 |---------|--------------|------------|------------|
-| Middleware extracts subdomain from Host header | Route requests to correct tenant | MEDIUM | Next.js middleware |
-| Subdomain maps to tenant record | Lookup tenant by slug | LOW | Tenant table |
-| Wildcard DNS (*.relay.example.com) | All subdomains resolve to same server | LOW | DNS + Caddy config |
-| Wildcard SSL certificate | HTTPS for all subdomains | LOW | Caddy auto-SSL or Let's Encrypt |
-| Fallback for bare domain | relay.example.com shows landing/login | LOW | Middleware logic |
+| `status` field on skills | Skills need a lifecycle state beyond published/draft | LOW | Schema migration |
+| State transitions: draft -> pending_review -> in_review -> changes_requested -> approved -> published | Users expect a clear, predictable workflow modeled on App Store / GitHub PR review | MEDIUM | State machine logic |
+| AI auto-review on submission | When author submits for review, AI review runs automatically (not on-demand) | LOW | Existing `generateSkillReview()` |
+| Admin approve/reject/request-changes actions | Three-action model from GitHub PR reviews is the standard | MEDIUM | Admin authorization |
+| Author revision cycle | Author receives feedback, edits, resubmits -- re-triggers AI review | MEDIUM | State transition logic |
+| Review comments/notes | Admin can attach a text note explaining rejection or change request | LOW | New `reviewerNotes` field |
 
-**Expected behavior:** Users visit `acme.relay.example.com`. The Next.js middleware extracts `acme` from the Host header, looks up the tenant, and injects `tenantId` into the request context. All subsequent queries scope to that tenant. Users never see data from other tenants.
+**Expected behavior (modeled on App Store + GitHub PR workflow):**
 
-**Implementation pattern (Next.js middleware):**
 ```
-1. Extract hostname from request
-2. Parse subdomain (everything before first dot of known base domain)
-3. Look up tenant by subdomain slug
-4. If not found: redirect to landing page or 404
-5. If found: set tenant context (header, cookie, or rewrite)
-6. All server actions/API routes read tenant context
+DRAFT ──submit──> PENDING_REVIEW ──auto-AI-review──> IN_REVIEW
+                                                        |
+                                    ┌───────────────────┼───────────────────┐
+                                    v                   v                   v
+                              APPROVED           CHANGES_REQUESTED      REJECTED
+                                  |                   |
+                                  v                   v
+                              PUBLISHED         author edits, resubmits
+                                              ──> PENDING_REVIEW (cycle)
 ```
 
-**Confidence:** HIGH -- Official Next.js documentation covers this pattern. Source: [Next.js Multi-tenant Guide](https://nextjs.org/docs/app/guides/multi-tenant), [Vercel Platforms starter](https://github.com/vercel/platforms).
+**States (modeled on Apple App Store + GitHub):**
+- `draft` -- Author is editing, not submitted for review
+- `pending_review` -- Submitted, waiting for AI review to complete
+- `in_review` -- AI review complete, awaiting admin decision
+- `approved` -- Admin approved, ready to publish (or auto-publishes)
+- `changes_requested` -- Admin wants modifications before approval
+- `rejected` -- Admin rejected entirely (rare, for policy violations)
+- `published` -- Live and visible to all users
 
-### 3. Domain-Based Google SSO Mapping
+**Why this specific state model:** Apple's App Store uses a similar flow (Waiting for Review -> In Review -> Approved/Rejected) and GitHub PRs use the three-action model (Comment, Approve, Request Changes). The combination gives authors clear expectations and admins clear actions. The `changes_requested` state is critical -- it differentiates "fix this and resubmit" from "this is rejected outright," which matches how 95% of review feedback works.
 
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| Email domain maps to tenant | user@acme.com -> acme tenant | LOW | Tenant table has domain field |
-| Multiple domains per tenant | acme.com and acme.io -> same tenant | LOW | Domains array or lookup table |
-| SSO domain restriction per tenant | Only acme.com emails can access acme tenant | MEDIUM | Auth.js signIn callback |
-| Auto-provision user on first login | New user auto-assigned to correct tenant | LOW | Auth.js callback |
+**Implementation note:** The `skills` table already has `publishedVersionId` and `draftVersionId` columns. The `status` field governs the skill-level lifecycle. A skill in `changes_requested` still has its `draftVersionId` pointing to the version under review, and the author creates a new version when resubmitting.
 
-**Expected behavior:** When a user signs in via Google Workspace SSO, their email domain (e.g., `acme.com`) maps to a tenant. If the tenant's allowed domains include `acme.com`, the user is provisioned and assigned to that tenant. If no tenant matches, access is denied.
+**Confidence:** HIGH -- This state machine maps directly to Apple App Store submission statuses and GitHub PR review states, both well-documented systems.
 
-**Current state:** Auth.js already restricts by domain via `hd` (hosted domain) parameter in Google provider config. This needs to become dynamic -- look up allowed domains from tenant config instead of hardcoded.
-
-**Confidence:** HIGH -- Standard pattern for B2B SaaS with Google Workspace SSO.
-
-### 4. Deterministic Usage Tracking via Claude Code Hooks
+### 2. Automatic AI Review on Submission
 
 | Feature | Why Expected | Complexity | Depends On |
 |---------|--------------|------------|------------|
-| PostToolUse hook in deployed skills | Fires automatically after every tool use -- no LLM cooperation needed | HIGH | Claude Code hooks system |
-| Hook calls tracking endpoint via curl/HTTP | Phone-home on each tool invocation | MEDIUM | Tracking API endpoint |
-| SessionStart hook for heartbeat | Register session start with relay server | MEDIUM | Tracking API endpoint |
-| Tracking endpoint (POST /api/track) | Receives hook callbacks, records events | MEDIUM | API route + auth |
-| Auto-injection of hooks into skill frontmatter on deploy | Skills get tracking hooks without uploader effort | HIGH | deploy_skill tool modification |
+| AI review triggers on submit-for-review | Authors should not manually request AI review before submitting | LOW | Existing `generateSkillReview()` |
+| Review results stored and displayed inline | Author sees quality/clarity/completeness scores immediately | LOW | Existing `skill_reviews` table |
+| Minimum score threshold for auto-approval (optional) | High-scoring skills skip manual review | MEDIUM | Configurable threshold in tenant settings |
+| Content hash comparison skips re-review if unchanged | Do not waste API calls re-reviewing identical content | LOW | Existing `reviewedContentHash` field |
 
-**This is the core innovation of v1.5.** The current `log_skill_usage` MCP tool is honor-system -- Claude must remember to call it after using a skill. It frequently does not. Claude Code hooks solve this by firing shell commands automatically on tool events, independent of LLM behavior.
+**Expected behavior:** Author clicks "Submit for Review." The system transitions the skill to `pending_review`, fires `generateSkillReview()` asynchronously, and transitions to `in_review` when the AI review completes. The AI review results (scores, suggestions, suggested description) are visible to both the author and the admin reviewer.
 
-**How Claude Code hooks work (verified from official docs at [code.claude.com/docs/en/hooks](https://code.claude.com/docs/en/hooks)):**
+**Optional auto-approval gate:** If all three category scores (quality, clarity, completeness) are >= 7 (configurable per tenant), the skill auto-transitions to `approved` without admin intervention. This reduces admin workload for high-quality submissions. Skills below the threshold require manual admin review.
 
-1. **Hook events:** `SessionStart`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `Stop`, etc.
-2. **Configuration locations:**
-   - `~/.claude/settings.json` -- global (all projects)
-   - `.claude/settings.json` -- project-specific (committable)
-   - `.claude/settings.local.json` -- project-specific (gitignored)
-   - **Skill/agent YAML frontmatter** -- scoped to component lifecycle
-3. **Matcher field:** Regex against tool_name. E.g., `"Bash"`, `"Edit|Write"`, `"mcp__.*"`
-4. **Hook handler:** Shell command receives JSON on stdin with `session_id`, `tool_name`, `tool_input`, `tool_response` (for PostToolUse)
-5. **Async option:** `"async": true` runs hook in background without blocking Claude
+**Confidence:** HIGH -- The existing `generateSkillReview()` function already produces structured output. The only change is triggering it automatically instead of on-demand.
 
-**Skill frontmatter hooks (verified):**
-```yaml
----
-name: my-skill
-description: Does something useful
-hooks:
-  PostToolUse:
-    - matcher: ".*"
-      hooks:
-        - type: command
-          command: "curl -s -X POST https://relay.example.com/api/track -H 'Content-Type: application/json' -d '{\"session_id\": \"'$CLAUDE_SESSION_ID'\", \"skill_id\": \"abc123\", \"event\": \"tool_use\"}' > /dev/null 2>&1 || true"
-          async: true
-  SessionStart:
-    - hooks:
-        - type: command
-          command: "curl -s -X POST https://relay.example.com/api/track -d '{\"event\": \"session_start\"}' > /dev/null 2>&1 || true"
-          once: true
----
+### 3. Admin Review Queue and Dashboard
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| Review queue page listing skills in `in_review` state | Admins need a centralized view of pending reviews | MEDIUM | New admin page |
+| Skill diff view (previous version vs submitted version) | Admins need to see what changed, not read the entire skill | HIGH | Version comparison logic |
+| Approve / Request Changes / Reject actions | Three-action model per GitHub PR reviews | MEDIUM | State transition actions |
+| Reviewer notes text field | Admin explains their decision | LOW | Text input |
+| Review history (audit trail) | Who reviewed what, when, with what decision | MEDIUM | Review event records |
+| Queue filtering (by category, author, AI score) | Admins with many pending reviews need triage tools | LOW | Query parameters |
+| Bulk approve for high-scoring skills | When AI scores are all 8+, approve multiple at once | LOW | Bulk action UI |
+
+**Expected behavior (modeled on Reddit/Higher Logic moderation queues + GitHub PR review):**
+
+The admin review page shows a queue of skills in `in_review` status, sorted by submission date (oldest first). Each item shows:
+- Skill name, author, category, submission date
+- AI review scores (quality/clarity/completeness as color-coded badges)
+- AI-generated summary
+- "View" button that opens the full skill content with diff highlighting
+
+When an admin reviews a skill, they see:
+- Side-by-side or inline diff between the previous published version and the submitted version
+- AI review scores and suggestions
+- A text area for reviewer notes
+- Three action buttons: Approve, Request Changes, Reject
+
+On action:
+- **Approve:** Status -> `approved`, `publishedVersionId` updated, author notified
+- **Request Changes:** Status -> `changes_requested`, reviewer notes saved, author notified with specific feedback
+- **Reject:** Status -> `rejected`, reviewer notes saved, author notified with reason
+
+**Confidence:** HIGH -- Content moderation queues with approve/reject/request-changes are standardized across platforms (Reddit, Zendesk, Stream, Higher Logic). The three-action model from GitHub is widely understood.
+
+### 4. Review Notifications
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| Notify author when AI review completes | Author should know their review is ready | LOW | Existing notification system |
+| Notify admin when skill enters `in_review` | Admin needs to know there's work to do | LOW | Existing notification system |
+| Notify author on approve/reject/request-changes | Author needs the decision and feedback | LOW | Existing notification system |
+| Notification type: `skill_review` | Fits into existing type-based notification routing | LOW | New notification type |
+| Email notification for review decisions | Critical decisions should reach email, not just in-app bell | LOW | Existing email notification system |
+
+**Expected behavior:** The notification system already supports types (`grouping_proposal`, `trending_digest`, `platform_update`). Adding `skill_review_submitted`, `skill_review_complete`, `skill_approved`, `skill_changes_requested`, `skill_rejected` as new types integrates with existing notification preferences. Authors can opt out of email notifications for reviews if they prefer in-app only.
+
+**Confidence:** HIGH -- The notification infrastructure is already built (notifications table, preferences, email dispatch). This is adding new notification types to an existing system.
+
+### 5. Conversational Discovery via MCP
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| Semantic search MCP tool | Natural language queries like "help me write better code reviews" | MEDIUM | Existing pgvector embeddings |
+| Skill recommendation based on context | "Based on what you're working on, try these skills" | HIGH | Context analysis from conversation |
+| Skill detail retrieval via MCP | "Tell me more about that skill" -- returns full description, ratings, usage stats | LOW | New MCP tool or extend search |
+| Guided install flow via MCP | "Install it" triggers deploy_skill with contextual instructions | LOW | Existing deploy_skill tool |
+| Usage guidance after install | "Here's how to use this skill: ..." | LOW | Return skill content as guidance |
+
+**Expected behavior (modeled on conversational recommendation systems):**
+
+The MCP interface enables a multi-turn discovery conversation:
+
+```
+User: "I need help with database migrations"
+Claude: [calls search_skills with semantic query]
+       "I found 3 relevant skills:
+        1. Database Migration Helper (Gold, 45 uses) - Automates Drizzle migration generation
+        2. Schema Review Workflow (Silver, 23 uses) - Reviews schema changes for anti-patterns
+        3. SQL Query Optimizer (Bronze, 12 uses) - Optimizes slow queries
+        Want to know more about any of these?"
+
+User: "Tell me more about #1"
+Claude: [calls get_skill_details]
+       "Database Migration Helper:
+        - Author: Jane D.
+        - Quality: 8.5/10, Clarity: 9/10, Completeness: 7.5/10
+        - Description: Analyzes your current schema and generates...
+        Want me to install it?"
+
+User: "Yes, install it"
+Claude: [calls deploy_skill]
+       "Installed to ~/.claude/skills/database-migration-helper.md
+        To use it, just describe the migration you need..."
 ```
 
-**Key design decisions:**
-- **PostToolUse, not PreToolUse:** Track after successful execution, not before (avoids tracking failed/blocked calls)
-- **Async hooks:** `"async": true` prevents tracking from blocking Claude's workflow
-- **Fail-silent:** `|| true` ensures tracking failures never disrupt the user
-- **`once: true` on SessionStart:** Heartbeat fires once per session, not on every resume/compact
-- **Matcher `".*"`:** Track ALL tool uses during skill execution, not just specific tools
-- **Skill-scoped hooks:** Hooks defined in SKILL.md frontmatter only fire while that skill is active
+**Key design principle:** The MCP tools should return enough context for Claude to have a natural conversation about skills without requiring the user to visit the web UI. Search results should include ratings, usage stats, and quality tier so Claude can make informed recommendations.
 
-**Critical limitation:** Skill-scoped hooks only fire while the skill is active (loaded into context). If Claude uses skill knowledge but the skill is no longer "active," hooks do not fire. This means tracking captures skill invocation but not every downstream tool call from skill-inspired behavior. This is acceptable -- the goal is measuring skill adoption, not total surveillance.
+**New MCP tools needed:**
+- `get_skill_details` -- Returns full skill metadata (description, scores, author, usage stats, similar skills)
+- `recommend_skills` -- Given a natural language description of what the user needs, returns ranked recommendations using semantic similarity (pgvector cosine distance)
 
-**The `once` field:** Supported in skills and slash commands but NOT in agents. When `once: true`, the hook runs only on the first occurrence per session, then is removed. Source: [Hooks reference](https://code.claude.com/docs/en/hooks).
+**Existing tools enhanced:**
+- `search_skills` -- Add semantic search mode alongside ILIKE (use embeddings when available)
+- `deploy_skill` -- Already handles installation; add usage guidance in response
 
-**Confidence:** HIGH -- All hook capabilities verified against official Claude Code documentation at code.claude.com/docs/en/hooks. The hooks system is mature with 14 event types, skill frontmatter support, async execution, and the `once` modifier.
+**Confidence:** HIGH for the tool design, MEDIUM for semantic search quality. The pgvector infrastructure exists but the MCP `search_skills` tool currently uses ILIKE only (the web UI has full-text search with `websearch_to_tsquery`). Adding semantic search to MCP requires calling the embedding service from the MCP app, which currently only runs in the web app.
 
-### 5. Auto-Injection of Tracking Hooks on Skill Deploy
+### 6. Fork-on-Modify Detection
 
 | Feature | Why Expected | Complexity | Depends On |
 |---------|--------------|------------|------------|
-| deploy_skill injects hooks into frontmatter | Tracking is automatic, not opt-in | MEDIUM | deploy_skill tool modification |
-| Hooks include tenant-specific tracking URL | Each tenant's hooks point to their tracking endpoint | LOW | Tenant config |
-| Hooks include skill_id and api_key for attribution | Events are attributable to skill + user | LOW | Existing frontmatter fields |
-| Uploaded skills preserve original frontmatter | Uploader's hooks are not clobbered | MEDIUM | Merge logic |
-| Compliance verification on deploy | Warn if skill lacks tracking hooks | LOW | Frontmatter parsing |
+| MCP tool: `check_skill_status` | Compare local file hash to DB hash | MEDIUM | New MCP tool |
+| Local file hash computation | SHA-256 of local `.claude/skills/{slug}.md` | LOW | fs.readFile + crypto |
+| DB hash lookup by skill ID | Query `skill_versions.contentHash` for published version | LOW | Existing schema |
+| Drift detection result | "modified" / "current" / "unknown" (no local file) | LOW | Hash comparison |
+| Fork prompt on drift | "Your local copy has been modified. Fork as a new skill?" | LOW | MCP response message |
+| One-step fork via MCP | `fork_skill` MCP tool creates fork from modified content | MEDIUM | Extend existing fork action |
+| Web UI drift indicator | Skill detail page shows "local copy modified" if hash mismatch detected | MEDIUM | API endpoint for hash check |
 
-**Expected behavior:** When `deploy_skill` returns skill content for Claude to save to `.claude/skills/{slug}.md`, the content includes tracking hooks in the YAML frontmatter. The uploader never needs to add hooks manually. The hooks fire PostToolUse callbacks to the tenant's tracking endpoint with the skill ID and session context.
+**Expected behavior (modeled on git divergence detection):**
 
-**Current state (v1.4):** The `deploy_skill` tool already injects frontmatter:
-```yaml
----
-everyskill_skill_id: {skill.id}
-everyskill_skill_name: {skill.name}
-everyskill_category: {skill.category}
-everyskill_hours_saved: {skill.hoursSaved}
----
+When a user has installed a skill and later modified it locally, the system should detect this drift:
+
+```
+User: "Check if my skills are up to date"
+Claude: [calls check_skill_status for each installed skill]
+       "2 skills have been modified locally:
+        - Code Review Automation: modified (different from published v3)
+        - Git PR Workflow: current (matches published v2)
+
+        Would you like to fork the modified skills as your own versions?"
+
+User: "Yes, fork Code Review Automation"
+Claude: [calls fork_skill with local content]
+       "Created 'Code Review Automation (Fork)' with your modifications.
+        Your fork is now published and tracking separately."
 ```
 
-**v1.5 enhancement -- add hooks to this frontmatter:**
-```yaml
----
-everyskill_skill_id: abc-123
-everyskill_skill_name: code-review
-everyskill_category: workflow
-everyskill_hours_saved: 2
-hooks:
-  PostToolUse:
-    - matcher: ".*"
-      hooks:
-        - type: command
-          command: 'curl -s -X POST "https://acme.relay.example.com/api/track" -H "Content-Type: application/json" -H "Authorization: Bearer $EVERYSKILL_API_KEY" -d "$(echo $0 | jq -c \"{session_id: .session_id, skill_id: \\\"abc-123\\\", tool_name: .tool_name, event: \\\"post_tool_use\\\"}\")" > /dev/null 2>&1 || true'
-          async: true
-  SessionStart:
-    - hooks:
-        - type: command
-          command: 'curl -s -X POST "https://acme.relay.example.com/api/track" -H "Content-Type: application/json" -H "Authorization: Bearer $EVERYSKILL_API_KEY" -d "{\"event\": \"session_start\", \"skill_id\": \"abc-123\"}" > /dev/null 2>&1 || true'
-          once: true
----
+**Hash comparison logic:**
+1. MCP tool reads local file at `~/.claude/skills/{slug}.md`
+2. Strips frontmatter (tracking hooks, metadata) before hashing -- compare content only
+3. Computes SHA-256 of stripped content
+4. Queries DB for the skill's `publishedVersionId` -> `skill_versions.contentHash`
+5. Compares hashes: match = "current", mismatch = "modified"
+
+**Critical design decision: Strip frontmatter before comparison.** The deploy_skill tool injects tracking hooks into frontmatter. The author's original content is stored separately. If the user modifies only the skill content (not the frontmatter), that should be detected. If the frontmatter was regenerated with a new tracking URL but content is identical, that should NOT trigger a fork prompt.
+
+**Web UI integration:** The skill detail page can show a "Check for local modifications" button that calls an API endpoint. This is secondary to the MCP flow -- most users will interact with skills via Claude, not the web UI.
+
+**Confidence:** HIGH -- Content hash comparison is a well-established pattern (git, SBOM integrity verification, file integrity monitoring). The existing `contentHash` field on `skill_versions` and `hashContent()` utility provide the foundation.
+
+### 7. MCP-First Review Experience
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| `review_skill` MCP tool | Author triggers review from within Claude conversation | MEDIUM | New MCP tool wrapping `generateSkillReview()` |
+| Inline review results in conversation | Claude presents scores, suggestions, and recommended actions | LOW | Structured MCP response |
+| `submit_for_review` MCP tool | Author submits skill for admin review via MCP | LOW | New MCP tool, state transition |
+| Review status check via MCP | "What's the status of my submitted skills?" | LOW | Query skills by author + status |
+
+**Expected behavior:**
+
+```
+User: "Review my code review automation skill before I submit it"
+Claude: [calls review_skill]
+       "AI Review Results for 'Code Review Automation':
+        - Quality: 8/10 - Well-structured with clear steps
+        - Clarity: 6/10 - Some jargon could be simplified
+          Suggestion: Replace 'LGTM heuristics' with 'approval criteria'
+        - Completeness: 7/10 - Missing error handling guidance
+          Suggestion: Add a section on what to do when review comments conflict
+
+        Overall: Good quality. Address clarity suggestions before submitting.
+        Ready to submit for admin review?"
+
+User: "Submit it"
+Claude: [calls submit_for_review]
+       "Submitted for review. You'll be notified when an admin reviews it."
 ```
 
-**Confidence:** HIGH -- The deploy_skill tool already handles frontmatter injection (verified in `/home/dev/projects/relay/apps/mcp/src/tools/deploy.ts` lines 70-72). Adding hooks to this frontmatter is a string construction exercise.
+**Why MCP-first matters:** EverySkill is a tool for Claude users. The primary interaction surface is the Claude conversation, not the web UI. Review, submission, and status checks should all be available without leaving the conversation.
 
-### 6. Tracking API Endpoint
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| POST /api/track endpoint | Receives hook callbacks from user machines | MEDIUM | API route |
-| API key authentication | Validate EVERYSKILL_API_KEY from Authorization header | LOW | Existing api_keys validation |
-| Rate limiting | Prevent abuse from malformed hooks | MEDIUM | Rate limiter middleware |
-| Event schema validation | Reject malformed payloads | LOW | Zod schema |
-| Async event recording | Non-blocking DB writes | LOW | Existing trackUsage pattern |
-| Tenant scoping from API key | API key resolves to user -> tenant | LOW | Existing chain |
-
-**Expected behavior:** Claude Code hooks fire HTTP POSTs to `https://{tenant}.relay.example.com/api/track` with event data. The endpoint validates the API key, resolves the tenant, and records the event. Events are stored in `usage_events` with full attribution (userId, skillId, toolName, tenantId).
-
-**Endpoint must be:**
-- Unauthenticated path in middleware (like `/api/install-callback` and `/api/mcp`)
-- Fast (< 100ms response) -- hooks have timeouts
-- Fail-tolerant -- 5xx should not break Claude's workflow
-- Rate-limited -- protect against runaway hooks
-
-**Confidence:** HIGH -- This is a standard webhook receiver pattern. The existing `/api/install-callback` and `/api/mcp` endpoints already handle unauthenticated API requests with validation.
-
-### 7. Tenant Admin Panel
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| Tenant settings page | Configure tenant name, domains, branding | MEDIUM | Tenant table |
-| User management (list, roles) | See who belongs to tenant | MEDIUM | User-tenant relationship |
-| Admin role | Distinguish admin from regular user | LOW | Role field on user |
-| Invite by email domain | Users with matching domain auto-join | LOW | Domain config |
-| Tenant-specific analytics | Skills, usage, FTE days saved per tenant | LOW | Existing analytics + WHERE tenant_id |
-
-**Expected behavior:** Each tenant has at least one admin user. Admins access a settings page to configure tenant domains, view users, and see tenant-specific analytics. Non-admin users see the standard skill marketplace scoped to their tenant.
-
-**Role model (minimal):**
-- `admin` -- full tenant management, user management, analytics
-- `member` -- browse, deploy, contribute skills, see personal analytics
-
-**Confidence:** HIGH -- Standard B2B SaaS admin panel pattern.
-
-### 8. Production Docker Compose Deployment
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| Docker Compose with Next.js + PostgreSQL + Caddy | Single-command deployment | HIGH | Dockerfiles |
-| Caddy for automatic SSL and wildcard certs | HTTPS with zero config | MEDIUM | DNS + Caddy config |
-| PostgreSQL with persistent volume | Data survives container restarts | LOW | Docker volumes |
-| Environment variable configuration | .env file for secrets | LOW | Standard pattern |
-| Health check endpoints | Container orchestration, monitoring | LOW | API route |
-| Backup strategy for PostgreSQL | Prevent data loss | MEDIUM | pg_dump cron or similar |
-
-**Expected behavior:** `docker compose up` on a Hetzner VPS starts the full stack. Caddy auto-provisions SSL certificates (including wildcard for `*.relay.example.com`). PostgreSQL data is persisted to a Docker volume. Environment variables configure database URL, Google OAuth credentials, API keys, etc.
-
-**Confidence:** HIGH -- Docker Compose + Caddy is a well-established self-hosted deployment pattern.
-
-### 9. Deploy-Time Compliance Checking
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| Verify tracking hooks exist in deployed skills | Ensure no skill bypasses tracking | MEDIUM | Frontmatter parsing |
-| Nudge if hooks are missing or outdated | Soft enforcement, not blocking | LOW | MCP tool response |
-| Compliance status in analytics | "X% of deployed skills have tracking" | LOW | Query on skill content |
-
-**Expected behavior:** When `deploy_skill` runs, it verifies the output skill file will include tracking hooks. If a user manually removes hooks from a deployed skill and re-deploys, the system detects the absence and re-injects them. The analytics dashboard shows compliance rate.
-
-**This is soft enforcement, not hard blocking.** Users can still edit their local `.claude/skills/` files. The system cannot prevent that. But every deploy_skill invocation ensures hooks are present, and analytics show what percentage of active installs are compliant.
-
-**Confidence:** MEDIUM -- The enforcement is at deploy time only. Post-deploy modifications by users are undetectable.
+**Confidence:** HIGH -- This is a natural extension of the existing MCP tool pattern. The AI review logic already exists; wrapping it in an MCP tool is straightforward.
 
 ---
 
 ## Differentiators
 
-Features that set Relay apart. Not required for launch but high-value.
+Features that set EverySkill apart from basic prompt marketplaces. Not required for v2.0 launch but high-value.
 
-### Compliance Skill (Standalone Tracker)
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Standalone "relay-tracker" skill | A skill whose sole purpose is registering session heartbeats and providing org-wide tracking hooks | MEDIUM | Installed alongside other skills |
-| SessionStart heartbeat | Know when employees start Claude sessions, even without using a specific skill | MEDIUM | Uses `once: true` SessionStart hook |
-| Global PostToolUse tracking | Track ALL tool usage across ALL skills, not just Relay-deployed ones | HIGH | Requires project-level or user-level hook, not skill-scoped |
-
-**Why this matters:** Skill-scoped hooks only fire while that skill is active. A standalone compliance skill with `SessionStart` hooks can register heartbeats. However, for truly global tracking (every tool use, not just during skill execution), hooks must be configured at the project level (`.claude/settings.json`) or user level (`~/.claude/settings.json`), NOT in skill frontmatter.
-
-**Architecture implications:** The compliance skill registers a session heartbeat on startup. For comprehensive tool tracking, the install process would also need to add entries to `.claude/settings.json` or `~/.claude/settings.json`. This is more invasive than skill-scoped hooks and should be opt-in with clear communication to users.
-
-### Tenant Onboarding Wizard
+### Auto-Approval for High-Quality Skills
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Self-service tenant creation | New orgs can onboard without manual DB work | MEDIUM | Web form + DB provisioning |
-| Guided setup flow | Domain config, first admin, SSO test | MEDIUM | Multi-step form |
-| Sample skills seeding | New tenants start with example skills | LOW | Seed script |
+| Configurable score threshold (e.g., all categories >= 8) | Reduces admin workload for obviously good skills | LOW | Tenant setting |
+| Auto-approve bypasses admin queue | Fast-tracks quality content | LOW | State transition shortcut |
+| Audit trail notes "auto-approved by AI" | Transparency about automated decisions | LOW | Review record metadata |
 
-### Cross-Tenant Skill Marketplace
+**Why valuable:** PromptBase manually reviews every submission, which does not scale. FlowGPT has no review, which leads to quality variance. Auto-approval for high-scoring skills is the middle ground -- maintains quality without bottlenecking on admin availability.
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Shared/public skills visible across tenants | "Community" skills available to all | HIGH | Cross-tenant query logic |
-| Tenant can "import" a public skill | Copy into their namespace | MEDIUM | Fork-like mechanism |
-| Skill visibility: private (tenant-only) vs public | Control what others can see | MEDIUM | Visibility field on skills |
-
-### Zero-Downtime Deployment
+### Suggested Edits (Apply AI Suggestions)
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Rolling container updates | Deploy without dropping connections | MEDIUM | Docker Compose + Caddy health checks |
-| Database migrations without downtime | Schema changes during operation | HIGH | Careful migration strategy |
-| Blue-green deployment option | Instant rollback capability | HIGH | Requires more infrastructure |
+| "Apply suggestion" button for AI review suggestions | One-click improvement, like GitHub suggested changes | MEDIUM | Edit + re-save |
+| Inline diff preview before applying | Author sees exactly what changes | MEDIUM | Diff rendering |
+| Apply suggested description | One-click to adopt AI's improved description | LOW | Field update |
 
-### Tailscale Integration
+**Why valuable:** GitHub's "Apply suggestion" feature on PR reviews dramatically improved review UX. Authors can adopt improvements without manually editing. This is especially powerful for clarity/completeness suggestions where the AI can generate improved text.
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Tailscale sidecar for private access | Internal users access via Tailscale network | LOW | Docker sidecar container |
-| Dual access: public domain + Tailscale | External (HTTPS) and internal (Tailscale) paths | MEDIUM | Caddy + Tailscale config |
-| MagicDNS for internal hostname | relay.ts.net as alternative to public domain | LOW | Tailscale config |
-
-### Monitoring and Alerting
+### Skill Compatibility Check
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Health check dashboard | At-a-glance system status | LOW | /api/health endpoint |
-| Error rate monitoring | Detect issues before users report them | MEDIUM | Log aggregation |
-| Usage anomaly detection | Detect unusual patterns (abuse, outage) | HIGH | Statistical analysis |
-| Uptime monitoring | External ping service | LOW | UptimeRobot or similar |
+| Check if skill's required tools are available | "This skill uses Bash and Write tools -- both available" | MEDIUM | Tool capability introspection |
+| Warn about unsupported features | "This skill requires MCP server X which is not installed" | MEDIUM | Dependency declaration |
+| Suggest prerequisites | "Install X before using this skill" | LOW | Response metadata |
+
+### Trending and Personalized Recommendations
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| "Trending this week" in MCP responses | Surface popular new skills | LOW | Query by recent usage growth |
+| "Based on your usage" recommendations | Personalized from user's install/usage history | HIGH | Collaborative filtering |
+| "Similar to skills you use" | Content-based filtering via embeddings | MEDIUM | Existing pgvector similarity |
+
+### Review Analytics Dashboard
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Average time to review | Track admin responsiveness | LOW | Timestamp deltas |
+| Approval/rejection rates | Quality trend monitoring | LOW | Status counts |
+| Common rejection reasons | Help authors improve upfront | MEDIUM | Text analysis of reviewer notes |
+| AI score distribution | Understand overall skill quality | LOW | Aggregation query |
 
 ---
 
 ## Anti-Features
 
-Features to explicitly NOT build. Common mistakes in this domain.
+Features to explicitly NOT build. Tempting but counterproductive.
 
 | Anti-Feature | Why Tempting | Why Problematic | Do Instead |
 |--------------|-------------|-----------------|------------|
-| **PostgreSQL Row-Level Security (RLS)** | "Defense in depth" | Adds significant complexity to Drizzle ORM queries, debugging becomes harder, RLS doesn't apply to superusers/table owners, and the app already scopes queries by tenant_id. At Relay's scale (<1000 users), RLS is overengineering. | Application-level tenant_id filtering in all queries. Add integration tests that verify no cross-tenant data leakage. |
-| **Separate database per tenant** | "Complete isolation" | Massive operational complexity -- migrations must run N times, connection pooling per DB, backup management multiplied. Only justified at enterprise scale with regulatory requirements. | Shared database with tenant_id column. Single migration path, single connection pool. |
-| **Blocking hooks (non-async tracking)** | "Guaranteed delivery" | Sync hooks block Claude's agent loop. If the tracking endpoint is slow or down, the user's entire Claude session freezes. Claude Code has hook timeouts (default 600s for command hooks) but even a 2-second delay per tool call degrades UX severely. | Always use `async: true` for tracking hooks. Accept eventual consistency -- a missed tracking event is far less costly than a blocked Claude session. |
-| **Global user-level hooks via ~/.claude/settings.json** | "Track everything everywhere" | Modifying user-level settings is invasive, affects ALL projects (not just Relay), and users may legitimately not want org tracking in personal projects. Creates trust issues. | Skill-scoped hooks (in SKILL.md frontmatter) + project-level hooks (in .claude/settings.json for opted-in projects). Transparent, scoped, revocable. |
-| **Mandatory hook compliance** | "100% tracking coverage" | Users can always edit local files. Hard enforcement is impossible and attempting it creates adversarial dynamics. Detected tampering creates a surveillance culture. | Soft enforcement: inject hooks on deploy, show compliance rate in analytics, make tracking VALUE visible ("your skills saved X days") so users want to be tracked. |
-| **Complex RBAC (roles beyond admin/member)** | "Enterprise needs granular permissions" | At Relay's current scale, complex RBAC is YAGNI. Two roles (admin, member) cover all use cases. Adding editor, viewer, contributor, etc. creates confusion and maintenance burden. | Two roles: admin and member. Add granularity later if proven needed. |
-| **Custom tenant themes/branding** | "White-label experience" | Significant CSS complexity, testing burden (every page in every theme), and low value for an internal tool. | Tenant name in header. Maybe a logo. That's it. |
-| **PreToolUse hooks for tracking** | "Track intent, not just completion" | PreToolUse fires before the tool runs. If the tool fails or is blocked, you've tracked a non-event. Also, PreToolUse hooks can block/modify tool calls, introducing risk. | PostToolUse only -- tracks actual completed tool executions. |
-| **Storing raw hook payloads** | "We might need the full context later" | Hook input JSON includes `tool_input` and `tool_response` which can contain file contents, code, and sensitive data. Storing this is a privacy/security liability. | Store only: session_id, skill_id, tool_name, timestamp, user_id. Discard tool_input and tool_response. |
-| **Real-time WebSocket tracking dashboard** | "Live usage feed" | Overkill for an internal tool. SSR with periodic refresh is sufficient. WebSocket adds connection management complexity and scaling concerns. | Server Components with revalidation. Refresh on navigation. |
-| **Multi-region deployment** | "Low latency globally" | Relay is an internal tool, likely single-region. Multi-region adds database replication complexity (write conflicts, eventual consistency) for minimal benefit. | Single Hetzner VPS in the region closest to the majority of users. |
+| **Mandatory review for all edits** | "Quality control on every change" | Creates friction for minor typo fixes. Authors will avoid updating skills if every edit requires re-review. Updates to published skills should only trigger re-review if content changes substantially (hash comparison). | Re-review only when content hash changes. Metadata-only edits (tags, description) skip review. |
+| **Multiple reviewer approval** | "More eyes = better quality" | This is an internal tool, not a regulatory pipeline. Requiring 2+ approvers creates bottlenecks. One admin approval is sufficient. | Single admin approval. Add optional "second opinion" for disputed cases later if needed. |
+| **Real-time collaborative editing during review** | "Google Docs-style review" | Massive frontend complexity (CRDT, OT, WebSocket). Skills are markdown files -- not documents. The edit-submit-review cycle is sufficient. | Author edits locally, resubmits. Reviewer adds notes. Async workflow. |
+| **AI-generated skill improvements** | "AI should auto-fix the skill" | Rewriting author content without consent is overstepping. AI should suggest, not modify. Auto-applying changes violates author ownership. | AI suggests specific improvements. Author chooses what to apply. "Apply suggestion" button for one-click adoption. |
+| **Blocking deploy of unreviewed skills** | "Only approved skills should be installable" | Overly restrictive for an internal tool. Authors should be able to deploy their own drafts for personal testing. Only the "published" (visible to others) status should require review. | Draft skills deployable by author only. Published status requires review approval. |
+| **Complex permission model for reviewers** | "Separate reviewer role from admin" | YAGNI at current scale. Admins are reviewers. Adding a separate reviewer role means role management UI, permission checks, etc. | Admins review skills. If the team grows, add a reviewer role later. |
+| **Webhook notifications to external systems** | "Post to Slack when a skill is approved" | Out of scope for v2.0. Internal notification system is sufficient. Webhook integrations add authentication complexity, retry logic, and failure handling. | In-app + email notifications. Add Slack integration in a future milestone. |
+| **Full-text search in MCP tool** | "Use PostgreSQL websearch_to_tsquery in MCP" | The MCP app runs standalone without access to the web app's search infrastructure. Full-text search requires the database connection and tsvector index. | Use ILIKE search for MCP (already works), add semantic search via embedding endpoint. The web UI already has full-text search. |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[Tenant Isolation] (#1)
-    |--requires--> Schema migration (add tenant_id columns)
-    |--requires--> Tenant table (new)
-    |--requires--> User-tenant mapping
-    |--blocks----> Everything else (all features need tenant context)
+[Review State Machine] (#1)
+    |--modifies--> skills table (add status column)
+    |--modifies--> create_skill MCP tool (default to draft, not auto-publish)
+    |--blocks----> Admin Review Queue (#3)
+    |--blocks----> Review Notifications (#4)
+    |--blocks----> MCP Review Tools (#7)
 
-[Subdomain Routing] (#2)
-    |--requires--> [Tenant Isolation] (#1)
-    |--requires--> Wildcard DNS + SSL
-    |--modifies--> Next.js middleware (existing)
-    |--enables---> Per-tenant URLs
+[Auto AI Review on Submit] (#2)
+    |--requires--> [Review State Machine] (#1)
+    |--reuses----> generateSkillReview() (existing)
+    |--reuses----> skill_reviews table (existing)
+    |--modifies--> skill_reviews to track review-pipeline context (not just advisory)
 
-[Domain SSO Mapping] (#3)
-    |--requires--> [Tenant Isolation] (#1)
-    |--modifies--> Auth.js config (existing)
-    |--modifies--> signIn callback logic
+[Admin Review Queue] (#3)
+    |--requires--> [Review State Machine] (#1)
+    |--requires--> [Auto AI Review] (#2) for AI scores display
+    |--modifies--> admin panel (new /admin/reviews page)
+    |--reuses----> skill_versions for diff view
+    |--reuses----> isAdmin() authorization (existing)
 
-[Claude Code Hooks Tracking] (#4)
-    |--requires--> [Tracking Endpoint] (#6)
-    |--requires--> [Auto-Injection] (#5)
-    |--independent of--> [Tenant Isolation] (hooks work without tenancy)
+[Review Notifications] (#4)
+    |--requires--> [Review State Machine] (#1)
+    |--reuses----> notifications table (existing, add new types)
+    |--reuses----> notification-preferences (existing)
+    |--reuses----> email dispatch (existing)
 
-[Auto-Injection of Hooks] (#5)
-    |--modifies--> deploy_skill tool (existing)
-    |--requires--> Tracking URL (from tenant config or env)
-    |--requires--> Hook frontmatter format knowledge
+[Conversational Discovery] (#5)
+    |--independent of--> Review Pipeline (#1-4)
+    |--reuses----> skill_embeddings + pgvector (existing)
+    |--reuses----> search_skills MCP tool (existing, enhanced)
+    |--creates---> get_skill_details MCP tool (new)
+    |--creates---> recommend_skills MCP tool (new)
+    |--modifies--> deploy_skill response (add usage guidance)
 
-[Tracking Endpoint] (#6)
-    |--creates---> POST /api/track route (new)
-    |--reuses----> validateApiKey (existing)
-    |--extends---> usage_events table (add hook-sourced events)
-    |--requires--> [Tenant Isolation] (#1) for tenant scoping
+[Fork-on-Modify Detection] (#6)
+    |--independent of--> Review Pipeline (#1-4)
+    |--independent of--> Conversational Discovery (#5)
+    |--reuses----> skill_versions.contentHash (existing)
+    |--reuses----> hashContent() utility (existing)
+    |--reuses----> forkSkill() server action (existing)
+    |--creates---> check_skill_status MCP tool (new)
+    |--creates---> fork_skill MCP tool (new, wraps existing forkSkill)
 
-[Tenant Admin Panel] (#7)
-    |--requires--> [Tenant Isolation] (#1)
-    |--requires--> Admin role on users
-    |--extends---> Existing analytics with tenant filter
-
-[Docker Compose Deployment] (#8)
-    |--independent of--> All feature work
-    |--requires--> Dockerfiles for web + MCP + PostgreSQL
-    |--requires--> Caddy config for SSL + reverse proxy
-    |--enables---> [Subdomain Routing] (#2) via Caddy wildcard
-
-[Compliance Checking] (#9)
-    |--requires--> [Auto-Injection] (#5)
-    |--modifies--> deploy_skill response (nudge message)
+[MCP Review Tools] (#7)
+    |--requires--> [Review State Machine] (#1)
+    |--reuses----> generateSkillReview() (existing)
+    |--creates---> review_skill MCP tool (new)
+    |--creates---> submit_for_review MCP tool (new)
+    |--creates---> check_review_status MCP tool (new)
 ```
 
 ### Critical Path
 
 ```
-Phase 1: Infrastructure
-    Docker Compose + Caddy + PostgreSQL
-    (Independent, can start immediately)
+Phase 1: Review Pipeline Foundation
+    Status field migration + state machine logic
+    Auto AI review on submit
+    (Must be first -- all review features depend on status field)
 
-Phase 2: Multi-Tenancy Foundation
-    Tenant table + tenant_id migration + scoped queries
-    Subdomain routing in middleware
-    Domain-based SSO mapping
-    Admin role + tenant admin panel
-    (Must be sequential, blocks all tenant-aware features)
+Phase 2: Admin Review UX
+    Admin review queue page
+    Diff view (version comparison)
+    Approve/reject/request-changes actions
+    Review notifications (all types)
+    (Requires Phase 1 state machine)
 
-Phase 3: Reliable Tracking
-    POST /api/track endpoint
-    Hook auto-injection in deploy_skill
-    Compliance checking
-    (Can partially parallel with Phase 2 if endpoint is tenant-agnostic initially)
+Phase 3: Conversational Discovery
+    get_skill_details MCP tool
+    recommend_skills MCP tool (semantic search in MCP)
+    Enhanced search_skills with semantic mode
+    (Independent of Phase 1-2, can partially parallel)
 
-Phase 4: Integration & Polish
-    Tenant-specific analytics
-    Compliance dashboard
-    Deploy-time verification
+Phase 4: Fork-on-Modify Detection
+    check_skill_status MCP tool
+    fork_skill MCP tool
+    Web UI drift indicator
+    (Independent of Phase 1-3, can partially parallel)
+
+Phase 5: MCP Review Integration
+    review_skill MCP tool
+    submit_for_review MCP tool
+    check_review_status MCP tool
+    (Requires Phase 1 state machine, benefits from Phase 2 admin UX)
 ```
 
 ---
 
 ## MVP Recommendation
 
-### Must Have for v1.5
+### Must Have for v2.0
 
-**Docker Compose Deployment -- Build First (independent):**
-- [ ] Dockerfile for Next.js web app
-- [ ] Dockerfile for MCP server (if separate)
-- [ ] docker-compose.yml with PostgreSQL, web, Caddy
-- [ ] Caddy config with wildcard SSL for *.relay.example.com
-- [ ] .env template for all configuration
-- [ ] Health check endpoint (GET /api/health)
-- [ ] PostgreSQL backup script (pg_dump cron)
+**Review Pipeline (build first -- foundation for everything):**
+- [ ] `status` column on `skills` table: draft | pending_review | in_review | changes_requested | approved | rejected | published
+- [ ] State transition functions with authorization checks (who can transition to what)
+- [ ] `create_skill` MCP tool defaults to `draft` status instead of auto-publishing
+- [ ] Web UI "Submit for Review" button on draft skills
+- [ ] Auto-trigger `generateSkillReview()` on submit-for-review
+- [ ] Transition to `in_review` when AI review completes
 
-**Tenant Isolation -- Build Second (foundation):**
-- [ ] `tenants` table (id, name, slug, domains, createdAt)
-- [ ] `tenant_id` column on: skills, skill_versions, skill_reviews, skill_embeddings, ratings, usage_events, api_keys
-- [ ] Migration: create tenant for existing data, backfill tenant_id
-- [ ] `role` field on users (admin/member)
-- [ ] Session callback includes tenantId resolved from user email domain
-- [ ] All service functions accept and filter by tenantId
-- [ ] Integration tests: verify cross-tenant data isolation
+**Admin Review Queue (build second -- enables admin workflow):**
+- [ ] `/admin/reviews` page with queue of `in_review` skills
+- [ ] Skill diff view (compare submitted version to previous published version)
+- [ ] Approve / Request Changes / Reject action buttons
+- [ ] Reviewer notes text field
+- [ ] Review decision stored with audit trail (who, when, action, notes)
 
-**Subdomain Routing -- Build with Tenancy:**
-- [ ] Middleware extracts subdomain from Host header
-- [ ] Subdomain maps to tenant via DB lookup (cached)
-- [ ] Tenant context available in all server actions
-- [ ] Bare domain redirects to login/landing
+**Review Notifications (build with admin queue):**
+- [ ] Notification types: `skill_review_submitted`, `skill_approved`, `skill_changes_requested`, `skill_rejected`
+- [ ] Notify author on all review decisions
+- [ ] Notify admins when new skill enters `in_review`
+- [ ] Email notifications for review decisions (respecting preferences)
 
-**Domain SSO Mapping -- Build with Tenancy:**
-- [ ] Tenant domains config (array of allowed email domains)
-- [ ] signIn callback: match email domain to tenant
-- [ ] Auto-provision user to correct tenant on first login
-- [ ] Reject login if no tenant matches email domain
+**Conversational Discovery (build third -- independent track):**
+- [ ] `get_skill_details` MCP tool (full metadata: scores, author, usage, similar skills)
+- [ ] `recommend_skills` MCP tool (semantic search via embedding endpoint)
+- [ ] Enhanced `search_skills` to return richer metadata (ratings, quality tier, install count)
+- [ ] Usage guidance text in `deploy_skill` response
 
-**Tracking Endpoint -- Build Third:**
-- [ ] POST /api/track route (unauthenticated in middleware)
-- [ ] Zod schema for event payload (session_id, skill_id, tool_name, event_type)
-- [ ] API key validation from Authorization header
-- [ ] Rate limiting (100 req/min per API key)
-- [ ] Record event to usage_events with tenant_id
+**Fork-on-Modify Detection (build fourth -- independent track):**
+- [ ] `check_skill_status` MCP tool (local hash vs DB hash comparison)
+- [ ] `fork_skill` MCP tool (create fork from local modified content)
+- [ ] Frontmatter stripping before hash comparison (ignore tracking hooks)
 
-**Hook Auto-Injection -- Build with Tracking:**
-- [ ] Modify deploy_skill to inject hooks into YAML frontmatter
-- [ ] PostToolUse hook: async curl to /api/track with skill_id, session_id, tool_name
-- [ ] SessionStart hook: once-per-session heartbeat
-- [ ] Hooks use $EVERYSKILL_API_KEY env var for authentication
-- [ ] Tracking URL derived from tenant subdomain
+### Defer to Post-v2.0
 
-**Tenant Admin Panel -- Build Last:**
-- [ ] Admin-only settings page
-- [ ] Tenant configuration (name, domains)
-- [ ] User list for tenant
-- [ ] Tenant-scoped analytics (reuse existing analytics with WHERE tenant_id)
-
-### Defer to Post-v1.5
-
-- [ ] Cross-tenant skill marketplace (shared/public skills)
-- [ ] Tenant onboarding wizard (self-service creation)
-- [ ] Zero-downtime deployments (rolling updates)
-- [ ] Monitoring/alerting stack
-- [ ] Custom tenant branding
-- [ ] Compliance skill (standalone global tracker)
-- [ ] Weekly digest emails
+- [ ] Auto-approval for high-scoring skills (nice-to-have, not blocking)
+- [ ] Suggested edits / "Apply suggestion" UI (valuable but complex)
+- [ ] Skill compatibility checks (requires tool introspection)
+- [ ] Personalized recommendations (requires usage history analysis)
+- [ ] Review analytics dashboard (valuable but not blocking)
+- [ ] Web UI drift indicator (MCP-first is sufficient for v2.0)
+- [ ] Bulk approve actions (optimize later based on queue volume)
+- [ ] MCP review tools -- review_skill, submit_for_review, check_review_status (defer to after admin queue is working)
 
 ---
 
@@ -500,136 +475,121 @@ Phase 4: Integration & Polish
 
 | Feature | User Value | Implementation Cost | Risk | Priority |
 |---------|------------|---------------------|------|----------|
-| Docker Compose deployment | HIGH (enables production) | HIGH | LOW | P0 |
-| Tenant isolation (tenant_id) | HIGH (enables multi-tenancy) | HIGH | MEDIUM | P0 |
-| Subdomain routing | HIGH (user-facing tenancy) | MEDIUM | LOW | P0 |
-| Domain SSO mapping | HIGH (seamless login) | MEDIUM | LOW | P0 |
-| POST /api/track endpoint | HIGH (enables hook tracking) | MEDIUM | LOW | P0 |
-| Hook auto-injection | HIGH (deterministic tracking) | MEDIUM | MEDIUM | P0 |
-| Tenant admin panel | MEDIUM (admin operations) | MEDIUM | LOW | P1 |
-| Compliance checking | MEDIUM (tracking visibility) | LOW | LOW | P1 |
-| Health checks | MEDIUM (operational) | LOW | LOW | P1 |
-| PostgreSQL backups | HIGH (data safety) | LOW | LOW | P1 |
-| Tailscale integration | MEDIUM (internal access) | LOW | LOW | P2 |
-| Compliance skill (standalone) | MEDIUM (global tracking) | MEDIUM | MEDIUM | P2 |
-| Zero-downtime deploys | LOW (nice to have) | HIGH | MEDIUM | P3 |
-| Cross-tenant marketplace | LOW (future feature) | HIGH | HIGH | P3 |
+| Review state machine (status field + transitions) | HIGH (enables quality control) | MEDIUM | LOW | P0 |
+| Auto AI review on submit | HIGH (immediate quality feedback) | LOW | LOW | P0 |
+| Admin review queue page | HIGH (admin workflow) | MEDIUM | LOW | P0 |
+| Skill diff view | HIGH (review quality) | HIGH | MEDIUM | P0 |
+| Approve/reject/request-changes actions | HIGH (admin workflow) | MEDIUM | LOW | P0 |
+| Review notifications | MEDIUM (author awareness) | LOW | LOW | P0 |
+| get_skill_details MCP tool | HIGH (discovery UX) | LOW | LOW | P0 |
+| recommend_skills MCP tool | HIGH (discovery value) | MEDIUM | MEDIUM | P0 |
+| check_skill_status MCP tool | HIGH (fork detection) | MEDIUM | LOW | P0 |
+| fork_skill MCP tool | MEDIUM (fork UX) | MEDIUM | LOW | P0 |
+| Reviewer notes | MEDIUM (feedback quality) | LOW | LOW | P1 |
+| Review history audit trail | MEDIUM (accountability) | LOW | LOW | P1 |
+| Enhanced search_skills metadata | MEDIUM (discovery quality) | LOW | LOW | P1 |
+| Auto-approval threshold | MEDIUM (admin efficiency) | LOW | LOW | P2 |
+| "Apply suggestion" UI | MEDIUM (author UX) | HIGH | MEDIUM | P2 |
+| MCP review/submit tools | MEDIUM (MCP-first UX) | MEDIUM | LOW | P2 |
+| Web UI drift indicator | LOW (web secondary to MCP) | MEDIUM | LOW | P3 |
+| Personalized recommendations | LOW (requires usage volume) | HIGH | HIGH | P3 |
 
 ---
 
-## Claude Code Hooks -- Technical Reference
+## Technical Reference: Review Pipeline Patterns
 
-This section documents verified hook capabilities relevant to Relay's tracking design.
+### State Transition Authorization Matrix
 
-### Hook Event Lifecycle
+| Current State | Action | Who Can Do It | Next State |
+|--------------|--------|---------------|------------|
+| draft | submit_for_review | author | pending_review |
+| pending_review | (auto: AI review completes) | system | in_review |
+| in_review | approve | admin | approved/published |
+| in_review | request_changes | admin | changes_requested |
+| in_review | reject | admin | rejected |
+| changes_requested | submit_for_review | author | pending_review |
+| rejected | submit_for_review | author | pending_review |
+| approved | publish | author or admin | published |
+| published | unpublish | author or admin | draft |
+
+### Review Quality Scoring (Existing, Reused)
+
+The existing AI review produces three scores (1-10):
+- **Quality:** Does it work well and produce good results?
+- **Clarity:** Is it clear, well-written, and easy to reuse?
+- **Completeness:** Is it thorough and self-contained?
+
+These scores inform the admin's decision but do not block any action. The admin can approve a low-scoring skill or reject a high-scoring one based on policy considerations.
+
+### Content Hash Comparison for Fork Detection
 
 ```
-SessionStart (once per session)
-    -> UserPromptSubmit
-        -> PreToolUse (before each tool)
-            -> [Tool Executes]
-        -> PostToolUse (after success) / PostToolUseFailure (after failure)
-    -> Stop (when Claude finishes)
-SessionEnd (when session terminates)
+Local file: ~/.claude/skills/{slug}.md
+    |
+    v
+Strip YAML frontmatter (everything between --- markers)
+    |
+    v
+SHA-256 hash of remaining content
+    |
+    v
+Compare to skill_versions.contentHash WHERE id = skills.publishedVersionId
+    |
+    v
+Match? -> "current" (no drift)
+Mismatch? -> "modified" (drift detected, prompt fork)
 ```
 
-### Hook Configuration in Skill Frontmatter
-
-Source: [code.claude.com/docs/en/hooks](https://code.claude.com/docs/en/hooks), [code.claude.com/docs/en/skills](https://code.claude.com/docs/en/skills)
-
-```yaml
----
-name: my-skill
-description: What this skill does
-hooks:
-  PostToolUse:
-    - matcher: ".*"           # Regex against tool_name
-      hooks:
-        - type: command       # Shell command
-          command: "your-script.sh"
-          async: true         # Non-blocking
-          timeout: 30         # Seconds
-  SessionStart:
-    - hooks:
-        - type: command
-          command: "init.sh"
-          once: true          # Only fires once per session (skills only, NOT agents)
----
-```
-
-### PostToolUse Input Schema (what the hook script receives on stdin)
-
-```json
-{
-  "session_id": "abc123",
-  "transcript_path": "/home/user/.claude/projects/.../transcript.jsonl",
-  "cwd": "/home/user/my-project",
-  "permission_mode": "default",
-  "hook_event_name": "PostToolUse",
-  "tool_name": "Bash",
-  "tool_input": {
-    "command": "npm test"
-  },
-  "tool_response": {
-    "stdout": "all tests passed"
-  },
-  "tool_use_id": "toolu_01ABC123..."
-}
-```
-
-### Environment Variables Available in Hooks
-
-| Variable | Available In | Description |
-|----------|--------------|-------------|
-| `$CLAUDE_PROJECT_DIR` | All hooks | Project root directory |
-| `$CLAUDE_SESSION_ID` | Skill content (not hooks directly) | Session ID for correlation |
-| `$CLAUDE_ENV_FILE` | SessionStart only | Path to write env vars |
-| `$CLAUDE_CODE_REMOTE` | All hooks | "true" if remote web environment |
-
-### Limitations Relevant to Relay
-
-1. **Skill-scoped hooks are lifecycle-bound:** Hooks in SKILL.md only fire while that skill is active in Claude's context. Once the skill is no longer loaded, its hooks stop firing.
-2. **No guaranteed delivery:** Async hooks can fail silently. Network errors, endpoint downtime, or hook timeouts mean some events will be lost. Design for eventual consistency.
-3. **No hook input modification for PostToolUse:** PostToolUse cannot modify or block the tool result (tool already ran). It can provide feedback to Claude via `decision: "block"` but cannot undo the action.
-4. **Hook snapshots at session start:** Hook configurations are captured at session startup. Mid-session changes to hooks require a new session to take effect.
-5. **Windows compatibility:** SessionStart hooks have known issues on Windows (hanging during initialization). Source: [GitHub issue #9542](https://github.com/anthropics/claude-code/issues/9542). Test Windows behavior.
+**Important:** The `contentHash` in `skill_versions` is computed from the content stored in R2, which may or may not include frontmatter. The fork detection tool must normalize both sides (strip frontmatter from both local and DB content) before comparison. If DB stores content without frontmatter, only strip from local.
 
 ---
 
 ## Sources
 
-### Claude Code Hooks (HIGH confidence)
-- [Hooks Reference -- Official Docs](https://code.claude.com/docs/en/hooks) -- Complete hook event reference, configuration schema, input/output formats
-- [Skills Documentation -- Official Docs](https://code.claude.com/docs/en/skills) -- Skill frontmatter fields including hooks
-- [GitHub: claude-code-hooks-mastery](https://github.com/disler/claude-code-hooks-mastery) -- Community examples
-- [GitHub: claude-code-hooks-multi-agent-observability](https://github.com/disler/claude-code-hooks-multi-agent-observability) -- PostToolUse tracking to HTTP endpoint example
-- [DataCamp: Claude Code Hooks Guide](https://www.datacamp.com/tutorial/claude-code-hooks) -- Practical examples
-- [GitHub Issue #17688: Skill-scoped hooks in plugins](https://github.com/anthropics/claude-code/issues/17688) -- Known limitation with plugin hooks
+### Review Pipeline Patterns (HIGH confidence)
+- [Apple App Store: App and Submission Statuses](https://developer.apple.com/help/app-store-connect/reference/app-and-submission-statuses) -- Complete state reference
+- [GitHub: About Pull Request Reviews](https://docs.github.com/articles/about-pull-request-reviews) -- Three-action review model
+- [GitHub PR Reviews: Comment vs Approve vs Request Changes](https://dev.to/msnmongare/github-pr-reviews-comment-vs-approve-vs-request-changes-when-to-use-each-1ph2) -- When to use each action
+- [Approval Workflow Best Practices](https://zipboard.co/blog/collaboration/content-review-and-approval-best-practices-tools-automation/) -- Review pipeline design
 
-### Multi-Tenancy (HIGH confidence)
-- [Next.js Multi-tenant Guide](https://nextjs.org/docs/app/guides/multi-tenant) -- Official Next.js documentation
-- [Vercel Platforms Starter](https://github.com/vercel/platforms) -- Reference implementation
-- [WorkOS: Developer's Guide to Multi-Tenant Architecture](https://workos.com/blog/developers-guide-saas-multi-tenant-architecture) -- Comprehensive patterns
-- [Frontegg: SaaS Multitenancy](https://frontegg.com/blog/saas-multitenancy) -- Components and best practices
-- [AWS: Multi-tenant data isolation with PostgreSQL RLS](https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/) -- RLS patterns (decided against for Relay)
-- [Crunchy Data: Row Level Security for Tenants](https://www.crunchydata.com/blog/row-level-security-for-tenants-in-postgres) -- RLS tradeoffs
-- [Nile: Shipping multi-tenant SaaS with RLS](https://www.thenile.dev/blog/multi-tenant-rls) -- Practical RLS implementation
+### Content Moderation Queues (HIGH confidence)
+- [Stream: Reviewing Content](https://getstream.io/moderation/docs/dashboard/reviewing-content/) -- Dashboard design patterns
+- [Reddit: Moderation Queue](https://support.reddithelp.com/hc/en-us/articles/15484440494356-Moderation-Queue) -- Queue management
+- [Higher Logic: Moderation Queue](https://support.higherlogic.com/hc/en-us/articles/360032694632-Manage-Your-Site-s-Moderation-Queue) -- Bulk actions, rejection notifications
 
-### Production Deployment (MEDIUM confidence)
-- [Caddy documentation](https://caddyserver.com/docs/) -- Auto-SSL, wildcard certificates, reverse proxy
-- Docker Compose documentation -- Multi-container orchestration
+### Prompt Marketplace Quality (MEDIUM confidence)
+- [PromptBase and FlowGPT Review](https://www.godofprompt.ai/blog/critical-review-popular-prompt-marketplace-platforms) -- Quality control comparison
+- [FlowGPT Review](https://skywork.ai/blog/flowgpt-review-2025-community-prompt-multimodel-chat/) -- Community-driven vs curated approaches
+- [Promptfoo: LLM Rubric](https://www.promptfoo.dev/docs/configuration/expected-outputs/model-graded/llm-rubric/) -- Automated quality scoring
+
+### Conversational Discovery (MEDIUM confidence)
+- [Claude Skills Explained](https://claude.com/blog/skills-explained) -- Skill discovery and loading mechanism
+- [Smithery: MCP Server Marketplace](https://smithery.ai/) -- MCP tool discovery patterns
+- [Glean: AI-Based Enterprise Search](https://www.glean.com/blog/the-definitive-guide-to-ai-based-enterprise-search-for-2025) -- Semantic search + conversational interfaces
+
+### Fork Detection (HIGH confidence)
+- [File Hashing for Integrity](https://www.sasa-software.com/learning/what-is-file-hashing-in-cybersecurity/) -- SHA-256 comparison patterns
+- [Git Divergence Detection](https://labex.io/tutorials/git-how-to-check-if-a-git-branch-has-diverged-from-remote-560038) -- Divergence detection patterns
+- [ENISA: SBOM Landscape Analysis](https://www.enisa.europa.eu/sites/default/files/2025-12/SBOM%20Analysis%20-%20Towards%20an%20Implementation%20Guide_v1.20-Published.pdf) -- Content-addressable references via hashing
 
 ### Existing Codebase (HIGH confidence)
-- `/home/dev/projects/relay/apps/mcp/src/tools/deploy.ts` -- Current frontmatter injection (lines 70-72)
-- `/home/dev/projects/relay/apps/mcp/src/tools/log-usage.ts` -- Honor-system tracking (being replaced)
-- `/home/dev/projects/relay/apps/mcp/src/tracking/events.ts` -- trackUsage function
-- `/home/dev/projects/relay/apps/mcp/src/auth.ts` -- API key resolution to userId
-- `/home/dev/projects/relay/packages/db/src/schema/usage-events.ts` -- Usage events schema
-- `/home/dev/projects/relay/packages/db/src/schema/skills.ts` -- Skills schema (no tenant_id yet)
-- `/home/dev/projects/relay/apps/web/middleware.ts` -- Auth middleware (needs subdomain logic)
+- `/home/dev/projects/relay/packages/db/src/schema/skills.ts` -- Skills schema with publishedVersionId, draftVersionId, forkedFromId
+- `/home/dev/projects/relay/packages/db/src/schema/skill-reviews.ts` -- AI review schema with categories, contentHash
+- `/home/dev/projects/relay/packages/db/src/schema/skill-versions.ts` -- Version records with contentHash
+- `/home/dev/projects/relay/packages/db/src/schema/skill-embeddings.ts` -- pgvector embeddings (768-dim, HNSW index)
+- `/home/dev/projects/relay/packages/db/src/schema/notifications.ts` -- Notification types and preferences
+- `/home/dev/projects/relay/apps/web/lib/ai-review.ts` -- generateSkillReview() with structured output
+- `/home/dev/projects/relay/apps/web/lib/content-hash.ts` -- hashContent() SHA-256 utility
+- `/home/dev/projects/relay/apps/web/lib/search-skills.ts` -- Full-text + ILIKE search with quality scoring
+- `/home/dev/projects/relay/apps/web/app/actions/ai-review.ts` -- On-demand AI review action
+- `/home/dev/projects/relay/apps/web/app/actions/fork-skill.ts` -- Fork skill action with embedding generation
+- `/home/dev/projects/relay/apps/mcp/src/tools/search.ts` -- MCP search tool (ILIKE only)
+- `/home/dev/projects/relay/apps/mcp/src/tools/create.ts` -- MCP create tool (auto-publishes, needs gating)
+- `/home/dev/projects/relay/apps/mcp/src/tools/deploy.ts` -- MCP deploy with frontmatter injection
+- `/home/dev/projects/relay/packages/db/src/services/skill-embeddings.ts` -- Embedding upsert/query
 
 ---
 
-*Feature research for: Relay v1.5 multi-tenancy, deterministic usage tracking, production deployment*
-*Researched: 2026-02-07*
-*Confidence: HIGH for multi-tenancy and Claude Code hooks (well-established patterns, official docs verified), MEDIUM for production deployment specifics (standard patterns, project-specific config needed)*
+*Feature research for: EverySkill v2.0 Skill Ecosystem -- Review Pipeline, Conversational Discovery, Fork-on-Modify Detection*
+*Researched: 2026-02-08*
+*Confidence: HIGH for review pipeline and fork detection (well-established patterns, existing codebase primitives), MEDIUM for conversational discovery (semantic search quality depends on embedding coverage and MCP-to-embedding service bridge)*

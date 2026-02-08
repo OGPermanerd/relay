@@ -1,628 +1,410 @@
-# Domain Pitfalls: Multi-Tenancy, Production Deployment, and Hook-Based Tracking
+# Domain Pitfalls: Review Pipeline, Conversational Discovery, Fork-on-Modify Detection
 
-**Domain:** Retrofitting multi-tenancy, Docker Compose production deployment, and Claude Code hooks into an existing single-tenant Next.js 16 + Drizzle ORM + PostgreSQL skill marketplace
-**Researched:** 2026-02-07 (v1.5 milestone)
-**Overall confidence:** HIGH (based on codebase audit + verified external sources)
+**Domain:** Adding review/approval pipeline, conversational AI discovery, and fork modification detection to an existing instant-publish skill marketplace
+**Project:** EverySkill v2.0
+**Researched:** 2026-02-08
+**Overall confidence:** HIGH (derived from direct codebase analysis of ~14,700 LOC across 33 shipped phases)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause data leakage, security breaches, or require rewrites.
+Mistakes that cause data corruption, broken user experience, or require rewrites.
 
 ---
 
-### Pitfall 1: Cross-Tenant Data Leakage via Missing WHERE Clauses
+### Pitfall 1: Existing Skills Have No Status Column -- Query Migration Is the Real Risk
 
-**What goes wrong:** After adding a `tenantId` column to tables, developers add tenant filtering to some queries but miss others. The existing codebase has **30+ files** with direct database queries (via `db.select`, `db.execute`, `db.query`, raw SQL CTEs) that would all need tenant-scoping. A single missed query leaks Tenant A's skills, usage events, or analytics to Tenant B.
+**What goes wrong:** The `skills` table has no `status` column. Every skill is implicitly "published." The only publish signal is `publishedVersionId IS NOT NULL`, but this check exists in only 6 of 15+ skill query paths. Adding a review pipeline requires a `status` enum (e.g., `draft | pending_review | approved | rejected | published`), and the migration must update every query path or pending-review skills will leak into public listings.
 
-**Why it happens:** Relay's current codebase has no concept of tenant scoping. Every query operates on the full dataset. The blast radius is enormous:
-
-| File | Query Type | Risk |
-|------|------------|------|
-| `apps/web/lib/analytics-queries.ts` | 6 raw SQL queries with domain-based filtering | HIGH - domain-matching logic must become tenantId filtering |
-| `apps/web/lib/leaderboard.ts` | Raw SQL CTE across users + skills | HIGH - currently returns global leaderboard |
-| `apps/web/lib/trending.ts` | Raw SQL CTE across usage_events + skills | HIGH - trending shows all tenants' data |
-| `apps/web/lib/platform-stats.ts` | 3 parallel queries on skills, users, ratings | HIGH - aggregates currently global |
-| `apps/web/lib/total-stats.ts` | Aggregate on skills + usage_events | HIGH - days saved currently global |
-| `packages/db/src/services/search-skills.ts` | ILIKE search across skills + users | HIGH - search returns all tenants' skills |
-| `apps/web/app/actions/skills.ts` | Insert/update skills, slug generation | MEDIUM - new skills must have tenantId |
-| `apps/web/app/actions/ratings.ts` | Insert/query ratings | MEDIUM - ratings should be tenant-scoped |
-| `apps/web/lib/slug.ts` | Slug uniqueness check | CRITICAL - slug collision across tenants breaks URLs |
-| `packages/db/src/services/api-keys.ts` | validateApiKey returns userId only | CRITICAL - must also return tenantId |
-| `apps/mcp/src/tracking/events.ts` | Insert usage events | MEDIUM - events need tenantId |
-| `apps/web/app/actions/search.ts` | quickSearch delegates to search-skills | HIGH - search must be tenant-scoped |
-| `apps/web/lib/my-leverage.ts` | User's personal usage data | LOW - already user-scoped |
-| `packages/db/src/services/site-settings.ts` | Singleton row settings | CRITICAL - must become per-tenant settings |
-
-**Consequences:** One missed query means a tenant admin can see another tenant's employee usage data, skill content, or analytics. This is a security incident, not just a bug.
-
-**Prevention:**
-1. **Add tenantId column to ALL relevant tables in one migration** (skills, usage_events, ratings, skill_versions, skill_embeddings, skill_reviews, api_keys, site_settings, users). Do NOT add it piecemeal across phases.
-2. **Create a tenant-scoped query helper** that wraps `db` with an automatic `WHERE tenantId = ?` clause. Use this everywhere instead of raw `db`.
-3. **Write an integration test that asserts cross-tenant isolation** for every query function. Create two tenants with identical data, then verify each function only returns data for the queried tenant.
-4. **Audit script:** After migration, grep for all `db.select`, `db.execute`, `db.query`, `db.insert`, `db.update`, `db.delete` calls in `apps/` and `packages/` source files. Every single one must either include a tenantId filter or be explicitly documented as intentionally global.
-
-**Detection (warning signs):**
-- Any query that does NOT include `tenantId` in its WHERE clause
-- Tests that pass with only one tenant in the database (false confidence)
-- Analytics that show suspiciously high numbers (aggregating across tenants)
-
-**Which phase should address it:** The very first phase of multi-tenancy work. Schema migration + query helper must land before ANY tenant-visible features.
-
-**Confidence:** HIGH - based on direct codebase audit of every query file
-
----
-
-### Pitfall 2: Analytics Domain-Matching Logic Becomes a Tenant Leak Vector
-
-**What goes wrong:** The current analytics system in `analytics-queries.ts` uses email domain matching to scope queries: `u.email LIKE '%@' || (SELECT split_part(u2.email, '@', 2) FROM users u2 WHERE u2.id = ${orgId})`. When multi-tenancy is added, this heuristic breaks in multiple ways:
-- Users with personal email addresses (`gmail.com`) match across tenants
-- A company with multiple domains (`company.com` and `company.co.uk`) has incomplete data
-- The subquery approach means the `orgId` parameter is really a `userId` being used to derive a domain, not a real org/tenant identifier
-
-**Why it happens:** The current system has no explicit tenant/org concept. It infers organizational boundaries from email domains. This was fine for single-tenant but becomes a data leakage vector in multi-tenant.
-
-**Consequences:** Tenant A's analytics dashboard could show usage data for Tenant B's employees if they share an email domain (e.g., both are consultancies using `@gmail.com` accounts). Or, the same user could exist in multiple tenants and their usage would appear in the wrong tenant's analytics.
-
-**Prevention:**
-1. Replace ALL 6 analytics queries' domain-matching logic with explicit `tenantId` filtering in a single phase
-2. The `getOverviewStats`, `getUsageTrend`, `getEmployeeUsage`, `getSkillUsage`, `getExportData`, and `getEmployeeActivity` functions must take `tenantId` (not `orgId` derived from userId) as their primary filter
-3. Remove the `split_part(email, '@', 2)` pattern entirely - it is inherently unreliable for multi-tenant
-4. Add the `tenantId` column to `usage_events` table so analytics queries filter directly on it, not via JOIN chains
-
-**Detection:** Analytics numbers that don't match expected values after multi-tenancy launch; users appearing in wrong tenant's employee list.
-
-**Which phase should address it:** Same phase as the schema migration. These queries are the highest-risk area for data leakage.
-
-**Confidence:** HIGH - verified by reading all 6 analytics query functions line by line
-
----
-
-### Pitfall 3: Google OAuth Does Not Support Wildcard Redirect URIs
-
-**What goes wrong:** Multi-tenant subdomain routing means each tenant has a URL like `acme.relay.example.com`. Google OAuth requires registering **exact** redirect URIs. Google explicitly does not support wildcard patterns like `*.relay.example.com/api/auth/callback/google`. Developers discover this only after implementing subdomain routing and finding that Google rejects login attempts from any subdomain not explicitly registered.
-
-**Why it happens:** Google's OAuth2 security model requires exact URI matching. This is a fundamental platform constraint, not a configuration issue.
-
-**Consequences:** Either (a) you must register every new tenant's subdomain in Google Cloud Console manually (does not scale), or (b) authentication completely breaks for subdomain-based tenants.
-
-**Prevention:** Use a **single shared auth endpoint** approach:
-1. All tenants authenticate through the same callback URL: `auth.relay.example.com/api/auth/callback/google` (or the apex domain `relay.example.com/api/auth/callback/google`)
-2. Store the originating tenant subdomain in the OAuth `state` parameter before redirect
-3. After successful auth, redirect the user back to their tenant subdomain using the stored state
-4. Set Auth.js cookies with `domain: '.relay.example.com'` so they are shared across all subdomains
-5. Register only ONE redirect URI in Google Cloud Console
-
-**Auth.js v5 specifics:** Auth.js v5 reads the host from request headers dynamically (no longer requires static `NEXTAUTH_URL`), but the `redirect_uri` sent to Google must still match what's registered. The workaround is to use `redirectProxyUrl` in the Auth.js config to force all OAuth callbacks through the shared auth domain.
-
-**Detection:** Login works on the apex domain but fails on any subdomain with a `redirect_uri_mismatch` error from Google.
-
-**Which phase should address it:** Auth configuration must be part of the FIRST multi-tenancy phase, before subdomain routing ships. If subdomain routing ships without fixing auth, every tenant is locked out.
-
-**Confidence:** HIGH - Google's exact-match requirement is well documented and confirmed by multiple GitHub issues: [next-auth #9785](https://github.com/nextauthjs/next-auth/discussions/9785), [next-auth #12225](https://github.com/nextauthjs/next-auth/issues/12225), [Google OAuth docs](https://developers.google.com/identity/protocols/oauth2/web-server)
-
----
-
-### Pitfall 4: Auth.js Subdomain Cookie Isolation / CSRF Failures
-
-**What goes wrong:** Auth.js sets session cookies with a specific domain scope. When a user logs in on `acme.relay.example.com`, the session cookie may be scoped to that exact subdomain. Navigating to `beta.relay.example.com` requires re-authentication. Worse, CSRF token cookies set on one subdomain may not be readable on another, causing `InvalidCheckError` during OAuth callbacks.
-
-**Why it happens:** Auth.js v5 changed cookie behavior between v4 and v5 (documented in [issue #10915](https://github.com/nextauthjs/next-auth/issues/10915)). The default cookie configuration does not account for subdomain sharing.
-
-**Consequences:** Users cannot log in from tenant subdomains, or get CSRF errors during the OAuth callback. This completely blocks authentication.
-
-**Prevention:**
-1. Explicitly configure Auth.js cookie options:
-   ```typescript
-   cookies: {
-     sessionToken: {
-       name: '__Secure-next-auth.session-token',
-       options: {
-         httpOnly: true,
-         sameSite: 'lax',
-         path: '/',
-         secure: true,
-         domain: '.relay.example.com'  // Leading dot = all subdomains
-       }
-     },
-     callbackUrl: {
-       name: '__Secure-next-auth.callback-url',
-       options: {
-         sameSite: 'lax',
-         path: '/',
-         secure: true,
-         domain: '.relay.example.com'
-       }
-     },
-     csrfToken: {
-       name: '__Host-next-auth.csrf-token',  // __Host prefix requires exact domain
-       options: {
-         httpOnly: true,
-         sameSite: 'lax',
-         path: '/',
-         secure: true,
-         // NOTE: __Host-prefixed cookies CANNOT have domain set
-         // Use __Secure- prefix instead if cross-subdomain is needed
-       }
-     }
-   }
-   ```
-2. Test auth flow from EACH subdomain, not just the apex domain
-3. Be aware that `__Host-` prefixed cookies (used by Auth.js for CSRF) cannot have a domain attribute set - they are bound to the exact origin. Consider switching to `__Secure-` prefix for the CSRF cookie if cross-subdomain auth is needed.
-
-**Detection:** Login works on the main domain, fails on subdomains with CSRF errors or infinite redirect loops.
-
-**Which phase should address it:** Same phase as Pitfall 3 (auth configuration).
-
-**Confidence:** HIGH - confirmed via Auth.js GitHub issues and Next.js multi-tenant documentation
-
----
-
-### Pitfall 5: MCP Server API Key Must Return Tenant Context
-
-**What goes wrong:** The current `validateApiKey` function in `packages/db/src/services/api-keys.ts` returns `{ userId, keyId }`. The MCP auth module in `apps/mcp/src/auth.ts` caches `userId` and uses it for all subsequent tool calls. In multi-tenant mode, the MCP server has no way to know which tenant a user belongs to, meaning:
-- `search_skills` returns skills from ALL tenants
-- `log_usage` records events without tenant context
-- `confirm_install` and `deploy` operate without tenant scoping
-
-**Why it happens:** The API key table has `userId` but no `tenantId`. The MCP auth resolution happens once at startup and caches only the userId.
-
-**Consequences:** MCP tool calls leak data across tenants. A user with Tenant A's API key could search and find Tenant B's skills.
-
-**Prevention:**
-1. Add `tenantId` to the `api_keys` table (or resolve it via the user's tenant membership)
-2. Modify `validateApiKey` to return `{ userId, keyId, tenantId }`
-3. Modify `resolveUserId` in MCP auth to also cache `tenantId`
-4. Pass `tenantId` to every MCP tool handler as required context
-5. Every MCP tool query must filter by tenantId
-
-**Detection:** MCP search returning skills the user shouldn't see; usage events without tenant attribution.
-
-**Which phase should address it:** Must be completed in the same phase as the database schema migration. MCP is a primary data access path.
-
-**Confidence:** HIGH - direct reading of `api-keys.ts` and `auth.ts` confirms the gap
-
----
-
-### Pitfall 6: Slug Uniqueness Constraint Breaks Under Multi-Tenancy
-
-**What goes wrong:** The `skills` table has `slug: text("slug").notNull().unique()`. This is a GLOBAL unique constraint. In multi-tenant mode, Tenant A creating a skill called "code-review" would prevent Tenant B from creating their own "code-review" skill. The `generateUniqueSlug` function in `lib/slug.ts` checks for collisions globally, meaning Tenant B gets "code-review-a3b4c5d6" while Tenant A has the clean "code-review" slug.
-
-**Why it happens:** The unique constraint was designed for single-tenant. Multi-tenant needs uniqueness scoped to the tenant: `UNIQUE(tenant_id, slug)`.
+**Why it happens:** The schema was designed for instant-publish. Status-awareness was never part of the query layer.
 
 **Consequences:**
-- Slugs become unpredictable across tenants (some get clean slugs, others get UUID suffixes)
-- URL collisions if middleware doesn't correctly scope slug lookups to the current tenant
-- Migration is complex: must drop the existing unique index and create a composite unique index
+- If you add `status` with no DEFAULT, existing skills get NULL and vanish from any query that filters `WHERE status = 'published'`.
+- If you add `status DEFAULT 'published'` but forget to update a query, pending-review skills leak into search results and MCP tool output.
+- If you add status but only update the web app queries, MCP tools remain unguarded (see Pitfall 2).
+
+**Specific query paths from codebase audit:**
+
+| Query Path | Has Published Filter? | Risk |
+|---|---|---|
+| `apps/web/lib/search-skills.ts` -- searchSkills() | NO | HIGH -- main listing page |
+| `apps/web/lib/similar-skills.ts` -- checkSimilarSkills() | NO | MEDIUM -- pending skills appear as duplicates |
+| `apps/web/lib/similar-skills.ts` -- findSimilarSkillsByName() | NO | MEDIUM -- pending skills in similarity panel |
+| `apps/web/app/(protected)/skills/[slug]/page.tsx` | NO | HIGH -- direct URL to pending skill |
+| `packages/db/src/services/search-skills.ts` -- searchSkillsByQuery() | NO | HIGH -- used by MCP search_skills |
+| `packages/db/src/services/skill-forks.ts` -- getTopForks() | NO | LOW -- forks of pending skills |
+| `apps/mcp/src/tools/list.ts` -- list_skills handler | NO | HIGH -- MCP returns all skills |
+| `apps/mcp/src/tools/search.ts` -- search_skills handler | NO | HIGH -- delegates to searchSkillsByQuery |
+| `apps/web/app/actions/admin-skills.ts` -- getAdminSkills() | NO | OK -- admin should see all statuses |
+| `apps/web/lib/trending.ts` | YES | OK |
+| `apps/web/lib/leaderboard.ts` | YES | OK |
+| `apps/web/lib/platform-stats.ts` | YES | OK |
+| `apps/web/lib/user-stats.ts` | YES | OK |
+| `apps/web/lib/my-leverage.ts` | YES | OK |
+| `apps/web/app/(protected)/users/[id]/page.tsx` | YES | OK |
 
 **Prevention:**
-1. **Migration strategy:** In a single migration:
-   - Add `tenant_id` column to skills table
-   - Backfill all existing rows with the default tenant's ID
-   - Drop the existing `UNIQUE(slug)` constraint
-   - Add `UNIQUE(tenant_id, slug)` composite constraint
-2. Update `generateUniqueSlug` to check collisions only within the current tenant
-3. Update the `[slug]` page route to resolve skills by `(tenantId, slug)` not just `slug`
+1. Add the `status` column with `DEFAULT 'published'` so existing skills automatically get the correct status. New submissions should explicitly set `status = 'pending_review'`.
+2. Add `WHERE status = 'published'` to ALL 8 unguarded query paths identified above BEFORE exposing the new submission flow.
+3. Migration must be atomic: `ALTER TABLE skills ADD COLUMN status TEXT NOT NULL DEFAULT 'published'`. One statement, no backfill needed.
+4. After migration, validate: `SELECT count(*) FROM skills WHERE status != 'published'` must return 0.
 
-**Detection:** Slug collision errors when different tenants try to create identically-named skills.
+**Detection:** After adding status filters, compare skill counts in the UI before and after. Counts should be identical for the initial migration (all existing skills are published).
 
-**Which phase should address it:** Schema migration phase (same as Pitfall 1).
-
-**Confidence:** HIGH - verified by reading `packages/db/src/schema/skills.ts` line 29 and `lib/slug.ts`
+**Phase:** Must be the FIRST phase. Every other v2.0 feature depends on status existing.
 
 ---
 
-### Pitfall 7: Site Settings Singleton Becomes a Shared Mutation Point
+### Pitfall 2: MCP Create Tool Bypasses the Review Pipeline
 
-**What goes wrong:** The `site_settings` table uses a singleton pattern with `id: text("id").primaryKey().default("default")`. All tenants would read and write the same "default" row. If Tenant A's admin enables Ollama semantic search, it enables it for ALL tenants. If Tenant B's admin changes the embedding model, it changes for everyone.
+**What goes wrong:** The MCP `create_skill` tool (`apps/mcp/src/tools/create.ts`) uses raw SQL to insert skills and immediately sets `published_version_id`. It reimplements slug generation, content hashing, and frontmatter building independently from the web app. After adding a review pipeline to the web UI, skills created via MCP will still publish instantly.
 
-**Why it happens:** Settings were designed for a single deployment. The schema has no tenant scoping.
+**Why it happens:** The MCP server is a standalone app with duplicated logic. Line 14 comments: "self-contained -- MCP server runs standalone." It has its own `generateSlug()`, `hashContent()`, and `buildHookFrontmatter()`.
 
-**Consequences:** One tenant's admin configuration silently affects all other tenants. This is both a data integrity issue and a security issue (one tenant controlling another tenant's features).
+**Consequences:**
+- Skills created via MCP bypass review entirely -- they go straight to published status.
+- If `status` column has no DEFAULT or is NOT NULL without DEFAULT, the MCP INSERT will fail with a constraint violation, breaking all MCP-based skill creation.
+- If `status` has `DEFAULT 'published'`, MCP-created skills silently skip the pipeline -- a back door.
+- Users who want to avoid review learn to use the MCP tool instead of the web UI.
 
 **Prevention:**
-1. Change `site_settings` primary key from singleton `"default"` to `tenantId`
-2. Each tenant gets their own settings row
-3. Update `getSiteSettings()` and `updateSiteSettings()` to take `tenantId` parameter
-4. Default settings for new tenants should come from a template, not from another tenant's config
-5. The admin settings page must scope to the current tenant
+1. When adding the status column, use `DEFAULT 'published'` initially to keep MCP working without breaking.
+2. In a subsequent step within the same phase, update the MCP `create_skill` handler's raw SQL to explicitly set `status = 'pending_review'` and remove the `UPDATE skills SET published_version_id = ...` line.
+3. The MCP tool should return a different message: "Skill submitted for review" instead of "Skill created and published!"
+4. Long-term: extract shared creation logic into `packages/db/src/services/skill-create.ts` to eliminate duplication.
 
-**Detection:** Settings changes by one admin unexpectedly affecting other tenants.
+**Detection:** After enabling the review pipeline, create a skill via MCP and verify it does NOT appear in `search_skills` results (it should be in pending_review status).
 
-**Which phase should address it:** Schema migration phase.
-
-**Confidence:** HIGH - verified by reading `packages/db/src/schema/site-settings.ts`
+**Phase:** Same phase as status column migration. The MCP INSERT is at `apps/mcp/src/tools/create.ts` lines 145-148 and the publish is at lines 184-186.
 
 ---
 
-## Major Pitfalls
+### Pitfall 3: AI Review Has Dual Identity -- Advisory vs Pipeline Gate
 
-Mistakes that cause significant delays, outages, or security issues.
+**What goes wrong:** The existing AI review system (`skill_reviews` table, `apps/web/lib/ai-review.ts`) was designed as an advisory, author-triggered, fire-and-forget feature. Repurposing it as a pipeline gate (blocking publish until AI review passes) introduces fundamental data model conflicts:
 
----
+1. **`requestedBy` assumes author-initiated.** In a pipeline, the system triggers review automatically. The `requestedBy` field would need to reference a system user or be nullable.
+2. **Unique constraint `(tenant_id, skill_id)` limits to one review per skill.** A pipeline needs history: submitted -> AI reviewed -> rejected -> revised -> re-reviewed -> approved. The upsert in `skill-reviews.ts` line 52 replaces previous reviews, destroying the audit trail.
+3. **`isVisible` toggle lets authors hide reviews.** In a gate context, authors hiding the rejection that blocks their skill creates a confusing UX.
+4. **`autoGenerateReview()` in `skills.ts` (line 110) runs fire-and-forget with `.catch(() => {})`.** If this becomes the pipeline gate, a swallowed error means the skill never gets reviewed and sits in limbo permanently.
+5. **Review scores are advisory (1-10 scale).** There is no pass/fail threshold. The pipeline needs a binary decision: approve or reject (possibly with a "needs human review" middle state).
 
-### Pitfall 8: Wildcard SSL Certificate Requires DNS Challenge (Cannot Use HTTP Challenge)
-
-**What goes wrong:** Let's Encrypt's HTTP-01 challenge (the most common automated approach) does NOT support wildcard certificates. Wildcard certs (`*.relay.example.com`) require the DNS-01 challenge, which means your certificate automation must have programmatic access to your DNS provider's API to create TXT records.
-
-**Why it happens:** Developers set up Certbot with the standard HTTP challenge, then discover it refuses to issue `*.relay.example.com`.
-
-**Consequences:** Either (a) SSL completely fails for tenant subdomains, or (b) you resort to issuing individual certificates per tenant (does not scale, hits Let's Encrypt rate limits of ~50 certificates per registered domain per week).
+**Consequences:**
+- Skills stuck in "pending_review" forever if the AI call fails (currently swallowed).
+- Review history lost because upsert replaces previous review.
+- No audit trail for compliance (who approved what, when).
+- Author can hide the gating review via the existing `toggleAiReviewVisibility` action.
+- No distinction between "AI passed," "AI failed," "AI review could not run," and "human override."
 
 **Prevention:**
-1. Use DNS-01 challenge with a Certbot DNS plugin matching your DNS provider (Hetzner DNS, Cloudflare, Route53, etc.)
-2. Set up a Docker container that runs Certbot with the DNS plugin for automatic renewal
-3. If using Hetzner DNS: use `certbot-dns-hetzner` plugin
-4. If using Cloudflare (recommended for Hetzner VPS): use `certbot-dns-cloudflare` plugin
-5. Store DNS API credentials securely (Docker secrets, not environment variables in docker-compose.yml)
-6. Test renewal BEFORE the 90-day expiry: `certbot renew --dry-run`
+1. **Keep `skill_reviews` for advisory reviews.** Create a SEPARATE `review_decisions` table for the pipeline that tracks: `skillId`, `versionId`, `reviewerType` (ai/admin), `decision` (approve/reject/needs_changes), `reason`, `reviewerId`, `createdAt`. Insert-only, no upsert. Immutable for audit.
+2. **Pipeline AI review must NOT be fire-and-forget.** Use `try/catch` with explicit error states. If the AI call fails, set a `review_status = 'ai_review_failed'` state and notify admins.
+3. **Define a scoring threshold for auto-approve.** For example: if all three category scores >= 7, auto-approve. If any score < 4, auto-reject. Otherwise, flag for human review.
+4. **Do NOT reuse `autoGenerateReview()` for pipeline gating.** Write a new function with proper error propagation and decision logic.
 
-**Alternative approach:** Use Traefik as the reverse proxy instead of Nginx. Traefik has built-in ACME support with automatic certificate management and DNS challenge support for many providers.
+**Detection:** Remove the Anthropic API key and submit a skill. It should enter an error state ("AI review could not be completed"), not silently publish or get stuck.
 
-**Detection:** SSL errors when accessing any `*.relay.example.com` subdomain; certificate renewal failures in logs.
-
-**Which phase should address it:** Infrastructure/deployment phase, before multi-tenancy subdomain routing.
-
-**Confidence:** HIGH - Let's Encrypt's challenge types are [documented officially](https://letsencrypt.org/docs/challenge-types/)
+**Phase:** Design the pipeline data model before building the admin UI. The admin UI depends on the data structure being correct.
 
 ---
 
-### Pitfall 9: Docker Compose Exposes PostgreSQL Port to the Internet
+### Pitfall 4: Notification System Is Not Extensible for Review Events
 
-**What goes wrong:** A common docker-compose.yml mistake:
-```yaml
-services:
-  postgres:
-    ports:
-      - "5432:5432"  # DANGER: Exposes to 0.0.0.0
-```
-This binds PostgreSQL to ALL network interfaces, making it accessible from the internet. Even with a firewall like UFW, Docker manipulates iptables directly and can bypass UFW rules.
+**What goes wrong:** The notification system has a hardcoded type union: `"grouping_proposal" | "trending_digest" | "platform_update"` in `CreateNotificationParams`. The database column is plain `text` (no enum). The notification preferences table has per-type boolean columns: `groupingProposalEmail`, `groupingProposalInApp`, `trendingDigest`, `platformUpdatesEmail`, `platformUpdatesInApp`.
 
-**Why it happens:** Developers copy local development docker-compose configs to production. In local dev, port mapping is convenient. In production, it's a security disaster.
+Adding review notifications (skill_submitted, review_approved, review_rejected, review_needs_changes) requires:
+- Expanding the TypeScript union (easy).
+- Adding preference columns for each new type (schema migration, awkward scaling).
+- Updating the notification bell UI to handle new types (rendering, icons, action URLs).
+- Deciding who receives each notification type (author vs admin vs reviewer).
 
-**Consequences:** Anyone on the internet can attempt to connect to your PostgreSQL instance. If the password is weak or default, full database compromise.
+**Consequences:**
+- If you add notification types but not preference columns, users cannot opt out of review notifications.
+- If you add a column per type, notification_preferences grows to 12+ boolean columns -- a schema smell.
+- If the notification bell component does not handle unknown types, it may crash or show raw text.
 
 **Prevention:**
-1. **Never expose database ports in production docker-compose.yml.** Use Docker networks instead:
-   ```yaml
-   services:
-     postgres:
-       # NO ports section
-       networks:
-         - internal
-     web:
-       networks:
-         - internal
-         - public
-   networks:
-     internal:
-       internal: true  # No external access
-     public:
-   ```
-2. If you must expose a port for debugging, bind to localhost only: `"127.0.0.1:5432:5432"`
-3. Be aware that Docker's iptables rules bypass UFW. Even `ufw deny 5432` does NOT block Docker-exposed ports.
-4. Use `docker network inspect` to verify the postgres container is only on internal networks
+1. Add TWO preference columns for all review notifications: `reviewNotificationsEmail` (boolean, default true) and `reviewNotificationsInApp` (boolean, default true). Do not add per-type columns for every review event.
+2. Add the new notification types to the TypeScript union: `"skill_submitted" | "review_approved" | "review_rejected" | "review_needs_changes"`.
+3. Ensure the notification bell component has a default rendering path for unknown types (graceful degradation, not crash).
+4. Review notifications should follow the existing fire-and-forget pattern -- notification delivery should NOT block the review pipeline.
 
-**Detection:** `nmap -p 5432 your-server-ip` from an external machine showing the port as open.
+**Detection:** After adding review notifications, check the notification preferences page renders the new options. Send a review notification when user has no preference row -- should use defaults, not crash.
 
-**Which phase should address it:** Infrastructure/deployment phase. The very first docker-compose.yml must get this right.
-
-**Confidence:** HIGH - this is a well-known Docker security issue
-
----
-
-### Pitfall 10: Database Migration Downtime for Adding tenant_id to Existing Tables
-
-**What goes wrong:** Adding a `NOT NULL` column to existing tables with data requires a default value. A naive approach like `ALTER TABLE skills ADD COLUMN tenant_id TEXT NOT NULL` fails because existing rows have no value. Adding it with a default like `DEFAULT 'default-tenant'` and then updating rows works but locks the table for the duration of the UPDATE on large tables.
-
-**Why it happens:** Drizzle Kit generates migrations that may not account for existing data. The `drizzle-kit generate` command creates the DDL but doesn't know about data backfill needs.
-
-**Consequences:** Table locks during migration cause downtime. Or, if you add the column as nullable first, you risk queries that forget to filter on tenantId silently returning cross-tenant data (null tenantId rows).
-
-**Prevention:** Use a multi-step migration strategy:
-1. **Step 1:** Add `tenant_id` as NULLABLE column (no lock, instant)
-2. **Step 2:** Backfill existing rows with the default tenant ID (can be done in batches to avoid long locks)
-3. **Step 3:** Add NOT NULL constraint (brief lock, but all rows already have values)
-4. **Step 4:** Add indexes on `tenant_id` (concurrent index creation: `CREATE INDEX CONCURRENTLY`)
-5. **Step 5:** Update composite unique constraints (drop old, add new)
-
-Use Drizzle Kit's custom migration feature (`drizzle-kit generate` then edit the generated SQL) to split this into the correct steps. Do NOT rely on Drizzle's auto-generated migration for this.
-
-The tables that need `tenant_id` added:
-- `skills` (+ update unique constraint on slug)
-- `usage_events`
-- `ratings`
-- `skill_versions`
-- `skill_embeddings`
-- `skill_reviews`
-- `api_keys`
-- `site_settings` (change primary key strategy)
-- `users` (users may belong to multiple tenants - consider a join table instead)
-
-**Detection:** Migration failures in production; long-running locks visible in `pg_stat_activity`.
-
-**Which phase should address it:** Schema migration phase. Must be the FIRST step in multi-tenancy.
-
-**Confidence:** HIGH - standard PostgreSQL migration knowledge + Drizzle migration [docs](https://orm.drizzle.team/docs/kit-custom-migrations)
-
----
-
-### Pitfall 11: Next.js Middleware Subdomain Extraction Fails on localhost
-
-**What goes wrong:** Subdomain routing relies on parsing the `Host` header to extract the tenant. On localhost, the host is `localhost:3000` with no subdomain. Developers either (a) can't test multi-tenancy locally, or (b) write localhost-specific code that diverges from production behavior.
-
-**Why it happens:** `localhost` has no subdomain support in browsers. `acme.localhost:3000` works in Chrome but not in all browsers or tools (like Playwright).
-
-**Consequences:** Development/testing cycle is broken. Bugs in subdomain routing are only caught in production.
-
-**Prevention:**
-1. Use `/etc/hosts` entries for local development: `127.0.0.1 acme.relay.local beta.relay.local relay.local`
-2. Or use a `.localhost` TLD which Chrome supports: `acme.localhost:3000` (but test in Playwright too)
-3. Write middleware that supports both modes:
-   ```typescript
-   function extractTenant(host: string): string | null {
-     // Production: acme.relay.example.com -> acme
-     // Local: acme.relay.local:3000 -> acme
-     const hostname = host.split(':')[0];
-     const parts = hostname.split('.');
-     if (parts.length > 2) return parts[0]; // subdomain
-     return null; // apex domain (no tenant)
-   }
-   ```
-4. Use environment variable for the base domain: `BASE_DOMAIN=relay.example.com` in production, `BASE_DOMAIN=relay.local` in development
-
-**Detection:** Works in production but not locally, or vice versa. Playwright tests fail with subdomain routing.
-
-**Which phase should address it:** Subdomain routing implementation phase.
-
-**Confidence:** MEDIUM - based on common Next.js multi-tenant patterns
-
----
-
-### Pitfall 12: Claude Code Hooks Are Fire-and-Forget with No Retry
-
-**What goes wrong:** Claude Code hooks run shell commands that exit with a code. If a PostToolUse hook that sends tracking data to the Relay API endpoint encounters a network error (endpoint down, timeout, DNS failure), the hook fails silently (non-zero exit codes other than 2 are logged but don't block). There is no retry mechanism built into Claude Code hooks.
-
-**Why it happens:** Hooks are designed for local operations (formatting, linting). They are NOT designed as reliable delivery mechanisms for remote APIs.
-
-**Consequences:** Usage tracking data is permanently lost whenever the Relay server is unreachable (server restart, network blip, DNS issues). Over time, this creates systematic undercounting.
-
-**Prevention:**
-1. **Write-ahead log pattern:** The hook should append events to a local file (`~/.relay/pending-events.jsonl`) first, then attempt to send. A separate background process or the next hook invocation retries failed sends.
-2. **Batch and flush:** Instead of sending one HTTP request per hook event, batch events and flush periodically.
-3. **Hook script resilience:**
-   ```bash
-   #!/bin/bash
-   EVENT=$(cat)
-   # Always write to local log first (never fails)
-   echo "$EVENT" >> ~/.relay/pending-events.jsonl
-   # Attempt send with timeout (fire-and-forget, don't block Claude Code)
-   curl -s --max-time 5 -X POST "$RELAY_URL/api/track" \
-     -H "Authorization: Bearer $EVERYSKILL_API_KEY" \
-     -d "$EVENT" &
-   exit 0  # Always succeed - don't block Claude Code
-   ```
-4. **Flush pending events on session start:** Use a `SessionStart` hook to retry any events in the pending log.
-
-**Detection:** Usage counts in Relay dashboard are consistently lower than expected; spikes in tracking after the server recovers from downtime (if flush-on-reconnect is implemented).
-
-**Which phase should address it:** Hook implementation phase.
-
-**Confidence:** HIGH - verified from [Claude Code hooks documentation](https://code.claude.com/docs/en/hooks-guide) that non-zero exit codes (except 2) are logged but don't block, and there's no built-in retry
-
----
-
-### Pitfall 13: Hook Auto-Injection Modifying User's .claude/settings.json
-
-**What goes wrong:** If the "auto-inject tracking hooks" feature modifies the user's `.claude/settings.json` during skill installation, it could:
-- Overwrite existing user hooks (data loss)
-- Create JSON syntax errors if the merge logic is flawed
-- Conflict with project-level settings in `.claude/settings.json`
-- Break if the user doesn't have a `.claude` directory yet
-
-**Why it happens:** Claude Code hooks are stored in JSON settings files. Programmatically merging into an existing JSON file while preserving the user's other configurations is error-prone.
-
-**Consequences:** User's Claude Code stops working, existing hooks are overwritten, or the injected hooks silently don't fire.
-
-**Prevention:**
-1. **Use project-level hooks instead of user-level hooks.** Install hooks in `.claude/settings.json` (project root) rather than `~/.claude/settings.json`. This scopes the hooks to the project and doesn't touch the user's global config.
-2. **Merge, don't overwrite:** If hooks already exist in the target file, add to the existing array rather than replacing it. Always read the file first, parse JSON, merge arrays, write back.
-3. **Validate JSON after write:** After modifying the settings file, parse it to verify it's valid JSON.
-4. **Create backup:** Before modifying, copy the original file to `.claude/settings.json.backup`.
-5. **Deduplication:** Before adding a hook, check if an identical hook command already exists in the array (Claude Code deduplicates at runtime, but keeping the file clean prevents confusion).
-
-**Detection:** User reports Claude Code errors after installing a skill; `jq . .claude/settings.json` fails with parse error.
-
-**Which phase should address it:** Hook auto-injection implementation phase.
-
-**Confidence:** HIGH - based on hooks guide showing the JSON structure and the fact that hooks are configured via JSON files
+**Phase:** Add notification types in the review pipeline phase, not the admin UI phase. The pipeline triggers notifications, so the types must exist first.
 
 ---
 
 ## Moderate Pitfalls
 
-Mistakes that cause delays, degraded UX, or technical debt.
+---
+
+### Pitfall 5: Fork Creates an Orphaned Skill with No Version Record
+
+**What goes wrong:** The `forkSkill()` action (`apps/web/app/actions/fork-skill.ts`) creates a new skill row by copying the parent's content, but:
+- It does NOT create a `skill_versions` record (no R2 upload, no contentUrl).
+- It does NOT set `publishedVersionId` (left as NULL).
+- It does NOT trigger AI review.
+- It does NOT check for similar skills (unlike the main create action).
+
+Currently this "works" because listings don't filter by `publishedVersionId`. But when the review pipeline is added:
+- Forked skills have no version to review.
+- The pipeline expects a version record to compare content hashes.
+- If listings start filtering by status, forked skills with NULL `publishedVersionId` either vanish (if treated as unpublished) or bypass the pipeline (if defaulted to published).
+
+**Prevention:**
+1. When adding the status column, forked skills should get `status = 'draft'` or `status = 'pending_review'`.
+2. The fork action should be updated to create a version record (matching the pattern in `checkAndCreateSkill`).
+3. Decide the UX: fork -> edit page (draft) vs fork -> submit for review (pending_review). The current redirect to the skill detail page is wrong for either path.
+4. If forks bypass review (acceptable for internal-only use), make this an explicit policy, not an accidental gap.
+
+**Detection:** Fork a skill after the pipeline is live. Verify the fork appears in the admin review queue (if forks require review) or is clearly marked as draft (if forks start as drafts).
+
+**Phase:** Address when updating the status column and query filters. Fork is a creation path that needs pipeline integration.
 
 ---
 
-### Pitfall 14: Tenant Isolation in R2/Object Storage
+### Pitfall 6: Semantic Similarity Uses Ollama Locally -- Conversational Discovery Must Use the Same Model
 
-**What goes wrong:** The current skill storage uses R2 with object keys like `skills/{skillId}/v{version}/content.md`. In multi-tenant mode, if two tenants have skills with the same ID (UUIDs make this unlikely but not impossible with forks), they could collide. More importantly, the R2 presigned URLs generated by `generateUploadUrl` are not tenant-scoped, meaning a malicious user could potentially access another tenant's skill content by guessing object keys.
+**What goes wrong:** The current embedding pipeline uses Ollama (`nomic-embed-text`, 768 dimensions) running locally. Conversational discovery needs to embed user queries in real-time for vector search. If the discovery feature uses a different embedding model (e.g., Anthropic, Voyage AI, OpenAI), the vectors will be in incompatible mathematical spaces. You cannot compare an Ollama embedding against a Voyage AI embedding -- they are not in the same vector space.
+
+**Consequences:**
+- Conversational search returns irrelevant results because query embeddings and stored skill embeddings use different models.
+- If you switch ALL embeddings to a cloud model, you must re-embed every existing skill (data migration).
+- Voyage AI has tight rate limits (documented in project memory). Re-embedding hundreds of skills at once will hit rate limits.
 
 **Prevention:**
-1. Add tenant prefix to all R2 object keys: `{tenantId}/skills/{skillId}/v{version}/content.md`
-2. Validate tenant context before generating presigned URLs
-3. Consider per-tenant R2 buckets for strongest isolation (more expensive, harder to manage)
+1. Conversational discovery MUST use the same embedding model as stored skill embeddings (currently `nomic-embed-text` via Ollama). Embed the user's query with Ollama, search against stored Ollama embeddings.
+2. The conversational response generation (natural language answers referencing search results) is a separate concern -- this CAN use the Anthropic API. The architecture is: embed query (Ollama) -> vector search (pgvector) -> generate response (Anthropic).
+3. If switching to cloud embeddings, plan a re-embedding migration as a separate phase. Budget for rate limits: batch at 10-20 skills per minute for Voyage AI.
+4. The `siteSettings.ollamaModel` determines the embedding model. Conversational discovery must read and use this setting, not hardcode a model.
 
-**Which phase should address it:** After schema migration, before skill upload/download flows are used in production.
+**Detection:** Before implementing, verify Ollama can embed query strings with acceptable latency for interactive use (~50ms local is fine). If Ollama is down, the conversational discovery feature should degrade gracefully (fall back to full-text search, not crash).
 
-**Confidence:** MEDIUM - depends on R2 configuration details not fully visible in codebase
+**Phase:** Address in the conversational discovery phase. Decide embedding strategy before building the conversation UI.
 
 ---
 
-### Pitfall 15: Admin Role Is Hardcoded to Email List
+### Pitfall 7: No Parent Content Hash Stored at Fork Time -- Cannot Detect Modification
 
-**What goes wrong:** The `isAdmin` function in `apps/web/lib/admin.ts` reads from `ADMIN_EMAILS` environment variable. In multi-tenant mode, there's no concept of per-tenant admins. Either everyone in the env var is admin of ALL tenants, or the admin system doesn't work at all.
+**What goes wrong:** Fork-on-modify detection requires knowing whether a forked skill's content has diverged from its parent AT THE TIME OF FORKING. The current fork system:
+- Records `forkedFromId` on the new skill (parent link exists).
+- Copies `parent.content` to the fork (content is duplicated).
+- Does NOT store the parent's content hash at fork time.
+- Does NOT record which version of the parent was forked.
+
+To detect modification, you need: `fork_current_content_hash != parent_content_hash_at_fork_time`. Without storing the parent's hash at fork time, you would have to compare against the parent's CURRENT content -- but the parent may have been updated since the fork, creating false positives (fork shows as "modified" when only the parent changed).
 
 **Prevention:**
-1. Add a `tenant_memberships` table with columns: `userId`, `tenantId`, `role` (admin/member)
-2. Replace `isAdmin(email)` with `isTenantAdmin(userId, tenantId)` that checks the membership table
-3. Keep a super-admin concept (cross-tenant admin) for platform operations, separate from tenant admins
+1. Add `forkedAtContentHash` column to the `skills` table (nullable, only populated for forks). When forking, compute `hashContent(parent.content)` and store it.
+2. Modification detection: `hashContent(fork.content) !== fork.forkedAtContentHash`.
+3. Do NOT compare against the parent's current content hash. The comparison must be against the SNAPSHOT at fork time.
+4. Update `forkSkill()` action to compute and store this hash.
+5. Consider also storing `forkedAtVersionId` if version records exist for the parent, for richer diff capabilities.
 
-**Which phase should address it:** Multi-tenancy schema phase (requires the tenants and memberships tables).
+**Detection:** Create a fork, don't modify it, verify it's NOT flagged as modified. Modify the fork's content, verify it IS flagged. Modify the PARENT's content, verify the fork is still NOT flagged (the fork hasn't changed relative to its fork point).
 
-**Confidence:** HIGH - verified by reading `apps/web/lib/admin.ts`
+**Phase:** Address when building fork-on-modify detection. Requires schema migration + fork action update.
 
 ---
 
-### Pitfall 16: Middleware Performance with Subdomain Resolution on Every Request
+### Pitfall 8: Skill Detail Page Has No "Pending Review" UX State
 
-**What goes wrong:** The current middleware in `apps/web/middleware.ts` does auth checking on every request. Adding subdomain extraction + database lookup to resolve tenant on every request adds latency and database load.
+**What goes wrong:** The skill detail page (`apps/web/app/(protected)/skills/[slug]/page.tsx`) renders a full skill page with install button, fork button, rating form, reviews section, similar skills, and AI review tab. If a skill is pending review:
+- The install button should be hidden (can't install an unapproved skill).
+- The fork button should be hidden (can't fork an unapproved skill).
+- The rating form should be hidden (can't rate what you can't use).
+- A "Pending Review" or "Under Review" banner should show to the author.
+- The page should return 404 for non-author, non-admin users.
+
+Currently the page fetches by slug with no access control -- any user with the URL can view any skill.
 
 **Prevention:**
-1. **Do NOT query the database in middleware.** Middleware runs on the Edge Runtime (in Vercel) or on every request. Database queries in middleware = a query per page load.
-2. **Resolve tenant from subdomain using an in-memory cache** (or hardcoded tenant registry for small numbers of tenants).
-3. **Store tenantId in the JWT token** at login time. Then middleware only needs to parse the JWT, not query the database.
-4. Alternative: Use a Redis cache for tenant lookups with short TTL.
+1. After fetching the skill by slug, check `skill.status`:
+   - `'published'`: render normally (current behavior).
+   - `'pending_review'` or `'draft'`: check if current user is the author or admin. If not, call `notFound()`.
+   - For author/admin: render a restricted view with a status banner and no install/fork/rate buttons.
+2. Do NOT put this access control in middleware -- it requires a database query for the skill's status. Handle it in the page component.
+3. This must ship in the same phase as the status column migration. If status exists but the detail page doesn't check it, users can view pending skills via direct URL.
 
-**Which phase should address it:** Subdomain routing implementation phase.
+**Detection:** Submit a skill for review, then access it via direct URL as a different (non-admin) user. Should get 404.
 
-**Confidence:** HIGH - the current middleware already has auth but no DB queries, adding them would be a regression
+**Phase:** Same phase as status column and query filters.
 
 ---
 
-### Pitfall 17: Docker Build Includes .env Secrets in Image Layers
+### Pitfall 9: Conversation State Bloat in Multi-Turn Discovery
 
-**What goes wrong:** If `.env` is not in `.dockerignore`, secrets like `DATABASE_URL`, `GOOGLE_CLIENT_SECRET`, `R2_SECRET_ACCESS_KEY` end up in Docker image layers. Anyone with access to the image can extract them.
+**What goes wrong:** Conversational discovery implies multi-turn interactions. This requires managing conversation state. Common mistakes:
+- Sending the full conversation history to the LLM on every turn (cost and latency grow linearly).
+- Persisting conversations in the database when they're ephemeral.
+- Re-embedding the full conversation instead of just the refined query.
+- Not setting a max conversation length, leading to unbounded API costs.
 
 **Prevention:**
-1. Add `.env*` to `.dockerignore`
-2. Use Docker build args for build-time config and runtime environment variables for runtime config
-3. For production: use Docker secrets or a mounted `.env` file via docker-compose `env_file:` directive (not `COPY . .` in Dockerfile)
-4. Never use `ARG` for secrets that shouldn't be in image layers - `ARG` values are visible in image history
-5. Use multi-stage builds: build in one stage, copy only the output to a clean stage
+1. Use client-side React state for conversation history in the initial implementation. No new database table needed.
+2. Send only the last 3-4 messages as context to the LLM (sliding window). The LLM's job is to reformulate the user's current intent, not recall the full history.
+3. Embed ONLY the user's latest refined query for vector search, not the full conversation. The LLM generates the search query from conversation context.
+4. Set a max conversation length (e.g., 10 turns) with a clear message: "Start a new conversation to continue exploring."
+5. Budget: assume ~1,000 tokens per turn, 5 turns average = 5,000 tokens per conversation. At Claude Sonnet pricing, this is negligible, but monitor.
 
-**Which phase should address it:** Infrastructure/deployment phase.
+**Detection:** Test with 20+ turn conversations. Verify response latency stays under 3 seconds. Monitor Anthropic API token usage per conversation.
 
-**Confidence:** HIGH - standard Docker security practice
+**Phase:** Address when building the conversational discovery UI.
 
 ---
 
-### Pitfall 18: Drizzle Schema Changes Not Matching Migration Output
+### Pitfall 10: Admin Review Queue Without Pagination or Filtering Breaks at Scale
 
-**What goes wrong:** Drizzle Kit's `generate` command compares the current schema files to the last snapshot. If you modify schema files and forget to run `drizzle-kit generate`, the application code expects columns that don't exist in the database. Conversely, if you hand-edit migration SQL (needed for multi-step tenant_id addition) but forget to update the schema snapshot, future migrations may try to re-add existing columns.
+**What goes wrong:** Building an admin review queue that loads all pending skills at once works for 5-10 pending skills but breaks at scale. If 50+ skills are submitted for review simultaneously (e.g., after a bulk import or a team onboarding), the review page becomes slow and unusable.
 
 **Prevention:**
-1. After any custom migration edits, run `drizzle-kit check` to verify schema consistency
-2. Always test migrations against a copy of the production database, not just a fresh database
-3. Keep the migration workflow strict: modify schema -> generate -> edit SQL if needed -> apply -> verify
-4. For the tenant_id addition specifically: modify ALL schema files first, then generate ONE migration, then split the generated SQL into multiple steps
+1. Build the review queue with pagination from day one (e.g., 20 per page).
+2. Add filters: by status (pending_review, rejected, needs_changes), by category, by submission date.
+3. Add sorting: newest first (default), oldest first (for clearing backlogs).
+4. Show a count of pending reviews in the admin sidebar or dashboard.
+5. Reuse existing pagination patterns from the skills listing page.
 
-**Which phase should address it:** Schema migration phase.
+**Detection:** Seed 100 skills with `status = 'pending_review'` and verify the admin review page loads in under 2 seconds.
 
-**Confidence:** HIGH - Drizzle [migration docs](https://orm.drizzle.team/docs/migrations) confirm the snapshot-based approach
+**Phase:** Admin review UI phase.
 
 ---
 
-### Pitfall 19: Hook PostToolUse Event Timing for MCP Tool Tracking
+### Pitfall 11: Race Condition Between Auto-Review and Admin Review
 
-**What goes wrong:** Claude Code hooks fire on specific events. For tracking MCP tool usage, you'd want `PostToolUse` with a matcher like `mcp__everyskill-skills__.*`. However, the hook receives `tool_input` (what was sent to the tool) but may not reliably receive the full `tool_output` (what the tool returned). If the hook script needs to know whether the tool call succeeded or what skill was used, the input alone may be insufficient.
-
-**Why it happens:** PostToolUse fires after a successful tool call. PostToolUseFailure fires after a failure. The input data includes `tool_input` and `tool_name` but the output may be truncated or absent in the hook's stdin payload.
+**What goes wrong:** When a skill is submitted, the AI auto-review runs asynchronously. If an admin opens the review queue and acts on the skill before the AI review completes, there's a race condition:
+- Admin approves while AI review is still running. AI review completes and... overwrites the admin decision? Gets ignored? Creates a conflict?
+- Admin rejects while AI review was about to auto-approve. The skill's status becomes inconsistent.
 
 **Prevention:**
-1. Design the tracking hook to work with `tool_input` only (skill name, search query, etc.) - don't depend on `tool_output`
-2. Use `PostToolUse` for success tracking and `PostToolUseFailure` for failure tracking
-3. Match specifically: `"matcher": "mcp__everyskill-skills__.*"` to only fire on Relay MCP tools
-4. Log the `session_id` from the hook input for correlation with server-side MCP logs
+1. The review pipeline should have clear state transitions: `pending_review -> ai_reviewing -> ai_reviewed -> (auto_approved | needs_human_review | auto_rejected)`. Admin action is only available in `ai_reviewed` or `needs_human_review` states.
+2. If the AI review has not completed, show "AI review in progress" in the admin UI and disable the approve/reject buttons.
+3. Use optimistic locking: the admin's approve/reject action should check that the skill's `review_status` hasn't changed since the page loaded. If it has, show a "Status has changed, please refresh" message.
+4. If AI review auto-approves, no admin action is needed. Only skills that fail AI review or are flagged for human review appear in the admin queue.
 
-**Which phase should address it:** Hook implementation phase.
+**Detection:** Submit a skill, immediately open the admin review queue, and try to approve before the AI review completes. The UI should either block the action or handle the race gracefully.
 
-**Confidence:** HIGH - verified from [hooks documentation](https://code.claude.com/docs/en/hooks-guide) that PostToolUse receives tool_input in JSON on stdin
+**Phase:** Review pipeline logic phase (before admin UI).
 
 ---
 
 ## Minor Pitfalls
 
-Mistakes that cause annoyance or minor issues but are fixable.
+---
+
+### Pitfall 12: The `content` Column Is DEPRECATED but Still Primary
+
+**What goes wrong:** `skills.content` has a comment: "DEPRECATED: Will be removed after migration to R2 storage." But it's still the primary content source for AI review, fork creation, MCP tools, and skill display. Building new pipeline features on a deprecated column creates more code to migrate when R2 becomes primary.
+
+**Prevention:** Accept the debt. Build v2.0 on the `content` column. Abstracting content access behind a `getSkillContent(skillId)` function would be ideal but is not worth the refactor for v2.0. Just be aware that R2 migration will touch pipeline code later.
+
+**Phase:** Not blocking. Acknowledge, don't fix.
 
 ---
 
-### Pitfall 20: Docker Compose Service Naming Conflicts
+### Pitfall 13: Fire-and-Forget Pattern in Pipeline-Critical Paths
 
-**What goes wrong:** Using generic service names like `db` or `web` in docker-compose.yml conflicts with other projects running on the same host. Docker creates containers and networks with these names, and two projects using `db` as a service name can cause confusion.
+**What goes wrong:** The codebase uses `.catch(() => {})` extensively for embedding generation and AI review. In the review pipeline, some operations MUST succeed or the skill enters an error state. Applying fire-and-forget to pipeline-critical operations creates silent failures.
 
-**Prevention:** Use project-specific service names: `relay-db`, `relay-web`, `relay-nginx`. Or use the `COMPOSE_PROJECT_NAME` environment variable to namespace.
+**Specific danger zones:**
+- `autoGenerateReview(...).catch(() => {})` in `skills.ts` line 299 -- if this is the pipeline gate, failure = stuck skill.
+- `generateSkillEmbedding(...).catch(() => {})` in `skills.ts` line 288 -- if embedding is needed for conversational discovery, failure = skill is undiscoverable.
 
-**Which phase should address it:** Infrastructure/deployment phase.
+**Prevention:**
+1. Classify each fire-and-forget call as "pipeline-critical" or "advisory."
+2. Pipeline-critical: use `try/catch` with explicit error state transitions, admin notifications on failure.
+3. Advisory (embedding enrichment after review, similarity panel): keep fire-and-forget.
+4. The pipeline review function should NEVER use `.catch(() => {})`. It should propagate errors to the caller, which sets the skill's review_status accordingly.
 
-**Confidence:** HIGH
+**Detection:** Temporarily disable the Anthropic API key and submit a skill. The skill should enter a clear error state, not disappear into limbo.
 
----
-
-### Pitfall 21: Forgetting to Set `output: 'standalone'` in next.config
-
-**What goes wrong:** Without `output: 'standalone'`, the Docker image includes the entire `node_modules` directory, making the image 1-2GB instead of ~200MB. This slows deployment, increases storage costs, and increases cold start times.
-
-**Prevention:** Add `output: 'standalone'` to `next.config.ts`. Verify the Docker image size after build.
-
-**Which phase should address it:** Infrastructure/deployment phase.
-
-**Confidence:** HIGH - documented in Next.js [deployment docs](https://nextjs.org/docs/app/building-your-application/deploying)
+**Phase:** Review pipeline logic phase.
 
 ---
 
-### Pitfall 22: Embedding Dimensions Mismatch Between Tenants
+### Pitfall 14: RBAC Is Binary (admin/member) -- No Reviewer Role
 
-**What goes wrong:** The current `site_settings` stores `embeddingDimensions` as a global setting. If different tenants configure different embedding models with different dimensions, the `skill_embeddings` pgvector column dimension must accommodate all of them, or each tenant needs separate embedding configuration.
+**What goes wrong:** The current role system is `user_role` pgEnum with values `admin` and `member`. The `isAdmin()` function checks `session.user.role === "admin"`. Adding a review pipeline likely needs a reviewer role -- someone who can approve/reject skills but doesn't have full admin access (tenant settings, user management).
 
-**Prevention:** Standardize embedding dimensions across all tenants (enforce a single model), or scope the embedding configuration per tenant and validate dimensions on insert.
+Without a reviewer role, every reviewer must be a full admin, violating least-privilege.
 
-**Which phase should address it:** After site_settings becomes per-tenant.
+**Prevention:**
+1. For v2.0, gate reviews behind `isAdmin()`. Admins can review. This avoids a schema migration for the role enum.
+2. If a separate reviewer role is needed later, add it to the enum: `ALTER TYPE user_role ADD VALUE 'reviewer'`. Create `canReview(session)` that checks `role === 'admin' || role === 'reviewer'`.
+3. Do NOT inline role checks in server actions -- always use helper functions.
 
-**Confidence:** MEDIUM
+**Detection:** Verify that a member cannot access the admin review UI. Verify that an admin can.
+
+**Phase:** Can be deferred. Start with admin-only review in v2.0.
+
+---
+
+### Pitfall 15: DEFAULT_TENANT_ID Hardcoded Proliferation
+
+**What goes wrong:** `DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000"` is hardcoded in 18+ files. New review pipeline services will likely copy-paste this pattern, making the eventual dynamic tenant resolution harder.
+
+**Prevention:** For new v2.0 code, import `DEFAULT_TENANT_ID` from `@everyskill/db` rather than re-declaring the string. Always accept `tenantId` as a parameter in new services (the existing `upsertSkillReview` does this correctly).
+
+**Detection:** After v2.0 development, `grep -r "default-tenant-000" --include="*.ts" | wc -l` should not increase significantly.
+
+**Phase:** Not blocking. Follow existing import pattern.
+
+---
+
+### Pitfall 16: Conversational Discovery Bypassing Status Filter
+
+**What goes wrong:** If conversational discovery uses the existing `trySemanticSearch()` function from `similar-skills.ts`, it will search ALL skill embeddings regardless of status. The vector search query (lines 58-69) joins `skill_embeddings` to `skills` but has no status filter. Pending or rejected skills would appear in conversational discovery results.
+
+**Prevention:**
+1. Add `AND s.status = 'published'` to the vector search SQL in `trySemanticSearch()`.
+2. OR create a new discovery-specific search function that includes the status filter.
+3. The existing `checkSimilarSkills()` and `findSimilarSkillsByName()` also need this filter (they search all skills).
+
+**Detection:** Submit a skill for review (pending status), then use conversational discovery to search for it by description. It should NOT appear.
+
+**Phase:** Same phase as status column migration (for the filter) and conversational discovery (for the new search function).
 
 ---
 
 ## Phase-Specific Warnings
 
 | Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| Schema migration (add tenantId) | Table locks on large tables during ALTER | Use nullable column + backfill + constraint strategy (Pitfall 10) |
-| Schema migration (add tenantId) | Slug uniqueness breaks | Composite unique constraint `(tenant_id, slug)` (Pitfall 6) |
-| Schema migration (add tenantId) | Site settings shared across tenants | Convert to per-tenant settings (Pitfall 7) |
-| Auth/OAuth configuration | Google OAuth redirect_uri_mismatch | Single shared auth endpoint + state parameter (Pitfall 3) |
-| Auth/OAuth configuration | Cross-subdomain cookie failures | Explicit cookie domain configuration (Pitfall 4) |
-| Subdomain routing | Cannot test locally | Use /etc/hosts entries + configurable base domain (Pitfall 11) |
-| Query tenant-scoping | Data leakage in analytics queries | Replace domain-matching with tenantId filtering (Pitfall 2) |
-| Query tenant-scoping | Missed WHERE clauses | Tenant-scoped query helper + integration tests (Pitfall 1) |
-| MCP server multi-tenancy | API key doesn't return tenant context | Add tenantId to validateApiKey return (Pitfall 5) |
-| Docker Compose setup | PostgreSQL exposed to internet | Internal-only Docker network (Pitfall 9) |
-| Docker Compose setup | Secrets in image layers | .dockerignore + runtime env vars (Pitfall 17) |
-| SSL/TLS setup | Wildcard cert requires DNS challenge | DNS-01 with provider API plugin (Pitfall 8) |
-| Hook tracking | Lost events on network failure | Write-ahead log + batch flush (Pitfall 12) |
-| Hook auto-injection | Overwriting user settings | Project-level hooks + merge logic (Pitfall 13) |
-| Admin system | Global admin, not per-tenant | Membership table with roles (Pitfall 15) |
+|---|---|---|
+| Status column migration | Pitfall 1: Existing skills vanish or pending skills leak into listings | Use `DEFAULT 'published'`, update ALL 8 unguarded query paths |
+| Status column migration | Pitfall 2: MCP bypasses pipeline | Update MCP raw SQL to include status column |
+| Status column migration | Pitfall 5: Fork creates orphaned skill | Update fork action to set status and create version record |
+| Status column migration | Pitfall 8: Skill detail page shows pending skills | Add status-aware access control to detail page |
+| Review pipeline data model | Pitfall 3: Advisory review table reused for gating | Separate tables: advisory reviews vs pipeline decisions |
+| Review pipeline logic | Pitfall 11: Race between AI review and admin action | State machine with clear transitions, optimistic locking |
+| Review pipeline logic | Pitfall 13: Fire-and-forget in critical paths | Explicit error handling for pipeline AI review |
+| Review notifications | Pitfall 4: Notification types not extensible | Group review notifications under two preference columns |
+| Admin review UI | Pitfall 10: No pagination in review queue | Build with pagination from day one |
+| Admin review UI | Pitfall 14: No reviewer role | Start with admin-only, defer reviewer role |
+| Conversational discovery | Pitfall 6: Incompatible embedding models | Use same Ollama model for query and stored vectors |
+| Conversational discovery | Pitfall 9: Conversation state bloat | Client-side state, sliding window, max turns |
+| Conversational discovery | Pitfall 16: Vector search returns non-published skills | Add status filter to semantic search queries |
+| Fork-on-modify detection | Pitfall 7: No parent hash at fork time | Add `forkedAtContentHash` column |
+| All new code | Pitfall 15: Hardcoded tenant ID | Import from `@everyskill/db`, accept tenantId as parameter |
+| All new code | Pitfall 12: Building on deprecated content column | Accept debt, build on `content` column |
 
 ---
 
 ## Sources
 
-### Codebase Audit (PRIMARY)
-- Direct reading of all schema files, service files, server actions, analytics queries, auth configuration, middleware, MCP server code, and tracking modules in the Relay codebase
+### Primary -- Direct Codebase Audit
+- Schema: `packages/db/src/schema/skills.ts` (lines 32-84), `skill-reviews.ts` (lines 43-76), `notifications.ts` (lines 12-44), `notification-preferences.ts` (lines 17-46), `skill-embeddings.ts` (lines 35-67), `skill-versions.ts` (lines 11-42), `users.ts` (lines 14-41)
+- Server actions: `apps/web/app/actions/skills.ts` (503 lines, checkAndCreateSkill + createSkill + autoGenerateReview), `ai-review.ts` (159 lines), `fork-skill.ts` (92 lines), `admin-skills.ts` (127 lines), `notifications.ts` (62 lines)
+- Services: `packages/db/src/services/notifications.ts`, `skill-reviews.ts`, `skill-forks.ts`, `search-skills.ts`
+- MCP tools: `apps/mcp/src/tools/create.ts` (272 lines -- raw SQL INSERT with immediate publish), `list.ts`, `search.ts`
+- Query paths audited: `apps/web/lib/search-skills.ts`, `similar-skills.ts`, `trending.ts`, `leaderboard.ts`, `platform-stats.ts`, `user-stats.ts`, `my-leverage.ts`
+- AI review: `apps/web/lib/ai-review.ts` (Anthropic SDK, JSON schema output, structured review generation)
+- Embedding: `apps/web/lib/embedding-generator.ts` (Ollama, nomic-embed-text, fire-and-forget)
+- Skill detail page: `apps/web/app/(protected)/skills/[slug]/page.tsx` (232 lines -- no status check, full render for all skills)
 
-### External Sources (VERIFIED)
-- [Auth.js dynamic NEXTAUTH_URL discussion](https://github.com/nextauthjs/next-auth/discussions/9785) - Multi-tenant auth configuration
-- [Auth.js subdomain behavior issue](https://github.com/nextauthjs/next-auth/issues/10915) - Cookie changes in v5
-- [Auth.js subdomain proxy CSRF issue](https://github.com/nextauthjs/next-auth/issues/12225) - InvalidCheckError with subdomains
-- [Google OAuth redirect URI docs](https://developers.google.com/identity/protocols/oauth2/web-server) - Exact-match requirement
-- [Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide) - Hook lifecycle, events, failure modes
-- [Let's Encrypt challenge types](https://letsencrypt.org/docs/challenge-types/) - DNS-01 requirement for wildcards
-- [Drizzle ORM migrations docs](https://orm.drizzle.team/docs/migrations) - Migration workflow
-- [Drizzle ORM custom migrations](https://orm.drizzle.team/docs/kit-custom-migrations) - Custom SQL in migrations
-- [Next.js multi-tenant guide](https://nextjs.org/docs/app/guides/multi-tenant) - Official multi-tenant patterns
-- [Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying) - Standalone output
-- [PostgreSQL RLS guide (AWS)](https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/) - RLS vs application-level filtering
-- [Multi-tenant security (Qrvey)](https://qrvey.com/blog/multi-tenant-security/) - General multi-tenant security patterns
-- [Multi-tenant risks (Clerk)](https://clerk.com/blog/what-are-the-risks-and-challenges-of-multi-tenancy) - Common challenges
+### External
+- [Five problems with the traditional content review process](https://medium.com/@filestage/five-problems-with-the-traditional-content-review-process-and-how-to-fix-them-f4a2a7a27ad3) -- Content approval workflow pitfalls
+- [Advanced Publishing Workflows | Payload CMS](https://payloadcms.com/enterprise/publishing-workflows) -- Pipeline state management patterns
+- [Avoiding AI Pitfalls in 2026 -- ISACA](https://www.isaca.org/resources/news-and-trends/isaca-now-blog/2025/avoiding-ai-pitfalls-in-2026-lessons-learned-from-top-2025-incidents) -- AI reliability in production workflows
+- [Modernising Publishing Workflows](https://www.thinslices.com/insights/modernising-publishing-workflows-for-performance-and-agility) -- Migration from instant-publish to approval workflows

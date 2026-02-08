@@ -1,600 +1,300 @@
-# Technology Stack: Production Deployment, Multi-Tenancy & Hook Tracking
+# Stack Research: v2.0 Skill Ecosystem Features
 
-**Project:** Relay v2.0 Milestone
-**Researched:** 2026-02-07
-**Scope:** Stack ADDITIONS only. Existing stack (Next.js 16.1.6, PostgreSQL, Drizzle ORM ^0.38.0, Auth.js 5.0.0-beta.30, MCP SDK, mcp-handler, Recharts, etc.) is validated and unchanged.
+**Domain:** Review pipeline, conversational MCP discovery, fork-on-modify detection, admin review UI
+**Researched:** 2026-02-08
+**Confidence:** HIGH
+**Scope:** Stack ADDITIONS only. Existing stack validated and unchanged (Next.js 16.1.6, PostgreSQL + pgvector, Drizzle ORM 0.42.0, Auth.js v5, MCP SDK 1.25.3, Anthropic SDK 0.72.1, Resend, Recharts, Playwright, vitest).
 
 ---
 
 ## Executive Summary
 
-v2.0 requires three capabilities not in the current stack:
+The v2.0 Skill Ecosystem features require **zero new npm dependencies**. Every capability maps directly onto existing stack components:
 
-1. **Docker Compose production deployment** -- Containerize the Next.js monorepo app with standalone output, add Caddy reverse proxy for automatic HTTPS, and upgrade to pgvector/pgvector:pg17 for production PostgreSQL with vector search.
+1. **Review Pipeline** (AI review -> author revision -> admin approval): Extends existing `skillReviews` table with status workflow, uses existing Anthropic SDK (`@anthropic-ai/sdk@0.72.1`) with `output_config.format.type: "json_schema"` (already working in `lib/ai-review.ts`), and existing notification + Resend email infrastructure.
 
-2. **Multi-tenant subdomain routing** -- Add a `tenants` table, add `tenantId` column to all existing tables, extract subdomain in middleware, scope all queries. Zero new npm dependencies.
+2. **Conversational MCP Discovery** (semantic search -> recommend -> describe -> install -> guide): New MCP tools registered via existing `server.registerTool()` API in `@modelcontextprotocol/sdk@1.25.3`. Semantic search reuses the existing `skill_embeddings` table with pgvector HNSW index and Ollama/Voyage AI embedding pipeline.
 
-3. **Claude Code hook-based usage tracking** -- Use PostToolUse hooks (configured via compliance skill frontmatter) to fire async HTTP callbacks to a Relay tracking endpoint. Zero new npm dependencies.
+3. **Fork-on-Modify Detection** (hash comparison MCP tool + web UI): New MCP tool using existing `content_hash` from `skill_versions` table. Web UI comparison page uses existing Next.js server actions + Tailwind CSS. No diff library needed -- SHA-256 hash comparison (already in `lib/content-hash.ts`) detects drift; content display is side-by-side text, not a character-level diff.
 
-**Total new npm dependencies: ZERO.** All additions are infrastructure-level (Docker images, Caddyfile, Dockerfile, database schema, hook shell scripts).
+4. **Admin Review Page**: Extends existing admin layout (`/admin/` with role-based access via `isAdmin(session)`) with a new "Reviews" tab. Uses existing `nuqs` for URL state management and server actions pattern.
 
----
-
-## Recommended Stack Additions
-
-### 1. Docker Production Deployment
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Docker Compose | v2 (bundled on Hetzner) | Service orchestration | Already installed on target server. 3 services (caddy, web, postgres) is a perfect Compose use case |
-| Node.js Alpine | 22-alpine | Container base image | Matches `engines.node >= 22.0.0` in root package.json. Alpine cuts image from ~1GB to ~150MB |
-| PostgreSQL + pgvector | pgvector/pgvector:pg17 | Database with vector search | Replaces current postgres:16-alpine. Bundles pgvector 0.8.x pre-compiled. PostgreSQL 17 is current stable |
-| Caddy | 2.10.x (official Docker image: `caddy:2.10-alpine`) | Reverse proxy + automatic HTTPS | Automatic TLS, wildcard subdomain routing in ~20 lines of Caddyfile. Dramatically simpler than Nginx/Traefik |
-| Turbo prune | Via turbo CLI ^2.3.0 (already installed) | Monorepo Docker layer optimization | `turbo prune web --docker` produces minimal dependency tree for cache-efficient builds |
-
-#### Why Caddy Over Nginx or Traefik
-
-| Criterion | Caddy | Nginx | Traefik |
-|-----------|-------|-------|---------|
-| Automatic HTTPS | Built-in, zero config for ACME + Tailscale | Requires certbot sidecar + cron renewal | Built-in but complex TOML/YAML config |
-| Wildcard subdomains | `*.domain.com` block + `{labels.*}` placeholders | Manual server blocks per subdomain or lua | Docker labels (verbose), dynamic but opaque |
-| Config complexity | ~20 lines Caddyfile | ~80 lines nginx.conf + certbot scripts | ~40 lines YAML + Docker labels per service |
-| Tailscale integration | Native `.ts.net` cert provisioning (auto-detected) | Manual cert mounting from Tailscale socket | No native support |
-| Hot reload | Automatic on Caddyfile change | `nginx -s reload` signal | Automatic via Docker events |
-| Config language | Caddyfile (human-readable) | nginx.conf (bespoke syntax) | TOML/YAML (verbose) |
-
-Caddy wins for this deployment: single server, wildcard subdomains, Tailscale on the network. The `{labels.*}` placeholder extracts subdomain dynamically from any request without per-tenant config.
-
-#### Why pgvector/pgvector:pg17 Over Plain postgres:17-alpine
-
-The project already uses pgvector for Voyage AI skill embeddings. The `pgvector/pgvector:pg17` image (maintained by the pgvector team on Docker Hub) includes the extension pre-compiled. This avoids a custom Dockerfile just to `apk add postgresql-pgvector` and compile. PostgreSQL 17 is the current stable release; upgrading from 16 is safe (minor dump/restore or pg_upgrade).
-
-### 2. Multi-Tenant Architecture
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Drizzle ORM (existing) | ^0.38.0 | Row-level tenant isolation via `tenantId` column | Application-level `WHERE tenantId = ?` on every query. Simpler and more auditable than PostgreSQL RLS for this use case |
-| Next.js middleware (existing) | via next@16.1.6 | Subdomain extraction + tenant resolution | Middleware already runs on every request for auth. Adding subdomain parsing is ~15 lines of code |
-| Auth.js (existing) | 5.0.0-beta.30 | Per-tenant Google SSO domain restriction | Already restricts by `AUTH_ALLOWED_DOMAIN`. Becomes per-tenant lookup: subdomain -> tenant -> allowedDomain |
-
-**No new npm packages needed.** The multi-tenancy pattern is entirely application-level:
-
-1. Middleware extracts subdomain from `req.headers.get('host')`
-2. Middleware resolves tenant by subdomain (cached in-memory with TTL)
-3. Tenant ID propagated via custom header or cookie to server actions
-4. All Drizzle queries include `WHERE tenantId = ?` (enforced by service layer)
-5. Auth.js `signIn` callback validates email domain against `tenant.allowedDomain`
-
-#### Why Row-Level tenantId Over Alternatives
-
-| Approach | Complexity | Migration Effort | Query Overhead | Data Isolation | Recommendation |
-|----------|------------|------------------|----------------|----------------|----------------|
-| **tenantId column + app-level WHERE** | LOW | Add column + backfill | Negligible with index | Logical (app-enforced) | **USE THIS** |
-| PostgreSQL RLS policies | MEDIUM | Drizzle RLS API is beta (requires ^1.0.0-beta.1), `SET` per request | Slight per-query overhead | Database-enforced | Overkill for <50 tenants; Drizzle RLS API not stable |
-| Schema-per-tenant | HIGH | Dynamic schema creation, per-tenant migrations | Connection per schema | Schema-level | Wrong for shared-DB single-server |
-| Database-per-tenant | VERY HIGH | Separate instances, separate connection pools | Per-DB connection | Full isolation | Wrong for Docker Compose single-server |
-
-Row-level tenantId is right because:
-- Relay is an internal tool with <50 expected tenants (one per org/team)
-- Single PostgreSQL instance on a single Hetzner server
-- Drizzle ORM ^0.38.0 does not have stable RLS support (`pgTable.withRLS()` requires drizzle-orm v1.0.0-beta.1+ which is not production-ready)
-- Application-level filtering is battle-tested, trivial to audit, works with the existing Drizzle version
-- A `tenantId` composite index on frequently queried tables ensures query performance
-
-### 3. Claude Code Hook-Based Usage Tracking
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Claude Code hooks | Built into Claude Code CLI | PostToolUse event firing | Hooks configured in skill YAML frontmatter. Fire shell commands on tool events. No library needed |
-| curl | System utility | HTTP callback from hook to Relay API | Hook commands receive JSON stdin, curl posts to tracking endpoint. Zero dependencies |
-| jq | System utility (or inline processing) | JSON field extraction from stdin | Optional; can use simple shell approach instead |
-| Next.js API route (existing) | via next@16.1.6 | `/api/track` endpoint receiving callbacks | Validates API key, writes usage event. Uses existing `usageEvents` table and `apiKeys` auth |
-
-**No new npm packages needed.** The entire hook system is:
-
-1. **Compliance skill** (a markdown file with YAML frontmatter) deployed to each user's `.claude/skills/` directory
-2. **PostToolUse hook** in the skill frontmatter fires after every tool call
-3. **Hook command** (shell script or inline curl) extracts tool info from JSON stdin and POSTs to Relay's `/api/track`
-4. **Relay API route** validates the `EVERYSKILL_API_KEY` header, maps to user + tenant, inserts `usageEvent`
-5. **Async mode** (`"async": true`) ensures hooks never block Claude Code's operation
+**Total new npm dependencies: ZERO.**
 
 ---
 
-## Docker Compose Service Topology
+## Recommended Stack (No Changes)
 
-```yaml
-# docker/docker-compose.prod.yml
-services:
-  # 1. Reverse proxy -- handles TLS termination, wildcard subdomain routing
-  caddy:
-    image: caddy:2.10-alpine
-    # For public domain with wildcard certs, use custom build:
-    # build:
-    #   context: ./caddy
-    #   dockerfile: Dockerfile
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ../Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data       # Persisted TLS certificates
-      - caddy_config:/config
-    environment:
-      - BASE_DOMAIN=${BASE_DOMAIN}
-    depends_on:
-      web:
-        condition: service_healthy
-    restart: unless-stopped
+### Existing Components Used As-Is
 
-  # 2. Next.js app -- standalone mode, minimal image (~150MB)
-  web:
-    build:
-      context: ../
-      dockerfile: docker/Dockerfile
-    environment:
-      - DATABASE_URL=postgresql://relay:${DB_PASSWORD}@postgres:5432/relay
-      - NEXTAUTH_URL=https://${BASE_DOMAIN}
-      - AUTH_SECRET=${AUTH_SECRET}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - VOYAGE_API_KEY=${VOYAGE_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-    expose:
-      - "2000"    # Only accessible within Docker network
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:2000/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    restart: unless-stopped
+| Technology | Installed Version | v2.0 Feature Usage | Notes |
+|------------|-------------------|---------------------|-------|
+| `@anthropic-ai/sdk` | 0.72.1 | AI review generation with structured JSON output | `output_config.format` already working in `lib/ai-review.ts`. Same pattern for review pipeline. Latest available is 0.73.0 -- no breaking changes, update optional |
+| `@modelcontextprotocol/sdk` | 1.25.3 | New tools: `recommend_skills`, `describe_skill`, `check_skill_drift` | `server.registerTool()` + `server.registerPrompt()` APIs used extensively. Latest available is 1.26.0 -- minor patch, update optional |
+| `drizzle-orm` | 0.42.0 | Schema additions (review status columns, admin queries) | Stable. Latest available is 0.45.1 but 0.42.0 is proven in this codebase with 14 tables. No new features needed |
+| `next` | 16.1.6 | New admin pages, review UI components, server actions | All v2.0 web features are standard Next.js App Router patterns |
+| `zod` | 3.25.76 | Input validation for new MCP tools and server actions | Already used in all MCP tools and AI review schemas |
+| `resend` | 6.9.1 | Email notifications for review status changes | Notification dispatch infrastructure built in Phase 33 |
+| `nuqs` | 2.8.7 | URL state for admin review filters (status, date range) | Already used in analytics pages |
+| PostgreSQL + pgvector | Installed with HNSW index | Semantic search for conversational discovery | `skill_embeddings` table with 768-dim vectors and cosine similarity already indexed |
+| `crypto.subtle` | Web Crypto (built-in) | Content hash comparison for fork drift detection | `hashContent()` in `lib/content-hash.ts` already uses SHA-256 |
 
-  # 3. PostgreSQL with pgvector pre-installed
-  postgres:
-    image: pgvector/pgvector:pg17
-    environment:
-      POSTGRES_USER: relay
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: everyskill
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U relay"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    # NOT port-mapped to host -- only accessible within Docker network
+### Why No Version Bumps Are Needed
 
-volumes:
-  postgres_data:
-  caddy_data:
-  caddy_config:
+- **Anthropic SDK 0.72.1 vs 0.73.0**: The 0.73.0 release (2 days ago) is a patch. The `output_config.format.type: "json_schema"` feature used for AI reviews has been stable since 0.70.x. No functional difference for our use case.
+- **MCP SDK 1.25.3 vs 1.26.0**: The 1.26.0 release (4 days ago) is a minor patch. `registerTool()` and `registerPrompt()` APIs are unchanged. v2 anticipated for Q1 2026 but v1.x remains the recommended production version.
+- **Drizzle ORM 0.42.0 vs 0.45.1**: 0.45.1 includes RLS improvements and minor fixes. None are needed -- we use `pgPolicy` definitions (stable since 0.42.0) and standard CRUD queries. Upgrading mid-milestone risks regressions.
+
+---
+
+## Feature-by-Feature Stack Mapping
+
+### Feature 1: Review Pipeline (AI Review -> Author Revision -> Admin Approval)
+
+**What exists today:**
+- `skill_reviews` table with AI-generated scores (quality/clarity/completeness), summary, suggestedDescription
+- `lib/ai-review.ts` generates reviews via Anthropic `messages.create()` with JSON schema output
+- `actions/ai-review.ts` server action: author requests review, content hash prevents duplicate reviews
+- Reviews are advisory-only, one per skill, author can hide/show
+
+**What needs to change (schema only, no new packages):**
+
+| Change | Implementation | Using |
+|--------|---------------|-------|
+| Add `status` column to `skill_reviews` | `text("status").notNull().default("pending")` -- values: `pending`, `ai_reviewed`, `author_revised`, `approved`, `rejected` | Drizzle schema + migration |
+| Add `adminReviewerId` column | `text("admin_reviewer_id").references(() => users.id)` | Drizzle schema |
+| Add `adminNotes` column | `text("admin_notes")` -- admin's feedback when requesting revision | Drizzle schema |
+| Add `reviewedAt` / `approvedAt` timestamps | Standard timestamp columns | Drizzle schema |
+| Status transition server actions | `approveSkillReview()`, `rejectSkillReview()`, `requestRevision()` | Next.js server actions + `isAdmin(session)` guard |
+| Notification on status change | `createNotification()` + `sendNotificationEmail()` | Existing notification + Resend infrastructure |
+| AI review prompt enhancement | Add "admin perspective" scoring context to system prompt | Existing `lib/ai-review.ts` -- modify SYSTEM_PROMPT string |
+
+**Why no state machine library (e.g., xstate, robot3):**
+The review workflow has 5 states and ~6 transitions. A simple `switch` statement or lookup table in a server action handles this. XState adds 15KB+ for a linear workflow that doesn't need parallel states, guards, or history. The transitions are:
+```
+pending -> ai_reviewed (automatic after AI generates review)
+ai_reviewed -> approved (admin approves)
+ai_reviewed -> rejected (admin rejects with notes)
+ai_reviewed -> author_revised (admin requests changes, author resubmits)
+author_revised -> ai_reviewed (re-review on new content)
+approved -> ai_reviewed (content changes after approval trigger re-review)
 ```
 
-**Key architecture decisions:**
-- PostgreSQL has no host port mapping (security: accessible only within Docker network)
-- Caddy handles all external traffic on 80/443
-- Next.js exposes port 2000 within Docker network only (never to host)
-- Health checks cascade: postgres -> web -> caddy (via depends_on conditions)
-- Named volumes for persistence: `postgres_data`, `caddy_data`, `caddy_config`
+### Feature 2: Conversational MCP Discovery
 
-### Caddyfile for Wildcard Subdomain Routing
+**What exists today:**
+- `search_skills` MCP tool: ILIKE text search across name/description/author/tags
+- `list_skills` MCP tool: list all skills with optional category filter
+- `deploy_skill` MCP tool: deploy skill to `~/.claude/skills/`
+- `suggest_skills` MCP prompt: generic prompt to search and present results
+- Semantic search via pgvector in `lib/similar-skills.ts` (web app only, NOT in MCP server)
+- Ollama embedding generation via `lib/ollama.ts`
 
-**Option A: Tailscale-only deployment (simplest, no DNS challenge)**
+**What needs to be added (new MCP tools, no new packages):**
 
-```caddyfile
-# Caddy auto-provisions per-subdomain certs from Tailscale
-# No DNS challenge, no cert configuration needed
-# First request to a new subdomain has ~2s delay for cert provisioning, then cached
+| New Tool | Purpose | Implementation |
+|----------|---------|----------------|
+| `recommend_skills` | Semantic similarity search from natural language | New tool in `apps/mcp/src/tools/recommend.ts`. Calls Ollama `/api/embed`, then SQL cosine similarity query against `skill_embeddings`. Reuses exact pattern from `lib/similar-skills.ts` `trySemanticSearch()` |
+| `describe_skill` | Get full details of a skill before installing | New tool in `apps/mcp/src/tools/describe.ts`. Returns full skill metadata + content + review scores + similar skills. Single DB query with joins |
+| `guide_skill` | Return usage guidance after installation | New tool in `apps/mcp/src/tools/guide.ts`. Returns skill content with contextual instructions. Simple DB fetch + formatted response |
 
-{$TS_HOSTNAME}.ts.net {
-    reverse_proxy web:2000
-}
-```
+**Why add `recommend_skills` instead of enhancing `search_skills`:**
+- `search_skills` is ILIKE-based text matching (fast, always works, no model dependency)
+- `recommend_skills` is semantic vector search (requires Ollama/embedding model running)
+- Keeping them separate means semantic search failure doesn't break basic text search
+- The MCP client (Claude) can try `recommend_skills` first, fall back to `search_skills`
 
-Note: Tailscale `.ts.net` domains do NOT support wildcard certificates (confirmed via GitHub issue tailscale/tailscale#7081). Each subdomain gets an individual certificate on first request. This works fine for <50 tenants -- there is a ~2 second delay on the very first request to each new subdomain while the cert is provisioned, then it is cached.
+**Semantic search in MCP server -- key integration point:**
+The `recommend_skills` tool needs access to the Ollama embedding endpoint. Currently, embedding generation is in `apps/web/lib/ollama.ts` (web-only). For the MCP server:
+- Option A: Duplicate the ~15-line `generateEmbedding()` function into `apps/mcp/src/lib/ollama.ts` (self-contained, no cross-package import issues)
+- Option B: Move to `packages/db/src/services/` as a shared service
+- **Recommendation: Option A** (duplicate). The MCP server is a standalone binary (`tsup` bundled). Cross-package imports of fetch-based code work but add build complexity. The function is tiny.
 
-Since Tailscale terminates at the host (not inside Docker), and tenants are distinguished by subdomain, the approach for Tailscale is: Caddy listens on the host network (or on the Tailscale interface), and the subdomain is passed through to Next.js via the `Host` header. Next.js middleware reads the Host header to determine the tenant.
+**MCP Prompt enhancement:**
+The existing `suggest_skills` prompt can be enhanced with a multi-step instruction that guides the LLM through: recommend -> describe -> deploy -> guide. This is a prompt text change, not a code change.
 
-**Option B: Public domain with wildcard cert (requires DNS provider plugin)**
+### Feature 3: Fork-on-Modify Detection
 
-```caddyfile
-# Wildcard cert for *.relay.company.com via DNS-01 challenge
-*.{$BASE_DOMAIN}, {$BASE_DOMAIN} {
-    tls {
-        dns cloudflare {$CLOUDFLARE_API_TOKEN}
-    }
-    reverse_proxy web:2000
-}
-```
+**What exists today:**
+- `skills.forkedFromId` column tracks parent-child fork relationships
+- `skill_versions.contentHash` stores SHA-256 hash of content at each version
+- `lib/content-hash.ts` has `hashContent()` using Web Crypto API
+- `skill-forks.ts` service: `getForkCount()`, `getTopForks()`, `getParentSkill()`
+- Fork UI shows fork count and parent link on skill detail page
 
-This requires a custom Caddy build with the DNS provider module:
+**What needs to be added (no new packages):**
 
-```dockerfile
-# docker/caddy/Dockerfile
-FROM caddy:2.10-builder AS builder
-RUN xcaddy build --with github.com/caddy-dns/cloudflare
+| Change | Implementation | Using |
+|--------|---------------|-------|
+| `check_skill_drift` MCP tool | Compare installed skill's content hash against latest published hash in DB | New tool in `apps/mcp/src/tools/check-drift.ts`. Takes `skillId` + local content hash. Returns drift status + changed fields |
+| Content hash in deploy response | Include `contentHash` in `deploy_skill` response so MCP client can track it | Modify existing `apps/mcp/src/tools/deploy.ts` to include hash in response payload |
+| Fork drift indicator on web UI | Badge on skill detail page showing "upstream changed" | Server component comparing `contentHash` of fork's published version vs parent's published version. Pure SQL query |
+| "View Changes" comparison page | Side-by-side view of fork content vs parent content | New Next.js page at `/skills/[slug]/compare`. Server component fetches both contents. Tailwind CSS grid for side-by-side |
 
-FROM caddy:2.10-alpine
-COPY --from=builder /usr/bin/caddy /usr/bin/caddy
-```
+**Why no diff library (e.g., diff, diff2html, jsdiff):**
+Fork drift detection answers "has it changed?" (boolean), not "what exactly changed?" (character-level diff). The use case is:
+1. User installs a skill via MCP
+2. User modifies it locally
+3. `check_skill_drift` compares content hashes: match = no drift, mismatch = drift detected
+4. If drift detected, tool returns link to web UI comparison page
+5. Web UI shows full text of both versions side-by-side (not a diff)
 
-**Recommendation:** Use Option B (public domain) if a custom domain like `relay.company.com` is available with Cloudflare DNS. This gives clean tenant URLs (`acme.relay.company.com`). Fall back to Option A only if Tailscale-only access is required.
+Character-level diffing is a Phase 3+ enhancement if user research shows it's needed. For v2.0, side-by-side content display is sufficient and requires zero dependencies.
 
-### Dockerfile for Next.js Standalone (pnpm Monorepo)
+### Feature 4: Admin Review Page
 
-```dockerfile
-# docker/Dockerfile
-# Multi-stage build using turbo prune for minimal dependency tree
+**What exists today:**
+- Admin layout at `/admin/` with tabs: Settings, Skills, Merge, API Keys, Compliance
+- `isAdmin(session)` guard in `lib/admin.ts`
+- `adminNavItems` array in admin layout (easy to extend)
+- Admin skills table component (`AdminSkillsTable`)
+- `nuqs` for URL state in admin pages
 
-# Stage 1: Prune monorepo to only web app and its dependencies
-FROM node:22-alpine AS pruner
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
-RUN npm install -g turbo@^2
-WORKDIR /app
-COPY . .
-RUN turbo prune web --docker
+**What needs to be added (no new packages):**
 
-# Stage 2: Install dependencies (cached layer -- only rebuilds when package.json changes)
-FROM node:22-alpine AS installer
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
-WORKDIR /app
-# Copy only package.json files first (from turbo prune --docker output)
-COPY --from=pruner /app/out/json/ .
-RUN pnpm install --frozen-lockfile
+| Change | Implementation | Using |
+|--------|---------------|-------|
+| "Reviews" tab in admin nav | Add `{ label: "Reviews", href: "/admin/reviews" }` to `adminNavItems` | Existing admin layout pattern |
+| `/admin/reviews` page | Server component listing skills with pending/in-review status | Next.js page + Drizzle query joining `skill_reviews` with `skills` and `users` |
+| Review detail panel | Click-to-expand showing AI scores, author content, admin actions | Client component with existing Tailwind patterns |
+| Filter by status | `nuqs` searchParams for status filter | Existing `nuqs` pattern from analytics pages |
+| Approve/Reject/Request Revision actions | Form actions calling server actions with admin auth check | Existing server action pattern + `isAdmin(session)` |
+| Bulk actions (optional) | Select multiple reviews, bulk approve | Standard checkbox + form submission pattern |
 
-# Stage 3: Build the application
-FROM node:22-alpine AS builder
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
-WORKDIR /app
-COPY --from=installer /app/ .
-# Copy full source code
-COPY --from=pruner /app/out/full/ .
-ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm turbo build --filter=web
+---
 
-# Stage 4: Production runner (~150MB)
-FROM node:22-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
-# Copy standalone output (includes only needed node_modules)
-COPY --from=builder /app/apps/web/.next/standalone ./
-# Copy static assets and public directory
-COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=builder /app/apps/web/public ./apps/web/public
-USER nextjs
-EXPOSE 2000
-ENV PORT=2000 HOSTNAME=0.0.0.0
-CMD ["node", "apps/web/server.js"]
-```
+## Schema Changes Summary
 
-**Critical next.config.ts change required for standalone + monorepo:**
+All schema changes use Drizzle ORM 0.42.0 migration capabilities already in use.
 
+### Modified Tables
+
+**`skill_reviews` (add columns):**
 ```typescript
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const nextConfig: NextConfig = {
-  output: "standalone",
-  // Tell Next.js to trace dependencies from the monorepo root,
-  // not just the apps/web directory
-  outputFileTracingRoot: path.join(__dirname, "../../"),
-  transpilePackages: ["@everyskill/ui", "@everyskill/core", "@everyskill/db"],
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-      },
-    ],
-  },
-};
+status: text("status").notNull().default("pending"),
+// Values: "pending" | "ai_reviewed" | "author_revised" | "approved" | "rejected"
+adminReviewerId: text("admin_reviewer_id").references(() => users.id),
+adminNotes: text("admin_notes"),
+reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+approvedAt: timestamp("approved_at", { withTimezone: true }),
 ```
 
-Without `outputFileTracingRoot`, the standalone build will miss `@everyskill/*` workspace package files.
+**`skills` (no schema change needed):**
+- `forkedFromId` already exists for fork tracking
+- `content` + `contentHash` (via `skill_versions`) already exist for drift detection
+- No new columns needed
 
----
-
-## Claude Code Hook Configuration Detail
-
-### PostToolUse Hook Schema (from Official Docs -- HIGH Confidence)
-
-**What PostToolUse receives on stdin:**
-```json
-{
-  "session_id": "abc123",
-  "transcript_path": "/home/user/.claude/projects/.../transcript.jsonl",
-  "cwd": "/home/user/my-project",
-  "permission_mode": "default",
-  "hook_event_name": "PostToolUse",
-  "tool_name": "Bash",
-  "tool_input": {
-    "command": "npm test",
-    "description": "Run test suite"
-  },
-  "tool_response": {
-    "stdout": "...",
-    "exitCode": 0
-  },
-  "tool_use_id": "toolu_01ABC123..."
-}
-```
-
-**Matcher:** Regex on `tool_name`. Use `".*"` to match all tools, `"Bash|Write|Edit"` for specific tools, `"mcp__.*"` for all MCP tools.
-
-### Compliance Skill with Hook Frontmatter
-
-The tracking hook is deployed as part of a "compliance skill" -- a markdown file with YAML frontmatter that defines the hook. When the skill is active in a user's `.claude/skills/`, the hook fires automatically.
-
-```yaml
----
-name: relay-usage-tracker
-description: Tracks tool usage for organizational compliance and analytics
-hooks:
-  PostToolUse:
-    - matcher: ".*"
-      hooks:
-        - type: command
-          command: |
-            curl -s -X POST "${RELAY_URL}/api/track" \
-              -H "Authorization: Bearer ${EVERYSKILL_API_KEY}" \
-              -H "Content-Type: application/json" \
-              -d @-
-          async: true
-          timeout: 10
----
-
-# Relay Usage Tracker
-
-This skill enables automatic usage tracking for your organization's Relay instance.
-All tool invocations are logged for compliance and analytics purposes.
-
-## What is tracked
-
-- Tool name (Bash, Write, Edit, Read, etc.)
-- Working directory
-- Session ID
-- Timestamp (server-side)
-
-## Privacy
-
-- Tool input/output content is NOT stored -- only tool names and metadata
-- Data is associated with your API key for per-employee attribution
-- All data stays within your organization's Relay instance
-```
-
-**Key design decisions for hook tracking:**
-
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Hook location | Skill frontmatter | Deploys with the skill; no manual settings.json editing per user |
-| Async mode | `"async": true` | Never blocks Claude Code's operation. Results delivered on next turn if needed |
-| Timeout | 10 seconds | Generous for HTTP POST; if Relay is unreachable, hook exits cleanly |
-| Matcher | `".*"` (all tools) | Track everything for complete visibility. Server-side filtering decides what to store |
-| Payload | Full stdin (`-d @-`) | Send entire PostToolUse JSON; server extracts what it needs |
-| Auth | `$EVERYSKILL_API_KEY` env var | Already configured for MCP auth; reused for hook callbacks |
-
-### Server-Side Tracking Endpoint
-
-```
-POST /api/track
-Headers:
-  Authorization: Bearer rlk_abc123...
-  Content-Type: application/json
-Body: (PostToolUse stdin JSON -- forwarded directly from hook)
-
-Response: 200 OK (empty body)
-```
-
-The endpoint:
-1. Validates API key -> resolves userId + tenantId
-2. Extracts `tool_name`, `session_id`, `cwd` from body
-3. Inserts into `usageEvents` table with `tenantId`
-4. Returns 200 immediately (fire-and-forget from hook's perspective)
-
-**What NOT to store:** `tool_input` and `tool_response` may contain sensitive code. Store only `tool_name` and metadata fields. The compliance skill description makes this clear to users.
-
----
-
-## Schema Changes Required for Multi-Tenancy
-
-### New Table: `tenants`
-
-```typescript
-export const tenants = pgTable("tenants", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull(),                        // "Acme Corp"
-  subdomain: text("subdomain").notNull().unique(),     // "acme"
-  allowedDomain: text("allowed_domain").notNull(),     // "acme.com" (Google SSO)
-  logoUrl: text("logo_url"),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-```
-
-### Column Additions to Existing Tables
-
-Every tenant-scoped table gets a `tenantId` column:
-
-```
-users          + tenantId text NOT NULL REFERENCES tenants(id)
-skills         + tenantId text NOT NULL REFERENCES tenants(id)
-skillVersions  + tenantId text NOT NULL REFERENCES tenants(id)
-usageEvents    + tenantId text NOT NULL REFERENCES tenants(id)
-ratings        + tenantId text NOT NULL REFERENCES tenants(id)
-skillReviews   + tenantId text NOT NULL REFERENCES tenants(id)
-apiKeys        + tenantId text NOT NULL REFERENCES tenants(id)
-siteSettings   + tenantId text (replaces singleton "default" id pattern)
-skillEmbeddings + tenantId text NOT NULL REFERENCES tenants(id)
-```
-
-### Index Additions
+### New Indexes
 
 ```sql
--- Single-column tenant indexes for filtering
-CREATE INDEX idx_users_tenant ON users(tenant_id);
-CREATE INDEX idx_skills_tenant ON skills(tenant_id);
-CREATE INDEX idx_usage_events_tenant ON usage_events(tenant_id);
-CREATE INDEX idx_api_keys_tenant ON api_keys(tenant_id);
-CREATE INDEX idx_ratings_tenant ON ratings(tenant_id);
+-- Review pipeline queries
+CREATE INDEX idx_skill_reviews_status ON skill_reviews(tenant_id, status);
+CREATE INDEX idx_skill_reviews_admin ON skill_reviews(admin_reviewer_id);
 
--- Composite indexes for common query patterns
-CREATE INDEX idx_skills_tenant_slug ON skills(tenant_id, slug);
-CREATE UNIQUE INDEX idx_skills_tenant_slug_unique ON skills(tenant_id, slug);
--- (slug uniqueness becomes per-tenant, not global)
+-- Fork drift detection
+CREATE INDEX idx_skills_forked_from ON skills(forked_from_id) WHERE forked_from_id IS NOT NULL;
 ```
 
-### Migration Strategy
+### Migration Count
 
-For the v1 -> v2 migration with existing data:
-
-1. Create `tenants` table
-2. Insert a "default" tenant for existing data
-3. Add `tenantId` column to all tables with `DEFAULT 'default-tenant-id'`
-4. Backfill `tenantId` for all existing rows
-5. Make `tenantId` NOT NULL
-6. Drop old unique constraints that should become per-tenant (e.g., `skills.slug`)
-7. Add new per-tenant unique constraints
-8. Add indexes
+One migration file covering all column additions and indexes. Estimated: `0013_add_review_pipeline.sql` (following existing migration numbering).
 
 ---
 
-## Auth.js Multi-Tenant Configuration
+## New MCP Tools Summary
 
-### Current State (Single Tenant)
+All tools use `server.registerTool()` from `@modelcontextprotocol/sdk@1.25.3`.
 
-```typescript
-// auth.config.ts -- edge-compatible (used by middleware)
-const ALLOWED_DOMAIN = process.env.AUTH_ALLOWED_DOMAIN || "company.com";
-// ...
-authorization: { params: { hd: ALLOWED_DOMAIN } }
+| Tool Name | Input Schema | Output | DB Queries |
+|-----------|--------------|--------|------------|
+| `recommend_skills` | `{ query: string, limit?: number }` | Semantic search results with similarity scores | Ollama `/api/embed` + pgvector cosine query |
+| `describe_skill` | `{ skillId: string }` | Full skill details + review + similar skills | 3 queries (skill, review, similar) |
+| `guide_skill` | `{ skillId: string }` | Usage instructions + content | 1 query (skill content) |
+| `check_skill_drift` | `{ skillId: string, localContentHash: string }` | `{ drifted: boolean, remoteHash: string, compareUrl: string }` | 1 query (skill_versions latest hash) |
+
+**File structure:**
 ```
-
-### Target State (Multi-Tenant)
-
-The middleware extracts the subdomain before auth checks. The auth configuration becomes dynamic per-tenant:
-
-```typescript
-// Middleware flow:
-// 1. Extract subdomain from Host header
-// 2. Look up tenant by subdomain (cached)
-// 3. If no tenant found, return 404
-// 4. Set tenant info in request headers for downstream
-// 5. Auth.js checks proceed with tenant context
-
-// auth.ts -- signIn callback becomes tenant-aware:
-async signIn({ account, profile }) {
-  if (account?.provider === "google") {
-    const email = profile?.email;
-    const domain = email?.split("@")[1];
-    // Look up tenant by email domain
-    const tenant = await getTenantByAllowedDomain(domain);
-    if (!tenant) return false;
-    // Verified + domain matches a tenant
-    return profile?.email_verified === true;
-  }
-  return false;
-}
-```
-
-**Key constraint:** `auth.config.ts` runs at the Edge (middleware) and cannot import database modules. The `hd` parameter in Google OAuth is a UX hint only (not security). The actual domain validation happens in the `signIn` callback in `auth.ts` (server-side) where database access is available.
-
-**NEXTAUTH_URL consideration:** Auth.js uses `NEXTAUTH_URL` for callback URLs. With subdomains, the callback URL must work for all tenants. Set `NEXTAUTH_URL=https://${BASE_DOMAIN}` and configure Google OAuth to allow callbacks from `*.relay.company.com`. Auth.js `trustHost: true` is already set.
-
----
-
-## Environment Variables for Production
-
-```bash
-# docker/.env (NOT committed to git)
-
-# Database
-DB_PASSWORD=<strong-random-password>
-
-# Next.js / Auth.js
-AUTH_SECRET=<openssl-rand-base64-32>
-NEXTAUTH_URL=https://relay.company.com
-GOOGLE_CLIENT_ID=<from-google-cloud-console>
-GOOGLE_CLIENT_SECRET=<from-google-cloud-console>
-
-# Domain configuration
-BASE_DOMAIN=relay.company.com
-
-# Caddy (only for Option B: public domain with wildcard cert)
-CLOUDFLARE_API_TOKEN=<cloudflare-api-token-with-dns-edit>
-
-# Tailscale (only for Option A: Tailscale-only)
-# TS_HOSTNAME=relay-server
-
-# Voyage AI (existing)
-VOYAGE_API_KEY=<existing-key>
-
-# Anthropic (existing)
-ANTHROPIC_API_KEY=<existing-key>
+apps/mcp/src/tools/
+  recommend.ts      # NEW - semantic search
+  describe.ts       # NEW - full skill details
+  guide.ts          # NEW - usage guidance
+  check-drift.ts    # NEW - fork drift detection
+  search.ts         # EXISTING - text search (unchanged)
+  list.ts           # EXISTING - list skills (unchanged)
+  deploy.ts         # EXISTING - deploy skill (minor: add contentHash to response)
+  create.ts         # EXISTING - create skill (unchanged)
+  confirm-install.ts # EXISTING - confirm install (unchanged)
+  log-usage.ts      # EXISTING - log usage (unchanged)
+  index.ts          # EXISTING - add imports for new tools
 ```
 
 ---
 
 ## Alternatives Considered and Rejected
 
-| Category | Recommended | Alternative | Why Not |
-|----------|-------------|-------------|---------|
-| Reverse proxy | Caddy 2.10 | Nginx | No automatic HTTPS; requires certbot sidecar, ~4x more config lines, no Tailscale integration |
-| Reverse proxy | Caddy 2.10 | Traefik | Overkill for single-server; Docker label config is verbose and opaque; no benefit without K8s/Swarm |
-| Tenant isolation | Row-level tenantId | PostgreSQL RLS | Drizzle RLS API is in beta (requires v1.0.0-beta.1+); app-level WHERE is simpler with current ^0.38.0 |
-| Tenant isolation | Row-level tenantId | Schema-per-tenant | Dynamic schema creation, per-tenant migration running, complex connection management. Wrong for <50 tenants |
-| Tenant isolation | Row-level tenantId | Database-per-tenant | Multiple PostgreSQL instances. Wrong for single Docker Compose server |
-| Hook tracking | PostToolUse + curl | Custom MCP tool for tracking | Hooks are deterministic (fire on every tool use); MCP tools require Claude to decide to call them (unreliable) |
-| Hook tracking | Skill frontmatter hooks | Global ~/.claude/settings.json | Skill-scoped hooks deploy with the skill; no per-user manual config needed |
-| Hook tracking | PostToolUse async | Synchronous hook | Async never blocks Claude Code operation; tracking is fire-and-forget |
-| Docker image | Node.js standalone | Full node_modules copy | Standalone is ~150MB vs ~1GB+; faster deploys, smaller attack surface |
-| PostgreSQL image | pgvector/pgvector:pg17 | postgres:17-alpine + manual pgvector | Pre-built image is simpler; no compile step in Dockerfile |
-| Container orchestration | Docker Compose | Kubernetes / K3s | Single server, <50 tenants, 3 services. K8s adds massive operational complexity for zero benefit here |
-| Subdomain routing | Middleware rewrite | Separate Next.js instances per tenant | One instance serves all tenants. Separate instances wastes resources and complicates deployment |
+| Category | Decision | Alternative | Why Not |
+|----------|----------|-------------|---------|
+| State machine | Simple switch/lookup | XState / Robot3 | 5 states, 6 transitions. XState adds 15KB+ for a linear workflow. Overkill |
+| Diff library | SHA-256 hash comparison | jsdiff / diff2html | v2.0 needs "changed or not", not character-level diff. Side-by-side display suffices |
+| AI review model | Keep `claude-sonnet-4` (existing) | Claude Haiku for cost | Reviews are quality-critical. Sonnet's structured output is battle-tested in this codebase. Cost is ~$0.003/review |
+| Semantic search in MCP | Duplicate Ollama client in MCP app | Shared package import | MCP server is standalone binary (tsup bundled). Cross-package fetch code adds build complexity for 15 lines |
+| MCP Resources | Use tools for discovery | Register skills as MCP resources | Tools are the right primitive -- discovery is an action (search/filter), not passive data exposure. Resources suit static reference data |
+| Review notification | In-app + email (existing) | WebSocket push | Notification polling + in-app bell UI already built in Phase 33. WebSocket adds infrastructure for low-frequency events |
+| Admin UI framework | Tailwind + server components | Shadcn/ui / Radix | Admin pages are simple tables + forms. Existing admin pages use plain Tailwind. Adding a component library mid-project is disruptive |
+| Version bump | Stay on current versions | Upgrade Drizzle to 0.45.1 | Zero features in 0.45.1 that we need. Upgrading mid-milestone risks subtle regressions across 14 tables |
+| Version bump | Stay on MCP SDK 1.25.3 | Upgrade to 1.26.0 | Patch release with no API changes relevant to our usage. Stable is good |
 
 ---
 
 ## What NOT to Add
 
-| Technology | Why Skip It |
-|------------|-------------|
-| Redis | Sessions are JWT (stateless). No caching layer needed at <50 tenants. PostgreSQL handles everything |
-| Kubernetes / K3s | Single Hetzner server. Docker Compose handles 3 services. Revisit only if scaling to multiple servers |
-| Nile Database | Drizzle's Nile integration is for hosted multi-tenant Postgres. We self-host on Hetzner |
-| Supabase/Neon RLS helpers | `drizzle-orm/supabase` and `drizzle-orm/neon` are provider-specific. We use plain PostgreSQL |
-| pgBouncer | Connection pooling handled by postgres.js client already. Not needed at this scale |
-| Grafana / Prometheus | Relay has its own analytics dashboard (Phase 23). System monitoring can be added later |
-| Watchtower | Auto-updating production containers is risky. Deploy manually or via CI/CD |
-| Let's Encrypt certbot | Caddy handles ACME automatically. Certbot is redundant and adds complexity |
-| dotenv in production | Environment variables injected via Docker Compose `environment:` block. No `.env` file inside container |
-| Next.js custom server | Standalone output already creates `server.js`. Custom server adds complexity with no benefit |
-| Multi-database Drizzle | Single database, single connection pool. Multi-DB patterns add connection management overhead |
-| Subdomain SSL cert manager | Caddy handles all certificate provisioning automatically, whether via ACME, Tailscale, or internal CA |
-| Event queue (BullMQ, etc.) | Hook tracking is fire-and-forget HTTP POST. No queue needed at this scale |
-| `jq` binary in Docker | Not needed in the web container. `jq` is only used in the hook shell script on developer machines (already installed or installable) |
+| Technology | Why Skip It | Risk If Added |
+|------------|-------------|---------------|
+| `xstate` or `robot3` | 5-state linear workflow. A switch statement is 20 lines | Over-engineering; debugging state chart configs takes longer than the logic |
+| `jsdiff` / `diff2html` | Fork drift is boolean (hash match/mismatch). Character diff is a future enhancement | Adds bundle weight, complexity, and an API surface for a feature that may not be needed |
+| `@ai-sdk/anthropic` (Vercel AI SDK) | Already using `@anthropic-ai/sdk` directly with structured output. Vercel AI SDK is a wrapper that adds streaming abstractions we don't need | Two competing Anthropic clients in one project; different API patterns; confusion |
+| `bullmq` / `pg-boss` | Review status changes are synchronous server actions. Email sending via Resend is already fire-and-forget | Queue infrastructure for 10 events/day is absurd overhead |
+| WebSocket library | Notification polling via server actions already works. Review status changes are infrequent (minutes-to-hours cadence) | Persistent connections, reconnection logic, server memory overhead for low-frequency events |
+| `react-diff-viewer` | Character-level diff rendering in React. Not needed for v2.0 side-by-side display | 40KB+ library for a feature not in scope |
+| Shadcn/ui components | Admin pages use plain Tailwind (consistent with existing 5 admin pages). Adding a component library mid-project breaks visual consistency | Style conflicts, learning curve, inconsistent UI between old and new admin pages |
+| `drizzle-orm` upgrade | 0.42.0 is battle-tested with 14 tables, RLS policies, pgvector custom types, and 12 migrations | 0.45.1 may have subtle behavior changes in query builder or migration generation |
 
 ---
 
-## Version Summary
+## Integration Points
 
-| Component | Current | Change | Notes |
-|-----------|---------|--------|-------|
-| next | ^16.1.6 | Add `output: "standalone"` + `outputFileTracingRoot` to config | No version change needed |
-| drizzle-orm | ^0.38.0 | No change | tenantId is a regular column; no RLS features needed |
-| postgres (Docker) | postgres:16-alpine | **Upgrade to pgvector/pgvector:pg17** | Bundles pgvector 0.8.x; PostgreSQL 17 stable |
-| caddy (Docker) | N/A (new) | **Add caddy:2.10-alpine** | New reverse proxy service |
-| turbo | ^2.3.0 | No change | Use `turbo prune web --docker` in Dockerfile |
-| pnpm | 9.15.0 | No change | Used in Docker multi-stage build |
+### Cross-Feature Dependencies
 
-**Total new npm dependencies: ZERO.** All changes are infrastructure and schema.
+```
+Review Pipeline
+  |-- uses: Anthropic SDK (AI review generation)
+  |-- uses: Notification infrastructure (status change alerts)
+  |-- uses: Resend (email on approval/rejection)
+  |-- used by: Admin Review Page (admin sees review queue)
+
+Conversational Discovery
+  |-- uses: Ollama/Voyage AI embeddings (semantic search)
+  |-- uses: skill_embeddings table + pgvector (vector search)
+  |-- uses: deploy_skill tool (after recommend -> describe -> deploy)
+  |-- independent: No dependency on review pipeline
+
+Fork Drift Detection
+  |-- uses: content_hash from skill_versions (hash comparison)
+  |-- uses: forkedFromId from skills (parent-child relationship)
+  |-- independent: No dependency on review pipeline or discovery
+
+Admin Review Page
+  |-- uses: Review Pipeline (displays review queue)
+  |-- uses: Admin layout + isAdmin guard (access control)
+  |-- uses: nuqs (URL state for filters)
+```
+
+### Build Order Recommendation
+
+1. **Review Pipeline schema + server actions** (foundation -- other features don't depend on it, but admin page does)
+2. **Admin Review Page** (depends on review pipeline schema)
+3. **Conversational MCP Discovery** (independent -- can be built in parallel with review pipeline)
+4. **Fork Drift Detection** (independent -- can be built in parallel)
 
 ---
 
@@ -602,44 +302,40 @@ ANTHROPIC_API_KEY=<existing-key>
 
 | Area | Confidence | Rationale |
 |------|------------|-----------|
-| Docker standalone + turbo prune | HIGH | Verified via official Turborepo Docker docs and Next.js deployment docs. Standard pattern. |
-| Caddy reverse proxy wildcard config | HIGH | Verified via official Caddy documentation (caddyfile/patterns). `{labels.*}` placeholder documented. |
-| Caddy automatic HTTPS with Tailscale | HIGH | Verified via official Tailscale blog post and Caddy automatic-https docs. `.ts.net` auto-provisioning confirmed. |
-| Tailscale wildcard cert limitation | MEDIUM | Multiple community sources confirm no wildcard `.ts.net` certs (GH issue #7081). Per-subdomain provisioning works but has initial latency. |
-| pgvector/pgvector:pg17 Docker image | HIGH | Verified on Docker Hub. `pg17` tag is current and actively maintained. |
-| Claude Code PostToolUse hook schema | HIGH | Verified via official hooks reference at code.claude.com/docs/en/hooks. Complete JSON input schema documented. |
-| Skill frontmatter hooks | HIGH | Documented in official hooks reference under "Hooks in skills and agents" section. YAML frontmatter format confirmed. |
-| Async hook behavior | HIGH | Official docs: `"async": true` runs in background, cannot block or return decisions. |
-| Row-level tenantId pattern | HIGH | Standard multi-tenant pattern. Drizzle RLS confirmed as beta (v1.0.0-beta.1+); app-level WHERE is the safe choice. |
-| Next.js outputFileTracingRoot for monorepo | MEDIUM | Documented in Next.js docs but monorepo edge cases exist; may need debugging during implementation. |
-| Auth.js multi-tenant callback URLs | MEDIUM | `trustHost: true` is already set. Google OAuth callback wildcard support needs verification during implementation. |
+| Zero new dependencies | HIGH | Every feature maps to existing packages. Verified by tracing each capability to installed code |
+| Review pipeline schema | HIGH | Extends existing `skill_reviews` table with standard Drizzle columns. Same pattern as all 14 existing tables |
+| Anthropic SDK structured output | HIGH | Already working in production (`lib/ai-review.ts` line 127-129). Same API for enhanced review prompts |
+| MCP tool registration | HIGH | 6 tools already registered via `server.registerTool()`. New tools follow identical pattern |
+| Semantic search in MCP server | MEDIUM | Duplicating Ollama client code is straightforward, but MCP server's access to Ollama depends on network configuration (Ollama runs on same host). Need to verify Ollama URL accessibility from MCP process |
+| Fork drift hash comparison | HIGH | `hashContent()` already in `lib/content-hash.ts`. `content_hash` stored in `skill_versions`. Pure comparison logic |
+| Admin review page | HIGH | Extends existing admin layout with proven pattern (5 admin pages already exist) |
+| No diff library needed | MEDIUM | Assumption that side-by-side text display is sufficient. If user research shows character-level diff is essential, `jsdiff` can be added in a later phase |
 
 ---
 
 ## Sources
 
-### Official Documentation (HIGH Confidence)
-- [Claude Code Hooks Reference](https://code.claude.com/docs/en/hooks) -- Complete hook lifecycle, PostToolUse schema, skill frontmatter hooks, async mode, matcher patterns
-- [Caddy Automatic HTTPS](https://caddyserver.com/docs/automatic-https) -- TLS automation, wildcard cert requirements, Tailscale .ts.net handling
-- [Caddy Common Patterns](https://caddyserver.com/docs/caddyfile/patterns) -- Wildcard subdomain Caddyfile with `{labels.*}` placeholder, handle + host matcher
-- [Caddy Reverse Proxy Directive](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy) -- Upstream configuration
-- [Turborepo Docker Guide](https://turborepo.dev/docs/guides/tools/docker) -- `turbo prune --docker` flag, multi-stage Dockerfile template
-- [Next.js Deployment Docs](https://nextjs.org/docs/app/getting-started/deploying) -- Standalone output mode, `outputFileTracingRoot`
-- [Next.js Multi-Tenant Guide](https://nextjs.org/docs/app/guides/multi-tenant) -- Subdomain middleware pattern reference
-- [Drizzle ORM RLS Docs](https://orm.drizzle.team/docs/rls) -- `pgTable.withRLS()` API, pgPolicy, confirmed beta status (v1.0.0-beta.1+)
-- [pgvector Docker Hub](https://hub.docker.com/r/pgvector/pgvector) -- pg17 tag, image details
+### Codebase Verification (HIGH Confidence)
+- `apps/web/lib/ai-review.ts` -- Anthropic SDK `output_config.format` usage confirmed at line 127
+- `apps/mcp/src/server.ts` -- MCP SDK `registerTool()` and `registerPrompt()` APIs confirmed
+- `apps/mcp/src/tools/` -- 6 existing tool implementations confirming registration pattern
+- `packages/db/src/schema/skill-reviews.ts` -- Current review schema with `ReviewCategories` interface
+- `packages/db/src/schema/skills.ts` -- `forkedFromId` column confirmed at line 67
+- `packages/db/src/schema/skill-versions.ts` -- `contentHash` column confirmed at line 26
+- `apps/web/lib/content-hash.ts` -- `hashContent()` SHA-256 implementation confirmed
+- `apps/web/lib/similar-skills.ts` -- pgvector cosine similarity query pattern confirmed
+- `apps/web/lib/ollama.ts` -- Ollama embedding API client (15 lines, duplicatable)
+- `apps/web/app/(protected)/admin/layout.tsx` -- Admin nav items array, `isAdmin()` guard
 
-### Verified via Web Search (MEDIUM Confidence)
-- [Tailscale + Caddy Blog](https://tailscale.com/blog/caddy) -- Automatic `.ts.net` cert provisioning, no special config needed
-- [Caddy GitHub Releases](https://github.com/caddyserver/caddy/releases) -- Current stable is 2.10.x
-- [pgvector GitHub](https://github.com/pgvector/pgvector) -- Current version 0.8.1, pg17 support confirmed
-- [Drizzle tenantId Discussion #1539](https://github.com/drizzle-team/drizzle-orm/discussions/1539) -- Community patterns for WHERE enforcement in multi-tenant apps
+### NPM Registry (HIGH Confidence)
+- [@modelcontextprotocol/sdk](https://www.npmjs.com/package/@modelcontextprotocol/sdk) -- Latest 1.26.0 (4 days ago), installed 1.25.3
+- [@anthropic-ai/sdk](https://www.npmjs.com/package/@anthropic-ai/sdk) -- Latest 0.73.0 (2 days ago), installed 0.72.1
+- [drizzle-orm](https://www.npmjs.com/drizzle-orm) -- Latest 0.45.1 (2 months ago), installed 0.42.0
 
-### Community Sources (LOW Confidence, Noted for Awareness)
-- [Tailscale Wildcard Cert FR #7081](https://github.com/tailscale/tailscale/issues/7081) -- Wildcard .ts.net not supported; per-subdomain provisioning is the workaround
-- [Next.js Monorepo Standalone Discussion #35437](https://github.com/vercel/next.js/discussions/35437) -- Community edge cases with outputFileTracingRoot in monorepos
+### MCP SDK Documentation (HIGH Confidence)
+- [TypeScript SDK Server Docs](https://github.com/modelcontextprotocol/typescript-sdk/blob/main/docs/server.md) -- `registerTool()`, `registerPrompt()`, `registerResource()` APIs, structured content responses
 
 ---
 
-*Stack research for: Relay v2.0 -- Production Deployment, Multi-Tenancy & Hook Tracking*
-*Researched: 2026-02-07*
+*Stack research for: EverySkill v2.0 -- Skill Ecosystem Features*
+*Researched: 2026-02-08*
