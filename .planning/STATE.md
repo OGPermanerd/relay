@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 39 of 39 (Fork Detection)
-Plan: 02 of 04
+Plan: 03 of 04
 Status: In progress
-Last activity: 2026-02-08 -- Completed 39-01-PLAN.md (forkedAtContentHash column + fork action update)
+Last activity: 2026-02-08 -- Completed 39-03-PLAN.md (update_skill MCP tool)
 
-Progress: [████████████████████░░░░] 91% (v2.0 -- 41/44 requirements delivered)
+Progress: [█████████████████████░░░] 93% (v2.0 -- 42/44 requirements delivered)
 
 ## Milestones
 
@@ -29,12 +29,12 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 173
+- Total plans completed: 174
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~9.8 hours
 
 **Cumulative:**
-- 173 plans across 39 phases and 7 milestones
+- 174 plans across 39 phases and 7 milestones
 - ~16,000 LOC TypeScript
 - 8 days total development time
 
@@ -99,6 +99,10 @@ Recent decisions affecting current work:
 - [39-02]: check_skill_status strips frontmatter from BOTH local and DB content before SHA-256 hashing (FORK-02 false-positive prevention)
 - [39-02]: Access control: published OR author-owned -- unpublished skills hidden from non-authors
 - [39-02]: Self-contained helpers in MCP tool files (no cross-app imports) per MCP standalone pattern
+- [39-03]: Author updates set status=draft for re-review rather than staying published
+- [39-03]: forkedAtContentHash computed from stripped body (no frontmatter) matching check_skill_status pattern
+- [39-03]: Fork description defaults to parent description when not provided
+- [39-03]: Version record failure is non-fatal (try/catch) matching create.ts pattern
 
 ### Pending Todos
 
@@ -114,5 +118,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 39 plans 01+02 complete -- next: 39-03 (update_skill MCP tool)
+Stopped at: Phase 39 plan 03 complete -- next: 39-04 (fork tree UI or remaining fork detection)
 Resume file: .planning/phases/39-fork-detection/
