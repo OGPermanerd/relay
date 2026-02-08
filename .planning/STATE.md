@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 31 of 33 (Skills Upload Enhancements)
-Plan: 1 of TBD in phase 31 (31-01 complete)
+Plan: 4 of 6 in phase 31 (31-01, 31-04 complete)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 31-01-PLAN.md (relative timestamp utility)
+Last activity: 2026-02-08 -- Completed 31-04-PLAN.md (skill messages data layer)
 
-Progress: [███████████████████░░░░░] ~33% (v1.5 -- 131 plans total)
+Progress: [███████████████████░░░░░] ~34% (v1.5 -- 132 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [███████████████████░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 131
-- Phase 31: 31-01 complete (relative timestamp utility TDD)
+- Total plans completed: 132
+- Phase 31: 31-01, 31-04 complete (relative timestamp utility TDD, skill messages data layer)
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~7.8 hours
+- Total execution time: ~7.9 hours
 
 **Cumulative:**
-- 131 plans across 31 phases and 5 milestones
+- 132 plans across 31 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -103,6 +103,7 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 30-07 | Caddy ask endpoint validates before cert issuance | Prevents abuse of on-demand TLS by verifying domain ownership in DB |
 | 31-01 | useState('') for hydration-safe RelativeTime | Empty string on server matches empty string before useEffect fires on client |
 | 31-01 | 60-second refresh interval for RelativeTime | Keeps display current without excessive re-renders |
+| 31-04 | Migration 0009 instead of 0010 for skill_messages | 31-03 not yet executed so 0009 was next available number |
 
 ### Pending Todos
 
@@ -122,5 +123,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 31 plan 01 complete -- relative timestamp utility with TDD
-Resume file: .planning/phases/31-skills-upload-enhancements/31-01-SUMMARY.md
+Stopped at: Phase 31 plan 04 complete -- skill messages data layer
+Resume file: .planning/phases/31-skills-upload-enhancements/31-04-SUMMARY.md
