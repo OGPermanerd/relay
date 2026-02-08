@@ -5,6 +5,7 @@ import { getUserStats } from "@/lib/user-stats";
 import { listApiKeysAction } from "@/app/actions/api-keys";
 import { ApiKeyManager } from "@/components/api-key-manager";
 import { McpConnectButton } from "@/components/mcp-connect-button";
+import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -42,7 +43,7 @@ export default async function ProfilePage() {
     },
     {
       label: "FTE Years Saved",
-      value: (userStats.fteDaysSaved / 365).toFixed(1),
+      value: (userStats.fteDaysSaved / FTE_DAYS_PER_YEAR).toFixed(1),
       description: "Years saved for the org",
     },
   ];

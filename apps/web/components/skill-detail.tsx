@@ -7,6 +7,7 @@ import { calculateQualityScore } from "@/lib/quality-score";
 import { QualityBadge } from "./quality-badge";
 import { QualityBreakdown } from "./quality-breakdown";
 import { ForkAttribution } from "./fork-attribution";
+import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
 
 interface SkillWithAuthor {
   id: string;
@@ -103,7 +104,7 @@ export function SkillDetail({ skill, stats, trends, forkCount, parentSkill }: Sk
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
           label="FTE Years Saved"
-          value={(Number(stats.fteDaysSaved) / 365).toFixed(2)}
+          value={(Number(stats.fteDaysSaved) / FTE_DAYS_PER_YEAR).toFixed(2)}
           trendData={trends.daysSavedTrend}
           trendColor="#10b981"
         />

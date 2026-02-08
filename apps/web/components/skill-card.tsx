@@ -4,6 +4,7 @@ import { formatRating } from "@everyskill/db";
 import { Sparkline } from "./sparkline";
 import { QualityBadge } from "./quality-badge";
 import { calculateQualityScore } from "../lib/quality-score";
+import { FTE_HOURS_PER_YEAR } from "../lib/constants";
 
 export interface SkillCardData {
   id: string;
@@ -37,8 +38,10 @@ interface SkillCardProps {
  * - Author avatar and name
  */
 export function SkillCard({ skill, usageTrend }: SkillCardProps) {
-  // Calculate FTE Years Saved: (totalUses * hoursSaved) / 8 / 365
-  const fteYearsSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / 8 / 365).toFixed(2);
+  // Calculate FTE Years Saved: (totalUses * hoursSaved) / FTE_HOURS_PER_YEAR
+  const fteYearsSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / FTE_HOURS_PER_YEAR).toFixed(
+    2
+  );
 
   // Calculate quality tier for badge
   const { tier } = calculateQualityScore({

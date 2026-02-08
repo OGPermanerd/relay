@@ -7,6 +7,7 @@ import { Sparkline } from "./sparkline";
 import { SkillAccordionContent } from "./skill-accordion-content";
 import { InstallButton } from "./install-button";
 import type { SkillTableRow } from "./skills-table";
+import { FTE_HOURS_PER_YEAR } from "@/lib/constants";
 
 interface SkillsTableRowProps {
   skill: SkillTableRow & {
@@ -87,8 +88,8 @@ export function SkillsTableRow({
     (rowRef as React.MutableRefObject<HTMLTableRowElement | null>).current = el;
     registerRef(el);
   };
-  // Calculate FTE Years Saved: (totalUses * hoursSaved) / 8 / 365
-  const yearsSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / 8 / 365).toFixed(2);
+  // Calculate FTE Years Saved: (totalUses * hoursSaved) / FTE_HOURS_PER_YEAR
+  const yearsSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / FTE_HOURS_PER_YEAR).toFixed(2);
 
   // Format date as "MMM D, YYYY" (e.g., "Jan 15, 2026")
   // Manual formatting avoids hydration mismatches from toLocaleDateString

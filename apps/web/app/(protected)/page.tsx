@@ -17,6 +17,7 @@ import { TrendingSection } from "@/components/trending-section";
 import { SearchWithDropdown } from "@/components/search-with-dropdown";
 import { HomeTabs } from "@/components/home-tabs";
 import { MyLeverageView } from "@/components/my-leverage-view";
+import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
 
 // Icons for stat cards (Heroicons)
 function ClockIcon() {
@@ -163,7 +164,7 @@ export default async function HomePage() {
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="FTE Years Saved"
-          value={(stats.totalFteDaysSaved / 365).toFixed(1)}
+          value={(stats.totalFteDaysSaved / FTE_DAYS_PER_YEAR).toFixed(1)}
           icon={<ClockIcon />}
           trendData={trends.fteDaysTrend}
           trendColor="#3b82f6"

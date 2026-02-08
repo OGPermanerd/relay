@@ -6,6 +6,7 @@ import { eq, and, isNotNull, desc } from "drizzle-orm";
 import { getUserStats } from "@/lib/user-stats";
 import { auth } from "@/auth";
 import { ThankYouButton } from "@/components/thank-you-button";
+import { FTE_DAYS_PER_YEAR, FTE_HOURS_PER_YEAR } from "@/lib/constants";
 
 interface UserPageProps {
   params: Promise<{ id: string }>;
@@ -57,7 +58,7 @@ export default async function UserPage(props: UserPageProps) {
     { label: "Skills Shared", value: userStats.skillsShared.toString() },
     { label: "Total Uses", value: userStats.totalUses.toString() },
     { label: "Avg Rating", value: userStats.avgRating ?? "-" },
-    { label: "FTE Years Saved", value: (userStats.fteDaysSaved / 365).toFixed(1) },
+    { label: "FTE Years Saved", value: (userStats.fteDaysSaved / FTE_DAYS_PER_YEAR).toFixed(1) },
   ];
 
   const isOwnProfile = session?.user?.id === user.id;
@@ -118,7 +119,10 @@ export default async function UserPage(props: UserPageProps) {
         {userSkills.length > 0 ? (
           <div className="space-y-3">
             {userSkills.map((skill) => {
-              const yearsSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / 8 / 365).toFixed(2);
+              const yearsSaved = (
+                (skill.totalUses * (skill.hoursSaved ?? 1)) /
+                FTE_HOURS_PER_YEAR
+              ).toFixed(2);
               const rating = skill.averageRating ? (skill.averageRating / 100).toFixed(1) : null;
 
               return (

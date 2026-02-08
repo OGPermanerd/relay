@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { StatCard } from "@/components/stat-card";
 import { loadMoreUsage } from "@/app/actions/my-leverage";
+import { FTE_HOURS_PER_YEAR } from "@/lib/constants";
 
 interface SerializedTimelineEntry {
   skillId: string | null;
@@ -125,7 +126,7 @@ export function MyLeverageView({
           <StatCard label="Skills Used" value={skillsUsedStats.totalSkills} />
           <StatCard
             label="Years Saved"
-            value={(skillsUsedStats.totalHoursSaved / 8 / 365).toFixed(2)}
+            value={(skillsUsedStats.totalHoursSaved / FTE_HOURS_PER_YEAR).toFixed(2)}
           />
           <StatCard label="Total Actions" value={skillsUsedStats.totalActions} />
           <StatCard label="Most Used" value={skillsUsedStats.mostUsedSkill || "None yet"} />
@@ -183,7 +184,7 @@ export function MyLeverageView({
           <StatCard label="Skills Published" value={skillsCreatedStats.skillsPublished} />
           <StatCard
             label="Years Saved by Others"
-            value={(skillsCreatedStats.hoursSavedByOthers / 8 / 365).toFixed(2)}
+            value={(skillsCreatedStats.hoursSavedByOthers / FTE_HOURS_PER_YEAR).toFixed(2)}
           />
           <StatCard label="Unique Users" value={skillsCreatedStats.uniqueUsers} />
           <StatCard

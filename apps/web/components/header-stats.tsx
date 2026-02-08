@@ -1,6 +1,7 @@
 "use client";
 
 import { Sparkline } from "./sparkline";
+import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
 
 interface HeaderStatsProps {
   totalDaysSaved: number;
@@ -11,7 +12,7 @@ interface HeaderStatsProps {
  * Header stats component showing total days saved with sparkline
  */
 export function HeaderStats({ totalDaysSaved, trendData }: HeaderStatsProps) {
-  const yearsSaved = (totalDaysSaved / 365).toFixed(1);
+  const yearsSaved = (totalDaysSaved / FTE_DAYS_PER_YEAR).toFixed(1);
 
   return (
     <div className="flex items-center gap-3">
