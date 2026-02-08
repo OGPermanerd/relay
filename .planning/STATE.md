@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 36 of 39 (Admin Review UI)
-Plan: 01 of 03
+Plan: 02 of 03
 Status: In progress
-Last activity: 2026-02-08 -- Completed 36-01-PLAN.md (review data layer)
+Last activity: 2026-02-08 -- Completed 36-02-PLAN.md (server actions + review queue)
 
-Progress: [████████░░░░░░░░░░░░░░░░] 39% (v2.0 -- 17/44 requirements delivered)
+Progress: [████████░░░░░░░░░░░░░░░░] 41% (v2.0 -- 18/44 requirements delivered)
 
 ## Milestones
 
@@ -29,12 +29,12 @@ Progress: [████████░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 161
+- Total plans completed: 162
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~9.5 hours
 
 **Cumulative:**
-- 161 plans across 36 phases and 7 milestones
+- 162 plans across 36 phases and 7 milestones
 - ~15,500 LOC TypeScript
 - 8 days total development time
 
@@ -65,6 +65,9 @@ Recent decisions affecting current work:
 - [36-01]: review_decisions table is insert-only (no updatedAt) for SOC2 immutable audit trail
 - [36-01]: Default review queue filter is "ai_reviewed" -- skills awaiting human admin review
 - [36-01]: AI scores snapshot stored as JSONB for point-in-time decision record
+- [36-02]: Raw tx.insert used inside transactions instead of createReviewDecision service to maintain transaction context
+- [36-02]: Approve action chains ai_reviewed -> approved -> published in a single transaction
+- [36-02]: Reviews nav tab positioned first in admin nav for prominence
 
 ### Pending Todos
 
@@ -80,5 +83,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 36-01 (review data layer) -- continue with 36-02 (server actions)
-Resume file: .planning/phases/36-admin-review-ui/36-02-PLAN.md
+Stopped at: Completed 36-02 (server actions + review queue) -- continue with 36-03 (review detail page)
+Resume file: .planning/phases/36-admin-review-ui/36-03-PLAN.md
