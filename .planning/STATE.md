@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 30 of 33 (Branding & Navigation)
-Plan: 6 of 7 in phase 30 (30-01, 30-02, 30-03, 30-06 complete)
+Plan: 6 of 7 in phase 30 (30-01, 30-02, 30-03, 30-04, 30-06 complete)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 30-03-PLAN.md (contributor tier & greeting area)
+Last activity: 2026-02-08 -- Completed 30-04-PLAN.md (TenantBranding server component)
 
 Progress: [█████████████████░░░░░░░] ~31% (v1.5 -- 29 of ~TBD plans)
 
@@ -28,13 +28,13 @@ Progress: [█████████████████░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 127
-- Phase 30: Plans 01-03, 06 complete (AnimatedLogo, NavLink, contributor tier, vanity domain)
+- Total plans completed: 128
+- Phase 30: Plans 01-04, 06 complete (AnimatedLogo, NavLink, contributor tier, TenantBranding, vanity domain)
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.8 hours
 
 **Cumulative:**
-- 127 plans across 30 phases and 5 milestones
+- 128 plans across 30 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -98,6 +98,7 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 29-02 | In-memory tenant filtering in MCP tools | drizzle-orm not direct dependency of MCP app; in-memory filter matches existing pattern |
 | 29-02 | Three-tier tenantId resolution in tracking | event.tenantId > cached auth tenantId > DEFAULT_TENANT_ID for anonymous fallback |
 | 30-06 | Nullable unique vanity_domain column | Opt-in vanity domains for paid tenants; nullable allows freemium tenants to skip |
+| 30-04 | Plain img tag for tenant logos | Avoids next/image remotePatterns config for arbitrary tenant logo domains |
 
 ### Pending Todos
 
@@ -117,5 +118,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 30, plan 03 complete (contributor tier & greeting area)
-Resume file: .planning/phases/30-branding-navigation/30-03-SUMMARY.md
+Stopped at: Phase 30, plan 04 complete (TenantBranding server component)
+Resume file: .planning/phases/30-branding-navigation/30-04-SUMMARY.md
