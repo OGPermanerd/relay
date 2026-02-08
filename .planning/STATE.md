@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 29 Tenant-Scoped Analytics & MCP -- COMPLETE (all 3 plans done).
+**Current focus:** Phase 29 Tenant-Scoped Analytics & MCP -- COMPLETE. Next: Phase 30.
 
 ## Current Position
 
 Phase: 29 of 33 (Tenant-Scoped Analytics & MCP) -- COMPLETE
 Plan: 3 of 3 in phase 29 (29-01 through 29-03 complete)
 Status: Phase complete
-Last activity: 2026-02-08 -- Completed 29-02-PLAN.md (MCP tenant scoping)
+Last activity: 2026-02-08 -- Phase 29 complete, all 3 plans executed in 1 wave, verified 11/11 must-haves
 
 Progress: [███████████████░░░░░░░░░] ~28% (v1.5 -- 26 of ~TBD plans)
 
@@ -116,5 +116,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 29 complete (all 3 plans), analytics tenant-scoped, MCP tenant-filtered, FTE standardized
-Resume file: .planning/phases/29-tenant-scoped-analytics-mcp/29-02-SUMMARY.md
+Stopped at: Phase 29 complete, verified, ROADMAP updated
+Resume file: None

@@ -98,7 +98,7 @@ Total: 25 plans completed.
 - [x] **Phase 26: Auth & Subdomain Routing** - Users can log in to their tenant's subdomain
 - [x] **Phase 27: Production Docker Deployment** - Single-command production deployment (parallel track)
 - [x] **Phase 28: Hook-Based Usage Tracking** - Deterministic skill usage tracking via Claude Code hooks
-- [ ] **Phase 29: Tenant-Scoped Analytics & MCP** - Analytics and MCP respect tenant boundaries
+- [x] **Phase 29: Tenant-Scoped Analytics & MCP** - Analytics and MCP respect tenant boundaries
 - [ ] **Phase 30: Branding & Navigation** - White-label tenant branding and improved navigation
 - [ ] **Phase 31: Skills & Upload Enhancements** - Richer upload experience with auto-review and similarity
 - [ ] **Phase 32: Admin Panel** - Tenant administrators can manage their organization
@@ -258,13 +258,13 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 26. Auth & Subdomain Routing | v1.5 | 3/3 | Complete | 2026-02-07 |
 | 27. Docker Deployment | v1.5 | 4/4 | Complete | 2026-02-08 |
 | 28. Hook-Based Tracking | v1.5 | 7/7 | Complete | 2026-02-08 |
-| 29. Tenant Analytics & MCP | v1.5 | 0/3 | Not started | - |
+| 29. Tenant Analytics & MCP | v1.5 | 3/3 | Complete | 2026-02-08 |
 | 30. Branding & Navigation | v1.5 | 0/TBD | Not started | - |
 | 31. Skills & Upload | v1.5 | 0/TBD | Not started | - |
 | 32. Admin Panel | v1.5 | 0/TBD | Not started | - |
 | 33. Email & Notifications | v1.5 | 0/TBD | Not started | - |
 
-**Total: 120 plans completed across 28 phases and 5 milestones (v1.0-v1.5 Phase 28)**
+**Total: 123 plans completed across 29 phases and 5 milestones (v1.0-v1.5 Phase 29)**
 
 ---
 *Roadmap created: 2026-01-31*
