@@ -7,6 +7,11 @@ import { TenantBranding } from "@/components/tenant-branding";
 import { NavLink } from "@/components/nav-link";
 import { GreetingArea } from "@/components/greeting-area";
 import { isAdmin } from "@/lib/admin";
+import {
+  getUnreadNotificationCount,
+  getUserNotifications,
+} from "@everyskill/db/services/notifications";
+import { NotificationBell } from "@/components/notification-bell";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -17,6 +22,23 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   }
 
   const { user } = session;
+
+  // Fetch notification data for the bell component
+  const [unreadCount, recentNotifications] = await Promise.all([
+    getUnreadNotificationCount(user.id!),
+    getUserNotifications(user.id!, 20),
+  ]);
+
+  const serializedNotifications = recentNotifications.map((n) => ({
+    id: n.id,
+    type: n.type,
+    title: n.title,
+    message: n.message,
+    actionUrl: n.actionUrl,
+    isRead: n.isRead,
+    createdAt: n.createdAt instanceof Date ? n.createdAt.toISOString() : n.createdAt,
+    readAt: n.readAt instanceof Date ? n.readAt.toISOString() : (n.readAt ?? null),
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,6 +60,12 @@ export default async function ProtectedLayout({ children }: { children: React.Re
           {/* User Menu */}
           <div className="flex items-center gap-4">
             <GreetingArea userId={user.id!} userName={user.name || "User"} />
+            <div className="relative">
+              <NotificationBell
+                initialCount={unreadCount}
+                initialNotifications={serializedNotifications}
+              />
+            </div>
             <Link href="/profile" className="flex items-center transition hover:opacity-80">
               {user.image ? (
                 <Image
