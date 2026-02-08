@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { eq, and, isNull, or, gt } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { db } from "../client";
 import { apiKeys } from "../schema";
 
@@ -8,11 +8,11 @@ import { apiKeys } from "../schema";
  * Uses timing-safe comparison to prevent timing attacks.
  * Fire-and-forget updates lastUsedAt on successful validation.
  *
- * @returns { userId, keyId } if valid, null otherwise
+ * @returns { userId, keyId, tenantId, isExpired } if valid, null otherwise
  */
 export async function validateApiKey(
   rawKey: string
-): Promise<{ userId: string; keyId: string } | null> {
+): Promise<{ userId: string; keyId: string; tenantId: string; isExpired: boolean } | null> {
   if (!db) {
     console.warn("Database not configured, skipping validateApiKey");
     return null;
@@ -22,12 +22,8 @@ export async function validateApiKey(
 
   const now = new Date();
   const result = await db.query.apiKeys.findFirst({
-    columns: { id: true, userId: true, keyHash: true },
-    where: and(
-      eq(apiKeys.keyHash, keyHash),
-      isNull(apiKeys.revokedAt),
-      or(isNull(apiKeys.expiresAt), gt(apiKeys.expiresAt, now))
-    ),
+    columns: { id: true, userId: true, keyHash: true, tenantId: true, expiresAt: true },
+    where: and(eq(apiKeys.keyHash, keyHash), isNull(apiKeys.revokedAt)),
   });
 
   if (!result) return null;
@@ -48,7 +44,12 @@ export async function validateApiKey(
     .then(() => {})
     .catch(console.error);
 
-  return { userId: result.userId, keyId: result.id };
+  return {
+    userId: result.userId,
+    keyId: result.id,
+    tenantId: result.tenantId,
+    isExpired: result.expiresAt ? result.expiresAt <= now : false,
+  };
 }
 
 /**

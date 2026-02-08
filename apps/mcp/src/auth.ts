@@ -34,7 +34,7 @@ export async function resolveUserId(): Promise<string | null> {
       cachedUserId = result.userId;
       console.error("Authenticated as userId:", cachedUserId);
     } else {
-      console.error("EVERYSKILL_API_KEY is invalid or expired — running in anonymous mode");
+      console.error("EVERYSKILL_API_KEY is invalid or revoked — running in anonymous mode");
     }
   } catch (error) {
     console.error("Failed to validate EVERYSKILL_API_KEY:", error);

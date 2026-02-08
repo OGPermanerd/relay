@@ -35,12 +35,16 @@ export async function POST(request: NextRequest) {
     clientVersion?: unknown;
   };
 
-  // Resolve userId from API key if provided (anonymous installs are valid)
+  // Resolve userId and tenantId from API key if provided (anonymous installs are valid)
   let userId: string | null = null;
+  let tenantId: string = DEFAULT_TENANT_ID;
   if (key && typeof key === "string") {
     try {
       const result = await validateApiKey(key);
       userId = result?.userId ?? null;
+      if (result?.tenantId) {
+        tenantId = result.tenantId;
+      }
     } catch {
       // Invalid key is not an error — treat as anonymous
       userId = null;
@@ -56,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     await db.insert(usageEvents).values({
-      tenantId: DEFAULT_TENANT_ID,
+      tenantId,
       toolName: "install_confirmed",
       skillId: resolvedSkillId,
       userId,

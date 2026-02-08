@@ -25,8 +25,16 @@ export async function POST(request: NextRequest) {
   const result = await validateApiKey(key);
 
   if (!result) {
-    return NextResponse.json({ error: "Invalid or expired key" }, { status: 401 });
+    return NextResponse.json({ error: "Invalid or revoked key" }, { status: 401 });
   }
 
-  return NextResponse.json({ userId: result.userId, keyId: result.keyId }, { status: 200 });
+  return NextResponse.json(
+    {
+      userId: result.userId,
+      keyId: result.keyId,
+      tenantId: result.tenantId,
+      isExpired: result.isExpired,
+    },
+    { status: 200 }
+  );
 }
