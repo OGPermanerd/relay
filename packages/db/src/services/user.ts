@@ -1,6 +1,6 @@
 import { db } from "../client";
 import { users } from "../schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 
 /**
  * Check if this would be the first user in a tenant.
@@ -78,6 +78,26 @@ export async function getUsersInTenant(tenantId: string) {
       .from(users)
       .where(eq(users.tenantId, tenantId))
       .orderBy(asc(users.createdAt));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Get all admin users in a tenant.
+ * Returns id, email, and name for notification dispatch.
+ */
+export async function getAdminsInTenant(tenantId: string) {
+  if (!db) return [];
+  try {
+    return await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+      })
+      .from(users)
+      .where(and(eq(users.tenantId, tenantId), eq(users.role, "admin")));
   } catch {
     return [];
   }

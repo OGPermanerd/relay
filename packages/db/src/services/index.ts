@@ -35,7 +35,13 @@ export {
   markMessageRead,
   updateMessageStatus,
 } from "./skill-messages";
-export { isFirstUserInTenant, getUserRole, setUserRole, getUsersInTenant } from "./user";
+export {
+  isFirstUserInTenant,
+  getUserRole,
+  setUserRole,
+  getUsersInTenant,
+  getAdminsInTenant,
+} from "./user";
 export {
   createNotification,
   getUserNotifications,

@@ -48,6 +48,8 @@ export async function updatePreferences(
     trendingDigest: "none" | "daily" | "weekly";
     platformUpdatesEmail: boolean;
     platformUpdatesInApp: boolean;
+    reviewNotificationsEmail: boolean;
+    reviewNotificationsInApp: boolean;
   }>
 ): Promise<void> {
   if (!db) return;
