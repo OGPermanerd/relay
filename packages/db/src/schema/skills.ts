@@ -67,6 +67,7 @@ export const skills = pgTable(
 
     // Fork tracking (self-referential, nullable)
     forkedFromId: text("forked_from_id"),
+    forkedAtContentHash: text("forked_at_content_hash"),
 
     authorId: text("author_id").references(() => users.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
