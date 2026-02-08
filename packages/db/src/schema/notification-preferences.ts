@@ -32,6 +32,8 @@ export const notificationPreferences = pgTable(
     trendingDigest: digestFrequencyEnum("trending_digest").notNull().default("weekly"),
     platformUpdatesEmail: boolean("platform_updates_email").notNull().default(true),
     platformUpdatesInApp: boolean("platform_updates_in_app").notNull().default(true),
+    reviewNotificationsEmail: boolean("review_notifications_email").notNull().default(true),
+    reviewNotificationsInApp: boolean("review_notifications_in_app").notNull().default(true),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

@@ -8,7 +8,15 @@ import { notifications } from "../schema/notifications";
 export interface CreateNotificationParams {
   tenantId: string;
   userId: string;
-  type: "grouping_proposal" | "trending_digest" | "platform_update";
+  type:
+    | "grouping_proposal"
+    | "trending_digest"
+    | "platform_update"
+    | "review_submitted"
+    | "review_approved"
+    | "review_rejected"
+    | "review_changes_requested"
+    | "review_published";
   title: string;
   message: string;
   actionUrl?: string;
