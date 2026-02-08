@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 33 of 33 (Email Notifications)
-Plan: 2 of 7 in phase 33 (33-01, 33-02 complete)
+Plan: 3 of 7 in phase 33 (33-01, 33-02, 33-03 complete)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 33-02-PLAN.md (email infrastructure and templates)
+Last activity: 2026-02-08 -- Completed 33-03-PLAN.md (notification service functions)
 
 Progress: [██████████████████████░░] ~43% (v1.5 -- 144 plans total)
 
@@ -28,13 +28,13 @@ Progress: [██████████████████████░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 144
-- Phase 33: 2 PLANS COMPLETE (notifications schema, email infrastructure)
+- Total plans completed: 145
+- Phase 33: 3 PLANS COMPLETE (notifications schema, email infrastructure, notification services)
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~8.7 hours
 
 **Cumulative:**
-- 144 plans across 33 phases and 5 milestones
+- 145 plans across 33 phases and 5 milestones
 - ~14,700 LOC TypeScript
 - 7 days total development time
 
@@ -131,6 +131,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 33-01 | Composite (userId, isRead) index for unread count optimization | Most common query is "count unread for user"; composite index serves it efficiently |
 | 33-02 | Stub mode via STUB_MODE = !process.env.RESEND_API_KEY | Console.log when unset, Resend API when set; zero-config for dev |
 | 33-02 | Inline styles only in email templates | Email clients do not support CSS classes or Tailwind |
+| 33-03 | count() aggregate over results.length for unread count | Uses composite (userId, isRead) index efficiently |
+| 33-03 | ON CONFLICT DO NOTHING + re-fetch for getOrCreatePreferences | Handles concurrent insert race conditions cleanly |
 
 ### Pending Todos
 
@@ -150,5 +152,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 33, Plan 02 complete (email infrastructure and templates)
-Resume file: .planning/phases/33-email-notifications/33-02-SUMMARY.md
+Stopped at: Phase 33, Plan 03 complete (notification service functions)
+Resume file: .planning/phases/33-email-notifications/33-03-SUMMARY.md
