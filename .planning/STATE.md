@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v2.0 Skill Ecosystem -- Phase 37 Complete, Phase 38 next
+**Current focus:** v2.0 Skill Ecosystem -- Phase 38 in progress
 
 ## Current Position
 
-Phase: 37 of 39 (Review Notifications) -- COMPLETE
-Plan: 04 of 04
-Status: Complete
-Last activity: 2026-02-08 -- Phase 37 complete (all 4 plans, 7 requirements)
+Phase: 38 of 39 (Conversational MCP Discovery)
+Plan: 01 of 03
+Status: In progress
+Last activity: 2026-02-08 -- Completed 38-01-PLAN.md (semantic search foundation)
 
-Progress: [████████████████░░░░░░░░] 75% (v2.0 -- 33/44 requirements delivered)
+Progress: [█████████████████░░░░░░░] 77% (v2.0 -- 34/44 requirements delivered)
 
 ## Milestones
 
@@ -29,13 +29,13 @@ Progress: [████████████████░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 167
+- Total plans completed: 168
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~9.8 hours
 
 **Cumulative:**
-- 167 plans across 37 phases and 7 milestones
-- ~15,800 LOC TypeScript
+- 168 plans across 38 phases and 7 milestones
+- ~15,900 LOC TypeScript
 - 8 days total development time
 
 *Updated after each plan completion*
@@ -82,6 +82,9 @@ Recent decisions affecting current work:
 - [37-03]: Nullable authorId guarded with if-check before eq() for Drizzle ORM type safety
 - [37-04]: Review notification preferences default to true (email + in-app) matching other preference defaults
 - [37-04]: getNotificationIcon(type) returns {icon, color} for per-type rendering in notification bell
+- [38-01]: cosineDistance from drizzle-orm/sql/functions/vector for type-safe pgvector queries
+- [38-01]: MCP Ollama client is self-contained copy (no cross-app imports) for stdio protocol safety
+- [38-01]: Similarity score = 1 - cosineDistance for intuitive 0-1 range (higher = more similar)
 
 ### Pending Todos
 
@@ -97,5 +100,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 37 complete -- next: implement Skill-Aware Install Flow, then Phase 38 (MCP Discovery)
-Resume file: .planning/phases/37-review-notifications/
+Stopped at: Phase 38 plan 01 complete -- next: 38-02 (recommend_skills tool) and 38-03 (describe_skill tool)
+Resume file: .planning/phases/38-conversational-mcp-discovery/
