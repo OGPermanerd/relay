@@ -36,3 +36,12 @@ export {
   updateMessageStatus,
 } from "./skill-messages";
 export { isFirstUserInTenant, getUserRole, setUserRole, getUsersInTenant } from "./user";
+export {
+  createNotification,
+  getUserNotifications,
+  getUnreadNotificationCount,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  type CreateNotificationParams,
+} from "./notifications";
+export { getOrCreatePreferences, updatePreferences } from "./notification-preferences";
