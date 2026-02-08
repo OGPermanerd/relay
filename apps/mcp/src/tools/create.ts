@@ -143,8 +143,8 @@ export async function handleCreateSkill({
   // Insert skill
   try {
     await db.execute(sql`
-      INSERT INTO skills (id, tenant_id, name, slug, description, category, content, hours_saved, author_id, tags)
-      VALUES (${skillId}, ${tenantId}, ${name}, ${slug}, ${description}, ${category}, ${rawContent}, ${hoursSaved}, ${userId}, ${tagsJson}::jsonb)
+      INSERT INTO skills (id, tenant_id, name, slug, description, category, content, hours_saved, author_id, tags, status)
+      VALUES (${skillId}, ${tenantId}, ${name}, ${slug}, ${description}, ${category}, ${rawContent}, ${hoursSaved}, ${userId}, ${tagsJson}::jsonb, 'draft')
     `);
   } catch (err) {
     return {
@@ -221,8 +221,8 @@ export async function handleCreateSkill({
       url: `https://${rootDomain}/skills/${slug}`,
     },
     message: savedTo
-      ? `Skill "${name}" created and published! Saved locally to ${savedTo}. View at https://${rootDomain}/skills/${slug}`
-      : `Skill "${name}" created and published! View at https://${rootDomain}/skills/${slug}`,
+      ? `Skill "${name}" created as a draft. It will be visible after review and approval. Saved locally to ${savedTo}. View at https://${rootDomain}/skills/${slug}`
+      : `Skill "${name}" created as a draft. It will be visible after review and approval. View at https://${rootDomain}/skills/${slug}`,
   };
 
   if (savedTo) {

@@ -223,6 +223,7 @@ export async function checkAndCreateSkill(
         hoursSaved,
         authorId: session.user.id,
         forkedFromId: variationOf || undefined,
+        status: "draft",
       })
       .returning({ id: skills.id, slug: skills.slug });
     newSkill = inserted;
@@ -404,6 +405,7 @@ export async function createSkill(
         content: rawContent,
         hoursSaved,
         authorId: session.user.id,
+        status: "draft",
       })
       .returning({ id: skills.id, slug: skills.slug });
 

@@ -69,6 +69,7 @@ export async function forkSkill(
         hoursSaved: 0,
         forkedFromId: parent.id,
         authorId: session.user.id,
+        status: "draft",
       })
       .returning({ id: skills.id, slug: skills.slug });
 
