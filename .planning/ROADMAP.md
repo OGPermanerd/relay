@@ -242,7 +242,13 @@ Plans:
   2. Each tenant has two roles — admin and member — and only admins can access admin-only pages
   3. Admins can review, delete, or select multiple skills to merge under one parent skill
   4. Admins can view which users have compliance hooks installed and actively firing callbacks
-**Plans**: TBD
+**Plans:** 5 plans
+Plans:
+- [ ] 32-01-PLAN.md — Role enum schema + migration + user DB service functions
+- [ ] 32-02-PLAN.md — Auth callback role assignment + replace all isAdmin callers with role-based checks
+- [ ] 32-03-PLAN.md — Admin layout with sub-nav + tenant settings form and server action
+- [ ] 32-04-PLAN.md — Admin skills table with delete and multi-select bulk merge
+- [ ] 32-05-PLAN.md — Hook compliance dashboard with per-user status table
 
 ### Phase 33: Email & Notifications
 **Goal**: Users receive timely email and in-app notifications about skill activity, trends, and platform updates, with full control over their preferences
@@ -276,7 +282,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 29. Tenant Analytics & MCP | v1.5 | 3/3 | Complete | 2026-02-08 |
 | 30. Branding & Navigation | v1.5 | 7/7 | Complete | 2026-02-08 |
 | 31. Skills & Upload | v1.5 | 6/6 | Complete | 2026-02-08 |
-| 32. Admin Panel | v1.5 | 0/TBD | Not started | - |
+| 32. Admin Panel | v1.5 | 0/5 | Not started | - |
 | 33. Email & Notifications | v1.5 | 0/TBD | Not started | - |
 
 **Total: 136 plans completed across 31 phases and 5 milestones (v1.0-v1.5 Phase 31)**
