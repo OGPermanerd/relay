@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 31 of 33 (Skills Upload Enhancements)
-Plan: 3 of 6 in phase 31 (31-01, 31-03, 31-04 complete)
+Plan: 4 of 6 in phase 31 (31-01, 31-02, 31-03, 31-04 complete)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 31-03-PLAN.md (AI review enhancement + auto-trigger)
+Last activity: 2026-02-08 -- Completed 31-02-PLAN.md (RelativeTime platform rollout)
 
-Progress: [███████████████████░░░░░] ~35% (v1.5 -- 133 plans total)
+Progress: [████████████████████░░░░] ~36% (v1.5 -- 134 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [███████████████████░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 133
-- Phase 31: 31-01, 31-03, 31-04 complete (relative timestamp utility, AI review enhancement, skill messages data layer)
+- Total plans completed: 134
+- Phase 31: 31-01, 31-02, 31-03, 31-04 complete (relative timestamp utility, RelativeTime rollout, AI review enhancement, skill messages data layer)
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~8.0 hours
 
 **Cumulative:**
-- 133 plans across 31 phases and 5 milestones
+- 134 plans across 31 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -106,6 +106,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 31-03 | json_schema output_config over zodOutputFormat | zod 3.25.x lacks toJSONSchema export required by SDK helper |
 | 31-03 | tenant_id added to upsert SQL | ON CONFLICT (tenant_id, skill_id) requires tenant_id in INSERT |
 | 31-04 | Migration 0009 instead of 0010 for skill_messages | 31-03 not yet executed so 0009 was next available number |
+| 31-02 | Expiry dates kept as absolute UTC format | Future dates as relative time ("45d from now") are confusing for API key expiry |
+| 31-02 | Server component passes date.toISOString() to RelativeTime | Proper Date serialization across server/client boundary |
 
 ### Pending Todos
 
@@ -125,5 +127,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 31 plan 03 complete -- AI review enhancement + auto-trigger
-Resume file: .planning/phases/31-skills-upload-enhancements/31-03-SUMMARY.md
+Stopped at: Phase 31 plan 02 complete -- RelativeTime platform rollout
+Resume file: .planning/phases/31-skills-upload-enhancements/31-02-SUMMARY.md
