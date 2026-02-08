@@ -200,11 +200,19 @@ Plans:
 **Depends on**: Phase 25, Phase 26
 **Requirements**: BRAND-01, BRAND-02, BRAND-03, BRAND-04, BRAND-05, BRAND-06, BRAND-07, BRAND-08
 **Success Criteria** (what must be TRUE):
-  1. The relay logo is an animated baton-pass concept, and freemium tenants display "Tenant x Relay" branding while paid tenants show only their own logo
-  2. Freemium tenants are served on `tenant.hostname.ai` subdomains; paid tenants can configure a vanity URL
+  1. The logo is an animated baton-pass concept, and freemium tenants display "Tenant x EverySkill" branding while paid tenants show only their own logo
+  2. Freemium tenants are served on `tenant.everyskill.ai` subdomains; paid tenants can configure a vanity URL
   3. The navigation bar shows an active-page underline indicator, a dedicated Skills nav button, and no longer displays the "2.7Y saved" metric
   4. The greeting area shows the user's name, their personal Days Saved total, and their composite contributor tier (Platinum/Gold/Silver/Bronze based on skills shared, days saved, ratings, and usage)
-**Plans**: TBD
+**Plans:** 7 plans
+Plans:
+- [ ] 30-01-PLAN.md — Animated SVG logo component + CSS keyframes
+- [ ] 30-02-PLAN.md — NavLink component with active page underline indicator
+- [ ] 30-03-PLAN.md — Contributor tier computation + GreetingArea component
+- [ ] 30-04-PLAN.md — Tenant-aware branding (TenantBranding component)
+- [ ] 30-05-PLAN.md — Wire all new components into layout.tsx
+- [ ] 30-06-PLAN.md — Vanity domain schema + migration + service function
+- [ ] 30-07-PLAN.md — Middleware vanity domain support + check-domain API + Caddyfile
 
 ### Phase 31: Skills & Upload Enhancements
 **Goal**: Uploading a skill gives the author immediate AI feedback, rich similarity context, and the ability to propose grouping with existing skills
@@ -259,7 +267,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 27. Docker Deployment | v1.5 | 4/4 | Complete | 2026-02-08 |
 | 28. Hook-Based Tracking | v1.5 | 7/7 | Complete | 2026-02-08 |
 | 29. Tenant Analytics & MCP | v1.5 | 3/3 | Complete | 2026-02-08 |
-| 30. Branding & Navigation | v1.5 | 0/TBD | Not started | - |
+| 30. Branding & Navigation | v1.5 | 0/7 | Not started | - |
 | 31. Skills & Upload | v1.5 | 0/TBD | Not started | - |
 | 32. Admin Panel | v1.5 | 0/TBD | Not started | - |
 | 33. Email & Notifications | v1.5 | 0/TBD | Not started | - |
