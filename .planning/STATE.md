@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 28 of 33 (Hook-Based Usage Tracking)
-Plan: 28-07 completed
+Plan: 28-03 completed
 Status: In progress
-Last activity: 2026-02-08 -- Completed 28-07-PLAN.md (per-tenant key expiry config)
+Last activity: 2026-02-08 -- Completed 28-03-PLAN.md (usage tracking service)
 
 Progress: [██████████░░░░░░░░░░░░░░] ~15% (v1.5 -- 17 of ~TBD plans)
 
@@ -28,12 +28,12 @@ Progress: [██████████░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 114
+- Total plans completed: 115
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.6 hours
 
 **Cumulative:**
-- 114 plans across 28 phases and 5 milestones
+- 115 plans across 28 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -81,6 +81,7 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 27-03 | Separate LUKS and backup passphrases | Defense in depth; compromising one does not expose the other |
 | 27-03 | Dropbear on port 2222 for remote LUKS unlock | Avoids conflict with post-boot SSH daemon |
 | 28-07 | 90-day default key expiry | SOC2-05 compliance requires bounded API key lifetimes; 90 days is industry standard |
+| 28-03 | Fire-and-forget tracking with skill name enrichment | Consistent with audit.ts pattern; skill name resolved at insert time for self-contained metadata |
 
 ### Pending Todos
 
@@ -99,6 +100,6 @@ All decisions logged in PROJECT.md Key Decisions table.
 
 ## Session Continuity
 
-Last session: 2026-02-08T03:00:00Z
-Stopped at: Completed 28-07-PLAN.md (per-tenant key expiry config)
+Last session: 2026-02-08T03:02:00Z
+Stopped at: Completed 28-03-PLAN.md (usage tracking service)
 Resume file: None
