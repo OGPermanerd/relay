@@ -24,10 +24,10 @@ test.describe("Hydration", () => {
     const table = page.locator('table[role="grid"]');
     await expect(table).toBeVisible({ timeout: 5000 });
 
-    // Verify dates are formatted correctly (MMM D, YYYY pattern)
+    // Verify dates are formatted as relative time (e.g., "60d 2h ago", "1y 5d ago", "just now")
     const dateCells = table.locator("td:nth-child(5)");
     const firstDate = await dateCells.first().textContent();
-    expect(firstDate).toMatch(/^[A-Z][a-z]{2} \d{1,2}, \d{4}$/);
+    expect(firstDate).toMatch(/(\d+[ydhm]\s*)+ago|just now/);
 
     // No hydration errors should have occurred
     const hydrationErrors = errors.filter(
@@ -62,8 +62,8 @@ test.describe("Hydration", () => {
     await page.goto(href!);
     await page.waitForLoadState("networkidle");
 
-    // Verify the page rendered with a date
-    await expect(page.getByText(/Created [A-Z][a-z]+ \d{1,2}, \d{4}/)).toBeVisible({
+    // Verify the page rendered with a relative date (e.g., "Created 60d 2h ago")
+    await expect(page.getByText(/Created \d+[ydhm]/)).toBeVisible({
       timeout: 5000,
     });
 
