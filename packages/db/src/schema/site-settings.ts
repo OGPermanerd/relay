@@ -26,6 +26,7 @@ export const siteSettings = pgTable(
     ollamaUrl: text("ollama_url").notNull().default("http://localhost:11434"),
     ollamaModel: text("ollama_model").notNull().default("nomic-embed-text"),
     embeddingDimensions: integer("embedding_dimensions").notNull().default(768),
+    keyExpiryDays: integer("key_expiry_days").notNull().default(90),
     lastSuccessfulConnection: timestamp("last_successful_connection"),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
