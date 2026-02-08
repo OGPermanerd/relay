@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 32 Admin Panel -- COMPLETE. Ready for Phase 33.
+**Current focus:** Phase 33 Email Notifications -- in progress.
 
 ## Current Position
 
-Phase: 32 of 33 (Admin Panel)
-Plan: 6 of 6 in phase 32 (32-01 through 32-06 complete)
-Status: Phase complete — verified 8/8 must-haves
-Last activity: 2026-02-08 -- Phase 32 verified, all 5 ADMIN requirements satisfied
+Phase: 33 of 33 (Email Notifications)
+Plan: 1 of 7 in phase 33 (33-01 complete)
+Status: In progress
+Last activity: 2026-02-08 -- Completed 33-01-PLAN.md (notifications schema)
 
-Progress: [██████████████████████░░] ~42% (v1.5 -- 142 plans total)
+Progress: [██████████████████████░░] ~43% (v1.5 -- 143 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [██████████████████████░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 142
-- Phase 32: 8 PLANS COMPLETE (user roles, auth wiring, admin pages, user management, hook compliance, isAdmin migration, admin layout, skills management)
+- Total plans completed: 143
+- Phase 33: 1 PLAN COMPLETE (notifications schema)
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~8.6 hours
 
 **Cumulative:**
-- 142 plans across 32 phases and 5 milestones
+- 143 plans across 33 phases and 5 milestones
 - ~14,700 LOC TypeScript
 - 7 days total development time
 
@@ -127,6 +127,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 32-04 | Merge target from selected set, not arbitrary dropdown | Ensures target is part of the group being merged |
 | 32-03 | Layout-level gate is sole admin security boundary | Per-page checks redundant after layout gate; server actions keep own checks for defense-in-depth |
 | 32-03 | Tenant settings validated with Zod schema | name required 1-100 chars, domain/logo optional empty-or-valid |
+| 33-01 | Idempotent migration with DO blocks for enum/policy creation | Safe to re-run; exception handlers skip duplicate objects |
+| 33-01 | Composite (userId, isRead) index for unread count optimization | Most common query is "count unread for user"; composite index serves it efficiently |
 
 ### Pending Todos
 
@@ -146,5 +148,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 32 verified (8/8 must-haves) — all 5 ADMIN requirements complete
-Resume file: .planning/phases/32-admin-panel/32-VERIFICATION.md
+Stopped at: Phase 33, Plan 01 complete (notifications schema)
+Resume file: .planning/phases/33-email-notifications/33-01-SUMMARY.md
