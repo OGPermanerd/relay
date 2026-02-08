@@ -8,9 +8,11 @@ import type { SkillReview, ReviewCategories } from "../schema";
  */
 export interface UpsertSkillReviewParams {
   skillId: string;
+  tenantId?: string;
   requestedBy: string;
   categories: ReviewCategories;
   summary: string;
+  suggestedDescription?: string;
   reviewedContentHash: string;
   modelName: string;
   isVisible?: boolean;
@@ -48,22 +50,25 @@ export async function upsertSkillReview(data: UpsertSkillReviewParams): Promise<
   // Use raw SQL for the upsert to handle columns with defaults
   // (Drizzle ORM excludes columns with .default() from onConflictDoUpdate set type)
   await db.execute(sql`
-    INSERT INTO skill_reviews (id, skill_id, requested_by, categories, summary, reviewed_content_hash, model_name, is_visible, created_at)
+    INSERT INTO skill_reviews (id, tenant_id, skill_id, requested_by, categories, summary, suggested_description, reviewed_content_hash, model_name, is_visible, created_at)
     VALUES (
       ${crypto.randomUUID()},
+      ${data.tenantId ?? "default-tenant-000-0000-000000000000"},
       ${data.skillId},
       ${data.requestedBy},
       ${JSON.stringify(data.categories)}::jsonb,
       ${data.summary},
+      ${data.suggestedDescription ?? null},
       ${data.reviewedContentHash},
       ${data.modelName},
       ${data.isVisible ?? true},
       NOW()
     )
-    ON CONFLICT (skill_id) DO UPDATE SET
+    ON CONFLICT (tenant_id, skill_id) DO UPDATE SET
       requested_by = EXCLUDED.requested_by,
       categories = EXCLUDED.categories,
       summary = EXCLUDED.summary,
+      suggested_description = EXCLUDED.suggested_description,
       reviewed_content_hash = EXCLUDED.reviewed_content_hash,
       model_name = EXCLUDED.model_name,
       created_at = NOW()

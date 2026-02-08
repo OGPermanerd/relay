@@ -85,14 +85,15 @@ export async function requestAiReview(
       skill.category ?? "prompt"
     );
 
-    // Extract category scores (without summary) for the categories field
-    const { summary, ...categories } = reviewOutput;
+    // Extract category scores (without summary/suggestedDescription) for the categories field
+    const { summary, suggestedDescription, ...categories } = reviewOutput;
 
     await upsertSkillReview({
       skillId,
       requestedBy: session.user.id,
       categories,
       summary,
+      suggestedDescription,
       reviewedContentHash: contentHash,
       modelName: REVIEW_MODEL,
     });

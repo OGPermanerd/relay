@@ -57,6 +57,7 @@ export const skillReviews = pgTable(
       .references(() => users.id),
     categories: jsonb("categories").$type<ReviewCategories>().notNull(),
     summary: text("summary").notNull(), // Brief overall summary from AI
+    suggestedDescription: text("suggested_description"), // AI-suggested improved description
     reviewedContentHash: text("reviewed_content_hash").notNull(), // SHA-256 hash of content at review time
     modelName: text("model_name").notNull(), // e.g., "claude-haiku-4-5-20241022"
     isVisible: boolean("is_visible").notNull().default(true), // Author can hide
