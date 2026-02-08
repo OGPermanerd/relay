@@ -53,3 +53,24 @@ export function canTransition(from: SkillStatus, to: SkillStatus): boolean {
 export function getValidTransitions(status: SkillStatus): SkillStatus[] {
   return VALID_TRANSITIONS[status];
 }
+
+export const DEFAULT_AUTO_APPROVE_THRESHOLD = 7;
+
+/**
+ * Check if a skill should be auto-approved based on AI review scores.
+ * Returns true when all 3 category scores meet or exceed the threshold.
+ */
+export function checkAutoApprove(
+  categories: {
+    quality: { score: number };
+    clarity: { score: number };
+    completeness: { score: number };
+  },
+  threshold: number = DEFAULT_AUTO_APPROVE_THRESHOLD
+): boolean {
+  return (
+    categories.quality.score >= threshold &&
+    categories.clarity.score >= threshold &&
+    categories.completeness.score >= threshold
+  );
+}

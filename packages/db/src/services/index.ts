@@ -48,6 +48,8 @@ export { getOrCreatePreferences, updatePreferences } from "./notification-prefer
 export {
   canTransition,
   getValidTransitions,
+  checkAutoApprove,
+  DEFAULT_AUTO_APPROVE_THRESHOLD,
   SKILL_STATUSES,
   VALID_TRANSITIONS,
   type SkillStatus,
