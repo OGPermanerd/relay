@@ -42,3 +42,22 @@ export async function getTenantByDomain(domain: string) {
     return null;
   }
 }
+
+/**
+ * Look up an active tenant by vanity domain.
+ * Returns the tenant record or null if not found / inactive / no vanity domain set.
+ */
+export async function getTenantByVanityDomain(vanityDomain: string) {
+  if (!db) return null;
+
+  try {
+    const [row] = await db
+      .select()
+      .from(tenants)
+      .where(and(eq(tenants.vanityDomain, vanityDomain), eq(tenants.isActive, true)))
+      .limit(1);
+    return row ?? null;
+  } catch {
+    return null;
+  }
+}

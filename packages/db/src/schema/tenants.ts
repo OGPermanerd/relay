@@ -14,6 +14,7 @@ export const tenants = pgTable("tenants", {
   logo: text("logo"), // URL to tenant logo
   isActive: boolean("is_active").notNull().default(true),
   plan: text("plan").notNull().default("freemium"), // "freemium" | "paid"
+  vanityDomain: text("vanity_domain").unique(), // e.g., "acme.skills.io" for paid tenants
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
