@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v2.0 Skill Ecosystem -- Phase 36 In Progress
+**Current focus:** v2.0 Skill Ecosystem -- Phase 36 Complete
 
 ## Current Position
 
 Phase: 36 of 39 (Admin Review UI)
-Plan: 02 of 03
-Status: In progress
-Last activity: 2026-02-08 -- Completed 36-02-PLAN.md (server actions + review queue)
+Plan: 03 of 03
+Status: Phase complete
+Last activity: 2026-02-08 -- Completed 36-03-PLAN.md (review detail page)
 
-Progress: [████████░░░░░░░░░░░░░░░░] 41% (v2.0 -- 18/44 requirements delivered)
+Progress: [█████████░░░░░░░░░░░░░░░] 45% (v2.0 -- 20/44 requirements delivered)
 
 ## Milestones
 
@@ -29,13 +29,13 @@ Progress: [████████░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 162
+- Total plans completed: 163
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~9.5 hours
+- Total execution time: ~9.6 hours
 
 **Cumulative:**
-- 162 plans across 36 phases and 7 milestones
-- ~15,500 LOC TypeScript
+- 163 plans across 36 phases and 7 milestones
+- ~15,600 LOC TypeScript
 - 8 days total development time
 
 *Updated after each plan completion*
@@ -68,6 +68,9 @@ Recent decisions affecting current work:
 - [36-02]: Raw tx.insert used inside transactions instead of createReviewDecision service to maintain transaction context
 - [36-02]: Approve action chains ai_reviewed -> approved -> published in a single transaction
 - [36-02]: Reviews nav tab positioned first in admin nav for prominence
+- [36-03]: Used diff npm package (diffLines) for line-level content comparison in review detail page
+- [36-03]: previousContent fetched from most recent review_decisions record (separate query, not loaded with every decision)
+- [36-03]: Two-column layout: skill content (2/3) + AI review and actions (1/3)
 
 ### Pending Todos
 
@@ -83,5 +86,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 36-02 (server actions + review queue) -- continue with 36-03 (review detail page)
-Resume file: .planning/phases/36-admin-review-ui/36-03-PLAN.md
+Stopped at: Completed 36-03 (review detail page) -- Phase 36 complete, continue with Phase 37
+Resume file: .planning/phases/37-public-review-display/
