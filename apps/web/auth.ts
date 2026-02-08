@@ -68,6 +68,22 @@ function createAuthConfig(): NextAuthConfig {
           }
         }
 
+        // Lazy-migrate existing sessions: if tenantId not in JWT, read from DB
+        if (!token.tenantId && token.id) {
+          try {
+            const [dbUser] = await db!
+              .select({ tenantId: users.tenantId })
+              .from(users)
+              .where(eq(users.id, token.id as string))
+              .limit(1);
+            if (dbUser?.tenantId) {
+              token.tenantId = dbUser.tenantId;
+            }
+          } catch {
+            // Non-fatal — next request will retry
+          }
+        }
+
         return token;
       },
       async session({ session, token }) {
