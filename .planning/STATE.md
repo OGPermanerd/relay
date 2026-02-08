@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 37 of 39 (Review Notifications)
-Plan: 03 of TBD
+Plan: 04 of TBD
 Status: In progress
-Last activity: 2026-02-08 -- Completed 37-03-PLAN.md (Notification Dispatch Wiring)
+Last activity: 2026-02-08 -- Completed 37-04-PLAN.md (Preferences UI and Notification Icons)
 
-Progress: [████████████░░░░░░░░░░░░] 59% (v2.0 -- 26/44 requirements delivered)
+Progress: [█████████████░░░░░░░░░░░] 59% (v2.0 -- 26/44 requirements delivered)
 
 ## Milestones
 
@@ -29,12 +29,12 @@ Progress: [████████████░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 167
+- Total plans completed: 168
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~9.7 hours
+- Total execution time: ~9.8 hours
 
 **Cumulative:**
-- 167 plans across 37 phases and 7 milestones
+- 168 plans across 37 phases and 7 milestones
 - ~15,600 LOC TypeScript
 - 8 days total development time
 
@@ -80,6 +80,8 @@ Recent decisions affecting current work:
 - [37-03]: approveSkillAction sends ONLY RVNT-05 (published), NOT RVNT-02 + RVNT-05, to avoid double notification
 - [37-03]: All notification dispatch happens AFTER DB transactions, never inside them
 - [37-03]: Nullable authorId guarded with if-check before eq() for Drizzle ORM type safety
+- [37-04]: Review notification preferences default to true (email + in-app) matching other preference defaults
+- [37-04]: getNotificationIcon(type) returns {icon, color} for per-type rendering in notification bell
 
 ### Pending Todos
 
@@ -95,5 +97,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 37-03 (Notification Dispatch Wiring) -- continue with 37-04 plan
+Stopped at: Completed 37-04 (Preferences UI and Notification Icons) -- continue with remaining Phase 37 plans
 Resume file: .planning/phases/37-review-notifications/
