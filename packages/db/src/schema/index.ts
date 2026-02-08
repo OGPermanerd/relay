@@ -16,3 +16,4 @@ export * from "./site-settings";
 export * from "./skill-embeddings";
 export * from "./tenants";
 export * from "./audit-logs";
+export * from "./skill-messages";
