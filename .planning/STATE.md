@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 Phase: 39 of 39 (Fork Detection)
 Plan: 02 of 04
 Status: In progress
-Last activity: 2026-02-08 -- Completed 39-02-PLAN.md (check_skill_status MCP tool)
+Last activity: 2026-02-08 -- Completed 39-01-PLAN.md (forkedAtContentHash column + fork action update)
 
 Progress: [████████████████████░░░░] 91% (v2.0 -- 41/44 requirements delivered)
 
@@ -29,12 +29,12 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 172
+- Total plans completed: 173
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~9.8 hours
 
 **Cumulative:**
-- 172 plans across 39 phases and 7 milestones
+- 173 plans across 39 phases and 7 milestones
 - ~16,000 LOC TypeScript
 - 8 days total development time
 
@@ -93,6 +93,9 @@ Recent decisions affecting current work:
 - [38-03]: Quality tier: gold (>=400 rating, >=10 uses), silver (>=300, >=5), bronze (>=200)
 - [38-03]: Similar skills capped at 3, excludes current skill from embedding search
 - [38-03]: guide_skill returns category-specific guidance for prompt/workflow/agent/mcp types
+- [39-01]: forkedAtContentHash computed from stripped body (no frontmatter) -- distinct from version contentHash (full content)
+- [39-01]: No backfill for existing forks -- hash at fork time unavailable, UI shows "unknown drift status"
+- [39-01]: Fork version creation is non-fatal (try/catch) matching create.ts pattern
 - [39-02]: check_skill_status strips frontmatter from BOTH local and DB content before SHA-256 hashing (FORK-02 false-positive prevention)
 - [39-02]: Access control: published OR author-owned -- unpublished skills hidden from non-authors
 - [39-02]: Self-contained helpers in MCP tool files (no cross-app imports) per MCP standalone pattern
@@ -111,5 +114,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 39 plan 02 complete -- next: 39-03 (update_skill MCP tool)
+Stopped at: Phase 39 plans 01+02 complete -- next: 39-03 (update_skill MCP tool)
 Resume file: .planning/phases/39-fork-detection/
