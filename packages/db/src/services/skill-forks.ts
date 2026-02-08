@@ -1,6 +1,6 @@
 import { db } from "../client";
 import { skills } from "../schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 
 export interface ForkInfo {
   id: string;
@@ -21,7 +21,7 @@ export async function getForkCount(skillId: string): Promise<number> {
   const result = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(skills)
-    .where(eq(skills.forkedFromId, skillId));
+    .where(and(eq(skills.forkedFromId, skillId), eq(skills.status, "published")));
 
   return result[0]?.count ?? 0;
 }
@@ -33,7 +33,7 @@ export async function getTopForks(skillId: string, limit: number = 5): Promise<F
   if (!db) return [];
 
   const forks = await db.query.skills.findMany({
-    where: eq(skills.forkedFromId, skillId),
+    where: and(eq(skills.forkedFromId, skillId), eq(skills.status, "published")),
     with: {
       author: {
         columns: { id: true, name: true },
@@ -57,9 +57,7 @@ export async function getTopForks(skillId: string, limit: number = 5): Promise<F
 /**
  * Get the parent skill info for a forked skill
  */
-export async function getParentSkill(
-  forkedFromId: string
-): Promise<{
+export async function getParentSkill(forkedFromId: string): Promise<{
   id: string;
   name: string;
   slug: string;

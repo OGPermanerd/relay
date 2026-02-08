@@ -125,6 +125,30 @@ export async function handleDeploySkill({
     };
   }
 
+  // Block deployment of non-published skills
+  if (
+    (skill as Record<string, unknown>).status &&
+    (skill as Record<string, unknown>).status !== "published"
+  ) {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(
+            {
+              success: false,
+              error: "Skill not published",
+              message: `Skill ${skillId} is not published and cannot be deployed.`,
+            },
+            null,
+            2
+          ),
+        },
+      ],
+      isError: true,
+    };
+  }
+
   if (!userId && !skipNudge) {
     incrementAnonymousCount();
   }

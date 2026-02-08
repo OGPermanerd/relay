@@ -66,7 +66,7 @@ export async function searchSkillsByQuery(
     OR array_to_string(${skills.tags}, ' ') ILIKE ${likePattern}
   )`;
 
-  const conditions = [matchCondition];
+  const conditions = [matchCondition, eq(skills.status, "published")];
 
   if (tenantId) {
     conditions.push(eq(skills.tenantId, tenantId));

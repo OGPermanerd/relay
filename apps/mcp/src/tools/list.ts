@@ -48,10 +48,13 @@ export async function handleListSkills({
     },
   });
 
-  // Filter by tenant first (if authenticated), then by category
+  // Filter by published status first, then tenant, then category
+  const publishedFiltered = allResults.filter(
+    (s: Record<string, unknown>) => s.status === "published" || !s.status
+  );
   const tenantFiltered = tenantId
-    ? allResults.filter((s: { tenantId: string }) => s.tenantId === tenantId)
-    : allResults;
+    ? publishedFiltered.filter((s: { tenantId: string }) => s.tenantId === tenantId)
+    : publishedFiltered;
   const results = category
     ? tenantFiltered
         .filter((s: { category: string | null }) => s.category === category)
