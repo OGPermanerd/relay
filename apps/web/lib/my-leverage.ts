@@ -180,6 +180,7 @@ export async function getSkillsCreated(userId: string): Promise<{ items: Created
     LEFT JOIN usage_events ue ON ue.skill_id = s.id
     WHERE s.author_id = ${userId}
       AND s.published_version_id IS NOT NULL
+      AND s.status = 'published'
     GROUP BY s.id, s.name, s.category, s.hours_saved, s.average_rating
     ORDER BY total_hours_saved DESC
   `);
@@ -227,6 +228,7 @@ export async function getSkillsCreatedStats(userId: string): Promise<SkillsCreat
     LEFT JOIN usage_events ue ON ue.skill_id = s.id
     WHERE s.author_id = ${userId}
       AND s.published_version_id IS NOT NULL
+      AND s.status = 'published'
   `);
 
   const rows = result as unknown as Record<string, unknown>[];

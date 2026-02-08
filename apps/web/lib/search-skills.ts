@@ -56,6 +56,9 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
 
   const conditions = [];
 
+  // Only show published skills in public search results
+  conditions.push(eq(skills.status, "published"));
+
   // Search condition: combine full-text search with ILIKE for substring/prefix matching
   if (params.query && params.query.trim()) {
     const q = params.query.trim();
@@ -200,7 +203,7 @@ export async function getAvailableTags(): Promise<string[]> {
 
   // Use unnest to flatten arrays, then select distinct
   const result = await db.execute(
-    sql`SELECT DISTINCT unnest(tags) as tag FROM skills WHERE tags IS NOT NULL ORDER BY tag`
+    sql`SELECT DISTINCT unnest(tags) as tag FROM skills WHERE tags IS NOT NULL AND status = 'published' ORDER BY tag`
   );
 
   // db.execute returns RowList which is array-like, cast to array for mapping

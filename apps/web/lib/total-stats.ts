@@ -1,6 +1,6 @@
 import { db } from "@everyskill/db";
 import { skills, usageEvents } from "@everyskill/db/schema";
-import { sql, gte, eq } from "drizzle-orm";
+import { sql, gte, eq, and } from "drizzle-orm";
 
 export interface TotalStats {
   totalDaysSaved: number;
@@ -22,7 +22,8 @@ export async function getTotalStats(): Promise<TotalStats> {
     .select({
       totalDaysSaved: sql<number>`coalesce(sum(${skills.totalUses} * coalesce(${skills.hoursSaved}, 1) / 8.0), 0)`,
     })
-    .from(skills);
+    .from(skills)
+    .where(eq(skills.status, "published"));
 
   const totalDaysSaved = Math.round(totalResult[0]?.totalDaysSaved || 0);
 
@@ -40,7 +41,7 @@ export async function getTotalStats(): Promise<TotalStats> {
     })
     .from(usageEvents)
     .innerJoin(skills, eq(usageEvents.skillId, skills.id))
-    .where(gte(usageEvents.createdAt, startDate))
+    .where(and(gte(usageEvents.createdAt, startDate), eq(skills.status, "published")))
     .groupBy(sql`date_trunc('day', ${usageEvents.createdAt})`)
     .orderBy(sql`date_trunc('day', ${usageEvents.createdAt})`);
 

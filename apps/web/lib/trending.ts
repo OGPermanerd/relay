@@ -49,6 +49,7 @@ export async function getTrendingSkills(limit: number = 10): Promise<TrendingSki
       JOIN skills s ON s.id = ue.skill_id
       WHERE ue.created_at >= NOW() - INTERVAL '7 days'
         AND s.published_version_id IS NOT NULL
+        AND s.status = 'published'
       GROUP BY ue.skill_id
       HAVING COUNT(*) >= 3
     )

@@ -1,7 +1,7 @@
 "use server";
 
 import { db, skills, getSiteSettings, getSkillEmbedding } from "@everyskill/db";
-import { sql, and, ne, or } from "drizzle-orm";
+import { sql, and, ne, or, eq } from "drizzle-orm";
 import { generateEmbedding } from "./ollama";
 
 export interface SimilarSkillResult {
@@ -65,6 +65,7 @@ async function trySemanticSearch(
         JOIN skills s ON s.id = se.skill_id
         WHERE (se.embedding <=> ${vectorStr}::vector) < ${threshold}
           AND s.id != ${excludeSkillId}
+          AND s.status = 'published'
         ORDER BY se.embedding <=> ${vectorStr}::vector
         LIMIT 5
       `);
@@ -78,6 +79,7 @@ async function trySemanticSearch(
         FROM skill_embeddings se
         JOIN skills s ON s.id = se.skill_id
         WHERE (se.embedding <=> ${vectorStr}::vector) < ${threshold}
+          AND s.status = 'published'
         ORDER BY se.embedding <=> ${vectorStr}::vector
         LIMIT 5
       `);
@@ -121,6 +123,7 @@ async function trySemanticSearchBySkill(skillId: string): Promise<SimilarSkillRe
       JOIN skills s ON s.id = se.skill_id
       WHERE (se.embedding <=> ${vectorStr}::vector) < ${threshold}
         AND s.id != ${skillId}
+        AND s.status = 'published'
       ORDER BY se.embedding <=> ${vectorStr}::vector
       LIMIT 5
     `);
@@ -178,9 +181,12 @@ export async function checkSimilarSkills(
       })
       .from(skills)
       .where(
-        or(
-          sql`${skills.name} ILIKE ${namePattern}`,
-          sql`${skills.description} ILIKE ${descPattern}`
+        and(
+          eq(skills.status, "published"),
+          or(
+            sql`${skills.name} ILIKE ${namePattern}`,
+            sql`${skills.description} ILIKE ${descPattern}`
+          )
         )
       )
       .limit(5);
@@ -237,7 +243,7 @@ export async function findSimilarSkillsByName(
         authorId: skills.authorId,
       })
       .from(skills)
-      .where(and(ne(skills.id, skillId), or(...conditions)))
+      .where(and(ne(skills.id, skillId), eq(skills.status, "published"), or(...conditions)))
       .limit(5);
 
     return results.map((r) => ({ ...r, matchType: "name" as const }));

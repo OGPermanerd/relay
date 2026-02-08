@@ -1,6 +1,6 @@
 import { db } from "@everyskill/db";
 import { skills, users, ratings } from "@everyskill/db/schema";
-import { sql, eq, isNotNull } from "drizzle-orm";
+import { sql, eq, isNotNull, and } from "drizzle-orm";
 
 export interface PlatformStats {
   totalContributors: number;
@@ -42,7 +42,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
         totalFteDays: sql<number>`COALESCE(SUM(${skills.totalUses} * ${skills.hoursSaved}) / 8.0, 0)`,
       })
       .from(skills)
-      .where(isNotNull(skills.publishedVersionId)),
+      .where(and(isNotNull(skills.publishedVersionId), eq(skills.status, "published"))),
 
     // Query 2: Count unique contributors with published skills
     db
@@ -51,7 +51,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
       })
       .from(users)
       .innerJoin(skills, eq(skills.authorId, users.id))
-      .where(isNotNull(skills.publishedVersionId)),
+      .where(and(isNotNull(skills.publishedVersionId), eq(skills.status, "published"))),
 
     // Query 3: Average rating across all ratings
     db

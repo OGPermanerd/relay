@@ -39,7 +39,13 @@ export async function getUserStats(userId: string): Promise<UserStats> {
       fteDaysSaved: sql<number>`COALESCE(SUM(${skills.totalUses} * ${skills.hoursSaved}) / 8.0, 0)`,
     })
     .from(skills)
-    .where(and(eq(skills.authorId, userId), isNotNull(skills.publishedVersionId)));
+    .where(
+      and(
+        eq(skills.authorId, userId),
+        isNotNull(skills.publishedVersionId),
+        eq(skills.status, "published")
+      )
+    );
 
   const row = result[0];
   const skillsShared = Number(row?.skillsShared ?? 0);
