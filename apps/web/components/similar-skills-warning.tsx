@@ -65,15 +65,6 @@ export function SimilarSkillsWarning({
                     {skill.similarityPct != null && (
                       <span className="text-sm text-gray-500">{skill.similarityPct}% match</span>
                     )}
-                    <span
-                      className={`rounded-full px-3 py-1 text-sm font-medium ${
-                        skill.matchType === "semantic"
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {skill.matchType === "semantic" ? "Semantic match" : "Name match"}
-                    </span>
                     {onCreateVariation && (
                       <button
                         type="button"

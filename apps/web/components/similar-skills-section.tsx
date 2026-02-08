@@ -27,15 +27,6 @@ export function SimilarSkillsSection({ similarSkills }: SimilarSkillsSectionProp
                     {skill.similarityPct}%
                   </span>
                 )}
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-sm ${
-                    skill.matchType === "semantic"
-                      ? "bg-purple-100 text-purple-700"
-                      : "bg-gray-100 text-gray-600"
-                  }`}
-                >
-                  {skill.matchType === "semantic" ? "Semantic" : "Name"}
-                </span>
               </div>
             </Link>
 
