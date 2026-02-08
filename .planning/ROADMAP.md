@@ -189,7 +189,11 @@ Plans:
   1. All 6 analytics queries filter by tenantId instead of email domain matching — no cross-tenant data leakage in dashboards
   2. MCP server operations (search, deploy, list) are scoped to the tenant resolved from the API key's tenantId
   3. FTE Years Saved calculation uses the standard 2,080 hours/year (USA FTE) and displays correctly across tenant-scoped views
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 29-01-PLAN.md — Analytics queries: replace email-domain matching with tenant_id filtering + update callers
+- [ ] 29-02-PLAN.md — MCP tenant scoping: auth tenantId caching + tool filtering + tracking
+- [ ] 29-03-PLAN.md — FTE constant: create shared constant + update 11 display locations
 
 ### Phase 30: Branding & Navigation
 **Goal**: Each tenant has branded navigation with white-label options, and users see their personal impact and contributor tier at a glance
@@ -254,7 +258,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 26. Auth & Subdomain Routing | v1.5 | 3/3 | Complete | 2026-02-07 |
 | 27. Docker Deployment | v1.5 | 4/4 | Complete | 2026-02-08 |
 | 28. Hook-Based Tracking | v1.5 | 7/7 | Complete | 2026-02-08 |
-| 29. Tenant Analytics & MCP | v1.5 | 0/TBD | Not started | - |
+| 29. Tenant Analytics & MCP | v1.5 | 0/3 | Not started | - |
 | 30. Branding & Navigation | v1.5 | 0/TBD | Not started | - |
 | 31. Skills & Upload | v1.5 | 0/TBD | Not started | - |
 | 32. Admin Panel | v1.5 | 0/TBD | Not started | - |
