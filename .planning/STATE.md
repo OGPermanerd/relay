@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v2.0 Skill Ecosystem -- Phase 39 in progress (Fork Detection)
+**Current focus:** v2.0 Skill Ecosystem -- Phase 39 complete (Fork Detection)
 
 ## Current Position
 
 Phase: 39 of 39 (Fork Detection)
-Plan: 03 of 04
-Status: In progress
-Last activity: 2026-02-08 -- Completed 39-03-PLAN.md (update_skill MCP tool)
+Plan: 04 of 04
+Status: Phase complete
+Last activity: 2026-02-08 -- Completed 39-04-PLAN.md (drift indicator UI + compare page)
 
-Progress: [█████████████████████░░░] 93% (v2.0 -- 42/44 requirements delivered)
+Progress: [████████████████████████] 100% (v2.0 -- 44/44 requirements delivered)
 
 ## Milestones
 
@@ -24,17 +24,17 @@ Progress: [█████████████████████░░
 - v1.3 AI Quality & Cross-Platform - 15 plans - shipped 2026-02-04
 - v1.4 Employee Analytics & Remote MCP - 25 plans - shipped 2026-02-06
 - v1.5 Production & Multi-Tenancy - 55 plans - shipped 2026-02-08
-- v2.0 Skill Ecosystem - 6 phases (34-39) - in progress
+- v2.0 Skill Ecosystem - 6 phases (34-39) - shipped 2026-02-08
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 174
+- Total plans completed: 175
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~9.8 hours
+- Total execution time: ~9.9 hours
 
 **Cumulative:**
-- 174 plans across 39 phases and 7 milestones
+- 175 plans across 39 phases and 7 milestones
 - ~16,000 LOC TypeScript
 - 8 days total development time
 
@@ -103,6 +103,10 @@ Recent decisions affecting current work:
 - [39-03]: forkedAtContentHash computed from stripped body (no frontmatter) matching check_skill_status pattern
 - [39-03]: Fork description defaults to parent description when not provided
 - [39-03]: Version record failure is non-fatal (try/catch) matching create.ts pattern
+- [39-04]: Drift status computed server-side on skill detail page load -- no client-side hash computation
+- [39-04]: DriftIndicator is a stateless server component (no use client) for zero JS overhead
+- [39-04]: Compare page reuses ReviewDiffView client component for consistent diff rendering
+- [39-04]: Frontmatter stripped from both fork and parent before diff to avoid noise
 
 ### Pending Todos
 
@@ -118,5 +122,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 39 plan 03 complete -- next: 39-04 (fork tree UI or remaining fork detection)
+Stopped at: Phase 39 complete -- all v2.0 phases shipped (34-39)
 Resume file: .planning/phases/39-fork-detection/
