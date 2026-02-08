@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 28 Hook-Based Usage Tracking -- COMPLETE. Next: Phase 29.
+**Current focus:** Phase 29 Tenant-Scoped Analytics & MCP -- In progress (plan 03 complete).
 
 ## Current Position
 
-Phase: 28 of 33 (Hook-Based Usage Tracking) -- COMPLETE
-Plan: All 7 plans completed (28-01 through 28-07)
-Status: Complete
-Last activity: 2026-02-08 -- Phase 28 complete, all 7 plans executed, migration 0007 applied, full build passing
+Phase: 29 of 33 (Tenant-Scoped Analytics & MCP)
+Plan: 3 of 3 in phase 29 (29-01 through 29-03 complete)
+Status: In progress
+Last activity: 2026-02-08 -- Completed 29-03-PLAN.md (standardize FTE Years Saved to 2,080 hrs/yr)
 
-Progress: [██████████████░░░░░░░░░░] ~27% (v1.5 -- 23 of ~TBD plans)
+Progress: [███████████████░░░░░░░░░] ~28% (v1.5 -- 26 of ~TBD plans)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [██████████████░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 120
-- Phase 28: 7 plans in 3 waves (parallel execution)
+- Total plans completed: 123
+- Phase 29: 3 plans in wave 1 (parallel execution)
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.8 hours
 
 **Cumulative:**
-- 120 plans across 28 phases and 5 milestones
+- 123 plans across 29 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -91,6 +91,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 28-05 | Retry once after 5s on non-200 | Balances reliability with not blocking Claude Code execution |
 | 28-06 | MCP deploy defaults to production tracking URL | MCP is production-facing; localhost fallback not appropriate |
 | 28-06 | log_skill_usage kept but deprecated | Backward compatibility with older MCP configurations |
+| 29-03 | FTE_HOURS_PER_YEAR = 2080 (40 hrs/wk * 52 wks) | USA FTE standard; corrects from implicit 2,920 hrs/yr (8 * 365) |
+| 29-03 | FTE_DAYS_PER_YEAR = 260 (2080 / 8) | Derived constant for pre-computed FTE days to years conversion |
 
 ### Pending Todos
 
@@ -110,5 +112,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 28 complete, verified build passing, migration 0007 applied
-Resume file: None
+Stopped at: Phase 29 plan 03 complete, FTE constants standardized across 11 display locations
+Resume file: .planning/phases/29-tenant-scoped-analytics-mcp/29-03-SUMMARY.md
