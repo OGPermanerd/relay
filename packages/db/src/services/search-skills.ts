@@ -15,6 +15,7 @@ export interface SearchSkillsParams {
   query: string;
   category?: string;
   limit?: number; // default 50
+  tenantId?: string;
 }
 
 export interface SearchSkillResult {
@@ -48,7 +49,7 @@ export async function searchSkillsByQuery(
     return [];
   }
 
-  const { query, category, limit = 50 } = params;
+  const { query, category, limit = 50, tenantId } = params;
   const trimmed = query.trim();
 
   if (!trimmed) {
@@ -66,6 +67,10 @@ export async function searchSkillsByQuery(
   )`;
 
   const conditions = [matchCondition];
+
+  if (tenantId) {
+    conditions.push(eq(skills.tenantId, tenantId));
+  }
 
   if (category) {
     conditions.push(eq(skills.category, category));

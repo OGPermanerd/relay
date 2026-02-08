@@ -2,7 +2,13 @@ import { z } from "zod";
 import { server } from "../server.js";
 import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
 import { trackUsage } from "../tracking/events.js";
-import { getUserId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
+import {
+  getUserId,
+  getTenantId,
+  shouldNudge,
+  incrementAnonymousCount,
+  getFirstAuthMessage,
+} from "../auth.js";
 
 export async function handleSearchSkills({
   query,
@@ -17,7 +23,13 @@ export async function handleSearchSkills({
   userId?: string;
   skipNudge?: boolean;
 }) {
-  const results = await searchSkillsByQuery({ query, category, limit });
+  const tenantId = getTenantId();
+  const results = await searchSkillsByQuery({
+    query,
+    category,
+    limit,
+    tenantId: tenantId ?? undefined,
+  });
 
   if (!userId && !skipNudge) {
     incrementAnonymousCount();

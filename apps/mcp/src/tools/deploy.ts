@@ -2,7 +2,13 @@ import { z } from "zod";
 import { server } from "../server.js";
 import { db } from "@everyskill/db";
 import { trackUsage } from "../tracking/events.js";
-import { getUserId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
+import {
+  getUserId,
+  getTenantId,
+  shouldNudge,
+  incrementAnonymousCount,
+  getFirstAuthMessage,
+} from "../auth.js";
 
 /**
  * Build YAML frontmatter with PostToolUse hooks for automatic usage tracking.
@@ -87,9 +93,14 @@ export async function handleDeploySkill({
     };
   }
 
-  // Fetch all skills and find by ID in-memory to avoid TypeScript module resolution issues
+  const tenantId = getTenantId();
+
+  // Fetch all skills and find by ID in-memory, with tenant filtering to prevent cross-tenant access
   const allSkills = await db.query.skills.findMany();
-  const skill = allSkills.find((s: { id: string }) => s.id === skillId);
+  const skill = allSkills.find(
+    (s: { id: string; tenantId: string }) =>
+      s.id === skillId && (!tenantId || s.tenantId === tenantId)
+  );
 
   if (!skill) {
     return {

@@ -2,7 +2,13 @@ import { z } from "zod";
 import { server } from "../server.js";
 import { db } from "@everyskill/db";
 import { trackUsage } from "../tracking/events.js";
-import { getUserId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
+import {
+  getUserId,
+  getTenantId,
+  shouldNudge,
+  incrementAnonymousCount,
+  getFirstAuthMessage,
+} from "../auth.js";
 
 export async function handleListSkills({
   category,
@@ -27,21 +33,30 @@ export async function handleListSkills({
     };
   }
 
+  const tenantId = getTenantId();
+
   // Fetch all skills and filter in-memory to avoid TypeScript module resolution issues
   const allResults = await db.query.skills.findMany({
-    limit: category ? undefined : limit, // Fetch all if filtering
+    limit: category || tenantId ? undefined : limit, // Fetch all if filtering
     columns: {
       id: true,
       name: true,
       description: true,
       category: true,
       hoursSaved: true,
+      tenantId: true,
     },
   });
 
-  const results = category
-    ? allResults.filter((s: { category: string | null }) => s.category === category).slice(0, limit)
+  // Filter by tenant first (if authenticated), then by category
+  const tenantFiltered = tenantId
+    ? allResults.filter((s: { tenantId: string }) => s.tenantId === tenantId)
     : allResults;
+  const results = category
+    ? tenantFiltered
+        .filter((s: { category: string | null }) => s.category === category)
+        .slice(0, limit)
+    : tenantFiltered.slice(0, limit);
 
   if (!userId && !skipNudge) {
     incrementAnonymousCount();
