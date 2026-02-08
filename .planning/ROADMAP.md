@@ -116,7 +116,7 @@ Total: 55 plans completed.
 **Milestone Goal:** Transform skill publishing from instant-publish to a quality-gated pipeline with AI review, author revision, and admin approval -- plus conversational discovery via MCP and fork-on-modify detection. 44 requirements across 6 categories.
 
 - [x] **Phase 34: Review Pipeline Foundation** - Status column, state machine, query guards, and author workflow ✓
-- [ ] **Phase 35: AI Review Integration** - Auto AI review on submission, MCP review tools, auto-approve threshold
+- [x] **Phase 35: AI Review Integration** - Auto AI review on submission, MCP review tools, auto-approve threshold ✓
 - [ ] **Phase 36: Admin Review UI** - Queue, diff view, approve/reject/request-changes actions, audit trail
 - [ ] **Phase 37: Review Notifications** - 7 new notification types for the review lifecycle
 - [ ] **Phase 38: Conversational MCP Discovery** - Semantic search, recommend, describe, and guide tools
@@ -155,9 +155,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 35-01-PLAN.md -- Schema statusMessage column + auto-approve threshold logic
-- [ ] 35-02-PLAN.md -- Submit-for-review pipeline with inline AI review + error UI
-- [ ] 35-03-PLAN.md -- MCP tools (review_skill, submit_for_review, check_review_status)
+- [x] 35-01-PLAN.md -- Schema statusMessage column + auto-approve threshold logic
+- [x] 35-02-PLAN.md -- Submit-for-review pipeline with inline AI review + error UI
+- [x] 35-03-PLAN.md -- MCP tools (review_skill, submit_for_review, check_review_status)
 
 ### Phase 36: Admin Review UI
 **Goal**: Tenant admins can efficiently review submitted skills with full context (AI scores, content diff) and take approve/reject/request-changes actions
@@ -220,13 +220,13 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34. Review Pipeline Foundation | v2.0 | 5/5 | Complete | 2026-02-08 |
-| 35. AI Review Integration | v2.0 | 0/3 | Planning complete | - |
+| 35. AI Review Integration | v2.0 | 3/3 | Complete | 2026-02-08 |
 | 36. Admin Review UI | v2.0 | 0/TBD | Not started | - |
 | 37. Review Notifications | v2.0 | 0/TBD | Not started | - |
 | 38. Conversational MCP Discovery | v2.0 | 0/TBD | Not started | - |
 | 39. Fork Detection | v2.0 | 0/TBD | Not started | - |
 
-**Total: 154 plans completed across 34 phases and 7 milestones (v1.0-v1.5, v2.0 in progress).**
+**Total: 157 plans completed across 35 phases and 7 milestones (v1.0-v1.5, v2.0 in progress).**
 
 ---
 *Roadmap created: 2026-01-31*

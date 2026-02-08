@@ -11,15 +11,15 @@ Requirements for the Skill Ecosystem milestone. Each maps to roadmap phases star
 
 - [ ] **RVPL-01**: Skill creation sets status to `draft` instead of auto-publishing
 - [ ] **RVPL-02**: Author can submit a draft skill for review, transitioning status to `pending_review`
-- [ ] **RVPL-03**: AI review triggers automatically on submit-for-review with explicit error handling (not fire-and-forget)
-- [ ] **RVPL-04**: AI review completion transitions skill to `ai_reviewed` status
+- [x] **RVPL-03**: AI review triggers automatically on submit-for-review with explicit error handling (not fire-and-forget)
+- [x] **RVPL-04**: AI review completion transitions skill to `ai_reviewed` status
 - [ ] **RVPL-05**: State machine enforces valid transitions: draft → pending_review → ai_reviewed → approved/rejected/changes_requested → published
 - [ ] **RVPL-06**: All 8+ existing skill query paths filter by `status = 'published'` to prevent pending skills from appearing in search/browse
 - [ ] **RVPL-07**: MCP `create_skill` tool creates skills as `draft` with response message explaining review process
 - [ ] **RVPL-08**: MCP `list_skills` and `search_skills` only return published skills
 - [ ] **RVPL-09**: Skill detail page shows 404 for non-author/non-admin users when skill is not published
 - [ ] **RVPL-10**: Existing published skills retain `published` status after migration (backward compatible)
-- [ ] **RVPL-11**: Skills with all AI review scores >= configurable threshold auto-approve (skip admin queue)
+- [x] **RVPL-11**: Skills with all AI review scores >= configurable threshold auto-approve (skip admin queue)
 - [ ] **RVPL-12**: Author can view their own draft/pending/rejected skills on a "My Skills" page
 
 ### Admin Review
@@ -55,9 +55,9 @@ Requirements for the Skill Ecosystem milestone. Each maps to roadmap phases star
 
 ### MCP Review Tools
 
-- [ ] **MCPR-01**: `review_skill` MCP tool triggers AI review from within Claude conversation, returns scores and suggestions
-- [ ] **MCPR-02**: `submit_for_review` MCP tool submits a draft skill for admin review via MCP
-- [ ] **MCPR-03**: `check_review_status` MCP tool returns current review status of author's submitted skills
+- [x] **MCPR-01**: `review_skill` MCP tool triggers AI review from within Claude conversation, returns scores and suggestions
+- [x] **MCPR-02**: `submit_for_review` MCP tool submits a draft skill for admin review via MCP
+- [x] **MCPR-03**: `check_review_status` MCP tool returns current review status of author's submitted skills
 
 ### Fork Detection
 
@@ -117,15 +117,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | RVPL-01 | Phase 34 | Done |
 | RVPL-02 | Phase 34 | Done |
-| RVPL-03 | Phase 35 | Pending |
-| RVPL-04 | Phase 35 | Pending |
+| RVPL-03 | Phase 35 | Done |
+| RVPL-04 | Phase 35 | Done |
 | RVPL-05 | Phase 34 | Done |
 | RVPL-06 | Phase 34 | Done |
 | RVPL-07 | Phase 34 | Done |
 | RVPL-08 | Phase 34 | Done |
 | RVPL-09 | Phase 34 | Done |
 | RVPL-10 | Phase 34 | Done |
-| RVPL-11 | Phase 35 | Pending |
+| RVPL-11 | Phase 35 | Done |
 | RVPL-12 | Phase 34 | Done |
 | ADMR-01 | Phase 36 | Pending |
 | ADMR-02 | Phase 36 | Pending |
@@ -149,9 +149,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DISC-04 | Phase 38 | Pending |
 | DISC-05 | Phase 38 | Pending |
 | DISC-06 | Phase 38 | Pending |
-| MCPR-01 | Phase 35 | Pending |
-| MCPR-02 | Phase 35 | Pending |
-| MCPR-03 | Phase 35 | Pending |
+| MCPR-01 | Phase 35 | Done |
+| MCPR-02 | Phase 35 | Done |
+| MCPR-03 | Phase 35 | Done |
 | FORK-01 | Phase 39 | Pending |
 | FORK-02 | Phase 39 | Pending |
 | FORK-03 | Phase 39 | Pending |
