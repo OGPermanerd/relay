@@ -7,7 +7,7 @@ import { AdminKeyManager } from "@/components/admin-key-manager";
 
 export default async function AdminKeysPage() {
   const session = await auth();
-  if (!session?.user?.id || !isAdmin(session.user.email)) {
+  if (!session?.user?.id || !isAdmin(session)) {
     redirect("/");
   }
 

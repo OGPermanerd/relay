@@ -5,7 +5,7 @@ import { AdminMergeForm } from "@/components/admin-merge-form";
 
 export default async function AdminMergePage() {
   const session = await auth();
-  if (!session?.user?.id || !isAdmin(session.user.email)) {
+  if (!session?.user?.id || !isAdmin(session)) {
     redirect("/");
   }
 

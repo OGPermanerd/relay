@@ -17,7 +17,7 @@ export async function mergeSkillsAction(
   formData: FormData
 ): Promise<MergeSkillsState> {
   const session = await auth();
-  if (!session?.user?.id || !isAdmin(session.user.email)) {
+  if (!session?.user?.id || !isAdmin(session)) {
     return { error: "Admin access required" };
   }
 
@@ -48,7 +48,7 @@ export type MergeSearchResult = {
 
 export async function searchSkillsForMerge(query: string): Promise<MergeSearchResult[]> {
   const session = await auth();
-  if (!session?.user?.id || !isAdmin(session.user.email)) {
+  if (!session?.user?.id || !isAdmin(session)) {
     return [];
   }
 

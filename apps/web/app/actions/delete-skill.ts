@@ -38,7 +38,7 @@ export async function deleteSkillAction(
   }
 
   // Check authorization: must be author or admin
-  const userIsAdmin = isAdmin(session.user.email);
+  const userIsAdmin = isAdmin(session);
   if (skill.authorId !== session.user.id && !userIsAdmin) {
     return { error: "You don't have permission to delete this skill" };
   }

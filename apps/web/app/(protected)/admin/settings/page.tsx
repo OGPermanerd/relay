@@ -6,7 +6,7 @@ import { AdminSettingsForm } from "@/components/admin-settings-form";
 
 export default async function AdminSettingsPage() {
   const session = await auth();
-  if (!session?.user?.id || !isAdmin(session.user.email)) {
+  if (!session?.user?.id || !isAdmin(session)) {
     redirect("/");
   }
 

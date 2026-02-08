@@ -18,7 +18,7 @@ export async function saveSettingsAction(
   formData: FormData
 ): Promise<SaveSettingsState> {
   const session = await auth();
-  if (!session?.user?.id || !isAdmin(session.user.email)) {
+  if (!session?.user?.id || !isAdmin(session)) {
     return { error: "Unauthorized" };
   }
 
@@ -73,7 +73,7 @@ export async function testConnectionAction(
   formData: FormData
 ): Promise<TestConnectionState> {
   const session = await auth();
-  if (!session?.user?.id || !isAdmin(session.user.email)) {
+  if (!session?.user?.id || !isAdmin(session)) {
     return { error: "Unauthorized" };
   }
 
@@ -113,7 +113,7 @@ export async function backfillEmbeddingsAction(
   _formData: FormData
 ): Promise<BackfillState> {
   const session = await auth();
-  if (!session?.user?.id || !isAdmin(session.user.email)) {
+  if (!session?.user?.id || !isAdmin(session)) {
     return { error: "Unauthorized" };
   }
 

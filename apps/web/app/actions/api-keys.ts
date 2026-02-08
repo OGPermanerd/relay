@@ -40,7 +40,7 @@ export async function generateApiKey(
   const targetUserId = forUserId || session.user.id;
 
   if (targetUserId !== session.user.id) {
-    if (!isAdmin(session.user.email)) {
+    if (!isAdmin(session)) {
       return { error: "Only admins can generate keys for other users" };
     }
   }
@@ -97,7 +97,7 @@ export async function revokeApiKeyAction(
     return { error: "API key not found" };
   }
 
-  if (existing.userId !== session.user.id && !isAdmin(session.user.email)) {
+  if (existing.userId !== session.user.id && !isAdmin(session)) {
     return { error: "You can only revoke your own API keys" };
   }
 
@@ -203,7 +203,7 @@ export async function listAllApiKeysAction(): Promise<{
     return { error: "You must be signed in" };
   }
 
-  if (!isAdmin(session.user.email)) {
+  if (!isAdmin(session)) {
     return { error: "Admin access required" };
   }
 

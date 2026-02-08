@@ -31,7 +31,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
               <NavLink href="/skills">Skills</NavLink>
               <NavLink href="/analytics">Analytics</NavLink>
               <NavLink href="/profile">Profile</NavLink>
-              {isAdmin(user.email) && <NavLink href="/admin/settings">Admin</NavLink>}
+              {isAdmin(session) && <NavLink href="/admin/settings">Admin</NavLink>}
             </nav>
           </div>
 

@@ -178,7 +178,7 @@ export default async function SkillPage(props: SkillPageProps) {
             {session?.user && (
               <ForkButton skillId={skill.id} skillName={skill.name} forkCount={forkCount} />
             )}
-            {session?.user && (isAuthor || isAdmin(session.user.email)) && (
+            {session?.user && (isAuthor || isAdmin(session)) && (
               <DeleteSkillButton
                 skillId={skill.id}
                 skillName={skill.name}

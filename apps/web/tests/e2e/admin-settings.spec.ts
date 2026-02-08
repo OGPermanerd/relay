@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Admin Settings", () => {
   test("non-admin is redirected away from settings page", async ({ page }) => {
-    // Without ADMIN_EMAILS set to include our test user, we get redirected
+    // Without admin role on test user, we get redirected
     await page.goto("/admin/settings");
 
     // Either redirected to "/" or we see the page (if test user is admin)
@@ -20,7 +20,7 @@ test.describe("Admin Settings", () => {
   });
 
   test("admin settings page loads when user is admin", async ({ page }) => {
-    // If ADMIN_EMAILS includes our test user email, we can see the page
+    // If test user has admin role, we can see the page
     await page.goto("/admin/settings");
     const url = page.url();
 
