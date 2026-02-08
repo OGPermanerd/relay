@@ -117,7 +117,7 @@ Total: 55 plans completed.
 
 - [x] **Phase 34: Review Pipeline Foundation** - Status column, state machine, query guards, and author workflow ✓
 - [x] **Phase 35: AI Review Integration** - Auto AI review on submission, MCP review tools, auto-approve threshold ✓
-- [ ] **Phase 36: Admin Review UI** - Queue, diff view, approve/reject/request-changes actions, audit trail
+- [x] **Phase 36: Admin Review UI** - Queue, diff view, approve/reject/request-changes actions, audit trail ✓
 - [ ] **Phase 37: Review Notifications** - 7 new notification types for the review lifecycle
 - [ ] **Phase 38: Conversational MCP Discovery** - Semantic search, recommend, describe, and guide tools
 - [ ] **Phase 39: Fork Detection** - Hash comparison, update_skill, web UI drift indicators
@@ -172,9 +172,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 36-01-PLAN.md -- Review decisions schema, migration, service, and query functions
-- [ ] 36-02-PLAN.md -- Server actions, review queue page, and admin nav badge
-- [ ] 36-03-PLAN.md -- Review detail page with AI scores, diff view, and action forms
+- [x] 36-01-PLAN.md -- Review decisions schema, migration, service, and query functions
+- [x] 36-02-PLAN.md -- Server actions, review queue page, and admin nav badge
+- [x] 36-03-PLAN.md -- Review detail page with AI scores, diff view, and action forms
 
 ### Phase 37: Review Notifications
 **Goal**: Authors and admins receive timely in-app and email notifications at every stage of the review lifecycle
@@ -226,12 +226,12 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34. Review Pipeline Foundation | v2.0 | 5/5 | Complete | 2026-02-08 |
 | 35. AI Review Integration | v2.0 | 3/3 | Complete | 2026-02-08 |
-| 36. Admin Review UI | v2.0 | 0/3 | Not started | - |
+| 36. Admin Review UI | v2.0 | 3/3 | Complete | 2026-02-08 |
 | 37. Review Notifications | v2.0 | 0/TBD | Not started | - |
 | 38. Conversational MCP Discovery | v2.0 | 0/TBD | Not started | - |
 | 39. Fork Detection | v2.0 | 0/TBD | Not started | - |
 
-**Total: 157 plans completed across 35 phases and 7 milestones (v1.0-v1.5, v2.0 in progress).**
+**Total: 163 plans completed across 36 phases and 7 milestones (v1.0-v1.5, v2.0 in progress).**
 
 ---
 *Roadmap created: 2026-01-31*

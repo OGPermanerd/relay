@@ -24,15 +24,15 @@ Requirements for the Skill Ecosystem milestone. Each maps to roadmap phases star
 
 ### Admin Review
 
-- [ ] **ADMR-01**: Admin review queue page at `/admin/reviews` lists skills with pending review status
-- [ ] **ADMR-02**: Review queue supports pagination (20 per page) and filtering by status/category/date
-- [ ] **ADMR-03**: Admin can approve a skill, transitioning it to `approved` then `published` with publishedVersionId set
-- [ ] **ADMR-04**: Admin can reject a skill with required notes explaining the reason
-- [ ] **ADMR-05**: Admin can request changes with feedback notes, transitioning to `changes_requested`
-- [ ] **ADMR-06**: Admin review page shows AI review scores (quality/clarity/completeness) to inform decision
-- [ ] **ADMR-07**: Admin review page shows skill content with diff view against previous version (if exists)
-- [ ] **ADMR-08**: Review decisions stored immutably for audit trail (reviewer, action, timestamp, notes)
-- [ ] **ADMR-09**: Review queue count shown in admin sidebar/nav
+- [x] **ADMR-01**: Admin review queue page at `/admin/reviews` lists skills with pending review status
+- [x] **ADMR-02**: Review queue supports pagination (20 per page) and filtering by status/category/date
+- [x] **ADMR-03**: Admin can approve a skill, transitioning it to `approved` then `published` with publishedVersionId set
+- [x] **ADMR-04**: Admin can reject a skill with required notes explaining the reason
+- [x] **ADMR-05**: Admin can request changes with feedback notes, transitioning to `changes_requested`
+- [x] **ADMR-06**: Admin review page shows AI review scores (quality/clarity/completeness) to inform decision
+- [x] **ADMR-07**: Admin review page shows skill content with diff view against previous version (if exists)
+- [x] **ADMR-08**: Review decisions stored immutably for audit trail (reviewer, action, timestamp, notes)
+- [x] **ADMR-09**: Review queue count shown in admin sidebar/nav
 
 ### Review Notifications
 
@@ -127,15 +127,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RVPL-10 | Phase 34 | Done |
 | RVPL-11 | Phase 35 | Done |
 | RVPL-12 | Phase 34 | Done |
-| ADMR-01 | Phase 36 | Pending |
-| ADMR-02 | Phase 36 | Pending |
-| ADMR-03 | Phase 36 | Pending |
-| ADMR-04 | Phase 36 | Pending |
-| ADMR-05 | Phase 36 | Pending |
-| ADMR-06 | Phase 36 | Pending |
-| ADMR-07 | Phase 36 | Pending |
-| ADMR-08 | Phase 36 | Pending |
-| ADMR-09 | Phase 36 | Pending |
+| ADMR-01 | Phase 36 | Done |
+| ADMR-02 | Phase 36 | Done |
+| ADMR-03 | Phase 36 | Done |
+| ADMR-04 | Phase 36 | Done |
+| ADMR-05 | Phase 36 | Done |
+| ADMR-06 | Phase 36 | Done |
+| ADMR-07 | Phase 36 | Done |
+| ADMR-08 | Phase 36 | Done |
+| ADMR-09 | Phase 36 | Done |
 | RVNT-01 | Phase 37 | Pending |
 | RVNT-02 | Phase 37 | Pending |
 | RVNT-03 | Phase 37 | Pending |
