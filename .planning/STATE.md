@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 33 of 33 (Email Notifications)
-Plan: 1 of 7 in phase 33 (33-01 complete)
+Plan: 2 of 7 in phase 33 (33-01, 33-02 complete)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 33-01-PLAN.md (notifications schema)
+Last activity: 2026-02-08 -- Completed 33-02-PLAN.md (email infrastructure and templates)
 
-Progress: [██████████████████████░░] ~43% (v1.5 -- 143 plans total)
+Progress: [██████████████████████░░] ~43% (v1.5 -- 144 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [██████████████████████░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 143
-- Phase 33: 1 PLAN COMPLETE (notifications schema)
+- Total plans completed: 144
+- Phase 33: 2 PLANS COMPLETE (notifications schema, email infrastructure)
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~8.6 hours
+- Total execution time: ~8.7 hours
 
 **Cumulative:**
-- 143 plans across 33 phases and 5 milestones
+- 144 plans across 33 phases and 5 milestones
 - ~14,700 LOC TypeScript
 - 7 days total development time
 
@@ -129,6 +129,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 32-03 | Tenant settings validated with Zod schema | name required 1-100 chars, domain/logo optional empty-or-valid |
 | 33-01 | Idempotent migration with DO blocks for enum/policy creation | Safe to re-run; exception handlers skip duplicate objects |
 | 33-01 | Composite (userId, isRead) index for unread count optimization | Most common query is "count unread for user"; composite index serves it efficiently |
+| 33-02 | Stub mode via STUB_MODE = !process.env.RESEND_API_KEY | Console.log when unset, Resend API when set; zero-config for dev |
+| 33-02 | Inline styles only in email templates | Email clients do not support CSS classes or Tailwind |
 
 ### Pending Todos
 
@@ -148,5 +150,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 33, Plan 01 complete (notifications schema)
-Resume file: .planning/phases/33-email-notifications/33-01-SUMMARY.md
+Stopped at: Phase 33, Plan 02 complete (email infrastructure and templates)
+Resume file: .planning/phases/33-email-notifications/33-02-SUMMARY.md
