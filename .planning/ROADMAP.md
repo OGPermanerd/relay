@@ -219,7 +219,13 @@ Plans:
   2. Hash comparison strips YAML frontmatter before hashing so that tracking hook changes do not trigger false drift detection
   3. `update_skill` MCP tool pushes local modifications back as a new version (if the user is the author) or creates a fork (if not), with proper skill_version records and review status
   4. The web UI shows a drift indicator on fork detail pages when the fork has diverged from its parent, and a `/skills/[slug]/compare` page shows side-by-side content comparison
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 39-01-PLAN.md -- Schema migration + fork action update (forkedAtContentHash, skill_versions)
+- [ ] 39-02-PLAN.md -- check_skill_status MCP tool with frontmatter-stripping hash comparison
+- [ ] 39-03-PLAN.md -- update_skill MCP tool (author-update or non-author-fork)
+- [ ] 39-04-PLAN.md -- Web UI drift indicator + side-by-side comparison page
 
 ## Progress
 
@@ -241,7 +247,7 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 36. Admin Review UI | v2.0 | 3/3 | Complete | 2026-02-08 |
 | 37. Review Notifications | v2.0 | 4/4 | Complete | 2026-02-08 |
 | 38. Conversational MCP Discovery | v2.0 | 4/4 | Complete | 2026-02-08 |
-| 39. Fork Detection | v2.0 | 0/TBD | Not started | - |
+| 39. Fork Detection | v2.0 | 0/4 | Not started | - |
 
 **Total: 171 plans completed across 38 phases and 7 milestones (v1.0-v1.5, v2.0 in progress).**
 
