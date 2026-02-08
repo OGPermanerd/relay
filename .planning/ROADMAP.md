@@ -134,7 +134,14 @@ Total: 55 plans completed.
   3. All existing published skills retain `published` status after migration -- zero regression in search results or skill visibility
   4. Non-author, non-admin users see a 404 when visiting a skill that is not published
   5. Authors can view all their own skills (draft, pending, rejected, published) on a "My Skills" page
-**Plans**: TBD
+**Plans:** 5 plans
+
+Plans:
+- [ ] 34-01-PLAN.md -- Schema + state machine + migration
+- [ ] 34-02-PLAN.md -- Creation paths set status='draft'
+- [ ] 34-03-PLAN.md -- Query guards (18 public query paths)
+- [ ] 34-04-PLAN.md -- Access control, My Skills badges, submit-for-review
+- [ ] 34-05-PLAN.md -- Build verification and E2E tests
 
 ### Phase 35: AI Review Integration
 **Goal**: Submitting a skill for review automatically triggers AI analysis with explicit error handling, and authors/admins can trigger and check reviews via MCP
@@ -207,7 +214,7 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
-| 34. Review Pipeline Foundation | v2.0 | 0/TBD | Not started | - |
+| 34. Review Pipeline Foundation | v2.0 | 0/5 | Planned | - |
 | 35. AI Review Integration | v2.0 | 0/TBD | Not started | - |
 | 36. Admin Review UI | v2.0 | 0/TBD | Not started | - |
 | 37. Review Notifications | v2.0 | 0/TBD | Not started | - |
