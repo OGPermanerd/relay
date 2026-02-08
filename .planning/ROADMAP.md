@@ -152,7 +152,12 @@ Plans:
   2. If AI review fails (API error, rate limit), the skill remains in `pending_review` with a visible error state -- it does not get stuck in limbo
   3. Skills with all AI review scores at or above a configurable threshold auto-approve without entering the admin queue
   4. From a Claude conversation, a user can trigger AI review (`review_skill`), submit a draft for admin review (`submit_for_review`), and check the status of their submitted skills (`check_review_status`)
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 35-01-PLAN.md -- Schema statusMessage column + auto-approve threshold logic
+- [ ] 35-02-PLAN.md -- Submit-for-review pipeline with inline AI review + error UI
+- [ ] 35-03-PLAN.md -- MCP tools (review_skill, submit_for_review, check_review_status)
 
 ### Phase 36: Admin Review UI
 **Goal**: Tenant admins can efficiently review submitted skills with full context (AI scores, content diff) and take approve/reject/request-changes actions
@@ -215,7 +220,7 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34. Review Pipeline Foundation | v2.0 | 5/5 | Complete | 2026-02-08 |
-| 35. AI Review Integration | v2.0 | 0/TBD | Not started | - |
+| 35. AI Review Integration | v2.0 | 0/3 | Planning complete | - |
 | 36. Admin Review UI | v2.0 | 0/TBD | Not started | - |
 | 37. Review Notifications | v2.0 | 0/TBD | Not started | - |
 | 38. Conversational MCP Discovery | v2.0 | 0/TBD | Not started | - |
