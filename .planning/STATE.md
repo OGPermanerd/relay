@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 ## Current Position
 
 Phase: 35 of 39 (AI Review Integration)
-Plan: 01 of 03
+Plan: 02 of 03
 Status: In progress
-Last activity: 2026-02-08 -- Completed 35-01-PLAN.md (schema + auto-approve logic)
+Last activity: 2026-02-08 -- Completed 35-02-PLAN.md (inline AI review pipeline + UI)
 
-Progress: [█████░░░░░░░░░░░░░░░░░░░] 20% (v2.0 -- 9/44 requirements delivered)
+Progress: [█████░░░░░░░░░░░░░░░░░░░] 23% (v2.0 -- 10/44 requirements delivered)
 
 ## Milestones
 
@@ -29,12 +29,12 @@ Progress: [█████░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 155
+- Total plans completed: 156
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~9.2 hours
+- Total execution time: ~9.3 hours
 
 **Cumulative:**
-- 155 plans across 35 phases and 6 milestones
+- 156 plans across 35 phases and 6 milestones
 - ~14,700 LOC TypeScript
 - 8 days total development time
 
@@ -56,6 +56,9 @@ Recent decisions affecting current work:
 - [34-05]: Integration verified: full build passes, 90/92 E2E tests green (2 pre-existing env-specific failures), all 91 skills remain 'published'
 - [35-01]: statusMessage is nullable TEXT, no default -- only populated on AI review failure
 - [35-01]: Auto-approve threshold defaults to 7/10 -- all 3 categories must meet threshold
+- [35-02]: AI review awaited inline (not fire-and-forget) -- user sees result immediately
+- [35-02]: Auto-approve transitions through full state machine path (ai_reviewed -> approved -> published)
+- [35-02]: Added changes_requested -> pending_review transition for resubmission support
 
 ### Pending Todos
 
@@ -71,5 +74,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 35 plan 01 complete -- plans 02+03 ready to execute
-Resume file: .planning/phases/35-ai-review-integration/35-02-PLAN.md
+Stopped at: Phase 35 plan 02 complete -- plan 03 ready to execute
+Resume file: .planning/phases/35-ai-review-integration/35-03-PLAN.md
