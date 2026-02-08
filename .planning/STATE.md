@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 30 of 33 (Branding & Navigation)
-Plan: 2 of 7 in phase 30 (30-01, 30-02 complete)
+Plan: 6 of 7 in phase 30 (30-01, 30-02, 30-06 complete)
 Status: In progress
-Last activity: 2026-02-08 -- Completed 30-02-PLAN.md (NavLink active indicator component)
+Last activity: 2026-02-08 -- Completed 30-06-PLAN.md (vanity domain schema + service)
 
-Progress: [████████████████░░░░░░░░] ~29% (v1.5 -- 27 of ~TBD plans)
+Progress: [████████████████░░░░░░░░] ~30% (v1.5 -- 28 of ~TBD plans)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [████████████████░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 125
-- Phase 30: Plans 01-02 complete (AnimatedLogo, NavLink components)
+- Total plans completed: 126
+- Phase 30: Plans 01-02, 06 complete (AnimatedLogo, NavLink, vanity domain)
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.8 hours
 
 **Cumulative:**
-- 125 plans across 30 phases and 5 milestones
+- 126 plans across 30 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -97,6 +97,7 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 29-01 | Defense-in-depth tenantId on drill-down queries | getEmployeeActivity and getSkillTrend add tenant_id filter alongside userId/skillId |
 | 29-02 | In-memory tenant filtering in MCP tools | drizzle-orm not direct dependency of MCP app; in-memory filter matches existing pattern |
 | 29-02 | Three-tier tenantId resolution in tracking | event.tenantId > cached auth tenantId > DEFAULT_TENANT_ID for anonymous fallback |
+| 30-06 | Nullable unique vanity_domain column | Opt-in vanity domains for paid tenants; nullable allows freemium tenants to skip |
 
 ### Pending Todos
 
@@ -116,5 +117,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 30, plan 02 complete (NavLink active indicator)
-Resume file: .planning/phases/30-branding-navigation/30-02-SUMMARY.md
+Stopped at: Phase 30, plan 06 complete (vanity domain schema + service)
+Resume file: .planning/phases/30-branding-navigation/30-06-SUMMARY.md
