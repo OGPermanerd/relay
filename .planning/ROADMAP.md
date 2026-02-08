@@ -261,7 +261,15 @@ Plans:
   3. Users can configure notification preferences per type (skill grouping requests, trending digests, platform updates) and choose digest frequency
   4. When someone proposes grouping a skill under another, the original author receives both an in-app notification and an email
   5. Trending skills digests (daily or weekly) and platform update notifications are delivered based on user preferences
-**Plans**: TBD
+**Plans:** 7 plans
+Plans:
+- [ ] 33-01-PLAN.md — Notifications + notification_preferences DB schemas and migration 0012
+- [ ] 33-02-PLAN.md — Resend email client (stubbed) + React Email templates
+- [ ] 33-03-PLAN.md — Notification and preference DB service functions
+- [ ] 33-04-PLAN.md — Bell icon notification center with unread badge in header
+- [ ] 33-05-PLAN.md — Notification preferences settings page
+- [ ] 33-06-PLAN.md — Wire grouping proposal to create notifications + stubbed email
+- [ ] 33-07-PLAN.md — Cron digest endpoints + admin platform update action
 
 ## Progress
 
@@ -284,7 +292,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 30. Branding & Navigation | v1.5 | 7/7 | Complete | 2026-02-08 |
 | 31. Skills & Upload | v1.5 | 6/6 | Complete | 2026-02-08 |
 | 32. Admin Panel | v1.5 | 6/6 | Complete | 2026-02-08 |
-| 33. Email & Notifications | v1.5 | 0/TBD | Not started | - |
+| 33. Email & Notifications | v1.5 | 0/7 | Not started | - |
 
 **Total: 142 plans completed across 32 phases and 5 milestones (v1.0-v1.5 Phase 32)**
 
