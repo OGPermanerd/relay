@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 30 Branding & Navigation -- in progress.
+**Current focus:** Phase 31 Skills Upload Enhancements -- in progress.
 
 ## Current Position
 
-Phase: 30 of 33 (Branding & Navigation)
-Plan: 7 of 7 in phase 30 (30-01 through 30-07 ALL complete)
-Status: Phase complete
-Last activity: 2026-02-08 -- Completed 30-05-PLAN.md (layout integration)
+Phase: 31 of 33 (Skills Upload Enhancements)
+Plan: 1 of TBD in phase 31 (31-01 complete)
+Status: In progress
+Last activity: 2026-02-08 -- Completed 31-01-PLAN.md (relative timestamp utility)
 
-Progress: [██████████████████░░░░░░] ~32% (v1.5 -- 30 of ~TBD plans)
+Progress: [███████████████████░░░░░] ~33% (v1.5 -- 131 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [██████████████████░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 130
-- Phase 30: ALL 7 plans complete (AnimatedLogo, NavLink, contributor tier, TenantBranding, layout integration, vanity domain schema, vanity domain infra)
+- Total plans completed: 131
+- Phase 31: 31-01 complete (relative timestamp utility TDD)
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.8 hours
 
 **Cumulative:**
-- 130 plans across 30 phases and 5 milestones
+- 131 plans across 31 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -101,6 +101,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 30-04 | Plain img tag for tenant logos | Avoids next/image remotePatterns config for arbitrary tenant logo domains |
 | 30-07 | No DB lookup in middleware for vanity domains | Edge-compatible, lightweight header pass-through; downstream resolves tenant |
 | 30-07 | Caddy ask endpoint validates before cert issuance | Prevents abuse of on-demand TLS by verifying domain ownership in DB |
+| 31-01 | useState('') for hydration-safe RelativeTime | Empty string on server matches empty string before useEffect fires on client |
+| 31-01 | 60-second refresh interval for RelativeTime | Keeps display current without excessive re-renders |
 
 ### Pending Todos
 
@@ -120,5 +122,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 30 complete -- all 7 plans done (layout integration was final)
-Resume file: .planning/phases/30-branding-navigation/30-05-SUMMARY.md
+Stopped at: Phase 31 plan 01 complete -- relative timestamp utility with TDD
+Resume file: .planning/phases/31-skills-upload-enhancements/31-01-SUMMARY.md
