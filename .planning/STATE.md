@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 28 of 33 (Hook-Based Usage Tracking)
-Plan: 28-03 completed
+Plan: 28-02, 28-03 completed
 Status: In progress
-Last activity: 2026-02-08 -- Completed 28-03-PLAN.md (usage tracking service)
+Last activity: 2026-02-08 -- Completed 28-02-PLAN.md (rate limiter and HMAC utilities)
 
-Progress: [██████████░░░░░░░░░░░░░░] ~15% (v1.5 -- 17 of ~TBD plans)
+Progress: [██████████░░░░░░░░░░░░░░] ~15% (v1.5 -- 18 of ~TBD plans)
 
 ## Milestones
 
@@ -28,12 +28,12 @@ Progress: [██████████░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 115
+- Total plans completed: 116
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~7.6 hours
 
 **Cumulative:**
-- 115 plans across 28 phases and 5 milestones
+- 116 plans across 28 phases and 5 milestones
 - ~14,500 LOC TypeScript
 - 7 days total development time
 
@@ -82,6 +82,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 27-03 | Dropbear on port 2222 for remote LUKS unlock | Avoids conflict with post-boot SSH daemon |
 | 28-07 | 90-day default key expiry | SOC2-05 compliance requires bounded API key lifetimes; 90 days is industry standard |
 | 28-03 | Fire-and-forget tracking with skill name enrichment | Consistent with audit.ts pattern; skill name resolved at insert time for self-contained metadata |
+| 28-02 | In-memory Map rate limiter over Redis | Single LXC container deployment; no Redis dependency needed |
+| 28-02 | timingSafeEqual with Buffer.from hex | Prevents timing attacks on HMAC string comparison |
 
 ### Pending Todos
 
@@ -101,5 +103,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08T03:02:00Z
-Stopped at: Completed 28-03-PLAN.md (usage tracking service)
+Stopped at: Completed 28-02-PLAN.md (rate limiter and HMAC utilities)
 Resume file: None
