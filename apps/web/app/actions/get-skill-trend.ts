@@ -22,8 +22,11 @@ export async function fetchSkillTrend(
     throw new Error("Unauthorized");
   }
 
+  const tenantId = session.user.tenantId;
+  if (!tenantId) throw new Error("Unauthorized");
+
   const startDate = getStartDate(range);
   const granularity = getGranularity(range);
-  const trend = await getSkillTrend(skillId, startDate, granularity);
+  const trend = await getSkillTrend(tenantId, skillId, startDate, granularity);
   return trend;
 }

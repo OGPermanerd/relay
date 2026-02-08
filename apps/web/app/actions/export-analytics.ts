@@ -20,7 +20,10 @@ export async function fetchExportData(range: TimeRange): Promise<ExportDataRow[]
     throw new Error("Unauthorized");
   }
 
+  const tenantId = session.user.tenantId;
+  if (!tenantId) throw new Error("Unauthorized");
+
   const startDate = getStartDate(range);
-  const data = await getExportData(session.user.id, startDate);
+  const data = await getExportData(tenantId, startDate);
   return data;
 }

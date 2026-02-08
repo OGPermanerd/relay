@@ -27,8 +27,8 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
     redirect("/login");
   }
 
-  // Use userId as orgId — query functions derive the email domain internally
-  const orgId = session.user.id;
+  const tenantId = session.user.tenantId;
+  if (!tenantId) redirect("/login");
 
   const params = await searchParams;
   const range = (params.range || "30d") as TimeRange;
@@ -37,10 +37,10 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
 
   // Fetch all data in parallel
   const [overviewStats, trendData, employeeData, skillData] = await Promise.all([
-    getOverviewStats(orgId, startDate),
-    getUsageTrend(orgId, startDate, granularity),
-    getEmployeeUsage(orgId, startDate),
-    getSkillUsage(orgId, startDate),
+    getOverviewStats(tenantId, startDate),
+    getUsageTrend(tenantId, startDate, granularity),
+    getEmployeeUsage(tenantId, startDate),
+    getSkillUsage(tenantId, startDate),
   ]);
 
   return (

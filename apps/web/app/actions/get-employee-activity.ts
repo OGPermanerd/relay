@@ -27,8 +27,11 @@ export async function fetchEmployeeActivity(
     throw new Error("Unauthorized");
   }
 
+  const tenantId = session.user.tenantId;
+  if (!tenantId) throw new Error("Unauthorized");
+
   const startDate = getStartDate(range);
-  const activity = await getEmployeeActivity(userId, startDate);
+  const activity = await getEmployeeActivity(tenantId, userId, startDate);
 
   // Map the result to ensure consistent types
   return activity.map((event) => ({
