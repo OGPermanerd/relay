@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v2.0 Skill Ecosystem -- Phase 35 Complete, Phase 36 Next
+**Current focus:** v2.0 Skill Ecosystem -- Phase 36 In Progress
 
 ## Current Position
 
 Phase: 36 of 39 (Admin Review UI)
-Plan: 00 of TBD
-Status: Not started
-Last activity: 2026-02-08 -- Phase 35 verified PASSED (4/4 criteria, 6/6 requirements)
+Plan: 01 of 03
+Status: In progress
+Last activity: 2026-02-08 -- Completed 36-01-PLAN.md (review data layer)
 
 Progress: [████████░░░░░░░░░░░░░░░░] 39% (v2.0 -- 17/44 requirements delivered)
 
@@ -29,12 +29,12 @@ Progress: [████████░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 160
+- Total plans completed: 161
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~9.5 hours
 
 **Cumulative:**
-- 160 plans across 35 phases and 7 milestones
+- 161 plans across 36 phases and 7 milestones
 - ~15,500 LOC TypeScript
 - 8 days total development time
 
@@ -62,6 +62,9 @@ Recent decisions affecting current work:
 - [35-03]: Duplicated state machine into submit-for-review.ts -- tsup DTS can't resolve @everyskill/db service exports
 - [35-03]: review_skill does NOT require ownership -- any authenticated user can review any visible skill
 - [35-03]: ANTHROPIC_API_KEY checked before status transitions in submit_for_review to prevent stuck states
+- [36-01]: review_decisions table is insert-only (no updatedAt) for SOC2 immutable audit trail
+- [36-01]: Default review queue filter is "ai_reviewed" -- skills awaiting human admin review
+- [36-01]: AI scores snapshot stored as JSONB for point-in-time decision record
 
 ### Pending Todos
 
@@ -77,5 +80,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 35 verified PASSED -- ready for Phase 36 (Admin Review UI)
-Resume file: .planning/phases/36-admin-review-ui/ (needs planning)
+Stopped at: Completed 36-01 (review data layer) -- continue with 36-02 (server actions)
+Resume file: .planning/phases/36-admin-review-ui/36-02-PLAN.md
