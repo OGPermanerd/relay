@@ -11,24 +11,7 @@ import type {
   TestConnectionState,
   BackfillState,
 } from "@/app/actions/admin-settings";
-
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-function formatUtcDate(iso: string): string {
-  const d = new Date(iso);
-  return (
-    MONTHS[d.getUTCMonth()] +
-    " " +
-    d.getUTCDate() +
-    ", " +
-    d.getUTCFullYear() +
-    " " +
-    String(d.getUTCHours()).padStart(2, "0") +
-    ":" +
-    String(d.getUTCMinutes()).padStart(2, "0") +
-    " UTC"
-  );
-}
+import { RelativeTime } from "@/components/relative-time";
 
 interface AdminSettingsFormProps {
   initialSettings: {
@@ -191,7 +174,7 @@ export function AdminSettingsForm({ initialSettings }: AdminSettingsFormProps) {
 
           {defaults.lastSuccessfulConnection && (
             <p className="mt-3 text-xs text-gray-500">
-              Last successful connection: {formatUtcDate(defaults.lastSuccessfulConnection)}
+              Last successful connection: <RelativeTime date={defaults.lastSuccessfulConnection} />
             </p>
           )}
         </div>

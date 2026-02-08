@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { DeleteSkillButton } from "./delete-skill-button";
-
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return MONTHS[d.getUTCMonth()] + " " + d.getUTCDate() + ", " + d.getUTCFullYear();
-}
+import { RelativeTime } from "@/components/relative-time";
 
 const CATEGORY_COLORS: Record<string, string> = {
   prompt: "bg-blue-100 text-blue-700",
@@ -63,7 +57,7 @@ export function MySkillsList({ skills }: MySkillsListProps) {
                   ? `${(skill.averageRating / 100).toFixed(1)} stars`
                   : "No ratings"}
               </span>
-              <span>{formatDate(skill.createdAt)}</span>
+              <RelativeTime date={skill.createdAt} />
             </div>
           </div>
           <div className="ml-4 flex-shrink-0">

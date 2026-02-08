@@ -6,6 +6,7 @@ import { eq, and, isNotNull, desc } from "drizzle-orm";
 import { getUserStats } from "@/lib/user-stats";
 import { auth } from "@/auth";
 import { ThankYouButton } from "@/components/thank-you-button";
+import { RelativeTime } from "@/components/relative-time";
 import { FTE_DAYS_PER_YEAR, FTE_HOURS_PER_YEAR } from "@/lib/constants";
 
 interface UserPageProps {
@@ -85,8 +86,7 @@ export default async function UserPage(props: UserPageProps) {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{user.name || "Anonymous"}</h1>
               <p className="text-gray-600">
-                Contributor since{" "}
-                {user.createdAt.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                Contributor since <RelativeTime date={user.createdAt.toISOString()} />
               </p>
             </div>
           </div>

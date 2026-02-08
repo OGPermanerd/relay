@@ -1,4 +1,5 @@
 import type { ReviewCategories } from "@everyskill/db/schema";
+import { RelativeTime } from "@/components/relative-time";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -45,17 +46,12 @@ interface AiReviewDisplayProps {
   modelName: string;
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
 export function AiReviewDisplay({
   categories,
   summary,
   reviewedAt,
   modelName,
 }: AiReviewDisplayProps) {
-  const d = new Date(reviewedAt);
-  const formattedDate = `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
-
   const categoryKeys = Object.keys(categoryLabels) as (keyof ReviewCategories)[];
 
   // Compute overall score as average of the 3 category scores
@@ -119,7 +115,7 @@ export function AiReviewDisplay({
 
       {/* Footer */}
       <p className="text-xs text-gray-400">
-        Reviewed {formattedDate} using {modelName}
+        Reviewed <RelativeTime date={reviewedAt} /> using {modelName}
       </p>
     </div>
   );

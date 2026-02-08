@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Sparkline } from "./sparkline";
 import { SkillAccordionContent } from "./skill-accordion-content";
 import { InstallButton } from "./install-button";
+import { RelativeTime } from "@/components/relative-time";
 import type { SkillTableRow } from "./skills-table";
 import { FTE_HOURS_PER_YEAR } from "@/lib/constants";
 
@@ -91,25 +92,6 @@ export function SkillsTableRow({
   // Calculate FTE Years Saved: (totalUses * hoursSaved) / FTE_HOURS_PER_YEAR
   const yearsSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / FTE_HOURS_PER_YEAR).toFixed(2);
 
-  // Format date as "MMM D, YYYY" (e.g., "Jan 15, 2026")
-  // Manual formatting avoids hydration mismatches from toLocaleDateString
-  const MONTHS = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  const d = new Date(skill.createdAt);
-  const dateAdded = `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
-
   // Row background: alternating + expanded state
   const rowBg = rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50";
   const expandedStyles = isExpanded ? "ring-1 ring-blue-200" : "";
@@ -154,7 +136,7 @@ export function SkillsTableRow({
           {String(skill.totalUses)}
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
-          {dateAdded}
+          <RelativeTime date={skill.createdAt} />
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
           {skill.author ? (
