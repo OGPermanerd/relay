@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 32 Admin Panel -- 7 plans done (32-01 through 32-04 + 32-05 + 32-06 + new 32-04 skills page).
+**Current focus:** Phase 32 Admin Panel -- 8 plans done (32-01 through 32-06 + 32-03 admin layout + 32-04 skills page).
 
 ## Current Position
 
 Phase: 32 of 33 (Admin Panel)
-Plan: 7 of 7 in phase 32 (32-01 through 32-06 + 32-04 skills page complete)
+Plan: 8 of 8 in phase 32 (32-01 through 32-06 + 32-03 admin layout + 32-04 skills page complete)
 Status: Phase in progress
-Last activity: 2026-02-08 -- Completed 32-04-PLAN.md (admin skills management page)
+Last activity: 2026-02-08 -- Completed 32-03-PLAN.md (admin layout + tenant settings)
 
-Progress: [██████████████████████░░] ~42% (v1.5 -- 141 plans total)
+Progress: [██████████████████████░░] ~42% (v1.5 -- 142 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [██████████████████████░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 141
-- Phase 32: 7 PLANS COMPLETE (user roles, auth wiring, admin pages, user management, hook compliance, isAdmin migration, skills management)
+- Total plans completed: 142
+- Phase 32: 8 PLANS COMPLETE (user roles, auth wiring, admin pages, user management, hook compliance, isAdmin migration, admin layout, skills management)
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~8.5 hours
+- Total execution time: ~8.6 hours
 
 **Cumulative:**
-- 141 plans across 32 phases and 5 milestones
+- 142 plans across 32 phases and 5 milestones
 - ~14,700 LOC TypeScript
 - 7 days total development time
 
@@ -125,6 +125,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 32-06 | Removed ADMIN_EMAILS from Docker config | No application code reads it after RBAC transition |
 | 32-04 | Sequential merge with error accumulation over parallel merge | mergeSkills manages own transaction; sequential avoids nesting and accumulates per-skill errors |
 | 32-04 | Merge target from selected set, not arbitrary dropdown | Ensures target is part of the group being merged |
+| 32-03 | Layout-level gate is sole admin security boundary | Per-page checks redundant after layout gate; server actions keep own checks for defense-in-depth |
+| 32-03 | Tenant settings validated with Zod schema | name required 1-100 chars, domain/logo optional empty-or-valid |
 
 ### Pending Todos
 
@@ -144,5 +146,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Completed 32-04 admin skills management page
-Resume file: .planning/phases/32-admin-panel/32-04-SUMMARY.md
+Stopped at: Completed 32-03 admin layout + tenant settings
+Resume file: .planning/phases/32-admin-panel/32-03-SUMMARY.md
