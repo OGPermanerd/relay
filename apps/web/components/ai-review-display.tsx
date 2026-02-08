@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { ReviewCategories } from "@everyskill/db/schema";
 import { RelativeTime } from "@/components/relative-time";
 
@@ -42,6 +45,7 @@ function getCategoryLabel(key: keyof ReviewCategories): string {
 interface AiReviewDisplayProps {
   categories: ReviewCategories;
   summary: string;
+  suggestedDescription?: string;
   reviewedAt: string;
   modelName: string;
 }
@@ -49,6 +53,7 @@ interface AiReviewDisplayProps {
 export function AiReviewDisplay({
   categories,
   summary,
+  suggestedDescription,
   reviewedAt,
   modelName,
 }: AiReviewDisplayProps) {
@@ -80,6 +85,17 @@ export function AiReviewDisplay({
       <div className="border-l-4 border-blue-200 bg-gray-50 rounded-r-lg px-4 py-3">
         <p className="text-sm text-gray-700 leading-relaxed">{summary}</p>
       </div>
+
+      {/* Suggested description */}
+      {suggestedDescription && (
+        <div className="border border-emerald-200 bg-emerald-50 rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium text-emerald-700">Suggested Description</span>
+            <CopyButton text={suggestedDescription} />
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed">{suggestedDescription}</p>
+        </div>
+      )}
 
       {/* Category score cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -118,5 +134,28 @@ export function AiReviewDisplay({
         Reviewed <RelativeTime date={reviewedAt} /> using {modelName}
       </p>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CopyButton
+// ---------------------------------------------------------------------------
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard.writeText(text).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        });
+      }}
+      className="text-xs text-emerald-600 hover:text-emerald-800"
+    >
+      {copied ? "Copied!" : "Copy"}
+    </button>
   );
 }

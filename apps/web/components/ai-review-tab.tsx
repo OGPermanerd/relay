@@ -12,6 +12,7 @@ import type { ReviewCategories } from "@everyskill/db/schema";
 interface ExistingReview {
   categories: ReviewCategories;
   summary: string;
+  suggestedDescription?: string;
   createdAt: string;
   modelName: string;
   isVisible: boolean;
@@ -61,6 +62,7 @@ export function AiReviewTab({
           <AiReviewDisplay
             categories={existingReview.categories}
             summary={existingReview.summary}
+            suggestedDescription={existingReview.suggestedDescription}
             reviewedAt={existingReview.createdAt}
             modelName={existingReview.modelName}
           />

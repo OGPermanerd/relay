@@ -98,6 +98,7 @@ export default async function SkillPage(props: SkillPageProps) {
     ? {
         categories: existingReview.categories,
         summary: existingReview.summary,
+        suggestedDescription: existingReview.suggestedDescription ?? undefined,
         createdAt: existingReview.createdAt.toISOString(),
         modelName: existingReview.modelName,
         isVisible: existingReview.isVisible,
