@@ -1,205 +1,170 @@
-# Requirements: Relay v1.5
+# Requirements: EverySkill v2.0 — Skill Ecosystem
 
-**Defined:** 2026-02-07
+**Defined:** 2026-02-08
 **Core Value:** Skills get better as they pass through more hands, with real metrics proving that value.
 
-## v1.5 Requirements
+## v2.0 Requirements
 
-Requirements for Production, Multi-Tenancy & Reliable Usage Tracking milestone.
+Requirements for the Skill Ecosystem milestone. Each maps to roadmap phases starting from Phase 34.
 
-### Multi-Tenancy
+### Review Pipeline
 
-- [ ] **TENANT-01**: Tenants table with id, name, slug, domain, logo, isActive, plan (freemium/paid)
-- [ ] **TENANT-02**: tenant_id column on all data tables (skills, usage_events, ratings, skill_versions, skill_embeddings, skill_reviews, api_keys, site_settings, users)
-- [ ] **TENANT-03**: Composite unique constraints (tenant_id + slug on skills)
-- [ ] **TENANT-04**: PostgreSQL RLS policies on all tenant-scoped tables
-- [ ] **TENANT-05**: Tenant-scoped query helper with automatic WHERE tenant_id filtering
-- [ ] **TENANT-06**: Subdomain routing — middleware extracts tenant from Host header
-- [ ] **TENANT-07**: Domain-based SSO mapping — email domain resolves to tenant in Auth.js signIn callback
-- [ ] **TENANT-08**: Shared Google OAuth endpoint with state parameter redirect back to tenant subdomain
-- [ ] **TENANT-09**: Auth.js cookies with domain scope for cross-subdomain sharing
-- [ ] **TENANT-10**: JWT includes tenantId claim
-- [ ] **TENANT-11**: API key validation returns tenantId (not just userId)
-- [ ] **TENANT-12**: All 6 analytics queries converted from domain-matching to tenantId filtering
-- [ ] **TENANT-13**: MCP server scoped to tenant via API key to tenantId resolution
+- [ ] **RVPL-01**: Skill creation sets status to `draft` instead of auto-publishing
+- [ ] **RVPL-02**: Author can submit a draft skill for review, transitioning status to `pending_review`
+- [ ] **RVPL-03**: AI review triggers automatically on submit-for-review with explicit error handling (not fire-and-forget)
+- [ ] **RVPL-04**: AI review completion transitions skill to `ai_reviewed` status
+- [ ] **RVPL-05**: State machine enforces valid transitions: draft → pending_review → ai_reviewed → approved/rejected/changes_requested → published
+- [ ] **RVPL-06**: All 8+ existing skill query paths filter by `status = 'published'` to prevent pending skills from appearing in search/browse
+- [ ] **RVPL-07**: MCP `create_skill` tool creates skills as `draft` with response message explaining review process
+- [ ] **RVPL-08**: MCP `list_skills` and `search_skills` only return published skills
+- [ ] **RVPL-09**: Skill detail page shows 404 for non-author/non-admin users when skill is not published
+- [ ] **RVPL-10**: Existing published skills retain `published` status after migration (backward compatible)
+- [ ] **RVPL-11**: Skills with all AI review scores >= configurable threshold auto-approve (skip admin queue)
+- [ ] **RVPL-12**: Author can view their own draft/pending/rejected skills on a "My Skills" page
 
-### SOC2 Compliance
+### Admin Review
 
-- [ ] **SOC2-01**: Append-only audit_logs table (actorId, tenantId, action, resourceType, ipAddress, metadata, createdAt)
-- [ ] **SOC2-02**: Audit logging on all security events (auth, admin actions, data modifications, cross-tenant access attempts)
-- [ ] **SOC2-03**: LUKS full-disk encryption on Hetzner for Docker volumes
-- [ ] **SOC2-04**: Session timeout reduced to 8 hours (from 30 days)
-- [ ] **SOC2-05**: API key default 90-day expiration with 14-day rotation warning
-- [ ] **SOC2-06**: Backup strategy — hourly incremental + daily full, 90-day retention, off-site encrypted
-- [ ] **SOC2-07**: PostgreSQL exposed only within Docker internal network
+- [ ] **ADMR-01**: Admin review queue page at `/admin/reviews` lists skills with pending review status
+- [ ] **ADMR-02**: Review queue supports pagination (20 per page) and filtering by status/category/date
+- [ ] **ADMR-03**: Admin can approve a skill, transitioning it to `approved` then `published` with publishedVersionId set
+- [ ] **ADMR-04**: Admin can reject a skill with required notes explaining the reason
+- [ ] **ADMR-05**: Admin can request changes with feedback notes, transitioning to `changes_requested`
+- [ ] **ADMR-06**: Admin review page shows AI review scores (quality/clarity/completeness) to inform decision
+- [ ] **ADMR-07**: Admin review page shows skill content with diff view against previous version (if exists)
+- [ ] **ADMR-08**: Review decisions stored immutably for audit trail (reviewer, action, timestamp, notes)
+- [ ] **ADMR-09**: Review queue count shown in admin sidebar/nav
 
-### Production Deployment
+### Review Notifications
 
-- [ ] **DEPLOY-01**: Dockerfile for Next.js (multi-stage with turbo prune, Node 22-alpine)
-- [ ] **DEPLOY-02**: docker-compose.yml with Caddy + Next.js + PostgreSQL (pgvector/pg17)
-- [ ] **DEPLOY-03**: Caddyfile with wildcard subdomain routing and automatic HTTPS
-- [ ] **DEPLOY-04**: Health checks on all services (pg_isready, /api/health, caddy depends_on)
-- [ ] **DEPLOY-05**: Named volumes for postgres_data, caddy_data, caddy_config
-- [ ] **DEPLOY-06**: Environment variable template for all configuration
-- [ ] **DEPLOY-07**: Backup script with pg_dump, gzip, gpg, off-site storage
+- [ ] **RVNT-01**: Admins notified (in-app + email) when a skill is submitted for review
+- [ ] **RVNT-02**: Author notified (in-app + email) when skill is approved
+- [ ] **RVNT-03**: Author notified (in-app + email) when skill is rejected (includes admin notes)
+- [ ] **RVNT-04**: Author notified (in-app + email) when changes are requested (includes admin feedback)
+- [ ] **RVNT-05**: Author notified (in-app + email) when skill is published
+- [ ] **RVNT-06**: Review notifications grouped under single preference toggle (reviewNotificationsEmail/InApp)
+- [ ] **RVNT-07**: Notification bell UI handles new review notification types with appropriate icons and action URLs
 
-### Usage Tracking
+### MCP Discovery
 
-- [ ] **TRACK-01**: POST /api/track endpoint with Bearer token auth and tenant context
-- [ ] **TRACK-02**: PostToolUse hook template injected into skill YAML frontmatter on deploy
-- [ ] **TRACK-03**: Async hook execution (never blocks Claude sessions)
-- [ ] **TRACK-04**: Auto-injection of tracking hooks into skill frontmatter on upload (invisible to uploader)
-- [ ] **TRACK-05**: Deploy-time compliance check — verify tracker harness, nudge if missing
-- [ ] **TRACK-06**: Rate limiting on tracking endpoint (100 req/min per API key)
-- [ ] **TRACK-07**: HMAC payload signing for hook callbacks
-- [ ] **TRACK-08**: Write-ahead log pattern for hook resilience
+- [ ] **DISC-01**: `recommend_skills` MCP tool performs semantic search using Ollama embeddings + pgvector cosine similarity
+- [ ] **DISC-02**: `describe_skill` MCP tool returns full skill details including AI review scores, ratings, usage stats, and similar skills
+- [ ] **DISC-03**: `guide_skill` MCP tool returns usage guidance and contextual instructions after skill installation
+- [ ] **DISC-04**: `search_skills` enhanced with richer metadata (ratings, quality tier, install count) in responses
+- [ ] **DISC-05**: Semantic search falls back gracefully to ILIKE text search when Ollama is unavailable
+- [ ] **DISC-06**: Semantic search only returns published skills (status filter in vector queries)
 
-### Branding & Navigation
+### MCP Review Tools
 
-- [ ] **BRAND-01**: Animated relay logo (baton pass concept)
-- [ ] **BRAND-02**: White-label tenant branding — freemium shows "Tenant x Relay", paid shows tenant logo only
-- [ ] **BRAND-03**: Freemium on tenant1.hostname.ai, paid supports vanity URL
-- [ ] **BRAND-04**: Active page underline indicator on nav links
-- [ ] **BRAND-05**: Skills nav button linking to dedicated skills page
-- [ ] **BRAND-06**: Remove 2.7Y saved display from nav bar
-- [ ] **BRAND-07**: Greeting shows "Name — XX Days Saved | Tier Contributor"
-- [ ] **BRAND-08**: Composite contributor tiers (Platinum/Gold/Silver/Bronze) based on skills shared + days saved + ratings + usage
+- [ ] **MCPR-01**: `review_skill` MCP tool triggers AI review from within Claude conversation, returns scores and suggestions
+- [ ] **MCPR-02**: `submit_for_review` MCP tool submits a draft skill for admin review via MCP
+- [ ] **MCPR-03**: `check_review_status` MCP tool returns current review status of author's submitted skills
 
-### Skills & Upload
+### Fork Detection
 
-- [ ] **SKILL-01**: Relative timestamps — "1d 5h 3min ago" until 1 year, then "1y 5d ago"
-- [ ] **SKILL-02**: Rich similarity pane on upload — right-hand popup with AI summary and highlighted semantic matches
-- [ ] **SKILL-03**: Hide semantic vs name match label from user
-- [ ] **SKILL-04**: Message author feature — propose grouping skill under an existing similar skill
-- [ ] **SKILL-05**: AI review auto-generated on upload (not on-demand)
-- [ ] **SKILL-06**: AI review suggests description modifications for user to copy
-- [ ] **SKILL-07**: AI review used in duplicate/similarity checks
-
-### Admin
-
-- [ ] **ADMIN-01**: Tenant admin panel — settings page for tenant config (name, domains, logo)
-- [ ] **ADMIN-02**: Two roles per tenant — admin and member
-- [ ] **ADMIN-03**: Admin can review and delete any skill in the database
-- [ ] **ADMIN-04**: Admin can select multiple skills to merge under one parent or delete
-- [ ] **ADMIN-05**: Admin can view which users have compliance hooks set up and firing
-
-### Email & Notifications
-
-- [ ] **NOTIF-01**: Email system via Resend (transactional + digest)
-- [ ] **NOTIF-02**: In-app notification center (bell icon, unread count, notification list)
-- [ ] **NOTIF-03**: User notification preferences page (toggle per type, digest frequency)
-- [ ] **NOTIF-04**: Skill grouping request notification — "Someone wants to add their skill under yours"
-- [ ] **NOTIF-05**: Trending skills digest (daily or weekly, user-configurable)
-- [ ] **NOTIF-06**: Platform update notifications (feature releases, upgrades)
-
-### Metrics
-
-- [ ] **METRIC-01**: Verify FTE years saved calculation uses 2,080 hours/year (standard USA FTE)
+- [ ] **FORK-01**: `check_skill_status` MCP tool compares local file content hash against DB published version hash
+- [ ] **FORK-02**: Hash comparison strips YAML frontmatter before hashing (tracking hooks should not trigger false drift)
+- [ ] **FORK-03**: `update_skill` MCP tool pushes local modifications back as new version (if author) or creates fork (if not author)
+- [ ] **FORK-04**: `forkedAtContentHash` column stored on skills at fork time as anchor for modification detection
+- [ ] **FORK-05**: Fork creation updated to create skill_version record and set proper status (not orphaned)
+- [ ] **FORK-06**: Web UI on skill detail page shows drift indicator when fork has diverged from parent
+- [ ] **FORK-07**: Web UI side-by-side comparison page at `/skills/[slug]/compare` shows fork content vs parent content
 
 ## Future Requirements
 
-Deferred to post-v1.5. Tracked but not in current roadmap.
+Deferred to post-v2.0. Tracked but not in current roadmap.
 
-### Cross-Tenant Features
-- **CROSS-01**: Public/shared skill marketplace visible across tenants — admin-controllable opt-in, subscription fee per tenant and per user per month
-- **CROSS-02**: Tenant onboarding wizard (self-service tenant creation)
-- **CROSS-03**: Cross-tenant skill forking
-- **CROSS-04**: Promote skills from private tenant catalog into public marketplace
+### Quality Automation
 
-### Advanced Deployment
-- **DEPLOY-08**: Zero-downtime rolling deployments
-- **DEPLOY-09**: Blue-green deployment strategy
-- **DEPLOY-10**: Auto-scaling based on load
+- **QUAL-01**: "Apply suggestion" button to adopt individual AI review suggestions with one click
+- **QUAL-02**: Inline diff preview before applying AI suggestions
+- **QUAL-03**: Skill compatibility check (required tools/MCP servers available)
 
-### Advanced Compliance
-- **SOC2-08**: Formal incident response plan documentation
-- **SOC2-09**: Quarterly backup restore testing
-- **SOC2-10**: SOC2 Type II audit engagement
+### Personalization
+
+- **PERS-01**: "Trending this week" in MCP recommendation responses
+- **PERS-02**: "Based on your usage" personalized recommendations
+- **PERS-03**: "Similar to skills you use" content-based filtering
+
+### Review Analytics
+
+- **RVAN-01**: Average time to review metric on admin dashboard
+- **RVAN-02**: Approval/rejection rate trends
+- **RVAN-03**: Common rejection reason analysis
+- **RVAN-04**: AI score distribution visualization
+
+### Advanced RBAC
+
+- **RBAC-01**: Separate reviewer role (can approve/reject but not admin settings)
+- **RBAC-02**: Review assignment to specific reviewers
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Separate database per tenant | Overkill for <50 tenants, operational overhead |
-| Global user hooks via ~/.claude/settings.json | Invasive, affects all user projects |
-| Mandatory hook compliance enforcement | Users can edit local files; soft enforcement only |
-| Blocking (sync) hooks for tracking | Would freeze Claude sessions on endpoint failures |
-| Storing raw hook payloads (tool_input/response) | Contains sensitive code |
-| Self-service tenant creation | Defer to post-v1.5; admin-provisioned for now |
-| Cross-tenant skill sharing | Defer to post-v1.5; all skills private to tenant |
+| Mandatory review for all edits | Creates friction for minor fixes; only content-changing updates trigger re-review |
+| Multiple reviewer approval | Internal tool, not regulatory pipeline; single admin sufficient |
+| Real-time collaborative editing | CRDT/OT complexity for markdown files is overkill; async edit-submit cycle sufficient |
+| AI-generated skill rewrites | AI suggests, never modifies; author ownership preserved |
+| Blocking deploy of unreviewed skills | Authors should test their own drafts; only "published" visibility requires review |
+| Webhook notifications to external systems | In-app + email sufficient for v2.0; Slack integration deferred |
+| Character-level diff rendering | Side-by-side text display sufficient; jsdiff/diff2html add complexity for uncertain value |
 
 ## Traceability
 
+Which phases cover which requirements. Updated during roadmap creation.
+
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TENANT-01 | Phase 25 | Pending |
-| TENANT-02 | Phase 25 | Pending |
-| TENANT-03 | Phase 25 | Pending |
-| TENANT-04 | Phase 25 | Pending |
-| TENANT-05 | Phase 25 | Pending |
-| TENANT-06 | Phase 26 | Pending |
-| TENANT-07 | Phase 26 | Pending |
-| TENANT-08 | Phase 26 | Pending |
-| TENANT-09 | Phase 26 | Pending |
-| TENANT-10 | Phase 26 | Pending |
-| TENANT-11 | Phase 28 | Pending |
-| TENANT-12 | Phase 29 | Pending |
-| TENANT-13 | Phase 29 | Pending |
-| SOC2-01 | Phase 25 | Pending |
-| SOC2-02 | Phase 25 | Pending |
-| SOC2-03 | Phase 27 | Pending |
-| SOC2-04 | Phase 26 | Pending |
-| SOC2-05 | Phase 28 | Pending |
-| SOC2-06 | Phase 27 | Pending |
-| SOC2-07 | Phase 27 | Pending |
-| DEPLOY-01 | Phase 27 | Pending |
-| DEPLOY-02 | Phase 27 | Pending |
-| DEPLOY-03 | Phase 27 | Pending |
-| DEPLOY-04 | Phase 27 | Pending |
-| DEPLOY-05 | Phase 27 | Pending |
-| DEPLOY-06 | Phase 27 | Pending |
-| DEPLOY-07 | Phase 27 | Pending |
-| TRACK-01 | Phase 28 | Pending |
-| TRACK-02 | Phase 28 | Pending |
-| TRACK-03 | Phase 28 | Pending |
-| TRACK-04 | Phase 28 | Pending |
-| TRACK-05 | Phase 28 | Pending |
-| TRACK-06 | Phase 28 | Pending |
-| TRACK-07 | Phase 28 | Pending |
-| TRACK-08 | Phase 28 | Pending |
-| BRAND-01 | Phase 30 | Pending |
-| BRAND-02 | Phase 30 | Pending |
-| BRAND-03 | Phase 30 | Pending |
-| BRAND-04 | Phase 30 | Pending |
-| BRAND-05 | Phase 30 | Pending |
-| BRAND-06 | Phase 30 | Pending |
-| BRAND-07 | Phase 30 | Pending |
-| BRAND-08 | Phase 30 | Pending |
-| SKILL-01 | Phase 31 | Pending |
-| SKILL-02 | Phase 31 | Pending |
-| SKILL-03 | Phase 31 | Pending |
-| SKILL-04 | Phase 31 | Pending |
-| SKILL-05 | Phase 31 | Pending |
-| SKILL-06 | Phase 31 | Pending |
-| SKILL-07 | Phase 31 | Pending |
-| ADMIN-01 | Phase 32 | Pending |
-| ADMIN-02 | Phase 32 | Pending |
-| ADMIN-03 | Phase 32 | Pending |
-| ADMIN-04 | Phase 32 | Pending |
-| ADMIN-05 | Phase 32 | Pending |
-| NOTIF-01 | Phase 33 | Pending |
-| NOTIF-02 | Phase 33 | Pending |
-| NOTIF-03 | Phase 33 | Pending |
-| NOTIF-04 | Phase 33 | Pending |
-| NOTIF-05 | Phase 33 | Pending |
-| NOTIF-06 | Phase 33 | Pending |
-| METRIC-01 | Phase 29 | Pending |
+| RVPL-01 | — | Pending |
+| RVPL-02 | — | Pending |
+| RVPL-03 | — | Pending |
+| RVPL-04 | — | Pending |
+| RVPL-05 | — | Pending |
+| RVPL-06 | — | Pending |
+| RVPL-07 | — | Pending |
+| RVPL-08 | — | Pending |
+| RVPL-09 | — | Pending |
+| RVPL-10 | — | Pending |
+| RVPL-11 | — | Pending |
+| RVPL-12 | — | Pending |
+| ADMR-01 | — | Pending |
+| ADMR-02 | — | Pending |
+| ADMR-03 | — | Pending |
+| ADMR-04 | — | Pending |
+| ADMR-05 | — | Pending |
+| ADMR-06 | — | Pending |
+| ADMR-07 | — | Pending |
+| ADMR-08 | — | Pending |
+| ADMR-09 | — | Pending |
+| RVNT-01 | — | Pending |
+| RVNT-02 | — | Pending |
+| RVNT-03 | — | Pending |
+| RVNT-04 | — | Pending |
+| RVNT-05 | — | Pending |
+| RVNT-06 | — | Pending |
+| RVNT-07 | — | Pending |
+| DISC-01 | — | Pending |
+| DISC-02 | — | Pending |
+| DISC-03 | — | Pending |
+| DISC-04 | — | Pending |
+| DISC-05 | — | Pending |
+| DISC-06 | — | Pending |
+| MCPR-01 | — | Pending |
+| MCPR-02 | — | Pending |
+| MCPR-03 | — | Pending |
+| FORK-01 | — | Pending |
+| FORK-02 | — | Pending |
+| FORK-03 | — | Pending |
+| FORK-04 | — | Pending |
+| FORK-05 | — | Pending |
+| FORK-06 | — | Pending |
+| FORK-07 | — | Pending |
 
 **Coverage:**
-- v1.5 requirements: 62 total
-- Mapped to phases: 62
-- Unmapped: 0
+- v2.0 requirements: 44 total
+- Mapped to phases: 0 (awaiting roadmap)
+- Unmapped: 44
 
 ---
-*Requirements defined: 2026-02-07*
-*Last updated: 2026-02-07 — traceability updated after roadmap creation*
+*Requirements defined: 2026-02-08*
+*Last updated: 2026-02-08 after initial definition*
