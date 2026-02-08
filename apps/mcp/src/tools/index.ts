@@ -8,3 +8,5 @@ import "./log-usage.js";
 import "./review-skill.js";
 import "./check-review-status.js";
 import "./submit-for-review.js";
+import "./recommend.js";
+import "./describe.js";
