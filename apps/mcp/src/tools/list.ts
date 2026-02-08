@@ -40,7 +40,7 @@ export async function handleListSkills({
   });
 
   const results = category
-    ? allResults.filter((s) => s.category === category).slice(0, limit)
+    ? allResults.filter((s: { category: string | null }) => s.category === category).slice(0, limit)
     : allResults;
 
   if (!userId && !skipNudge) {

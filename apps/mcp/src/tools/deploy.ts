@@ -89,7 +89,7 @@ export async function handleDeploySkill({
 
   // Fetch all skills and find by ID in-memory to avoid TypeScript module resolution issues
   const allSkills = await db.query.skills.findMany();
-  const skill = allSkills.find((s) => s.id === skillId);
+  const skill = allSkills.find((s: { id: string }) => s.id === skillId);
 
   if (!skill) {
     return {
