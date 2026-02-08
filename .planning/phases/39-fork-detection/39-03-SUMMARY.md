@@ -64,7 +64,7 @@ Each task was committed atomically:
 
 1. **Task 1: Create update_skill MCP tool** - `6835e99` (feat)
 
-**Plan metadata:** [pending] (docs: complete plan)
+**Plan metadata:** `e9b7799` (docs: complete plan)
 
 ## Files Created/Modified
 - `apps/mcp/src/tools/update-skill.ts` - update_skill MCP tool with author-vs-fork branching, self-contained helpers

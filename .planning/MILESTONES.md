@@ -1,4 +1,54 @@
-# Project Milestones: Relay
+# Project Milestones: EverySkill
+
+## v2.0 Skill Ecosystem (Shipped: 2026-02-08)
+
+**Delivered:** Quality-gated skill publishing with AI review, admin approval, conversational MCP discovery, and fork drift detection.
+
+**Phases completed:** 34-39 (23 plans total)
+
+**Key accomplishments:**
+- Quality-gated publishing: 7-status review lifecycle replacing instant-publish, with draft → AI review → admin approval → published flow
+- Automatic AI review with configurable auto-approve threshold (7/10) — low-quality skills never reach admin queue
+- Admin review dashboard with paginated queue, AI scores, content diffs, and immutable SOC2 audit trail
+- Review notification system: in-app + email at every lifecycle stage with grouped preference controls
+- Conversational MCP discovery: semantic search via pgvector, rich skill descriptions with quality tiers, category-specific usage guidance
+- Fork drift detection: frontmatter-stripped hash comparison, update_skill MCP tool for pushing changes back, side-by-side comparison UI
+
+**Stats:**
+- 67 files created/modified
+- ~17,000 lines of TypeScript (cumulative)
+- 6 phases, 23 plans, 44 requirements
+- 1 day (2026-02-08)
+
+**Git range:** `d047dfc` (feat(34-01)) → `65c87f3` (docs(phase-39))
+
+**Archive:** [v2.0-ROADMAP.md](milestones/v2.0-ROADMAP.md) | [v2.0-REQUIREMENTS.md](milestones/v2.0-REQUIREMENTS.md)
+
+---
+
+## v1.5 Production, Multi-Tenancy & Reliable Usage Tracking (Shipped: 2026-02-08)
+
+**Delivered:** Production Docker deployment, full multi-tenancy with subdomain routing, RBAC, branding, email notifications, and hook-based usage tracking.
+
+**Phases completed:** 25-33 (55 plans total)
+
+**Key accomplishments:**
+- Multi-tenancy with RLS, subdomain routing, and tenant isolation across all 9 data tables
+- Production Docker Compose deployment on Hetzner with Caddy/SSL
+- Hook-based deterministic usage tracking via PostToolUse callbacks
+- EverySkill branding with custom domain, tenant white-labeling, and animated logo
+- Admin panel with RBAC, tenant settings, user management
+- Email notification system with preferences, cron digests, and notification bell UI
+
+**Stats:**
+- 55 plans across 9 phases
+- 2 days (2026-02-07 → 2026-02-08)
+
+**Git range:** See v1.5-ROADMAP.md
+
+**Archive:** [v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md) | v1.5-REQUIREMENTS.md (inline in v1.5 roadmap)
+
+---
 
 ## v1.4 Employee Analytics & Remote MCP (Shipped: 2026-02-06)
 

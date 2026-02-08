@@ -10,24 +10,12 @@ Skills get better as they pass through more hands, with real metrics proving tha
 
 ## Current State
 
-**v1.5 shipped 2026-02-08** — Production deployment, multi-tenancy, subdomain routing, RBAC, branding, email notifications, reliable usage tracking.
+**v2.0 shipped 2026-02-08** — Quality-gated skill publishing with AI review, admin approval, conversational MCP discovery, and fork drift detection.
 
-## Current Milestone: v2.0 Skill Ecosystem
+Tech stack: Next.js 16.1.6, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, mcp-handler, Playwright, vitest, nuqs, react-swipeable, Recharts, Voyage AI, pgvector, Anthropic SDK, Ollama (nomic-embed-text)
+LOC: ~17,000 TypeScript across 350+ files
 
-**Goal:** Transform skill publishing from instant-publish to a quality-gated pipeline with AI review, author revision, and admin approval — plus conversational discovery via MCP and fork-on-modify detection.
-
-**Target features:**
-- Review pipeline: AI review → author incorporation → admin approval
-- Review UX across all 3 modalities (in-app page, notification+modal, MCP-first)
-- Full admin review page with queue, diff, approve/reject/request-changes
-- Semantic conversational discovery via MCP (search → recommend → describe → install → guide)
-- Fork-on-modify detection (MCP tool + web UI)
-- `update_skill` MCP tool for pushing local changes back
-
-Tech stack: Next.js 16.1.6, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, mcp-handler, Playwright, vitest, nuqs, react-swipeable, Recharts, Voyage AI, pgvector, Anthropic SDK
-LOC: ~14,700 TypeScript across 290+ files
-
-Previous:
+Previous milestones:
 - v1.5 shipped 2026-02-08 — Production deployment, multi-tenancy, RBAC, branding, email notifications
 - v1.4 shipped 2026-02-06 — Employee analytics, remote MCP, extended search
 - v1.3 shipped 2026-02-04 — AI-driven skill review, semantic similarity, fork-based versioning, cross-platform install
@@ -92,20 +80,24 @@ Previous:
 - ✓ Web remote MCP via Streamable HTTP for Claude.ai browser access — v1.4
 - ✓ Extended MCP search matching author name and tags with field-weighted scoring — v1.4
 
-### Active — v2.0 Skill Ecosystem
+### Active
 
-- [ ] Skill creation puts skill into `pending_review` status (not immediately published)
-- [ ] AI review analyzes skill quality, clarity, completeness and suggests improvements
-- [ ] Author receives AI review feedback and can incorporate or ignore suggestions
-- [ ] Author resubmits revised skill for tenant admin approval
-- [ ] Tenant admin reviews skill with full diff view, approves/rejects/requests changes
-- [ ] Review UX: in-app review page, notification+modal, and MCP-first (Claude returns review results)
-- [ ] Full `/admin/reviews` page with queue, diff view, approve/reject/request-changes
-- [ ] Semantic search via MCP with conversational discovery (search → recommend → describe → install → guide)
-- [ ] Guided implementation flow after skill install
-- [ ] Fork-on-modify detection via MCP tool (compares local file hash against DB version)
-- [ ] Fork detection also invocable from web UI on skills page
-- [ ] `update_skill` MCP tool for pushing local modifications back as new version/fork
+(No active milestone — planning next)
+
+### Validated — v2.0 Skill Ecosystem
+
+- ✓ Quality-gated skill publishing with draft → AI review → admin approval → published lifecycle — v2.0
+- ✓ AI review analyzes quality, clarity, completeness with auto-approve threshold (7/10) — v2.0
+- ✓ Admin review dashboard with queue, diff view, approve/reject/request-changes, audit trail — v2.0
+- ✓ Review notifications (in-app + email) at every lifecycle stage with grouped preferences — v2.0
+- ✓ Semantic search via MCP (recommend_skills) with Ollama embeddings + pgvector cosine similarity — v2.0
+- ✓ Conversational discovery: describe_skill, guide_skill with category-specific guidance — v2.0
+- ✓ Enhanced search_skills with quality tiers (gold/silver/bronze), ratings, usage stats — v2.0
+- ✓ Fork drift detection via check_skill_status (frontmatter-stripped hash comparison) — v2.0
+- ✓ update_skill MCP tool for pushing local modifications back as new version or fork — v2.0
+- ✓ Web UI drift indicator on fork detail pages + /skills/[slug]/compare comparison page — v2.0
+- ✓ MCP review tools: review_skill, submit_for_review, check_review_status — v2.0
+- ✓ State machine with 7 valid statuses and enforced transitions — v2.0
 
 ### Validated — v1.5 Production, Multi-Tenancy & Reliable Usage Tracking
 
@@ -189,6 +181,14 @@ Previous:
 | Field-weighted scoring (4/3/2/1) | Blended ranking: title > desc > author > tags | ✓ Good |
 | Recharts for analytics charts | Lightweight, React-native, blue #3b82f6 theme | ✓ Good |
 | mcp-handler for Streamable HTTP | Handles MCP protocol negotiation for Next.js routes | ✓ Good |
+| 7-status skill lifecycle | draft → pending_review → ai_reviewed → approved/rejected/changes_requested → published | ✓ Good |
+| Inline AI review (not fire-and-forget) | User sees result immediately; explicit error handling for failures | ✓ Good |
+| Auto-approve threshold 7/10 | All 3 categories must meet threshold; configurable per tenant | ✓ Good |
+| Insert-only review_decisions | SOC2 immutable audit trail; no updatedAt column | ✓ Good |
+| cosineDistance for semantic search | drizzle-orm type-safe pgvector; similarity = 1 - distance | ✓ Good |
+| Self-contained MCP helpers | No cross-app imports; stdio protocol safety | ✓ Good |
+| Frontmatter-stripped hash for drift | Tracking hooks don't trigger false positive drift detection | ✓ Good |
+| Author-update vs non-author-fork | update_skill branches on userId === authorId | ✓ Good |
 
 ---
-*Last updated: 2026-02-08 after v2.0 milestone started*
+*Last updated: 2026-02-08 after v2.0 milestone complete*
