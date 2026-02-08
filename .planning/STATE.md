@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 33 of 33 (Email Notifications)
-Plan: 3 of 7 in phase 33 (33-01, 33-02, 33-03 complete)
-Status: In progress
-Last activity: 2026-02-08 -- Completed 33-03-PLAN.md (notification service functions)
+Plan: 7 of 7 in phase 33 (33-01 through 33-07 complete)
+Status: Phase complete
+Last activity: 2026-02-08 -- Completed 33-07-PLAN.md (cron digests and admin notifications)
 
-Progress: [██████████████████████░░] ~43% (v1.5 -- 144 plans total)
+Progress: [████████████████████████] ~100% (v1.5 -- 148 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [██████████████████████░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 145
-- Phase 33: 3 PLANS COMPLETE (notifications schema, email infrastructure, notification services)
+- Total plans completed: 148
+- Phase 33: 7 PLANS COMPLETE (notifications schema, email infrastructure, notification services, bell+actions, preferences UI, grouping proposals, cron digests)
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~8.7 hours
+- Total execution time: ~8.8 hours
 
 **Cumulative:**
-- 145 plans across 33 phases and 5 milestones
+- 148 plans across 33 phases and 5 milestones
 - ~14,700 LOC TypeScript
 - 7 days total development time
 
@@ -133,6 +133,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 33-02 | Inline styles only in email templates | Email clients do not support CSS classes or Tailwind |
 | 33-03 | count() aggregate over results.length for unread count | Uses composite (userId, isRead) index efficiently |
 | 33-03 | ON CONFLICT DO NOTHING + re-fetch for getOrCreatePreferences | Handles concurrent insert race conditions cleanly |
+| 33-07 | CRON_SECRET graceful skip returns 200 with skipped=true | Allows safe deployment without cron setup |
+| 33-07 | Per-user preference gating in platform update | Checks getOrCreatePreferences before each send; respects user opt-out |
 
 ### Pending Todos
 
@@ -152,5 +154,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 33, Plan 03 complete (notification service functions)
-Resume file: .planning/phases/33-email-notifications/33-03-SUMMARY.md
+Stopped at: Phase 33, Plan 07 complete (cron digests and admin notifications) -- Phase 33 COMPLETE
+Resume file: .planning/phases/33-email-notifications/33-07-SUMMARY.md
