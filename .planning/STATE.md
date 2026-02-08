@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-07)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 32 Admin Panel -- COMPLETE (All 6 plans done).
+**Current focus:** Phase 32 Admin Panel -- 7 plans done (32-01 through 32-04 + 32-05 + 32-06 + new 32-04 skills page).
 
 ## Current Position
 
 Phase: 32 of 33 (Admin Panel)
-Plan: 6 of 6 in phase 32 (32-01 through 32-06 complete)
-Status: Phase complete
-Last activity: 2026-02-08 -- Completed 32-06-PLAN.md (isAdmin caller migration)
+Plan: 7 of 7 in phase 32 (32-01 through 32-06 + 32-04 skills page complete)
+Status: Phase in progress
+Last activity: 2026-02-08 -- Completed 32-04-PLAN.md (admin skills management page)
 
-Progress: [██████████████████████░░] ~42% (v1.5 -- 140 plans total)
+Progress: [██████████████████████░░] ~42% (v1.5 -- 141 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [██████████████████████░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 140
-- Phase 32: ALL 6 PLANS COMPLETE (user roles, auth wiring, admin pages, user management, hook compliance, isAdmin migration)
+- Total plans completed: 141
+- Phase 32: 7 PLANS COMPLETE (user roles, auth wiring, admin pages, user management, hook compliance, isAdmin migration, skills management)
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~8.5 hours
 
 **Cumulative:**
-- 140 plans across 32 phases and 5 milestones
+- 141 plans across 32 phases and 5 milestones
 - ~14,700 LOC TypeScript
 - 7 days total development time
 
@@ -123,6 +123,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 32-05 | Non-compliant users sorted first in table | Admin visibility for users needing attention |
 | 32-06 | Migrated 3 additional admin page isAdmin callers beyond plan scope | Complete migration requires all callers updated |
 | 32-06 | Removed ADMIN_EMAILS from Docker config | No application code reads it after RBAC transition |
+| 32-04 | Sequential merge with error accumulation over parallel merge | mergeSkills manages own transaction; sequential avoids nesting and accumulates per-skill errors |
+| 32-04 | Merge target from selected set, not arbitrary dropdown | Ensures target is part of the group being merged |
 
 ### Pending Todos
 
@@ -142,5 +144,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 32 COMPLETE -- all 6 admin panel plans done, RBAC fully transitioned
-Resume file: .planning/phases/32-admin-panel/32-06-SUMMARY.md
+Stopped at: Completed 32-04 admin skills management page
+Resume file: .planning/phases/32-admin-panel/32-04-SUMMARY.md
