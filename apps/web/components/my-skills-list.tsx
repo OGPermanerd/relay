@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DeleteSkillButton } from "./delete-skill-button";
@@ -39,6 +40,7 @@ export interface MySkillItem {
   slug: string;
   category: string;
   status: string;
+  statusMessage: string | null;
   totalUses: number;
   averageRating: number | null;
   createdAt: string;
@@ -49,8 +51,42 @@ interface MySkillsListProps {
   skills: MySkillItem[];
 }
 
+/** Statuses that allow submitting (or retrying) for review */
+const SUBMITTABLE_STATUSES = new Set(["draft", "changes_requested"]);
+
+function canSubmitForReview(skill: MySkillItem): boolean {
+  // Draft and changes_requested can always submit
+  if (SUBMITTABLE_STATUSES.has(skill.status)) return true;
+  // pending_review with a statusMessage means a failed review that can be retried
+  if (skill.status === "pending_review" && skill.statusMessage) return true;
+  return false;
+}
+
+function getSubmitLabel(skill: MySkillItem): string {
+  if (skill.status === "pending_review" && skill.statusMessage) return "Retry Review";
+  if (skill.status === "changes_requested") return "Resubmit for Review";
+  return "Submit for Review";
+}
+
 export function MySkillsList({ skills }: MySkillsListProps) {
   const router = useRouter();
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
+
+  async function handleSubmit(skillId: string) {
+    if (submittingId) return; // Prevent double-clicks
+    setSubmittingId(skillId);
+    try {
+      const result = await submitForReview(skillId);
+      if ("error" in result) {
+        // Error is now shown via statusMessage in UI after refresh
+        router.refresh();
+      } else {
+        router.refresh();
+      }
+    } finally {
+      setSubmittingId(null);
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -78,6 +114,9 @@ export function MySkillsList({ skills }: MySkillsListProps) {
                 {STATUS_LABELS[skill.status] || skill.status}
               </span>
             </div>
+            {skill.statusMessage && (
+              <p className="mt-1 text-sm text-red-600">{skill.statusMessage}</p>
+            )}
             <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
               <span>
                 {skill.totalUses} use{skill.totalUses !== 1 ? "s" : ""}
@@ -91,19 +130,13 @@ export function MySkillsList({ skills }: MySkillsListProps) {
             </div>
           </div>
           <div className="ml-4 flex shrink-0 items-center gap-2">
-            {skill.status === "draft" && (
+            {canSubmitForReview(skill) && (
               <button
-                onClick={async () => {
-                  const result = await submitForReview(skill.id);
-                  if (result.error) {
-                    alert(result.error);
-                  } else {
-                    router.refresh();
-                  }
-                }}
-                className="rounded-lg border border-blue-300 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
+                onClick={() => handleSubmit(skill.id)}
+                disabled={submittingId === skill.id}
+                className="rounded-lg border border-blue-300 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Submit for Review
+                {submittingId === skill.id ? "Reviewing..." : getSubmitLabel(skill)}
               </button>
             )}
             <DeleteSkillButton

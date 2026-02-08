@@ -26,6 +26,7 @@ export default async function MySkillsPage() {
       slug: skills.slug,
       category: skills.category,
       status: skills.status,
+      statusMessage: skills.statusMessage,
       totalUses: skills.totalUses,
       averageRating: skills.averageRating,
       createdAt: skills.createdAt,
@@ -37,6 +38,7 @@ export default async function MySkillsPage() {
 
   const serialized: MySkillItem[] = userSkills.map((s) => ({
     ...s,
+    statusMessage: s.statusMessage ?? null,
     createdAt: s.createdAt.toISOString(),
   }));
 
