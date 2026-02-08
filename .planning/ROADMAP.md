@@ -202,7 +202,13 @@ Plans:
   2. `describe_skill` returns comprehensive skill details including AI review scores, ratings, usage stats, similar skills, and install instructions
   3. `guide_skill` returns contextual usage guidance and implementation instructions after a skill is installed
   4. Semantic search gracefully falls back to ILIKE text search when Ollama is unavailable, and only returns published skills regardless of search method
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 38-01-PLAN.md -- Semantic search service + Ollama client for MCP
+- [ ] 38-02-PLAN.md -- recommend_skills MCP tool with semantic search + ILIKE fallback
+- [ ] 38-03-PLAN.md -- describe_skill + guide_skill MCP tools
+- [ ] 38-04-PLAN.md -- Enhanced search_skills with rating/usage/tier metadata
 
 ### Phase 39: Fork Detection
 **Goal**: Users know when their local skill copy has diverged from the published version and can push changes back or create forks
@@ -234,10 +240,10 @@ Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notificat
 | 35. AI Review Integration | v2.0 | 3/3 | Complete | 2026-02-08 |
 | 36. Admin Review UI | v2.0 | 3/3 | Complete | 2026-02-08 |
 | 37. Review Notifications | v2.0 | 4/4 | Complete | 2026-02-08 |
-| 38. Conversational MCP Discovery | v2.0 | 0/TBD | Not started | - |
+| 38. Conversational MCP Discovery | v2.0 | 0/4 | Not started | - |
 | 39. Fork Detection | v2.0 | 0/TBD | Not started | - |
 
-**Total: 163 plans completed across 36 phases and 7 milestones (v1.0-v1.5, v2.0 in progress).**
+**Total: 167 plans completed across 37 phases and 7 milestones (v1.0-v1.5, v2.0 in progress).**
 
 ---
 *Roadmap created: 2026-01-31*
