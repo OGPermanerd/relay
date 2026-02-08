@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-07)
 ## Current Position
 
 Phase: 32 of 33 (Admin Panel)
-Plan: 5 of 6 in phase 32 (32-01, 32-02, 32-05 complete)
-Status: In progress
-Last activity: 2026-02-08 -- Completed 32-05-PLAN.md (Hook compliance dashboard)
+Plan: 6 of 6 in phase 32 (32-01 through 32-06 complete)
+Status: Phase complete
+Last activity: 2026-02-08 -- Completed 32-06-PLAN.md (isAdmin caller migration)
 
-Progress: [█████████████████████░░░] ~41% (v1.5 -- 139 plans total)
+Progress: [██████████████████████░░] ~42% (v1.5 -- 140 plans total)
 
 ## Milestones
 
@@ -28,13 +28,13 @@ Progress: [█████████████████████░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 139
-- Phase 32: 32-01, 32-02, 32-05 complete (user roles schema + service, auth role wiring, hook compliance)
+- Total plans completed: 140
+- Phase 32: ALL 6 PLANS COMPLETE (user roles, auth wiring, admin pages, user management, hook compliance, isAdmin migration)
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~8.5 hours
 
 **Cumulative:**
-- 139 plans across 32 phases and 5 milestones
+- 140 plans across 32 phases and 5 milestones
 - ~14,700 LOC TypeScript
 - 7 days total development time
 
@@ -121,6 +121,8 @@ All decisions logged in PROJECT.md Key Decisions table.
 | 32-02 | isAdmin signature break intentional (fixed in 32-06) | Session-based auth is more secure than email-list approach |
 | 32-05 | 30-day rolling window for hook compliance | Users with at least one hook event in last 30 days are compliant |
 | 32-05 | Non-compliant users sorted first in table | Admin visibility for users needing attention |
+| 32-06 | Migrated 3 additional admin page isAdmin callers beyond plan scope | Complete migration requires all callers updated |
+| 32-06 | Removed ADMIN_EMAILS from Docker config | No application code reads it after RBAC transition |
 
 ### Pending Todos
 
@@ -140,5 +142,5 @@ All decisions logged in PROJECT.md Key Decisions table.
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 32, Plan 05 complete -- hook compliance dashboard done
-Resume file: .planning/phases/32-admin-panel/32-05-SUMMARY.md
+Stopped at: Phase 32 COMPLETE -- all 6 admin panel plans done, RBAC fully transitioned
+Resume file: .planning/phases/32-admin-panel/32-06-SUMMARY.md
