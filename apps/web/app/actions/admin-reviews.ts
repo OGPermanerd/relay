@@ -2,9 +2,10 @@
 
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
-import { db, skills, reviewDecisions } from "@everyskill/db";
+import { db, skills, users, reviewDecisions } from "@everyskill/db";
 import { canTransition, type SkillStatus } from "@everyskill/db/services/skill-status";
 import { getSkillReview } from "@everyskill/db/services/skill-reviews";
+import { notifyReviewEvent } from "@/lib/notifications";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -39,7 +40,15 @@ export async function approveSkillAction(skillId: string, notes?: string): Promi
   // Fetch skill
   const skill = await db.query.skills.findFirst({
     where: eq(skills.id, skillId),
-    columns: { id: true, status: true, tenantId: true, content: true },
+    columns: {
+      id: true,
+      status: true,
+      tenantId: true,
+      content: true,
+      authorId: true,
+      name: true,
+      slug: true,
+    },
   });
 
   if (!skill) {
@@ -81,6 +90,29 @@ export async function approveSkillAction(skillId: string, notes?: string): Promi
       .where(eq(skills.id, skillId));
   });
 
+  // Fetch author info for notification
+  if (skill.authorId) {
+    const author = await db.query.users.findFirst({
+      where: eq(users.id, skill.authorId),
+      columns: { id: true, email: true, name: true },
+    });
+    if (author) {
+      // RVNT-05 only: author is notified of publication (approval is implicit)
+      // Do NOT send separate RVNT-02 (approved) to avoid double notification
+      notifyReviewEvent({
+        tenantId: skill.tenantId,
+        recipientId: author.id,
+        recipientEmail: author.email,
+        recipientName: author.name || "there",
+        type: "review_published",
+        skillName: skill.name,
+        skillSlug: skill.slug ?? skillId,
+        notes: notes || undefined,
+        reviewerName: session.user.name || "Admin",
+      }).catch(() => {});
+    }
+  }
+
   revalidatePath("/admin");
   return { success: true };
 }
@@ -111,7 +143,15 @@ export async function rejectSkillAction(skillId: string, notes: string): Promise
   // Fetch skill
   const skill = await db.query.skills.findFirst({
     where: eq(skills.id, skillId),
-    columns: { id: true, status: true, tenantId: true, content: true },
+    columns: {
+      id: true,
+      status: true,
+      tenantId: true,
+      content: true,
+      authorId: true,
+      name: true,
+      slug: true,
+    },
   });
 
   if (!skill) {
@@ -151,6 +191,28 @@ export async function rejectSkillAction(skillId: string, notes: string): Promise
       .where(eq(skills.id, skillId));
   });
 
+  // Fetch author info for notification
+  if (skill.authorId) {
+    const author = await db.query.users.findFirst({
+      where: eq(users.id, skill.authorId),
+      columns: { id: true, email: true, name: true },
+    });
+    if (author) {
+      // RVNT-03: Notify author of rejection with reason
+      notifyReviewEvent({
+        tenantId: skill.tenantId,
+        recipientId: author.id,
+        recipientEmail: author.email,
+        recipientName: author.name || "there",
+        type: "review_rejected",
+        skillName: skill.name,
+        skillSlug: skill.slug ?? skillId,
+        notes: notesResult.data,
+        reviewerName: session.user.name || "Admin",
+      }).catch(() => {});
+    }
+  }
+
   revalidatePath("/admin");
   return { success: true };
 }
@@ -181,7 +243,15 @@ export async function requestChangesAction(skillId: string, notes: string): Prom
   // Fetch skill
   const skill = await db.query.skills.findFirst({
     where: eq(skills.id, skillId),
-    columns: { id: true, status: true, tenantId: true, content: true },
+    columns: {
+      id: true,
+      status: true,
+      tenantId: true,
+      content: true,
+      authorId: true,
+      name: true,
+      slug: true,
+    },
   });
 
   if (!skill) {
@@ -220,6 +290,28 @@ export async function requestChangesAction(skillId: string, notes: string): Prom
       })
       .where(eq(skills.id, skillId));
   });
+
+  // Fetch author info for notification
+  if (skill.authorId) {
+    const author = await db.query.users.findFirst({
+      where: eq(users.id, skill.authorId),
+      columns: { id: true, email: true, name: true },
+    });
+    if (author) {
+      // RVNT-04: Notify author that changes are requested
+      notifyReviewEvent({
+        tenantId: skill.tenantId,
+        recipientId: author.id,
+        recipientEmail: author.email,
+        recipientName: author.name || "there",
+        type: "review_changes_requested",
+        skillName: skill.name,
+        skillSlug: skill.slug ?? skillId,
+        notes: notesResult.data,
+        reviewerName: session.user.name || "Admin",
+      }).catch(() => {});
+    }
+  }
 
   revalidatePath("/admin");
   return { success: true };
