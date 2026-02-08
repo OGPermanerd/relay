@@ -39,17 +39,29 @@ export default async function SkillPage(props: SkillPageProps) {
     );
   }
 
-  // Fetch skill from database with author relation
-  const skill = await db.query.skills.findFirst({
-    where: eq(skills.slug, params.slug),
-    with: {
-      author: {
-        columns: { id: true, name: true, image: true },
+  // Fetch skill and session in parallel for access control
+  const [skill, session] = await Promise.all([
+    db.query.skills.findFirst({
+      where: eq(skills.slug, params.slug),
+      with: {
+        author: {
+          columns: { id: true, name: true, image: true },
+        },
       },
-    },
-  });
+    }),
+    auth(),
+  ]);
 
   if (!skill) {
+    notFound();
+  }
+
+  // Access control: non-published skills only visible to author or admin
+  const isPublished = skill.status === "published";
+  const isAuthorOfSkill = session?.user?.id === skill.authorId;
+  const userIsAdmin = isAdmin(session);
+
+  if (!isPublished && !isAuthorOfSkill && !userIsAdmin) {
     notFound();
   }
 
@@ -74,9 +86,6 @@ export default async function SkillPage(props: SkillPageProps) {
     skill.forkedFromId ? getParentSkill(skill.forkedFromId) : Promise.resolve(null),
   ]);
 
-  // Get session for authenticated user
-  const session = await auth();
-
   // Query user's existing rating (if logged in)
   const existingRating =
     session?.user?.id && db
@@ -90,8 +99,8 @@ export default async function SkillPage(props: SkillPageProps) {
         })
       : null;
 
-  // Determine if current user is the skill author
-  const isAuthor = session?.user?.id === skill.authorId;
+  // Determine if current user is the skill author (reuse from access control)
+  const isAuthor = isAuthorOfSkill;
 
   // Map review to props shape for AiReviewTab (serialize Date to string for client component)
   const reviewProps = existingReview
