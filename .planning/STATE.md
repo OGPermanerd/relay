@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-08)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v2.0 Skill Ecosystem -- Phase 38 Complete, Phase 39 next
+**Current focus:** v2.0 Skill Ecosystem -- Phase 39 in progress (Fork Detection)
 
 ## Current Position
 
-Phase: 38 of 39 (Conversational MCP Discovery) -- COMPLETE
-Plan: 04 of 04
-Status: Complete
-Last activity: 2026-02-08 -- Phase 38 complete (all 4 plans, 6 DISC requirements)
+Phase: 39 of 39 (Fork Detection)
+Plan: 02 of 04
+Status: In progress
+Last activity: 2026-02-08 -- Completed 39-02-PLAN.md (check_skill_status MCP tool)
 
-Progress: [████████████████████░░░░] 89% (v2.0 -- 39/44 requirements delivered)
+Progress: [████████████████████░░░░] 91% (v2.0 -- 41/44 requirements delivered)
 
 ## Milestones
 
@@ -29,12 +29,12 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 171
+- Total plans completed: 172
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~9.8 hours
 
 **Cumulative:**
-- 171 plans across 38 phases and 7 milestones
+- 172 plans across 39 phases and 7 milestones
 - ~16,000 LOC TypeScript
 - 8 days total development time
 
@@ -93,6 +93,9 @@ Recent decisions affecting current work:
 - [38-03]: Quality tier: gold (>=400 rating, >=10 uses), silver (>=300, >=5), bronze (>=200)
 - [38-03]: Similar skills capped at 3, excludes current skill from embedding search
 - [38-03]: guide_skill returns category-specific guidance for prompt/workflow/agent/mcp types
+- [39-02]: check_skill_status strips frontmatter from BOTH local and DB content before SHA-256 hashing (FORK-02 false-positive prevention)
+- [39-02]: Access control: published OR author-owned -- unpublished skills hidden from non-authors
+- [39-02]: Self-contained helpers in MCP tool files (no cross-app imports) per MCP standalone pattern
 
 ### Pending Todos
 
@@ -108,5 +111,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-08
-Stopped at: Phase 38 complete (all 4 plans done) -- next: Phase 39 (Fork Detection)
-Resume file: .planning/phases/38-conversational-mcp-discovery/
+Stopped at: Phase 39 plan 02 complete -- next: 39-03 (update_skill MCP tool)
+Resume file: .planning/phases/39-fork-detection/
