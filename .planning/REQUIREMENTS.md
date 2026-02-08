@@ -115,56 +115,56 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RVPL-01 | — | Pending |
-| RVPL-02 | — | Pending |
-| RVPL-03 | — | Pending |
-| RVPL-04 | — | Pending |
-| RVPL-05 | — | Pending |
-| RVPL-06 | — | Pending |
-| RVPL-07 | — | Pending |
-| RVPL-08 | — | Pending |
-| RVPL-09 | — | Pending |
-| RVPL-10 | — | Pending |
-| RVPL-11 | — | Pending |
-| RVPL-12 | — | Pending |
-| ADMR-01 | — | Pending |
-| ADMR-02 | — | Pending |
-| ADMR-03 | — | Pending |
-| ADMR-04 | — | Pending |
-| ADMR-05 | — | Pending |
-| ADMR-06 | — | Pending |
-| ADMR-07 | — | Pending |
-| ADMR-08 | — | Pending |
-| ADMR-09 | — | Pending |
-| RVNT-01 | — | Pending |
-| RVNT-02 | — | Pending |
-| RVNT-03 | — | Pending |
-| RVNT-04 | — | Pending |
-| RVNT-05 | — | Pending |
-| RVNT-06 | — | Pending |
-| RVNT-07 | — | Pending |
-| DISC-01 | — | Pending |
-| DISC-02 | — | Pending |
-| DISC-03 | — | Pending |
-| DISC-04 | — | Pending |
-| DISC-05 | — | Pending |
-| DISC-06 | — | Pending |
-| MCPR-01 | — | Pending |
-| MCPR-02 | — | Pending |
-| MCPR-03 | — | Pending |
-| FORK-01 | — | Pending |
-| FORK-02 | — | Pending |
-| FORK-03 | — | Pending |
-| FORK-04 | — | Pending |
-| FORK-05 | — | Pending |
-| FORK-06 | — | Pending |
-| FORK-07 | — | Pending |
+| RVPL-01 | Phase 34 | Pending |
+| RVPL-02 | Phase 34 | Pending |
+| RVPL-03 | Phase 35 | Pending |
+| RVPL-04 | Phase 35 | Pending |
+| RVPL-05 | Phase 34 | Pending |
+| RVPL-06 | Phase 34 | Pending |
+| RVPL-07 | Phase 34 | Pending |
+| RVPL-08 | Phase 34 | Pending |
+| RVPL-09 | Phase 34 | Pending |
+| RVPL-10 | Phase 34 | Pending |
+| RVPL-11 | Phase 35 | Pending |
+| RVPL-12 | Phase 34 | Pending |
+| ADMR-01 | Phase 36 | Pending |
+| ADMR-02 | Phase 36 | Pending |
+| ADMR-03 | Phase 36 | Pending |
+| ADMR-04 | Phase 36 | Pending |
+| ADMR-05 | Phase 36 | Pending |
+| ADMR-06 | Phase 36 | Pending |
+| ADMR-07 | Phase 36 | Pending |
+| ADMR-08 | Phase 36 | Pending |
+| ADMR-09 | Phase 36 | Pending |
+| RVNT-01 | Phase 37 | Pending |
+| RVNT-02 | Phase 37 | Pending |
+| RVNT-03 | Phase 37 | Pending |
+| RVNT-04 | Phase 37 | Pending |
+| RVNT-05 | Phase 37 | Pending |
+| RVNT-06 | Phase 37 | Pending |
+| RVNT-07 | Phase 37 | Pending |
+| DISC-01 | Phase 38 | Pending |
+| DISC-02 | Phase 38 | Pending |
+| DISC-03 | Phase 38 | Pending |
+| DISC-04 | Phase 38 | Pending |
+| DISC-05 | Phase 38 | Pending |
+| DISC-06 | Phase 38 | Pending |
+| MCPR-01 | Phase 35 | Pending |
+| MCPR-02 | Phase 35 | Pending |
+| MCPR-03 | Phase 35 | Pending |
+| FORK-01 | Phase 39 | Pending |
+| FORK-02 | Phase 39 | Pending |
+| FORK-03 | Phase 39 | Pending |
+| FORK-04 | Phase 39 | Pending |
+| FORK-05 | Phase 39 | Pending |
+| FORK-06 | Phase 39 | Pending |
+| FORK-07 | Phase 39 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 44 total
-- Mapped to phases: 0 (awaiting roadmap)
-- Unmapped: 44
+- Mapped to phases: 44
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-08*
-*Last updated: 2026-02-08 after initial definition*
+*Last updated: 2026-02-08 after roadmap creation*

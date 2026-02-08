@@ -8,6 +8,7 @@
 - ✅ **v1.3 AI Quality & Cross-Platform** - Phases 15-19 (shipped 2026-02-04)
 - ✅ **v1.4 Employee Analytics & Remote MCP** - Phases 20-24 (shipped 2026-02-06)
 - ✅ **v1.5 Production, Multi-Tenancy & Reliable Usage Tracking** - Phases 25-33 (shipped 2026-02-08)
+- 🚧 **v2.0 Skill Ecosystem** - Phases 34-39 (in progress)
 
 ## Phases
 
@@ -90,192 +91,113 @@ Total: 25 plans completed.
 
 </details>
 
-### ✅ v1.5 Production, Multi-Tenancy & Reliable Usage Tracking (Shipped 2026-02-08)
+<details>
+<summary>✅ v1.5 Production, Multi-Tenancy & Reliable Usage Tracking (Phases 25-33) - SHIPPED 2026-02-08</summary>
 
-**Milestone Goal:** Transform Relay from a single-tenant internal tool into a production-deployed, multi-tenant SaaS platform with deterministic usage tracking, SOC2 compliance foundations, white-label branding, enhanced skill management, and a notification system. 62 requirements across 9 categories deliver the infrastructure for enterprise-grade multi-organization deployment.
+See archived roadmap: .planning/milestones/v1.5-ROADMAP.md
 
-- [x] **Phase 25: Multi-Tenancy Schema & Audit Foundation** - Tenant isolation at the database level
-- [x] **Phase 26: Auth & Subdomain Routing** - Users can log in to their tenant's subdomain
-- [x] **Phase 27: Production Docker Deployment** - Single-command production deployment (parallel track)
-- [x] **Phase 28: Hook-Based Usage Tracking** - Deterministic skill usage tracking via Claude Code hooks
-- [x] **Phase 29: Tenant-Scoped Analytics & MCP** - Analytics and MCP respect tenant boundaries
-- [x] **Phase 30: Branding & Navigation** - White-label tenant branding and improved navigation
-- [x] **Phase 31: Skills & Upload Enhancements** - Richer upload experience with auto-review and similarity
-- [x] **Phase 32: Admin Panel** - Tenant administrators can manage their organization
-- [x] **Phase 33: Email & Notifications** - Transactional email and in-app notification system
+**Summary:**
+- Phase 25: Multi-Tenancy Schema & Audit Foundation (9 plans)
+- Phase 26: Auth & Subdomain Routing (3 plans)
+- Phase 27: Production Docker Deployment (4 plans)
+- Phase 28: Hook-Based Usage Tracking (7 plans)
+- Phase 29: Tenant-Scoped Analytics & MCP (3 plans)
+- Phase 30: Branding & Navigation (7 plans)
+- Phase 31: Skills & Upload Enhancements (6 plans)
+- Phase 32: Admin Panel (6 plans)
+- Phase 33: Email & Notifications (7 plans)
+
+Total: 55 plans completed.
+
+</details>
+
+### 🚧 v2.0 Skill Ecosystem (In Progress)
+
+**Milestone Goal:** Transform skill publishing from instant-publish to a quality-gated pipeline with AI review, author revision, and admin approval -- plus conversational discovery via MCP and fork-on-modify detection. 44 requirements across 6 categories.
+
+- [ ] **Phase 34: Review Pipeline Foundation** - Status column, state machine, query guards, and author workflow
+- [ ] **Phase 35: AI Review Integration** - Auto AI review on submission, MCP review tools, auto-approve threshold
+- [ ] **Phase 36: Admin Review UI** - Queue, diff view, approve/reject/request-changes actions, audit trail
+- [ ] **Phase 37: Review Notifications** - 7 new notification types for the review lifecycle
+- [ ] **Phase 38: Conversational MCP Discovery** - Semantic search, recommend, describe, and guide tools
+- [ ] **Phase 39: Fork Detection** - Hash comparison, update_skill, web UI drift indicators
 
 ## Phase Details
 
-### Phase 25: Multi-Tenancy Schema & Audit Foundation
-**Goal**: Every database query is tenant-isolated, with an append-only audit trail capturing all security events
-**Depends on**: Nothing (first phase of v1.5)
-**Requirements**: TENANT-01, TENANT-02, TENANT-03, TENANT-04, TENANT-05, SOC2-01, SOC2-02
+### Phase 34: Review Pipeline Foundation
+**Goal**: Skills enter a gated lifecycle instead of auto-publishing -- authors create drafts, submit for review, and only published skills appear in search/browse
+**Depends on**: Nothing (first phase of v2.0)
+**Requirements**: RVPL-01, RVPL-02, RVPL-05, RVPL-06, RVPL-07, RVPL-08, RVPL-09, RVPL-10, RVPL-12
 **Success Criteria** (what must be TRUE):
-  1. A `tenants` table exists with id, name, slug, domain, logo, isActive, and plan columns
-  2. Every data table (skills, usage_events, ratings, skill_versions, skill_embeddings, skill_reviews, api_keys, site_settings, users) has a NOT NULL tenant_id column with foreign key to tenants
-  3. Skills table has a composite unique constraint on (tenant_id, slug) — two tenants can have skills with the same slug
-  4. PostgreSQL RLS policies are active on all tenant-scoped tables, preventing cross-tenant reads/writes at the database level
-  5. An append-only audit_logs table records all security events (auth, admin actions, data modifications), and UPDATE/DELETE are revoked on it
-**Plans:** 9 plans
-Plans:
-- [x] 25-01-PLAN.md — Tenants + audit_logs table schemas
-- [x] 25-02-PLAN.md — withTenant() helper module
-- [x] 25-03-PLAN.md — Add tenant_id to 5 schema files (skills, users, ratings, usage-events, skill-versions) + schema index
-- [x] 25-04-PLAN.md — Add tenant_id to 4 schema files (skill-embeddings, skill-reviews, api-keys, site-settings) + relations
-- [x] 25-05-PLAN.md — SQL migrations 0002-0004 (create tenants, add columns, backfill)
-- [x] 25-06-PLAN.md — SQL migrations 0005-0006 (enforce constraints + RLS, audit logs)
-- [x] 25-07-PLAN.md — RLS pgPolicy definitions on all 9 tables + drizzle config
-- [x] 25-08-PLAN.md — Audit log write service
-- [x] 25-09-PLAN.md — Run migrations + end-to-end verification
+  1. Creating a skill (web or MCP) puts it in `draft` status -- it does not appear in search, browse, or public skill listings
+  2. Author can submit a draft for review, and the state machine enforces valid transitions (draft -> pending_review -> ai_reviewed -> approved/rejected/changes_requested -> published)
+  3. All existing published skills retain `published` status after migration -- zero regression in search results or skill visibility
+  4. Non-author, non-admin users see a 404 when visiting a skill that is not published
+  5. Authors can view all their own skills (draft, pending, rejected, published) on a "My Skills" page
+**Plans**: TBD
 
-### Phase 26: Auth & Subdomain Routing
-**Goal**: Users access their tenant via a subdomain and authenticate through domain-mapped Google SSO with proper session management
-**Depends on**: Phase 25
-**Requirements**: TENANT-06, TENANT-07, TENANT-08, TENANT-09, TENANT-10, SOC2-04
+### Phase 35: AI Review Integration
+**Goal**: Submitting a skill for review automatically triggers AI analysis with explicit error handling, and authors/admins can trigger and check reviews via MCP
+**Depends on**: Phase 34
+**Requirements**: RVPL-03, RVPL-04, RVPL-11, MCPR-01, MCPR-02, MCPR-03
 **Success Criteria** (what must be TRUE):
-  1. Visiting `tenant-slug.domain.com` loads Relay scoped to that tenant — middleware extracts tenant from Host header
-  2. Google SSO login maps the user's email domain to the correct tenant — a user with `@acme.com` email can only sign into the Acme tenant
-  3. A single shared Google OAuth endpoint handles all tenants, using the state parameter to redirect back to the originating tenant subdomain after auth
-  4. Auth.js session cookies work across subdomains (domain-scoped cookies), and the JWT includes a tenantId claim
-  5. Sessions expire after 8 hours (reduced from 30 days)
-**Plans:** 3 plans
-Plans:
-- [x] 26-01-PLAN.md — Tenant DB service, NextAuth type augmentation, auth.config.ts cookies/session
-- [x] 26-02-PLAN.md — Auth.ts callbacks rewrite (signIn, jwt, session, redirect)
-- [x] 26-03-PLAN.md — Middleware rewrite (unwrapped subdomain extraction) + login page update
+  1. When a skill transitions to `pending_review`, AI review runs automatically (not fire-and-forget) and transitions the skill to `ai_reviewed` on completion
+  2. If AI review fails (API error, rate limit), the skill remains in `pending_review` with a visible error state -- it does not get stuck in limbo
+  3. Skills with all AI review scores at or above a configurable threshold auto-approve without entering the admin queue
+  4. From a Claude conversation, a user can trigger AI review (`review_skill`), submit a draft for admin review (`submit_for_review`), and check the status of their submitted skills (`check_review_status`)
+**Plans**: TBD
 
-### Phase 27: Production Docker Deployment
-**Goal**: Relay runs in production on a Hetzner VPS with automatic HTTPS, encrypted storage, and automated backups
-**Depends on**: Nothing (parallel track — no dependency on multi-tenancy code)
-**Requirements**: DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04, DEPLOY-05, DEPLOY-06, DEPLOY-07, SOC2-03, SOC2-06, SOC2-07
+### Phase 36: Admin Review UI
+**Goal**: Tenant admins can efficiently review submitted skills with full context (AI scores, content diff) and take approve/reject/request-changes actions
+**Depends on**: Phase 34, Phase 35
+**Requirements**: ADMR-01, ADMR-02, ADMR-03, ADMR-04, ADMR-05, ADMR-06, ADMR-07, ADMR-08, ADMR-09
 **Success Criteria** (what must be TRUE):
-  1. `docker compose up` starts Caddy (reverse proxy), Next.js (web app), and PostgreSQL (pgvector/pg17) with health checks on all services
-  2. Caddy handles wildcard subdomain routing and automatic HTTPS via Let's Encrypt
-  3. PostgreSQL is accessible only within the Docker internal network — no host port exposure
-  4. Docker volumes are encrypted at rest via LUKS full-disk encryption on the Hetzner VPS
-  5. A backup script performs pg_dump with gzip compression, GPG encryption, and off-site storage — hourly incremental and daily full with 90-day retention
-**Plans:** 4 plans
-Plans:
-- [x] 27-01-PLAN.md — Next.js standalone config + /api/health endpoint + .dockerignore
-- [x] 27-02-PLAN.md — Dockerfile (4-stage turbo prune) + Dockerfile.caddy + Caddyfile
-- [x] 27-03-PLAN.md — Backup/restore scripts + LUKS encryption runbook
-- [x] 27-04-PLAN.md — docker-compose.prod.yml + .env.example
+  1. `/admin/reviews` shows a paginated queue (20 per page) of skills awaiting review, filterable by status, category, and date
+  2. Each review page shows the skill content, AI review scores (quality/clarity/completeness), and a diff view against the previous version if one exists
+  3. Admin can approve (publishes the skill), reject (with required notes), or request changes (with feedback) -- each action is a single click plus optional/required notes
+  4. Every review decision is stored immutably for audit trail (reviewer, action, timestamp, notes) and cannot be modified after the fact
+  5. The admin sidebar shows the count of skills awaiting review
+**Plans**: TBD
 
-### Phase 28: Hook-Based Usage Tracking
-**Goal**: Every Claude Code tool invocation against a deployed skill is deterministically tracked via PostToolUse hooks firing to the production endpoint
-**Depends on**: Phase 25, Phase 26
-**Requirements**: TRACK-01, TRACK-02, TRACK-03, TRACK-04, TRACK-05, TRACK-06, TRACK-07, TRACK-08, TENANT-11, SOC2-05
+### Phase 37: Review Notifications
+**Goal**: Authors and admins receive timely in-app and email notifications at every stage of the review lifecycle
+**Depends on**: Phase 34, Phase 35
+**Requirements**: RVNT-01, RVNT-02, RVNT-03, RVNT-04, RVNT-05, RVNT-06, RVNT-07
 **Success Criteria** (what must be TRUE):
-  1. A `POST /api/track` endpoint accepts hook callbacks with Bearer token auth, validates the API key, resolves userId + tenantId, and inserts a usage event
-  2. When a skill is uploaded/deployed, tracking hook frontmatter (PostToolUse with async curl) is auto-injected into the skill file — invisible to the uploader
-  3. Hook execution is async and never blocks Claude Code sessions — failures are silently logged, not surfaced to the user
-  4. The tracking endpoint enforces rate limiting (100 req/min per API key) and HMAC payload signing to prevent spoofed callbacks
-  5. API key validation returns tenantId alongside userId, and keys have a default 90-day expiration with 14-day rotation warning
-**Plans:** 7 plans
-Plans:
-- [x] 28-01-PLAN.md — validateApiKey returns tenantId + soft expiry, update all callers
-- [x] 28-02-PLAN.md — Rate limiter + HMAC utility modules
-- [x] 28-03-PLAN.md — Usage tracking service (insertTrackingEvent)
-- [x] 28-04-PLAN.md — POST /api/track endpoint + middleware exemption
-- [x] 28-05-PLAN.md — PostToolUse hook injection in buildEverySkillFrontmatter
-- [x] 28-06-PLAN.md — Deploy-time hook compliance + deprecate log_skill_usage
-- [x] 28-07-PLAN.md — Per-tenant key expiry schema migration
+  1. When a skill is submitted for review, all tenant admins receive an in-app notification and email
+  2. When an admin approves, rejects, or requests changes on a skill, the author receives an in-app notification and email with the admin's notes
+  3. All review notification types are grouped under a single preference toggle -- users can disable review notifications in one action
+  4. The notification bell correctly renders new review notification types with appropriate icons and action URLs that link to the relevant skill or review page
+**Plans**: TBD
 
-### Phase 29: Tenant-Scoped Analytics & MCP
-**Goal**: Analytics dashboards and MCP operations respect tenant boundaries — each tenant sees only their own data
-**Depends on**: Phase 25, Phase 26
-**Requirements**: TENANT-12, TENANT-13, METRIC-01
+### Phase 38: Conversational MCP Discovery
+**Goal**: Users can discover skills through natural conversation in Claude -- semantic search, detailed descriptions, and post-install guidance
+**Depends on**: Nothing (independent of review pipeline; uses existing embedding infrastructure)
+**Requirements**: DISC-01, DISC-02, DISC-03, DISC-04, DISC-05, DISC-06
 **Success Criteria** (what must be TRUE):
-  1. All 6 analytics queries filter by tenantId instead of email domain matching — no cross-tenant data leakage in dashboards
-  2. MCP server operations (search, deploy, list) are scoped to the tenant resolved from the API key's tenantId
-  3. FTE Years Saved calculation uses the standard 2,080 hours/year (USA FTE) and displays correctly across tenant-scoped views
-**Plans:** 3 plans
-Plans:
-- [x] 29-01-PLAN.md — Analytics queries: replace email-domain matching with tenant_id filtering + update callers
-- [x] 29-02-PLAN.md — MCP tenant scoping: auth tenantId caching + tool filtering + tracking
-- [x] 29-03-PLAN.md — FTE constant: create shared constant + update 11 display locations
+  1. `recommend_skills` performs semantic search using Ollama embeddings + pgvector cosine similarity and returns relevant published skills ranked by relevance
+  2. `describe_skill` returns comprehensive skill details including AI review scores, ratings, usage stats, similar skills, and install instructions
+  3. `guide_skill` returns contextual usage guidance and implementation instructions after a skill is installed
+  4. Semantic search gracefully falls back to ILIKE text search when Ollama is unavailable, and only returns published skills regardless of search method
+**Plans**: TBD
 
-### Phase 30: Branding & Navigation
-**Goal**: Each tenant has branded navigation with white-label options, and users see their personal impact and contributor tier at a glance
-**Depends on**: Phase 25, Phase 26
-**Requirements**: BRAND-01, BRAND-02, BRAND-03, BRAND-04, BRAND-05, BRAND-06, BRAND-07, BRAND-08
+### Phase 39: Fork Detection
+**Goal**: Users know when their local skill copy has diverged from the published version and can push changes back or create forks
+**Depends on**: Nothing (independent of review pipeline; uses existing fork and contentHash infrastructure)
+**Requirements**: FORK-01, FORK-02, FORK-03, FORK-04, FORK-05, FORK-06, FORK-07
 **Success Criteria** (what must be TRUE):
-  1. The logo is an animated baton-pass concept, and freemium tenants display "Tenant x EverySkill" branding while paid tenants show only their own logo
-  2. Freemium tenants are served on `tenant.everyskill.ai` subdomains; paid tenants can configure a vanity URL
-  3. The navigation bar shows an active-page underline indicator, a dedicated Skills nav button, and no longer displays the "2.7Y saved" metric
-  4. The greeting area shows the user's name, their personal Days Saved total, and their composite contributor tier (Platinum/Gold/Silver/Bronze based on skills shared, days saved, ratings, and usage)
-**Plans:** 7 plans
-Plans:
-- [x] 30-01-PLAN.md — Animated SVG logo component + CSS keyframes
-- [x] 30-02-PLAN.md — NavLink component with active page underline indicator
-- [x] 30-03-PLAN.md — Contributor tier computation + GreetingArea component
-- [x] 30-04-PLAN.md — Tenant-aware branding (TenantBranding component)
-- [x] 30-05-PLAN.md — Wire all new components into layout.tsx
-- [x] 30-06-PLAN.md — Vanity domain schema + migration + service function
-- [x] 30-07-PLAN.md — Middleware vanity domain support + check-domain API + Caddyfile
-
-### Phase 31: Skills & Upload Enhancements
-**Goal**: Uploading a skill gives the author immediate AI feedback, rich similarity context, and the ability to propose grouping with existing skills
-**Depends on**: Phase 25
-**Requirements**: SKILL-01, SKILL-02, SKILL-03, SKILL-04, SKILL-05, SKILL-06, SKILL-07
-**Success Criteria** (what must be TRUE):
-  1. All timestamps across the platform display as relative ("1d 5h 3min ago" until 1 year, then "1y 5d ago") instead of absolute dates
-  2. On upload, a right-hand similarity pane shows AI-summarized matches with highlighted semantic overlaps — the "semantic vs name match" label is hidden from users
-  3. AI review runs automatically on upload (not on-demand) and suggests description modifications that the user can copy
-  4. AI review results feed into duplicate/similarity detection for more accurate matching
-  5. The uploader can "message author" to propose grouping their skill under an existing similar skill
-**Plans:** 6 plans
-Plans:
-- [x] 31-01-PLAN.md — Relative timestamps: TDD utility + RelativeTime component
-- [x] 31-02-PLAN.md — Relative timestamps: replace 13 locations across 11 files
-- [x] 31-03-PLAN.md — AI review enhancement: suggestedDescription output + auto-trigger on upload
-- [x] 31-04-PLAN.md — skill_messages DB table, schema, migration, and service functions
-- [x] 31-05-PLAN.md — Rich similarity pane, hide match labels, wire AI review into similarity detection
-- [x] 31-06-PLAN.md — Message author dialog, server action, and messages inbox page
-
-### Phase 32: Admin Panel
-**Goal**: Tenant administrators can manage their organization's settings, users, skills, and compliance status
-**Depends on**: Phase 25, Phase 26, Phase 28, Phase 29
-**Requirements**: ADMIN-01, ADMIN-02, ADMIN-03, ADMIN-04, ADMIN-05
-**Success Criteria** (what must be TRUE):
-  1. A tenant admin settings page allows admins to configure tenant name, allowed domains, and logo
-  2. Each tenant has two roles — admin and member — and only admins can access admin-only pages
-  3. Admins can review, delete, or select multiple skills to merge under one parent skill
-  4. Admins can view which users have compliance hooks installed and actively firing callbacks
-**Plans:** 6 plans
-Plans:
-- [x] 32-01-PLAN.md — Role enum schema + migration + user DB service functions
-- [x] 32-02-PLAN.md — Auth callback role assignment + isAdmin rewrite to session-based
-- [x] 32-03-PLAN.md — Admin layout with sub-nav + tenant settings form and server action
-- [x] 32-04-PLAN.md — Admin skills table with delete and multi-select bulk merge
-- [x] 32-05-PLAN.md — Hook compliance dashboard with per-user status table
-- [x] 32-06-PLAN.md — Migrate all isAdmin callers from email-based to session-based checks
-
-### Phase 33: Email & Notifications
-**Goal**: Users receive timely email and in-app notifications about skill activity, trends, and platform updates, with full control over their preferences
-**Depends on**: Phase 25, Phase 26
-**Requirements**: NOTIF-01, NOTIF-02, NOTIF-03, NOTIF-04, NOTIF-05, NOTIF-06
-**Success Criteria** (what must be TRUE):
-  1. Transactional and digest emails are sent via Resend — infrastructure is tenant-aware
-  2. An in-app notification center (bell icon with unread count) shows a scrollable list of notifications
-  3. Users can configure notification preferences per type (skill grouping requests, trending digests, platform updates) and choose digest frequency
-  4. When someone proposes grouping a skill under another, the original author receives both an in-app notification and an email
-  5. Trending skills digests (daily or weekly) and platform update notifications are delivered based on user preferences
-**Plans:** 7 plans
-Plans:
-- [x] 33-01-PLAN.md — Notifications + notification_preferences DB schemas and migration 0012
-- [x] 33-02-PLAN.md — Resend email client (stubbed) + React Email templates
-- [x] 33-03-PLAN.md — Notification and preference DB service functions
-- [x] 33-04-PLAN.md — Bell icon notification center with unread badge in header
-- [x] 33-05-PLAN.md — Notification preferences settings page
-- [x] 33-06-PLAN.md — Wire grouping proposal to create notifications + stubbed email
-- [x] 33-07-PLAN.md — Cron digest endpoints + admin platform update action
+  1. `check_skill_status` MCP tool compares a local file's content hash against the DB published version and reports whether the skill has diverged
+  2. Hash comparison strips YAML frontmatter before hashing so that tracking hook changes do not trigger false drift detection
+  3. `update_skill` MCP tool pushes local modifications back as a new version (if the user is the author) or creates a fork (if not), with proper skill_version records and review status
+  4. The web UI shows a drift indicator on fork detail pages when the fork has diverged from its parent, and a `/skills/[slug]/compare` page shows side-by-side content comparison
+**Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases 25, 26, and 27 can begin first. Phase 27 (Docker) is a parallel track with no dependency on 25/26.
-Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26, 28, 29 — the most downstream.
+Phase 34 must be first (everything depends on the status column). Phase 35 depends on 34. Phases 36 and 37 depend on 34-35 but can run in parallel with each other. Phases 38 and 39 are fully independent of the review pipeline and can run at any time.
+
+Critical path: 34 -> 35 -> 36 (admin can review). Parallel tracks: 37 (notifications), 38 (discovery), 39 (fork detection).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -284,17 +206,15 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 12-14 | v1.2 | 12/12 | Complete | 2026-02-02 |
 | 15-19 | v1.3 | 15/15 | Complete | 2026-02-04 |
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
-| 25. Multi-Tenancy Schema | v1.5 | 9/9 | Complete | 2026-02-07 |
-| 26. Auth & Subdomain Routing | v1.5 | 3/3 | Complete | 2026-02-07 |
-| 27. Docker Deployment | v1.5 | 4/4 | Complete | 2026-02-08 |
-| 28. Hook-Based Tracking | v1.5 | 7/7 | Complete | 2026-02-08 |
-| 29. Tenant Analytics & MCP | v1.5 | 3/3 | Complete | 2026-02-08 |
-| 30. Branding & Navigation | v1.5 | 7/7 | Complete | 2026-02-08 |
-| 31. Skills & Upload | v1.5 | 6/6 | Complete | 2026-02-08 |
-| 32. Admin Panel | v1.5 | 6/6 | Complete | 2026-02-08 |
-| 33. Email & Notifications | v1.5 | 7/7 | Complete | 2026-02-08 |
+| 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
+| 34. Review Pipeline Foundation | v2.0 | 0/TBD | Not started | - |
+| 35. AI Review Integration | v2.0 | 0/TBD | Not started | - |
+| 36. Admin Review UI | v2.0 | 0/TBD | Not started | - |
+| 37. Review Notifications | v2.0 | 0/TBD | Not started | - |
+| 38. Conversational MCP Discovery | v2.0 | 0/TBD | Not started | - |
+| 39. Fork Detection | v2.0 | 0/TBD | Not started | - |
 
-**Total: 149 plans completed across 33 phases and 6 milestones (v1.0-v1.5)**
+**Total: 149 plans completed across 33 phases and 6 milestones (v1.0-v1.5). v2.0 phases 34-39 planned.**
 
 ---
 *Roadmap created: 2026-01-31*
@@ -302,5 +222,5 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 *v1.2 completed: 2026-02-02*
 *v1.3 completed: 2026-02-04*
 *v1.4 completed: 2026-02-06*
-*v1.5 roadmap added: 2026-02-07*
 *v1.5 completed: 2026-02-08*
+*v2.0 roadmap added: 2026-02-08*
