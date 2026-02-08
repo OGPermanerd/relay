@@ -171,7 +171,15 @@ Plans:
   3. Hook execution is async and never blocks Claude Code sessions — failures are silently logged, not surfaced to the user
   4. The tracking endpoint enforces rate limiting (100 req/min per API key) and HMAC payload signing to prevent spoofed callbacks
   5. API key validation returns tenantId alongside userId, and keys have a default 90-day expiration with 14-day rotation warning
-**Plans**: TBD
+**Plans:** 7 plans
+Plans:
+- [ ] 28-01-PLAN.md — validateApiKey returns tenantId + soft expiry, update all callers
+- [ ] 28-02-PLAN.md — Rate limiter + HMAC utility modules
+- [ ] 28-03-PLAN.md — Usage tracking service (insertTrackingEvent)
+- [ ] 28-04-PLAN.md — POST /api/track endpoint + middleware exemption
+- [ ] 28-05-PLAN.md — PostToolUse hook injection in buildEverySkillFrontmatter
+- [ ] 28-06-PLAN.md — Deploy-time hook compliance + deprecate log_skill_usage
+- [ ] 28-07-PLAN.md — Per-tenant key expiry schema migration
 
 ### Phase 29: Tenant-Scoped Analytics & MCP
 **Goal**: Analytics dashboards and MCP operations respect tenant boundaries — each tenant sees only their own data
@@ -245,7 +253,7 @@ Phases 28-33 follow their dependency chains. Phase 32 (Admin) depends on 25, 26,
 | 25. Multi-Tenancy Schema | v1.5 | 9/9 | Complete | 2026-02-07 |
 | 26. Auth & Subdomain Routing | v1.5 | 3/3 | Complete | 2026-02-07 |
 | 27. Docker Deployment | v1.5 | 4/4 | Complete | 2026-02-08 |
-| 28. Hook-Based Tracking | v1.5 | 0/TBD | Not started | - |
+| 28. Hook-Based Tracking | v1.5 | 0/7 | Not started | - |
 | 29. Tenant Analytics & MCP | v1.5 | 0/TBD | Not started | - |
 | 30. Branding & Navigation | v1.5 | 0/TBD | Not started | - |
 | 31. Skills & Upload | v1.5 | 0/TBD | Not started | - |
