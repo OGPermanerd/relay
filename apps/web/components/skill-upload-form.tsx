@@ -3,6 +3,7 @@
 import { useActionState, useState, useRef, useEffect, useCallback } from "react";
 import { checkAndCreateSkill, SkillFormState } from "@/app/actions/skills";
 import { SimilarityPane } from "./similarity-pane";
+import { MessageAuthorDialog } from "./message-author-dialog";
 import { SkillFileDropZone } from "./skill-file-drop-zone";
 import type { ParsedSkillData } from "@/lib/skill-file-parser";
 import type { SimilarSkillResult } from "@/lib/similar-skills";
@@ -33,8 +34,8 @@ export function SkillUploadForm() {
   }, []);
 
   const [reuploadSkillId, setReuploadSkillId] = useState<string | null>(null);
-  // Placeholder for messaging flow (Plan 31-06)
-  const [_messageTarget, setMessageTarget] = useState<SimilarSkillResult | null>(null);
+  // Message author dialog target (Plan 31-06)
+  const [messageTarget, setMessageTarget] = useState<SimilarSkillResult | null>(null);
 
   const handleFileParsed = useCallback((data: ParsedSkillData) => {
     setFields((prev) => ({
@@ -301,6 +302,11 @@ export function SkillUploadForm() {
           />
         )}
       </div>
+
+      {/* Message Author dialog overlay */}
+      {messageTarget && (
+        <MessageAuthorDialog skill={messageTarget} onClose={() => setMessageTarget(null)} />
+      )}
     </form>
   );
 }

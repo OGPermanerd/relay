@@ -14,6 +14,7 @@ export interface SimilarSkillResult {
   category?: string;
   totalUses?: number;
   averageRating?: number | null;
+  authorId?: string | null;
 }
 
 export interface CheckSimilarSkillsInput {
@@ -58,6 +59,7 @@ async function trySemanticSearch(
         SELECT s.id AS "skillId", s.name AS "skillName", s.slug AS "skillSlug",
                s.description, s.category, s.total_uses AS "totalUses",
                s.average_rating AS "averageRating",
+               s.author_id AS "authorId",
                ROUND(100 * (1 - (se.embedding <=> ${vectorStr}::vector) / 2))::int AS "similarityPct"
         FROM skill_embeddings se
         JOIN skills s ON s.id = se.skill_id
@@ -71,6 +73,7 @@ async function trySemanticSearch(
         SELECT s.id AS "skillId", s.name AS "skillName", s.slug AS "skillSlug",
                s.description, s.category, s.total_uses AS "totalUses",
                s.average_rating AS "averageRating",
+               s.author_id AS "authorId",
                ROUND(100 * (1 - (se.embedding <=> ${vectorStr}::vector) / 2))::int AS "similarityPct"
         FROM skill_embeddings se
         JOIN skills s ON s.id = se.skill_id
@@ -112,6 +115,7 @@ async function trySemanticSearchBySkill(skillId: string): Promise<SimilarSkillRe
       SELECT s.id AS "skillId", s.name AS "skillName", s.slug AS "skillSlug",
              s.description, s.category, s.total_uses AS "totalUses",
              s.average_rating AS "averageRating",
+             s.author_id AS "authorId",
              ROUND(100 * (1 - (se.embedding <=> ${vectorStr}::vector) / 2))::int AS "similarityPct"
       FROM skill_embeddings se
       JOIN skills s ON s.id = se.skill_id
@@ -170,6 +174,7 @@ export async function checkSimilarSkills(
         category: skills.category,
         totalUses: skills.totalUses,
         averageRating: skills.averageRating,
+        authorId: skills.authorId,
       })
       .from(skills)
       .where(
@@ -229,6 +234,7 @@ export async function findSimilarSkillsByName(
         category: skills.category,
         totalUses: skills.totalUses,
         averageRating: skills.averageRating,
+        authorId: skills.authorId,
       })
       .from(skills)
       .where(and(ne(skills.id, skillId), or(...conditions)))
