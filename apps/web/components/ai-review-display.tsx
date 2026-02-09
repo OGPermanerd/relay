@@ -48,6 +48,8 @@ interface AiReviewDisplayProps {
   suggestedDescription?: string;
   reviewedAt: string;
   modelName: string;
+  isAuthor?: boolean;
+  onImprove?: (selectedSuggestions: string[], useSuggestedDescription: boolean) => void;
 }
 
 export function AiReviewDisplay({
@@ -56,8 +58,12 @@ export function AiReviewDisplay({
   suggestedDescription,
   reviewedAt,
   modelName,
+  isAuthor,
+  onImprove,
 }: AiReviewDisplayProps) {
   const categoryKeys = Object.keys(categoryLabels) as (keyof ReviewCategories)[];
+  const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set());
+  const [useDescription, setUseDescription] = useState(false);
 
   // Compute overall score as average of the 3 category scores
   const overallScore = Math.round(
@@ -65,6 +71,20 @@ export function AiReviewDisplay({
   );
 
   const overallColorClass = getOverallScoreColor(overallScore);
+
+  const toggleSuggestion = (suggestion: string) => {
+    setSelectedSuggestions((prev) => {
+      const next = new Set(prev);
+      if (next.has(suggestion)) {
+        next.delete(suggestion);
+      } else {
+        next.add(suggestion);
+      }
+      return next;
+    });
+  };
+
+  const totalSelected = selectedSuggestions.size + (useDescription ? 1 : 0);
 
   return (
     <div className="space-y-4">
@@ -90,7 +110,17 @@ export function AiReviewDisplay({
       {suggestedDescription && (
         <div className="border border-emerald-200 bg-emerald-50 rounded-lg px-4 py-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-medium text-emerald-700">Suggested Description</span>
+            <div className="flex items-center gap-2">
+              {isAuthor && onImprove && (
+                <input
+                  type="checkbox"
+                  checked={useDescription}
+                  onChange={() => setUseDescription((prev) => !prev)}
+                  className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                />
+              )}
+              <span className="text-xs font-medium text-emerald-700">Suggested Description</span>
+            </div>
             <CopyButton text={suggestedDescription} />
           </div>
           <p className="text-sm text-gray-700 leading-relaxed">{suggestedDescription}</p>
@@ -117,9 +147,29 @@ export function AiReviewDisplay({
               {suggestions.length > 0 && (
                 <ul className="space-y-1.5">
                   {suggestions.map((suggestion, i) => (
-                    <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gray-400" />
-                      {suggestion}
+                    <li
+                      key={i}
+                      className={`text-sm text-gray-600 flex items-start gap-2 rounded px-1 py-0.5 -mx-1 transition-colors ${
+                        isAuthor && onImprove ? "hover:bg-gray-100 cursor-pointer" : ""
+                      }`}
+                      onClick={
+                        isAuthor && onImprove ? () => toggleSuggestion(suggestion) : undefined
+                      }
+                    >
+                      {isAuthor && onImprove ? (
+                        <input
+                          type="checkbox"
+                          checked={selectedSuggestions.has(suggestion)}
+                          onChange={() => toggleSuggestion(suggestion)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      ) : (
+                        <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gray-400" />
+                      )}
+                      <span className={selectedSuggestions.has(suggestion) ? "text-blue-700" : ""}>
+                        {suggestion}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -128,6 +178,19 @@ export function AiReviewDisplay({
           );
         })}
       </div>
+
+      {/* Improve Skill button */}
+      {isAuthor && onImprove && totalSelected > 0 && (
+        <div className="sticky bottom-4 z-10">
+          <button
+            type="button"
+            onClick={() => onImprove(Array.from(selectedSuggestions), useDescription)}
+            className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-blue-700 transition-colors"
+          >
+            Improve Skill ({totalSelected} selected)
+          </button>
+        </div>
+      )}
 
       {/* Footer */}
       <p className="text-xs text-gray-400">

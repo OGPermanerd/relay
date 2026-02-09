@@ -10,13 +10,24 @@ import {
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { hashContent } from "@/lib/content-hash";
-import { generateSkillReview, REVIEW_MODEL } from "@/lib/ai-review";
+import { generateSkillReview, generateImprovedSkill, REVIEW_MODEL } from "@/lib/ai-review";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export type AiReviewState = {
+  error?: string;
+  success?: boolean;
+};
+
+export type ImproveSkillState = {
+  error?: string;
+  improvedContent?: string;
+  originalContent?: string;
+};
+
+export type AcceptImproveState = {
   error?: string;
   success?: boolean;
 };
@@ -154,5 +165,122 @@ export async function toggleAiReviewVisibility(
   } catch (error) {
     console.error("Toggle review visibility failed:", error);
     return { error: "Failed to update review visibility. Please try again." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Improve Skill (generate improved content from selected suggestions)
+// ---------------------------------------------------------------------------
+
+export async function improveSkill(
+  prevState: ImproveSkillState,
+  formData: FormData
+): Promise<ImproveSkillState> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "You must be signed in" };
+  }
+
+  const skillId = formData.get("skillId") as string;
+  const suggestionsJson = formData.get("suggestions") as string;
+  const useSuggestedDescription = formData.get("useSuggestedDescription") === "true";
+  const suggestedDescription = formData.get("suggestedDescription") as string | null;
+
+  if (!skillId || !suggestionsJson) {
+    return { error: "Invalid request" };
+  }
+
+  if (!db) {
+    return { error: "Database not configured" };
+  }
+
+  let selectedSuggestions: string[];
+  try {
+    selectedSuggestions = JSON.parse(suggestionsJson);
+  } catch {
+    return { error: "Invalid suggestions data" };
+  }
+
+  if (selectedSuggestions.length === 0 && !useSuggestedDescription) {
+    return { error: "No improvements selected" };
+  }
+
+  const skill = await db.query.skills.findFirst({
+    where: eq(skills.id, skillId),
+    columns: { id: true, name: true, content: true, authorId: true, slug: true },
+  });
+
+  if (!skill) {
+    return { error: "Skill not found" };
+  }
+
+  if (skill.authorId !== session.user.id) {
+    return { error: "Only the skill author can improve a skill" };
+  }
+
+  try {
+    const improvedContent = await generateImprovedSkill(
+      skill.name,
+      skill.content,
+      selectedSuggestions,
+      useSuggestedDescription,
+      suggestedDescription ?? undefined
+    );
+
+    return { improvedContent, originalContent: skill.content };
+  } catch (error) {
+    console.error("Skill improvement failed:", error);
+    return { error: "AI improvement service is temporarily unavailable. Please try again." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Accept Improved Skill (persist the improved content)
+// ---------------------------------------------------------------------------
+
+export async function acceptImprovedSkill(
+  prevState: AcceptImproveState,
+  formData: FormData
+): Promise<AcceptImproveState> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "You must be signed in" };
+  }
+
+  const skillId = formData.get("skillId") as string;
+  const improvedContent = formData.get("improvedContent") as string;
+
+  if (!skillId || !improvedContent) {
+    return { error: "Invalid request" };
+  }
+
+  if (!db) {
+    return { error: "Database not configured" };
+  }
+
+  const skill = await db.query.skills.findFirst({
+    where: eq(skills.id, skillId),
+    columns: { id: true, authorId: true, slug: true },
+  });
+
+  if (!skill) {
+    return { error: "Skill not found" };
+  }
+
+  if (skill.authorId !== session.user.id) {
+    return { error: "Only the skill author can update a skill" };
+  }
+
+  try {
+    await db
+      .update(skills)
+      .set({ content: improvedContent, updatedAt: new Date() })
+      .where(eq(skills.id, skillId));
+
+    revalidatePath(`/skills/${skill.slug}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Accept improved skill failed:", error);
+    return { error: "Failed to save improved content. Please try again." };
   }
 }

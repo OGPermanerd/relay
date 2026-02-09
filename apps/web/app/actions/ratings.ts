@@ -1,8 +1,9 @@
 "use server";
 
 import { auth } from "@/auth";
-import { db, ratings } from "@everyskill/db";
+import { db, ratings, skills } from "@everyskill/db";
 import { updateSkillRating } from "@everyskill/db/services/skill-metrics";
+import { createNotification } from "@everyskill/db/services/notifications";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -99,6 +100,31 @@ export async function submitRating(
         comment,
         hoursSavedEstimate,
       });
+
+      // Notify skill author (fire-and-forget, don't block the response)
+      const skill = await db.query.skills.findFirst({
+        where: eq(skills.id, skillId),
+        columns: { authorId: true, name: true },
+      });
+
+      if (skill?.authorId && skill.authorId !== session.user.id) {
+        const raterName = session.user.name || "Someone";
+        const stars = rating === 1 ? "1 star" : `${rating} stars`;
+        const commentExcerpt = comment
+          ? ` — "${comment.slice(0, 100)}${comment.length > 100 ? "..." : ""}"`
+          : "";
+
+        createNotification({
+          tenantId: DEFAULT_TENANT_ID,
+          userId: skill.authorId,
+          type: "skill_rated",
+          title: `New rating on ${skill.name}`,
+          message: `${raterName} gave ${skill.name} ${stars}${commentExcerpt}`,
+          actionUrl: `/skills/${skillSlug}`,
+        }).catch(() => {
+          // Swallow notification errors — rating already saved
+        });
+      }
     }
 
     // Recalculate skill's average rating
