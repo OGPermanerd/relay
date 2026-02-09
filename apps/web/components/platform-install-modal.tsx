@@ -18,9 +18,9 @@ interface PlatformInstallModalProps {
   skill?: SkillInfo;
 }
 
-const MCP_SETUP_KEY = "everyskill-mcp-setup-done";
+export const MCP_SETUP_KEY = "everyskill-mcp-setup-done";
 
-const platforms: {
+export const platforms: {
   id: Platform;
   name: string;
   description: string;
@@ -52,7 +52,7 @@ const platforms: {
   },
 ];
 
-function PlatformIcon({ type, className }: { type: string; className?: string }) {
+export function PlatformIcon({ type, className }: { type: string; className?: string }) {
   switch (type) {
     case "desktop":
       return (
