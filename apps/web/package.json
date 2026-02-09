@@ -20,7 +20,7 @@
     "@everyskill/db": "workspace:*",
     "@everyskill/storage": "workspace:*",
     "@everyskill/ui": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.25.2",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@react-email/components": "^1.0.7",
     "@react-email/render": "^2.0.4",
     "diff": "^8.0.3",
