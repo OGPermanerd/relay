@@ -1,6 +1,21 @@
 {
     on_demand_tls {
-        ask http://web:2000/api/check-domain
+        ask http://web-prod:2000/api/check-domain
+    }
+}
+
+staging.everyskill.ai {
+    tls {
+        dns hetzner {env.HETZNER_DNS_API_TOKEN}
+    }
+    basicauth {
+        {env.STAGING_AUTH_USER} {env.STAGING_AUTH_HASH}
+    }
+    reverse_proxy web-staging:2001 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
     }
 }
 
@@ -9,7 +24,7 @@
         dns hetzner {env.HETZNER_DNS_API_TOKEN}
     }
 
-    reverse_proxy web:2000 {
+    reverse_proxy web-prod:2000 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -23,7 +38,7 @@ https:// {
     tls {
         on_demand
     }
-    reverse_proxy web:2000 {
+    reverse_proxy web-prod:2000 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}

@@ -15,9 +15,9 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: relay
-          POSTGRES_PASSWORD: relay
-          POSTGRES_DB: relay_test
+          POSTGRES_USER: everyskill
+          POSTGRES_PASSWORD: everyskill
+          POSTGRES_DB: everyskill_test
         ports:
           - 5432:5432
         options: >-
@@ -61,7 +61,7 @@ jobs:
       - name: Run database migrations
         run: pnpm db:migrate
         env:
-          DATABASE_URL: postgresql://relay:relay@localhost:5432/relay_test
+          DATABASE_URL: postgresql://everyskill:everyskill@localhost:5432/everyskill_test
 
       - name: Install Playwright
         run: pnpm --filter web exec playwright install --with-deps chromium
@@ -69,7 +69,7 @@ jobs:
       - name: E2E tests
         run: pnpm test:e2e
         env:
-          DATABASE_URL: postgresql://relay:relay@localhost:5432/relay_test
+          DATABASE_URL: postgresql://everyskill:everyskill@localhost:5432/everyskill_test
           AUTH_SECRET: e2e-test-secret-for-ci-pipeline-only
 
       - name: Upload Playwright report
@@ -79,3 +79,46 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report/
           retention-days: 30
+
+  build-and-deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/ogpermanerd/relay:${{ github.sha }}
+            ghcr.io/ogpermanerd/relay:staging
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to staging
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: cd /opt/everyskill && ./deploy.sh staging
