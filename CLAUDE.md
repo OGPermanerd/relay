@@ -122,11 +122,30 @@ If the user identifies as a design contributor, is non-technical, or mentions th
 - Feedback only: `feedback/homepage-spacing`, `feedback/mobile-nav`
 - Never push directly to `master`
 
+### First-time setup (run once per machine)
+If the project was just cloned and hasn't been set up yet (no `node_modules/` or no `.env.local`):
+1. Copy `.env.example` to `.env.local` if it doesn't exist
+2. Ask the user for their AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET (or say "ask Trevor for the Google credentials") and fill them in
+3. Check if Docker is running: `docker info` — if not, tell the user to open Docker Desktop
+4. Start the database: `pnpm docker:up` — wait 5 seconds for it to be ready
+5. Install dependencies: `pnpm install`
+6. Push the database schema: `pnpm db:push` (ignore warnings about roles)
+7. Confirm setup is complete
+
 ### Session start
-At the beginning of a session, always:
+At the beginning of every session, always:
 1. `git pull origin master` to get latest
-2. Ask what the user wants to work on today
-3. Suggest they browse https://everyskill.ai first if they haven't recently
+2. `pnpm install` (in case dependencies changed) — only if package.json changed since last pull
+3. Check if the dev server is running: try `curl -s http://localhost:2002/api/health`
+4. If not running, start it in the background: `cd apps/web && pnpm dev &`
+5. Once healthy, open the browser: `start http://localhost:2002` (Windows) or `open http://localhost:2002` (Mac)
+6. Ask what the user wants to work on today
+
+### During design iteration
+After making code changes:
+1. Tell the user to refresh their browser (or note which page to check)
+2. Ask if they like it, want adjustments, or want to try something different
+3. Keep iterating until they're happy before proposing
 
 ### Key design files
 - `apps/web/lib/header-theme.ts` — header dark/light toggle

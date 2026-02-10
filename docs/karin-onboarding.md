@@ -11,6 +11,7 @@ Open **PowerShell** (search for it in the Start menu) and run these commands one
 ```powershell
 winget install Git.Git
 winget install OpenJS.NodeJS.LTS
+winget install Docker.DockerDesktop
 ```
 
 Close PowerShell and reopen it (so it picks up the new tools), then run:
@@ -19,7 +20,7 @@ Close PowerShell and reopen it (so it picks up the new tools), then run:
 npm install -g @anthropic-ai/claude-code
 ```
 
-That's it — Git, Node.js, and Claude Code are all installed.
+**Open Docker Desktop** from the Start menu and let it finish starting up (you'll see a whale icon in your taskbar). It needs to be running whenever you work on EverySkill.
 
 ### 2. Set up your GitHub account
 
@@ -60,11 +61,11 @@ cd ~/everyskill
 claude
 ```
 
-Then say something like:
+Make sure **Docker Desktop** is running (whale icon in taskbar), then say something like:
 
-> "Hi! I just browsed everyskill.ai and I have some feedback and ideas."
+> "Hi! I want to try some design changes today."
 
-Claude will pull the latest code and ask what you'd like to work on.
+Claude will pull the latest code, start the local app, and open it in your browser at http://localhost:2002. Then just tell it what you want to change.
 
 ## What you can do
 
@@ -86,7 +87,7 @@ Describe what you want to see:
 - "Try making the logo bigger"
 - "What would it look like with rounded cards instead of a table?"
 
-Claude will make the changes in the code. You won't see them live (that requires a local dev server), but Claude will describe exactly what it changed and create a pull request with full details for Trevor.
+Claude will make the changes in the code and tell you to refresh your browser at http://localhost:2002 to see them live. Keep iterating until you like it, then tell Claude to propose it.
 
 ### Share a new logo or image
 Drag an image file into the Claude chat, or say:
