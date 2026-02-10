@@ -4,16 +4,22 @@ Hi Karin! This gets you set up to give design feedback and try out visual change
 
 ## One-time setup (15 minutes)
 
-### 1. Install three things
+### 1. Install everything from PowerShell
 
-Download and install these (click through the installers, all defaults are fine):
+Open **PowerShell** (search for it in the Start menu) and run these commands one at a time:
 
-1. **Git for Windows** — https://gitforwindows.org
-2. **Node.js** — https://nodejs.org (pick the LTS/Recommended version)
-3. **Claude Code** — after Node.js is installed, open **PowerShell** (search for it in Start menu) and type:
-   ```
-   npm install -g @anthropic-ai/claude-code
-   ```
+```powershell
+winget install Git.Git
+winget install OpenJS.NodeJS.LTS
+```
+
+Close PowerShell and reopen it (so it picks up the new tools), then run:
+
+```powershell
+npm install -g @anthropic-ai/claude-code
+```
+
+That's it — Git, Node.js, and Claude Code are all installed.
 
 ### 2. Set up your GitHub account
 
