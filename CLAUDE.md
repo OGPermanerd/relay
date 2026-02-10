@@ -60,27 +60,79 @@ Registry and inboxes at /home/dev/projects/backlog-muse/
 
 ## Design Collaboration
 
-This project supports design contributors who use Claude Desktop to experiment with visual changes.
+This project supports design contributors who use Claude Code to experiment with visual changes. All feedback and proposals flow through git (branches + PRs) so the lead developer's Claude can review them directly.
 
-### When the user says "propose this change"
-1. Create a branch: `design/short-description` (from latest master)
-2. Stage and commit all changed files with a descriptive message prefixed with `design:`
-3. Push the branch: `git push -u origin design/short-description`
-4. Open a PR: `gh pr create --title "Design: ..." --body "## What changed\n..."` with before/after description
-5. Share the PR link with the user
+### Contributor role detection
+If the user identifies as a design contributor, is non-technical, or mentions they are working on design/feedback:
+- Use simple, non-technical language
+- Don't show raw error output — summarize what happened
+- Proactively handle git operations (pull, branch, commit, push, PR) without explaining git concepts
+- Always confirm before pushing to remote
 
-### When the user says "leave feedback" or describes a UX issue
-1. Append the feedback to `docs/feedback-log.md` with the current date, page/area, and the comment
-2. Confirm it was logged
+### When the user describes a visual change they want to try
+1. Make sure you're on latest master: `git pull origin master`
+2. Create a branch: `git checkout -b design/short-description`
+3. Make the code changes
+4. Show the user what changed in plain language
+5. If they like it, ask "Want me to propose this to Trevor?"
+
+### When the user says "propose this" or wants to share a change
+1. Stage and commit with a clear message: `design: [what changed and why]`
+2. Push: `git push -u origin design/short-description`
+3. Open a PR with full context for the reviewer's Claude:
+   ```
+   gh pr create --title "Design: ..." --body "## What changed
+   [plain description]
+
+   ## Why
+   [Karin's reasoning / feedback]
+
+   ## Files changed
+   [list of files with what was modified in each]
+
+   ## How to review
+   Apply this branch and view [which pages] to see the changes.
+
+   ## Design context
+   [any color values, spacing details, or visual rationale]"
+   ```
+4. Share the PR link with the user
+
+### When the user gives feedback (not a code change)
+1. Make sure you're on latest master: `git pull origin master`
+2. Create a branch: `git checkout -b feedback/short-topic`
+3. Append structured feedback to `docs/feedback-log.md`:
+   ```
+   ### [Date] — [Page/Area]
+   **Type:** improvement | bug | idea
+   **From:** [user name]
+   **Description:** [their feedback, cleaned up]
+   **Suggestion:** [any specific suggestion they mentioned]
+   ```
+4. Commit, push, and open a PR titled "Feedback: [topic]"
+5. Confirm to the user that it's been sent
+
+### When the user wants to share a logo or image
+1. Save the file to `docs/proposals/` directory (create if needed)
+2. Reference it in the PR description
+3. Note what it should replace (e.g., "Replace apps/web/public/everyskill-logo-dark.svg")
 
 ### Branch naming
-- Design proposals: `design/dark-header`, `design/new-logo`, `design/card-layout`
+- Design changes: `design/dark-header`, `design/new-logo`, `design/card-layout`
+- Feedback only: `feedback/homepage-spacing`, `feedback/mobile-nav`
 - Never push directly to `master`
+
+### Session start
+At the beginning of a session, always:
+1. `git pull origin master` to get latest
+2. Ask what the user wants to work on today
+3. Suggest they browse https://everyskill.ai first if they haven't recently
 
 ### Key design files
 - `apps/web/lib/header-theme.ts` — header dark/light toggle
 - `apps/web/app/globals.css` — global styles
-- `apps/web/components/` — all UI components
+- `apps/web/components/` — all UI components (nav-link, greeting-area, notification-bell, sign-out-button, tenant-branding, animated-logo)
 - `apps/web/app/(protected)/layout.tsx` — main layout with header/nav
-- `apps/web/public/` — logos, static assets
+- `apps/web/public/` — logos and static images
 - `tailwind.config.ts` — Tailwind theme config
+- Current header colors: bg #0b1624, borders #1a3050, text #dbe9f6 (active), #7a9ab4 (inactive)
