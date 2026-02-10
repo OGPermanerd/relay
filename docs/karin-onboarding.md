@@ -69,38 +69,47 @@ Claude will pull the latest code, start the local app, and open it in your brows
 
 ## What you can do
 
-### Give feedback on the live site
-Browse https://everyskill.ai in your browser, then tell Claude:
+### Browse and comment page by page
+Open http://localhost:2002 in your browser and click around. As you visit each page, tell Claude what you think:
 
-- "The header feels too dark — it needs more contrast"
-- "The spacing on the skills page is cramped on my screen"
-- "I love the logo but the nav links are hard to read"
-- "The sign-out button should be more visible"
+- "I'm on the home page — the trending section feels cramped"
+- "Now I'm looking at the skills page — the table rows need more breathing room"
+- "The profile page is nice but the stats should be more prominent"
+- "The sign-out button is hard to find"
 
-Claude will write up your feedback, commit it, and send it to Trevor as a pull request.
+Claude collects all your comments and sends them to Trevor as one organized feedback package when you're done. Say **"send my feedback"** when you're ready.
 
 ### Try out design changes
-Describe what you want to see:
+Describe what you want to see — Claude makes the change and you refresh your browser to see it instantly:
 
 - "What if we used a warmer color palette? Think sunset tones"
 - "Make the header a gradient instead of flat"
 - "Try making the logo bigger"
 - "What would it look like with rounded cards instead of a table?"
 
-Claude will make the changes in the code and tell you to refresh your browser at http://localhost:2002 to see them live. Keep iterating until you like it, then tell Claude to propose it.
+Keep going back and forth until you like it. Then say **"propose this"** and Claude sends it to Trevor.
 
-### Share a new logo or image
-Drag an image file into the Claude chat, or say:
+### Create and test logos and assets
+You can design new assets right in the conversation:
 
-- "I made a new logo, use this" (then paste or drag the file)
-- "Try this color for the header background: #2d1b4e"
+- "Create an alternative logo — something more minimal, just the letters ES in a circle"
+- "Make a dark version of that logo too"
+- "Try it on the site" — Claude swaps it in and you refresh to see how it looks
+- "I prefer the first version, use that one"
+
+You can also drag and drop your own files:
+
+- "Use this logo instead" (drag an image into the chat)
+- "Try this icon for the notification bell"
+
+Claude will test it on your local site and include the asset files in the proposal.
 
 ### Wrap up a session
 When you're done:
 
 - "That's all for today, send everything to Trevor"
 
-Claude will make sure all your feedback and proposals are committed and pushed.
+Claude will make sure all your feedback, design changes, and assets are committed and pushed as pull requests.
 
 ## What happens after you submit?
 
@@ -121,11 +130,14 @@ Claude will make sure all your feedback and proposals are committed and pushed.
 
 | You say | What happens |
 |---------|-------------|
-| "I have feedback about the home page" | Claude writes structured feedback → PR |
-| "Try making the header lighter" | Claude edits the code → shows you what changed |
+| "I'm on the skills page — the spacing is off" | Claude logs feedback for that page |
+| "Send my feedback" | Claude packages all comments into a PR for Trevor |
+| "Try making the header lighter" | Claude edits code → you refresh browser to see it |
+| "Create a new logo — something more geometric" | Claude designs an SVG and tests it on the site |
+| "Use this image" (drag file into chat) | Claude swaps it in → refresh to see it |
 | "I like this, propose it" | Claude commits + pushes + opens a PR |
 | "Undo that" | Claude reverts the change |
-| "Wrap up my session" | Claude commits any remaining work + pushes |
+| "Wrap up my session" | Claude sends any remaining work as PRs |
 
 ## Need help?
 

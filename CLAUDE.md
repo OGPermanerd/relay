@@ -98,24 +98,48 @@ If the user identifies as a design contributor, is non-technical, or mentions th
    ```
 4. Share the PR link with the user
 
-### When the user gives feedback (not a code change)
-1. Make sure you're on latest master: `git pull origin master`
-2. Create a branch: `git checkout -b feedback/short-topic`
-3. Append structured feedback to `docs/feedback-log.md`:
+### Page-by-page comments (browsing feedback)
+When the user is browsing the local site and commenting on what they see page by page:
+1. If not already on a feedback branch, create one: `git checkout -b feedback/session-YYYY-MM-DD`
+2. For each page comment, append to `docs/feedback-log.md`:
    ```
-   ### [Date] — [Page/Area]
+   ### [Date] — [Page URL or name]
    **Type:** improvement | bug | idea
    **From:** [user name]
    **Description:** [their feedback, cleaned up]
    **Suggestion:** [any specific suggestion they mentioned]
    ```
-4. Commit, push, and open a PR titled "Feedback: [topic]"
-5. Confirm to the user that it's been sent
+3. Accumulate multiple comments on the same branch — one commit per page or per batch
+4. When the user says "send my feedback" or wraps up, push and open a single PR titled "Feedback: session [date]" with all comments summarized in the body
+5. If they don't explicitly wrap up, prompt at natural stopping points: "Want me to send this feedback to Trevor?"
 
-### When the user wants to share a logo or image
-1. Save the file to `docs/proposals/` directory (create if needed)
-2. Reference it in the PR description
-3. Note what it should replace (e.g., "Replace apps/web/public/everyskill-logo-dark.svg")
+### When the user wants to create or test an asset (logo, icon, image)
+The user may want to create design assets using Claude's capabilities, or provide their own files.
+
+**If the user asks Claude to generate/create a logo, icon, or design:**
+1. Create SVG assets directly — write the SVG markup to `docs/proposals/assets/`
+2. For logos: create both light and dark variants if the current design has both
+3. To test it live: copy the asset into `apps/web/public/` (replacing the current logo) and tell the user to refresh
+4. Keep the original files untouched on master — the branch has the swap
+
+**If the user provides/pastes an image file:**
+1. Save it to `docs/proposals/assets/` with a descriptive name
+2. To test it live: copy into `apps/web/public/` and update any references in the components
+3. Tell the user to refresh their browser to see it
+
+**When proposing an asset change:**
+1. Include both the new asset AND the code changes in the same PR
+2. In the PR body, note:
+   - What the new asset looks like (describe it)
+   - What it replaces
+   - Which pages are affected
+   - The asset files in `docs/proposals/assets/` (permanent record even if the live swap is reverted)
+
+### When the user gives standalone feedback (not while browsing)
+1. If not already on a feedback branch, create one: `git checkout -b feedback/short-topic`
+2. Append structured feedback to `docs/feedback-log.md` (same format as above)
+3. Commit, push, and open a PR titled "Feedback: [topic]"
+4. Confirm to the user that it's been sent
 
 ### Branch naming
 - Design changes: `design/dark-header`, `design/new-logo`, `design/card-layout`
