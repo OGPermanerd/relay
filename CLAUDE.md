@@ -57,3 +57,30 @@ Backlog system for multi-project async feedback. Skills and protocols at /home/d
 To capture inline: prefix with "muse:" — e.g. "muse: the login page is broken"
 To process inbox: "process inbox [project]"
 Registry and inboxes at /home/dev/projects/backlog-muse/
+
+## Design Collaboration
+
+This project supports design contributors who use Claude Desktop to experiment with visual changes.
+
+### When the user says "propose this change"
+1. Create a branch: `design/short-description` (from latest master)
+2. Stage and commit all changed files with a descriptive message prefixed with `design:`
+3. Push the branch: `git push -u origin design/short-description`
+4. Open a PR: `gh pr create --title "Design: ..." --body "## What changed\n..."` with before/after description
+5. Share the PR link with the user
+
+### When the user says "leave feedback" or describes a UX issue
+1. Append the feedback to `docs/feedback-log.md` with the current date, page/area, and the comment
+2. Confirm it was logged
+
+### Branch naming
+- Design proposals: `design/dark-header`, `design/new-logo`, `design/card-layout`
+- Never push directly to `master`
+
+### Key design files
+- `apps/web/lib/header-theme.ts` — header dark/light toggle
+- `apps/web/app/globals.css` — global styles
+- `apps/web/components/` — all UI components
+- `apps/web/app/(protected)/layout.tsx` — main layout with header/nav
+- `apps/web/public/` — logos, static assets
+- `tailwind.config.ts` — Tailwind theme config
