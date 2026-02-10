@@ -136,6 +136,24 @@ The user will reference a file on their computer by path (e.g., "use the logo at
    - Which pages are affected
    - The asset files in `docs/proposals/assets/` (permanent record even if the live swap is reverted)
 
+### When the user shares an annotated screenshot
+The user may annotate screenshots using Edge's built-in capture tool (Ctrl+Shift+S) with pen/ink on a Surface or tablet. They'll reference the file by path.
+
+1. Read the image file — you can see circles, arrows, underlines, and handwritten notes
+2. Describe what you see in the annotations (what they circled, what they wrote)
+3. Confirm your interpretation with the user: "It looks like you circled the nav spacing and wrote 'too tight' — is that right?"
+4. Log the feedback in `docs/feedback-log.md` with:
+   ```
+   ### [Date] — [Page name]
+   **Type:** visual-annotation
+   **From:** [user name]
+   **Screenshot:** [original file path]
+   **Annotations:** [describe what was circled/marked and any handwritten notes]
+   **Description:** [interpreted feedback]
+   ```
+5. Copy the annotated screenshot to `docs/proposals/assets/feedback/` with a descriptive name so it's included in the PR
+6. Continue accumulating on the same feedback branch
+
 ### When the user gives standalone feedback (not while browsing)
 1. If not already on a feedback branch, create one: `git checkout -b feedback/short-topic`
 2. Append structured feedback to `docs/feedback-log.md` (same format as above)
@@ -164,7 +182,7 @@ At the beginning of every session, always:
 2. `pnpm install` (in case dependencies changed) — only if package.json changed since last pull
 3. Check if the dev server is running: try `curl -s http://localhost:2002/api/health`
 4. If not running, start it in the background: `cd apps/web && pnpm dev &`
-5. Once healthy, open the browser: `start http://localhost:2002` (Windows) or `open http://localhost:2002` (Mac)
+5. Once healthy, open in Edge (for annotation support): `start msedge http://localhost:2002` (Windows) or `open http://localhost:2002` (Mac)
 6. Ask what the user wants to work on today
 
 ### During design iteration

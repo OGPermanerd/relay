@@ -70,7 +70,7 @@ Claude will pull the latest code, start the local app, and open it in your brows
 ## What you can do
 
 ### Browse and comment page by page
-Open http://localhost:2002 in your browser and click around. As you visit each page, tell Claude what you think:
+Open http://localhost:2002 in **Microsoft Edge** and click around. As you visit each page, tell Claude what you think:
 
 - "I'm on the home page — the trending section feels cramped"
 - "Now I'm looking at the skills page — the table rows need more breathing room"
@@ -78,6 +78,17 @@ Open http://localhost:2002 in your browser and click around. As you visit each p
 - "The sign-out button is hard to find"
 
 Claude collects all your comments and sends them to Trevor as one organized feedback package when you're done. Say **"send my feedback"** when you're ready.
+
+### Annotate with your pen (Surface / tablet)
+You can circle things, draw arrows, and write notes directly on the screen — then share them with Claude:
+
+1. In **Edge**, press **Ctrl+Shift+S** (or click the **screenshot** icon in the toolbar)
+2. Select the area you want to comment on
+3. Use the **pen tool** to circle, underline, or draw arrows on the capture
+4. Click **Save** and put it somewhere easy to find (like your Desktop or Downloads folder)
+5. Tell Claude: **"See my notes at Desktop\skills-page-feedback.png"**
+
+Claude reads the image, sees your circles and handwritten notes, and includes them in the feedback PR for Trevor. This works great on a Surface with a pen — just mark up what you see and let Claude handle the rest.
 
 ### Try out design changes
 Describe what you want to see — Claude makes the change and you refresh your browser to see it instantly:
@@ -130,7 +141,7 @@ Your changes only exist on your computer and your branch — the live site at ev
 
 - **You can't break anything** — your changes go on a separate branch, never the live site
 - **Be specific** — "the blue on the header" is better than "the thing on the page"
-- **Screenshots help** — paste screenshots into the Claude chat
+- **Annotate with your pen** — use Edge's screenshot tool (Ctrl+Shift+S) to circle and mark up the page, save it, then tell Claude the file path
 - **It's OK to change your mind** — "undo that" or "go back to how it was" works
 - **Each session is fresh** — Claude pulls the latest code at the start
 
@@ -142,7 +153,8 @@ Your changes only exist on your computer and your branch — the live site at ev
 | "Send my feedback" | Claude packages all comments into a PR for Trevor |
 | "Try making the header lighter" | Claude edits code → you refresh browser to see it |
 | "Create a new logo — something more geometric" | Claude designs an SVG and tests it on the site |
-| "Use this image" (drag file into chat) | Claude swaps it in → refresh to see it |
+| "Use the logo at Downloads\new-logo.svg" | Claude swaps it in → refresh to see it |
+| "See my notes at Desktop\feedback.png" | Claude reads your annotated screenshot and logs the feedback |
 | "I like this, propose it" | Claude commits + pushes + opens a PR |
 | "Undo that" | Claude reverts the change |
 | "Wrap up my session" | Claude sends any remaining work as PRs |
