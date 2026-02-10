@@ -36,3 +36,10 @@ export const TIER_COLORS: Record<ContributorTier, string> = {
   Silver: "text-gray-500",
   Bronze: "text-orange-700",
 };
+
+export const TIER_COLORS_DARK: Record<ContributorTier, string> = {
+  Platinum: "text-purple-400",
+  Gold: "text-yellow-400",
+  Silver: "text-gray-400",
+  Bronze: "text-orange-400",
+};

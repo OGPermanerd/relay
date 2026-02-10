@@ -17,14 +17,21 @@ interface NotificationData {
 interface NotificationBellProps {
   initialCount: number;
   initialNotifications: NotificationData[];
+  theme?: "light" | "dark";
 }
 
-export function NotificationBell({ initialCount, initialNotifications }: NotificationBellProps) {
+export function NotificationBell({
+  initialCount,
+  initialNotifications,
+  theme = "light",
+}: NotificationBellProps) {
   const [count, setCount] = useState(initialCount);
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isOpen, setIsOpen] = useState(false);
   const [_isPending, startTransition] = useTransition();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const dark = theme === "dark";
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -82,7 +89,11 @@ export function NotificationBell({ initialCount, initialNotifications }: Notific
     <div ref={containerRef} className="relative">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="relative rounded-full p-1 text-gray-500 transition hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className={`relative rounded-full p-1 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          dark
+            ? "text-[#7a9ab4] hover:text-[#dbe9f6] focus:ring-offset-[#0b1624]"
+            : "text-gray-500 hover:text-gray-700"
+        }`}
         aria-label={`Notifications${count > 0 ? ` (${count} unread)` : ""}`}
       >
         {/* Bell icon */}

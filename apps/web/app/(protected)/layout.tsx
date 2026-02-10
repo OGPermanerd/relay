@@ -7,6 +7,7 @@ import { TenantBranding } from "@/components/tenant-branding";
 import { NavLink } from "@/components/nav-link";
 import { GreetingArea } from "@/components/greeting-area";
 import { isAdmin } from "@/lib/admin";
+import { HEADER_THEME } from "@/lib/header-theme";
 import {
   getUnreadNotificationCount,
   getUserNotifications,
@@ -22,6 +23,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   }
 
   const { user } = session;
+  const dark = HEADER_THEME === "dark";
 
   // Fetch notification data for the bell component
   const [unreadCount, recentNotifications] = await Promise.all([
@@ -43,27 +45,46 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="border-b border-gray-200 bg-white">
+      <header
+        className={
+          dark ? "border-b border-[#1a3050] bg-[#0b1624]" : "border-b border-gray-200 bg-white"
+        }
+      >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-8">
-            <TenantBranding />
+            <Link href="/">
+              <TenantBranding theme={HEADER_THEME} />
+            </Link>
             <nav className="hidden sm:flex sm:gap-6">
-              <NavLink href="/">Home</NavLink>
-              <NavLink href="/skills">Skills</NavLink>
-              <NavLink href="/analytics">Analytics</NavLink>
-              <NavLink href="/profile">Profile</NavLink>
-              {isAdmin(session) && <NavLink href="/admin/settings">Admin</NavLink>}
+              <NavLink href="/" theme={HEADER_THEME}>
+                Home
+              </NavLink>
+              <NavLink href="/skills" theme={HEADER_THEME}>
+                Skills
+              </NavLink>
+              <NavLink href="/analytics" theme={HEADER_THEME}>
+                Analytics
+              </NavLink>
+              <NavLink href="/profile" theme={HEADER_THEME}>
+                Profile
+              </NavLink>
+              {isAdmin(session) && (
+                <NavLink href="/admin/settings" theme={HEADER_THEME}>
+                  Admin
+                </NavLink>
+              )}
             </nav>
           </div>
 
           {/* User Menu */}
           <div className="flex items-center gap-4">
-            <GreetingArea userId={user.id!} userName={user.name || "User"} />
+            <GreetingArea userId={user.id!} userName={user.name || "User"} theme={HEADER_THEME} />
             <div className="relative">
               <NotificationBell
                 initialCount={unreadCount}
                 initialNotifications={serializedNotifications}
+                theme={HEADER_THEME}
               />
             </div>
             <Link href="/profile" className="flex items-center transition hover:opacity-80">
@@ -76,12 +97,16 @@ export default async function ProtectedLayout({ children }: { children: React.Re
                   className="rounded-full"
                 />
               ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-sm font-medium text-gray-600">
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+                    dark ? "bg-[#1a3050] text-[#9fc5ff]" : "bg-gray-200 text-gray-600"
+                  }`}
+                >
                   {user.name?.charAt(0) || user.email?.charAt(0) || "?"}
                 </div>
               )}
             </Link>
-            <SignOutButton />
+            <SignOutButton theme={HEADER_THEME} />
           </div>
         </div>
       </header>
