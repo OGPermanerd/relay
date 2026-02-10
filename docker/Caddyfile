@@ -1,47 +1,44 @@
+# Host Caddyfile for FNCR-dev2 VPS
+# Caddy runs on VPS host, proxies to LXC containers
+#   relay-dev (10.10.10.152) — EverySkill web app
+#   ceo (10.10.10.21) — Muse MCP server
+
 {
     on_demand_tls {
-        ask http://web-prod:2000/api/check-domain
+        ask http://10.10.10.152:2000/api/check-domain
     }
 }
 
+# Muse MCP server — runs in ceo LXC
+muse.everyskill.ai {
+    bind 178.156.181.178
+    reverse_proxy 10.10.10.21:3001
+}
+
+# Staging
 staging.everyskill.ai {
-    tls {
-        dns hetzner {env.HETZNER_DNS_API_TOKEN}
-    }
-    basicauth {
-        {env.STAGING_AUTH_USER} {env.STAGING_AUTH_HASH}
-    }
-    reverse_proxy web-staging:2001 {
-        header_up Host {host}
+    bind 178.156.181.178
+    reverse_proxy 10.10.10.152:2001 {
         header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
     }
 }
 
-*.everyskill.ai, everyskill.ai {
-    tls {
-        dns hetzner {env.HETZNER_DNS_API_TOKEN}
-    }
-
-    reverse_proxy web-prod:2000 {
-        header_up Host {host}
+# Bare domain
+everyskill.ai {
+    bind 178.156.181.178
+    reverse_proxy 10.10.10.152:2000 {
         header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
     }
 }
 
-# Catch-all for vanity domains — on-demand TLS auto-provisions certificates
-# Only domains validated by /api/check-domain will get certificates
+# Tenant subdomains (*.everyskill.ai) + vanity domains
+# On-demand TLS provisions certs via HTTP challenge, validated by /api/check-domain
 https:// {
+    bind 178.156.181.178
     tls {
         on_demand
     }
-    reverse_proxy web-prod:2000 {
-        header_up Host {host}
+    reverse_proxy 10.10.10.152:2000 {
         header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
     }
 }
