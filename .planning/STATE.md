@@ -47,6 +47,7 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ### Pending Todos
 
 - AI-Independence -- platform-agnostic skill translation (future phase)
+- MCP security hardening -- audit logging, read-only remote mode, Cloudflare (pre-go-live)
 
 ### Blockers/Concerns
 
