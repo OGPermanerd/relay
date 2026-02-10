@@ -52,3 +52,8 @@ pkill -f "next-server" && pkill -9 node && pkill ollama
 
 ## Testing
 - Always invoke Playwright to test each page modified before asking the user to review it. Never present a checkpoint without first running automated Playwright tests that verify every modified page loads without errors.
+## Backlog Muse
+Backlog system for multi-project async feedback. Skills and protocols at /home/dev/projects/backlog-muse/skill/SKILL.md
+To capture inline: prefix with "muse:" — e.g. "muse: the login page is broken"
+To process inbox: "process inbox [project]"
+Registry and inboxes at /home/dev/projects/backlog-muse/
