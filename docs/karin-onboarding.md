@@ -97,10 +97,10 @@ You can design new assets right in the conversation:
 - "Try it on the site" — Claude swaps it in and you refresh to see how it looks
 - "I prefer the first version, use that one"
 
-You can also drag and drop your own files:
+You can also use your own files — just tell Claude where the file is:
 
-- "Use this logo instead" (drag an image into the chat)
-- "Try this icon for the notification bell"
+- "Use the logo I saved at Downloads\new-logo.svg"
+- "Try the icon at Desktop\bell-icon.png for the notification bell"
 
 Claude will test it on your local site and include the asset files in the proposal.
 
@@ -117,6 +117,14 @@ Claude will make sure all your feedback, design changes, and assets are committe
 2. It reads your feedback and the exact code changes
 3. Trevor reviews it and either merges it (goes live!), tweaks it, or discusses with you
 4. You'll see the PR status on GitHub
+
+## How the local site works
+
+When you open http://localhost:2002, you're running a **full copy of the real EverySkill app** on your computer — the same code, the same pages, the same styling. It's not a mockup. When Claude changes a color or swaps a logo, you're seeing exactly how it would look on the real site.
+
+The only difference is that your local database starts with sample data, not the real production data. So you'll see realistic-looking pages with test skills and users.
+
+Your changes only exist on your computer and your branch — the live site at everyskill.ai is never affected until Trevor approves your proposal.
 
 ## Tips
 

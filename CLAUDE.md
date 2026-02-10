@@ -122,8 +122,9 @@ The user may want to create design assets using Claude's capabilities, or provid
 3. To test it live: copy the asset into `apps/web/public/` (replacing the current logo) and tell the user to refresh
 4. Keep the original files untouched on master — the branch has the swap
 
-**If the user provides/pastes an image file:**
-1. Save it to `docs/proposals/assets/` with a descriptive name
+**If the user provides their own image file:**
+The user will reference a file on their computer by path (e.g., "use the logo at Downloads\new-logo.svg").
+1. Read the file from the path they provide and copy it to `docs/proposals/assets/` with a descriptive name
 2. To test it live: copy into `apps/web/public/` and update any references in the components
 3. Tell the user to refresh their browser to see it
 
@@ -154,7 +155,8 @@ If the project was just cloned and hasn't been set up yet (no `node_modules/` or
 4. Start the database: `pnpm docker:up` — wait 5 seconds for it to be ready
 5. Install dependencies: `pnpm install`
 6. Push the database schema: `pnpm db:push` (ignore warnings about roles)
-7. Confirm setup is complete
+7. Seed the database with sample data so pages look realistic: `pnpm --filter @everyskill/db db:seed` (if the script exists, otherwise skip — the app works without data, pages will just be empty)
+8. Confirm setup is complete and explain that the local site is a full working copy of the real app
 
 ### Session start
 At the beginning of every session, always:
