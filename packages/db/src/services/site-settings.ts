@@ -1,10 +1,9 @@
 import { db } from "../client";
 import { siteSettings, type SiteSettings } from "../schema/site-settings";
-import { eq, and } from "drizzle-orm";
 
 const CACHE_TTL_MS = 60_000; // 60 seconds
 
-let cachedSettings: Map<string, { data: SiteSettings; timestamp: number }> = new Map();
+const cachedSettings: Map<string, { data: SiteSettings; timestamp: number }> = new Map();
 
 /**
  * Get site settings with 60s in-memory cache.
