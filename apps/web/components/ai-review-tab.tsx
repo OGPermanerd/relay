@@ -156,16 +156,6 @@ export function AiReviewTab({
         />
       )}
 
-      {/* Improvement loading state */}
-      {isImprovePending && (
-        <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-center">
-          <div className="inline-flex items-center gap-2 text-sm text-blue-700">
-            <Spinner />
-            Improving skill... {improveTimer.elapsed}s
-          </div>
-        </div>
-      )}
-
       {/* Accept success message */}
       {acceptState.success && !showPreview && (
         <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-700">
@@ -184,6 +174,8 @@ export function AiReviewTab({
             modelName={existingReview.modelName}
             isAuthor={isAuthor}
             onImprove={isAuthor ? handleImprove : undefined}
+            isImprovePending={isImprovePending}
+            improveElapsed={improveTimer.elapsed}
           />
 
           {/* Visibility toggle (author only) */}
@@ -402,24 +394,7 @@ function ImprovementPreview({
           })}
         </pre>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Original
-            </span>
-            <pre className="mt-1 max-h-80 overflow-auto rounded-lg bg-gray-50 border border-gray-200 p-3 text-xs text-gray-700 whitespace-pre-wrap break-words">
-              {originalContent}
-            </pre>
-          </div>
-          <div>
-            <span className="text-xs font-medium text-emerald-600 uppercase tracking-wide">
-              Improved
-            </span>
-            <pre className="mt-1 max-h-80 overflow-auto rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-xs text-gray-700 whitespace-pre-wrap break-words">
-              {improvedContent}
-            </pre>
-          </div>
-        </div>
+        <SideBySideDiff diffParts={diffParts} />
       )}
 
       <div className="flex items-center gap-3">
@@ -443,6 +418,108 @@ function ImprovementPreview({
         >
           Discard
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Side-by-Side Diff with sync scrolling
+// ---------------------------------------------------------------------------
+
+function SideBySideDiff({ diffParts }: { diffParts: ReturnType<typeof diffLines> }) {
+  const leftRef = useRef<HTMLPreElement>(null);
+  const rightRef = useRef<HTMLPreElement>(null);
+  const syncing = useRef(false);
+
+  const handleScroll = (source: "left" | "right") => {
+    if (syncing.current) return;
+    syncing.current = true;
+    const from = source === "left" ? leftRef.current : rightRef.current;
+    const to = source === "left" ? rightRef.current : leftRef.current;
+    if (from && to) {
+      to.scrollTop = from.scrollTop;
+    }
+    syncing.current = false;
+  };
+
+  // Build left (original) and right (improved) line arrays with highlighting
+  const leftLines: { text: string; type: "removed" | "context" | "spacer" }[] = [];
+  const rightLines: { text: string; type: "added" | "context" | "spacer" }[] = [];
+
+  for (const part of diffParts) {
+    const lines = part.value.replace(/\n$/, "").split("\n");
+    if (part.added) {
+      // Added lines appear on right, spacers on left
+      for (const line of lines) {
+        leftLines.push({ text: "", type: "spacer" });
+        rightLines.push({ text: line, type: "added" });
+      }
+    } else if (part.removed) {
+      // Removed lines appear on left, spacers on right
+      for (const line of lines) {
+        leftLines.push({ text: line, type: "removed" });
+        rightLines.push({ text: "", type: "spacer" });
+      }
+    } else {
+      // Unchanged lines appear on both sides
+      for (const line of lines) {
+        leftLines.push({ text: line, type: "context" });
+        rightLines.push({ text: line, type: "context" });
+      }
+    }
+  }
+
+  const lineClass = (type: string) => {
+    switch (type) {
+      case "added":
+        return "bg-emerald-50 text-emerald-800";
+      case "removed":
+        return "bg-red-50 text-red-700 line-through decoration-red-300";
+      case "spacer":
+        return "bg-gray-100 text-transparent select-none";
+      default:
+        return "text-gray-600";
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-0 rounded-lg border border-gray-200 overflow-hidden">
+      <div>
+        <div className="px-3 py-1.5 bg-gray-100 border-b border-r border-gray-200">
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            Original
+          </span>
+        </div>
+        <pre
+          ref={leftRef}
+          onScroll={() => handleScroll("left")}
+          className="max-h-96 overflow-auto p-3 text-xs leading-5 whitespace-pre-wrap break-words border-r border-gray-200"
+        >
+          {leftLines.map((line, i) => (
+            <span key={i} className={`block px-1 ${lineClass(line.type)}`}>
+              {line.type === "spacer" ? "\u00A0" : line.text || "\u00A0"}
+            </span>
+          ))}
+        </pre>
+      </div>
+      <div>
+        <div className="px-3 py-1.5 bg-gray-100 border-b border-gray-200">
+          <span className="text-xs font-medium text-emerald-600 uppercase tracking-wide">
+            Improved
+          </span>
+        </div>
+        <pre
+          ref={rightRef}
+          onScroll={() => handleScroll("right")}
+          className="max-h-96 overflow-auto p-3 text-xs leading-5 whitespace-pre-wrap break-words"
+        >
+          {rightLines.map((line, i) => (
+            <span key={i} className={`block px-1 ${lineClass(line.type)}`}>
+              {line.type === "spacer" ? "\u00A0" : line.text || "\u00A0"}
+            </span>
+          ))}
+        </pre>
       </div>
     </div>
   );
