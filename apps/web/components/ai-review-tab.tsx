@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState, useEffect, useRef } from "react";
+import { useActionState, useState, useEffect, useRef, useMemo } from "react";
+import { diffLines } from "diff";
 import {
   requestAiReview,
   toggleAiReviewVisibility,
@@ -37,22 +38,29 @@ interface AiReviewTabProps {
 // Elapsed Timer Hook
 // ---------------------------------------------------------------------------
 
-function useElapsedTimer(active: boolean): number {
+function useElapsedTimer(active: boolean): { elapsed: number; final: number | null } {
   const [elapsed, setElapsed] = useState(0);
+  const [finalTime, setFinalTime] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const elapsedRef = useRef(0);
 
   useEffect(() => {
     if (active) {
       setElapsed(0);
+      setFinalTime(null);
+      elapsedRef.current = 0;
       intervalRef.current = setInterval(() => {
-        setElapsed((prev) => prev + 1);
+        elapsedRef.current += 1;
+        setElapsed(elapsedRef.current);
       }, 1000);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
+        if (elapsedRef.current > 0) {
+          setFinalTime(elapsedRef.current);
+        }
       }
-      setElapsed(0);
     }
 
     return () => {
@@ -63,7 +71,7 @@ function useElapsedTimer(active: boolean): number {
     };
   }, [active]);
 
-  return elapsed;
+  return { elapsed, final: finalTime };
 }
 
 // ---------------------------------------------------------------------------
@@ -91,8 +99,8 @@ export function AiReviewTab({
   // Track preview state locally (reset when accept succeeds)
   const [showPreview, setShowPreview] = useState(false);
 
-  const reviewElapsed = useElapsedTimer(isReviewPending);
-  const improveElapsed = useElapsedTimer(isImprovePending);
+  const reviewTimer = useElapsedTimer(isReviewPending);
+  const improveTimer = useElapsedTimer(isImprovePending);
 
   const contentChanged =
     !existingReview || existingReview.reviewedContentHash !== currentContentHash;
@@ -144,6 +152,7 @@ export function AiReviewTab({
           onDiscard={() => setShowPreview(false)}
           acceptAction={acceptAction}
           isAcceptPending={isAcceptPending}
+          elapsedSeconds={improveTimer.final}
         />
       )}
 
@@ -152,7 +161,7 @@ export function AiReviewTab({
         <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-center">
           <div className="inline-flex items-center gap-2 text-sm text-blue-700">
             <Spinner />
-            Improving skill... {improveElapsed}s
+            Improving skill... {improveTimer.elapsed}s
           </div>
         </div>
       )}
@@ -214,7 +223,9 @@ export function AiReviewTab({
                   className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   {isReviewPending && <Spinner />}
-                  {isReviewPending ? `Analyzing skill... ${reviewElapsed}s` : "Get New Review"}
+                  {isReviewPending
+                    ? `Analyzing skill... ${reviewTimer.elapsed}s`
+                    : "Get New Review"}
                 </button>
               </form>
             </div>
@@ -238,7 +249,7 @@ export function AiReviewTab({
                   className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   {isReviewPending && <Spinner />}
-                  {isReviewPending ? `Analyzing skill... ${reviewElapsed}s` : "Get AI Review"}
+                  {isReviewPending ? `Analyzing skill... ${reviewTimer.elapsed}s` : "Get AI Review"}
                 </button>
               </form>
             </div>
@@ -260,6 +271,8 @@ export function AiReviewTab({
 // Improvement Preview
 // ---------------------------------------------------------------------------
 
+type DiffViewMode = "diff" | "side-by-side";
+
 function ImprovementPreview({
   originalContent,
   improvedContent,
@@ -267,6 +280,7 @@ function ImprovementPreview({
   onDiscard,
   acceptAction,
   isAcceptPending,
+  elapsedSeconds,
 }: {
   originalContent: string;
   improvedContent: string;
@@ -274,29 +288,139 @@ function ImprovementPreview({
   onDiscard: () => void;
   acceptAction: (formData: FormData) => void;
   isAcceptPending: boolean;
+  elapsedSeconds: number | null;
 }) {
+  const [viewMode, setViewMode] = useState<DiffViewMode>("diff");
+
+  const diffParts = useMemo(
+    () => diffLines(originalContent, improvedContent),
+    [originalContent, improvedContent]
+  );
+
+  const stats = useMemo(() => {
+    let added = 0;
+    let removed = 0;
+    for (const part of diffParts) {
+      const lines = part.value.split("\n").filter((l) => l !== "").length;
+      if (part.added) added += lines;
+      else if (part.removed) removed += lines;
+    }
+    return { added, removed };
+  }, [diffParts]);
+
   return (
     <div className="rounded-lg border border-blue-200 bg-white p-4 space-y-4">
-      <h3 className="text-sm font-semibold text-gray-800">Review Changes</h3>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-            Original
-          </span>
-          <pre className="mt-1 max-h-80 overflow-auto rounded-lg bg-gray-50 border border-gray-200 p-3 text-xs text-gray-700 whitespace-pre-wrap break-words">
-            {originalContent}
-          </pre>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h3 className="text-sm font-semibold text-gray-800">Review Changes</h3>
+          {elapsedSeconds !== null && (
+            <span className="text-xs text-gray-400">Generated in {elapsedSeconds}s</span>
+          )}
         </div>
-        <div>
-          <span className="text-xs font-medium text-emerald-600 uppercase tracking-wide">
-            Improved
-          </span>
-          <pre className="mt-1 max-h-80 overflow-auto rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-xs text-gray-700 whitespace-pre-wrap break-words">
-            {improvedContent}
-          </pre>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-emerald-600 font-medium">+{stats.added}</span>
+          <span className="text-xs text-red-500 font-medium">-{stats.removed}</span>
+          <div className="flex rounded-md border border-gray-200 overflow-hidden ml-2">
+            <button
+              type="button"
+              onClick={() => setViewMode("diff")}
+              className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                viewMode === "diff"
+                  ? "bg-gray-800 text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Diff
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("side-by-side")}
+              className={`px-2.5 py-1 text-xs font-medium border-l border-gray-200 transition-colors ${
+                viewMode === "side-by-side"
+                  ? "bg-gray-800 text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Side by Side
+            </button>
+          </div>
         </div>
       </div>
+
+      {viewMode === "diff" ? (
+        <pre className="max-h-96 overflow-auto rounded-lg border border-gray-200 text-xs leading-5 whitespace-pre-wrap break-words">
+          {diffParts.map((part, i) => {
+            if (part.added) {
+              return (
+                <span
+                  key={i}
+                  className="block bg-emerald-50 text-emerald-800 border-l-2 border-emerald-400 pl-2"
+                >
+                  {part.value
+                    .replace(/\n$/, "")
+                    .split("\n")
+                    .map((line, j) => (
+                      <span key={j} className="block">
+                        <span className="select-none text-emerald-400 mr-2">+</span>
+                        {line}
+                      </span>
+                    ))}
+                </span>
+              );
+            }
+            if (part.removed) {
+              return (
+                <span
+                  key={i}
+                  className="block bg-red-50 text-red-700 border-l-2 border-red-300 pl-2"
+                >
+                  {part.value
+                    .replace(/\n$/, "")
+                    .split("\n")
+                    .map((line, j) => (
+                      <span key={j} className="block">
+                        <span className="select-none text-red-300 mr-2">-</span>
+                        {line}
+                      </span>
+                    ))}
+                </span>
+              );
+            }
+            return (
+              <span key={i} className="block pl-2 text-gray-600">
+                {part.value
+                  .replace(/\n$/, "")
+                  .split("\n")
+                  .map((line, j) => (
+                    <span key={j} className="block">
+                      <span className="select-none text-gray-300 mr-2">&nbsp;</span>
+                      {line}
+                    </span>
+                  ))}
+              </span>
+            );
+          })}
+        </pre>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Original
+            </span>
+            <pre className="mt-1 max-h-80 overflow-auto rounded-lg bg-gray-50 border border-gray-200 p-3 text-xs text-gray-700 whitespace-pre-wrap break-words">
+              {originalContent}
+            </pre>
+          </div>
+          <div>
+            <span className="text-xs font-medium text-emerald-600 uppercase tracking-wide">
+              Improved
+            </span>
+            <pre className="mt-1 max-h-80 overflow-auto rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-xs text-gray-700 whitespace-pre-wrap break-words">
+              {improvedContent}
+            </pre>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-3">
         <form action={acceptAction}>
