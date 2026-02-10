@@ -1,0 +1,27 @@
+{
+  "projectName": "EverySkill",
+  "leadDevName": "Trevor",
+  "repoUrl": "https://github.com/OGPermanerd/relay.git",
+  "projectFolder": "everyskill",
+  "devServerPort": 2002,
+  "devServerStartCmd": "cd apps/web && pnpm dev",
+  "dbStartCmd": "pnpm docker:up",
+  "dbSetupCmd": "pnpm db:push",
+  "installCmd": "pnpm install",
+  "seedCmd": "pnpm --filter @everyskill/db db:seed",
+  "healthCheckUrl": "/api/health",
+  "publicDir": "apps/web/public/",
+  "authCredentialKeys": ["AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET"],
+  "contributors": [{ "name": "Karin", "role": "design" }],
+  "designFiles": [
+    { "path": "apps/web/lib/header-theme.ts", "description": "header dark/light toggle" },
+    { "path": "apps/web/app/globals.css", "description": "global styles" },
+    { "path": "apps/web/components/", "description": "all UI components" },
+    { "path": "apps/web/app/(protected)/layout.tsx", "description": "main layout with header/nav" },
+    { "path": "apps/web/public/", "description": "logos and static images" },
+    { "path": "tailwind.config.ts", "description": "Tailwind theme config" }
+  ],
+  "extraClaudeNotes": [
+    "Current header colors: bg #0b1624, borders #1a3050, text #dbe9f6 (active), #7a9ab4 (inactive)"
+  ]
+}
