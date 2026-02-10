@@ -48,6 +48,7 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 
 - AI-Independence -- platform-agnostic skill translation (future phase)
 - MCP security hardening -- audit logging, read-only remote mode, Cloudflare (pre-go-live)
+- Database integrity checks -- verify denormalized counters, tenant_id alignment, orphaned records from user migrations
 
 ### Blockers/Concerns
 
