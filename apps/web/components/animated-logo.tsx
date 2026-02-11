@@ -3,9 +3,15 @@ interface AnimatedLogoProps {
   variant?: "light" | "dark";
 }
 
-export function AnimatedLogo({ size = "default", variant = "light" }: AnimatedLogoProps) {
+export function AnimatedLogo({ size = "default" }: AnimatedLogoProps) {
   const height = size === "default" ? 48 : 30;
-  const src = variant === "dark" ? "/everyskill-logo-dark.svg" : "/everyskill-logo.svg";
 
-  return <img src={src} alt="EverySkill" height={height} style={{ height, width: "auto" }} />;
+  return (
+    <img
+      src="/everyskill-logo-new.png"
+      alt="EverySkill"
+      height={height}
+      style={{ height, width: "auto" }}
+    />
+  );
 }
