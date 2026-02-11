@@ -91,19 +91,21 @@ test.describe("Fork Skill", () => {
     }
   });
 
-  test("should show fork button on skill detail page", async ({ page }) => {
+  test("should show fork buttons on skill detail page", async ({ page }) => {
     await page.goto(`/skills/${parentSkillSlug}`);
 
-    // Fork button should be visible
-    const forkButton = page.getByRole("button", { name: /fork/i });
-    await expect(forkButton).toBeVisible({ timeout: 10000 });
+    // Both Fork & Improve and plain Fork buttons should be visible (non-author view)
+    await expect(page.getByRole("button", { name: /fork & improve/i })).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.getByRole("button", { name: /^fork(\s*\(\d+\))?$/i })).toBeVisible();
   });
 
   test("should show confirmation modal when fork button clicked", async ({ page }) => {
     await page.goto(`/skills/${parentSkillSlug}`);
 
-    // Click fork button
-    await page.getByRole("button", { name: /fork/i }).click();
+    // Click the plain fork button
+    await page.getByRole("button", { name: /^fork(\s*\(\d+\))?$/i }).click();
 
     // Confirmation modal should appear
     await expect(page.getByText(/fork skill/i)).toBeVisible();
@@ -111,7 +113,6 @@ test.describe("Fork Skill", () => {
 
     // Modal should have Fork and Cancel buttons
     await expect(page.getByRole("button", { name: /^cancel$/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /^fork$/i })).toBeVisible();
 
     // Cancel should close the modal
     await page.getByRole("button", { name: /^cancel$/i }).click();

@@ -132,5 +132,6 @@ export async function forkSkill(
   revalidatePath(`/skills/${slug}`);
 
   // Redirect to the new forked skill page
-  redirect(`/skills/${newSkill.slug}`);
+  const improve = formData.get("improve") === "1";
+  redirect(`/skills/${newSkill.slug}${improve ? "?improve=1" : ""}`);
 }

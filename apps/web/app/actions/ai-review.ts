@@ -10,7 +10,13 @@ import {
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { hashContent } from "@/lib/content-hash";
-import { generateSkillReview, generateImprovedSkill, REVIEW_MODEL } from "@/lib/ai-review";
+import {
+  generateSkillReview,
+  generateImprovedSkill,
+  refineImprovedSkill as refineImprovedSkillAI,
+  generateForkDifferentiation,
+  REVIEW_MODEL,
+} from "@/lib/ai-review";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,11 +31,18 @@ export type ImproveSkillState = {
   error?: string;
   improvedContent?: string;
   originalContent?: string;
+  suggestedTitle?: string;
+  suggestedDescription?: string;
 };
 
 export type AcceptImproveState = {
   error?: string;
   success?: boolean;
+};
+
+export type RefineSkillState = {
+  error?: string;
+  refinedContent?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -96,14 +109,15 @@ export async function requestAiReview(
       skill.category ?? "prompt"
     );
 
-    // Extract category scores (without summary/suggestedDescription) for the categories field
-    const { summary, suggestedDescription, ...categories } = reviewOutput;
+    // Extract category scores (without summary/suggestedTitle/suggestedDescription) for the categories field
+    const { summary, suggestedTitle, suggestedDescription, ...categories } = reviewOutput;
 
     await upsertSkillReview({
       skillId,
       requestedBy: session.user.id,
       categories,
       summary,
+      suggestedTitle,
       suggestedDescription,
       reviewedContentHash: contentHash,
       modelName: REVIEW_MODEL,
@@ -185,6 +199,8 @@ export async function improveSkill(
   const suggestionsJson = formData.get("suggestions") as string;
   const useSuggestedDescription = formData.get("useSuggestedDescription") === "true";
   const suggestedDescription = formData.get("suggestedDescription") as string | null;
+  const useSuggestedTitle = formData.get("useSuggestedTitle") === "true";
+  const suggestedTitle = formData.get("suggestedTitle") as string | null;
 
   if (!skillId || !suggestionsJson) {
     return { error: "Invalid request" };
@@ -201,7 +217,7 @@ export async function improveSkill(
     return { error: "Invalid suggestions data" };
   }
 
-  if (selectedSuggestions.length === 0 && !useSuggestedDescription) {
+  if (selectedSuggestions.length === 0 && !useSuggestedDescription && !useSuggestedTitle) {
     return { error: "No improvements selected" };
   }
 
@@ -224,13 +240,69 @@ export async function improveSkill(
       skill.content,
       selectedSuggestions,
       useSuggestedDescription,
-      suggestedDescription ?? undefined
+      suggestedDescription ?? undefined,
+      useSuggestedTitle,
+      suggestedTitle ?? undefined
     );
 
-    return { improvedContent, originalContent: skill.content };
+    return {
+      improvedContent,
+      originalContent: skill.content,
+      suggestedTitle: useSuggestedTitle ? (suggestedTitle ?? undefined) : undefined,
+      suggestedDescription: useSuggestedDescription
+        ? (suggestedDescription ?? undefined)
+        : undefined,
+    };
   } catch (error) {
     console.error("Skill improvement failed:", error);
     return { error: "AI improvement service is temporarily unavailable. Please try again." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Refine Improved Skill (iterative refinement based on user feedback)
+// ---------------------------------------------------------------------------
+
+export async function refineImprovedSkill(
+  prevState: RefineSkillState,
+  formData: FormData
+): Promise<RefineSkillState> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "You must be signed in" };
+  }
+
+  const skillId = formData.get("skillId") as string;
+  const currentContent = formData.get("currentContent") as string;
+  const feedback = formData.get("refinementFeedback") as string;
+
+  if (!skillId || !currentContent || !feedback?.trim()) {
+    return { error: "Invalid request" };
+  }
+
+  if (!db) {
+    return { error: "Database not configured" };
+  }
+
+  const skill = await db.query.skills.findFirst({
+    where: eq(skills.id, skillId),
+    columns: { id: true, name: true, authorId: true },
+  });
+
+  if (!skill) {
+    return { error: "Skill not found" };
+  }
+
+  if (skill.authorId !== session.user.id) {
+    return { error: "Only the skill author can refine a skill" };
+  }
+
+  try {
+    const refinedContent = await refineImprovedSkillAI(skill.name, currentContent, feedback.trim());
+    return { refinedContent };
+  } catch (error) {
+    console.error("Skill refinement failed:", error);
+    return { error: "AI refinement service is temporarily unavailable. Please try again." };
   }
 }
 
@@ -249,6 +321,10 @@ export async function acceptImprovedSkill(
 
   const skillId = formData.get("skillId") as string;
   const improvedContent = formData.get("improvedContent") as string;
+  const suggestedTitle = formData.get("suggestedTitle") as string | null;
+  const suggestedDescription = formData.get("suggestedDescription") as string | null;
+  const forkedFromId = formData.get("forkedFromId") as string | null;
+  const parentContent = formData.get("parentContent") as string | null;
 
   if (!skillId || !improvedContent) {
     return { error: "Invalid request" };
@@ -260,7 +336,7 @@ export async function acceptImprovedSkill(
 
   const skill = await db.query.skills.findFirst({
     where: eq(skills.id, skillId),
-    columns: { id: true, authorId: true, slug: true },
+    columns: { id: true, authorId: true, slug: true, description: true },
   });
 
   if (!skill) {
@@ -272,10 +348,32 @@ export async function acceptImprovedSkill(
   }
 
   try {
-    await db
-      .update(skills)
-      .set({ content: improvedContent, updatedAt: new Date() })
-      .where(eq(skills.id, skillId));
+    const updateFields: Record<string, unknown> = {
+      content: improvedContent,
+      updatedAt: new Date(),
+    };
+    if (suggestedTitle) {
+      updateFields.name = suggestedTitle;
+    }
+
+    // Fork differentiation: generate summary when this is a fork with parent content
+    if (forkedFromId && parentContent) {
+      try {
+        const diffSummary = await generateForkDifferentiation(parentContent, improvedContent);
+        const existingDesc = suggestedDescription || skill.description || "";
+        updateFields.description = `**What's different:** ${diffSummary}\n\n${existingDesc}`;
+      } catch (diffError) {
+        // Non-fatal — log and skip differentiation
+        console.error("Fork differentiation generation failed:", diffError);
+        if (suggestedDescription) {
+          updateFields.description = suggestedDescription;
+        }
+      }
+    } else if (suggestedDescription) {
+      updateFields.description = suggestedDescription;
+    }
+
+    await db.update(skills).set(updateFields).where(eq(skills.id, skillId));
 
     revalidatePath(`/skills/${skill.slug}`);
     return { success: true };

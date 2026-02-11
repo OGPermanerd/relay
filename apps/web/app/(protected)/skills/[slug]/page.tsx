@@ -25,10 +25,12 @@ import Link from "next/link";
 
 interface SkillPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function SkillPage(props: SkillPageProps) {
-  const params = await props.params;
+  const [params, searchParams] = await Promise.all([props.params, props.searchParams]);
+  const autoImprove = searchParams.improve === "1";
 
   // Handle null db case
   if (!db) {
@@ -86,6 +88,16 @@ export default async function SkillPage(props: SkillPageProps) {
     skill.forkedFromId ? getParentSkill(skill.forkedFromId) : Promise.resolve(null),
   ]);
 
+  // Fetch parent content for fork differentiation (only when skill is a fork)
+  const parentContent = skill.forkedFromId
+    ? await db.query.skills
+        .findFirst({
+          where: eq(skills.id, skill.forkedFromId),
+          columns: { content: true },
+        })
+        .then((p) => p?.content ?? null)
+    : null;
+
   // Compute drift status for fork skills
   let driftStatus: "diverged" | "current" | "unknown" | undefined;
   if (skill.forkedFromId && skill.forkedAtContentHash) {
@@ -120,6 +132,7 @@ export default async function SkillPage(props: SkillPageProps) {
     ? {
         categories: existingReview.categories,
         summary: existingReview.summary,
+        suggestedTitle: existingReview.suggestedTitle ?? undefined,
         suggestedDescription: existingReview.suggestedDescription ?? undefined,
         createdAt: existingReview.createdAt.toISOString(),
         modelName: existingReview.modelName,
@@ -182,6 +195,9 @@ export default async function SkillPage(props: SkillPageProps) {
               existingReview={reviewProps}
               currentContentHash={currentContentHash}
               skillSlug={skill.slug}
+              autoImprove={autoImprove}
+              forkedFromId={skill.forkedFromId ?? undefined}
+              parentContent={parentContent ?? undefined}
             />
           }
         >
@@ -203,7 +219,12 @@ export default async function SkillPage(props: SkillPageProps) {
               skill={{ id: skill.id, name: skill.name, slug: skill.slug, category: skill.category }}
             />
             {session?.user && (
-              <ForkButton skillId={skill.id} skillName={skill.name} forkCount={forkCount} />
+              <ForkButton
+                skillId={skill.id}
+                skillName={skill.name}
+                forkCount={forkCount}
+                isAuthor={isAuthor}
+              />
             )}
             {session?.user && (isAuthor || isAdmin(session)) && (
               <DeleteSkillButton

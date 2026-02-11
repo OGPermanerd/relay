@@ -1,14 +1,19 @@
 "use client";
 
-import { useActionState, useState, useEffect, useRef, useMemo } from "react";
+import { useActionState, useState, useEffect, useRef, useMemo, startTransition } from "react";
 import { diffLines } from "diff";
 import {
   requestAiReview,
   toggleAiReviewVisibility,
   improveSkill,
   acceptImprovedSkill,
+  refineImprovedSkill,
 } from "@/app/actions/ai-review";
-import type { ImproveSkillState, AcceptImproveState } from "@/app/actions/ai-review";
+import type {
+  ImproveSkillState,
+  AcceptImproveState,
+  RefineSkillState,
+} from "@/app/actions/ai-review";
 import { AiReviewDisplay } from "./ai-review-display";
 import type { ReviewCategories } from "@everyskill/db/schema";
 
@@ -19,6 +24,7 @@ import type { ReviewCategories } from "@everyskill/db/schema";
 interface ExistingReview {
   categories: ReviewCategories;
   summary: string;
+  suggestedTitle?: string;
   suggestedDescription?: string;
   createdAt: string;
   modelName: string;
@@ -32,6 +38,9 @@ interface AiReviewTabProps {
   existingReview: ExistingReview | null;
   currentContentHash: string;
   skillSlug: string;
+  autoImprove?: boolean;
+  forkedFromId?: string;
+  parentContent?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,10 +93,13 @@ export function AiReviewTab({
   existingReview,
   currentContentHash,
   skillSlug: _skillSlug,
+  autoImprove,
+  forkedFromId,
+  parentContent,
 }: AiReviewTabProps) {
   const [reviewState, reviewAction, isReviewPending] = useActionState(requestAiReview, {});
   const [toggleState, toggleAction, isTogglePending] = useActionState(toggleAiReviewVisibility, {});
-  const [improveState, improveAction, isImprovePending] = useActionState<
+  const [improveState, improveAction, _isImprovePending] = useActionState<
     ImproveSkillState,
     FormData
   >(improveSkill, {});
@@ -95,12 +107,30 @@ export function AiReviewTab({
     acceptImprovedSkill,
     {}
   );
+  const [refineState, refineAction, _isRefinePending] = useActionState<RefineSkillState, FormData>(
+    refineImprovedSkill,
+    {}
+  );
 
   // Track preview state locally (reset when accept succeeds)
   const [showPreview, setShowPreview] = useState(false);
 
+  // Track improve pending locally — useActionState's isPending doesn't fire
+  // reliably for programmatic dispatch (only native <form action=...> works)
+  const [isImproving, setIsImproving] = useState(false);
+
+  // Track current improved content (can be updated by refinements)
+  const [currentImprovedContent, setCurrentImprovedContent] = useState<string | null>(null);
+
+  // Track refinement count
+  const [refinementCount, setRefinementCount] = useState(0);
+
+  // Track refine pending locally
+  const [isRefining, setIsRefining] = useState(false);
+
   const reviewTimer = useElapsedTimer(isReviewPending);
-  const improveTimer = useElapsedTimer(isImprovePending);
+  const improveTimer = useElapsedTimer(isImproving);
+  const refineTimer = useElapsedTimer(isRefining);
 
   const contentChanged =
     !existingReview || existingReview.reviewedContentHash !== currentContentHash;
@@ -108,51 +138,127 @@ export function AiReviewTab({
   // Determine if review should display (either visible to all, or author can always see)
   const showReview = existingReview && (existingReview.isVisible || isAuthor);
 
-  // Show preview when improve action returns content
+  // Auto-trigger review when autoImprove=true and no review exists
+  const autoTriggered = useRef(false);
   useEffect(() => {
+    if (autoImprove && !existingReview && isAuthor && !autoTriggered.current) {
+      autoTriggered.current = true;
+      const formData = new FormData();
+      formData.set("skillId", skillId);
+      startTransition(() => {
+        reviewAction(formData);
+      });
+    }
+  }, [autoImprove, existingReview, isAuthor, skillId, reviewAction]);
+
+  // Show preview when improve action returns content (also clears local pending)
+  useEffect(() => {
+    if (improveState.improvedContent || improveState.error) {
+      setIsImproving(false);
+    }
     if (improveState.improvedContent) {
       setShowPreview(true);
+      setCurrentImprovedContent(improveState.improvedContent);
+      setRefinementCount(0);
     }
-  }, [improveState.improvedContent]);
+  }, [improveState.improvedContent, improveState.error]);
+
+  // Update content when refinement returns
+  useEffect(() => {
+    if (refineState.refinedContent || refineState.error) {
+      setIsRefining(false);
+    }
+    if (refineState.refinedContent) {
+      setCurrentImprovedContent(refineState.refinedContent);
+      setRefinementCount((c) => c + 1);
+    }
+  }, [refineState.refinedContent, refineState.error]);
 
   // Hide preview when accept succeeds
   useEffect(() => {
     if (acceptState.success) {
       setShowPreview(false);
+      setCurrentImprovedContent(null);
+      setRefinementCount(0);
     }
   }, [acceptState.success]);
 
   // Handle improve button from AiReviewDisplay
-  const handleImprove = (selectedSuggestions: string[], useSuggestedDescription: boolean) => {
+  const handleImprove = (
+    selectedSuggestions: string[],
+    useSuggestedDescription: boolean,
+    useSuggestedTitle: boolean
+  ) => {
+    setIsImproving(true);
     const formData = new FormData();
     formData.set("skillId", skillId);
     formData.set("suggestions", JSON.stringify(selectedSuggestions));
     formData.set("useSuggestedDescription", useSuggestedDescription ? "true" : "false");
+    formData.set("useSuggestedTitle", useSuggestedTitle ? "true" : "false");
     if (existingReview?.suggestedDescription) {
       formData.set("suggestedDescription", existingReview.suggestedDescription);
     }
-    improveAction(formData);
+    if (existingReview?.suggestedTitle) {
+      formData.set("suggestedTitle", existingReview.suggestedTitle);
+    }
+    startTransition(() => {
+      improveAction(formData);
+    });
+  };
+
+  // Handle refinement
+  const handleRefine = (feedback: string) => {
+    if (!currentImprovedContent) return;
+    setIsRefining(true);
+    const formData = new FormData();
+    formData.set("skillId", skillId);
+    formData.set("currentContent", currentImprovedContent);
+    formData.set("refinementFeedback", feedback);
+    startTransition(() => {
+      refineAction(formData);
+    });
   };
 
   return (
     <div className="space-y-6">
       {/* Error display */}
-      {(reviewState.error || toggleState.error || improveState.error || acceptState.error) && (
+      {(reviewState.error ||
+        toggleState.error ||
+        improveState.error ||
+        acceptState.error ||
+        refineState.error) && (
         <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-600">
-          {reviewState.error || toggleState.error || improveState.error || acceptState.error}
+          {reviewState.error ||
+            toggleState.error ||
+            improveState.error ||
+            acceptState.error ||
+            refineState.error}
         </div>
       )}
 
       {/* Improvement preview (before/after) */}
-      {showPreview && improveState.improvedContent && (
+      {showPreview && currentImprovedContent && (
         <ImprovementPreview
           originalContent={improveState.originalContent ?? ""}
-          improvedContent={improveState.improvedContent}
+          improvedContent={currentImprovedContent}
           skillId={skillId}
-          onDiscard={() => setShowPreview(false)}
+          suggestedTitle={improveState.suggestedTitle}
+          suggestedDescription={improveState.suggestedDescription}
+          forkedFromId={forkedFromId}
+          parentContent={parentContent}
+          onDiscard={() => {
+            setShowPreview(false);
+            setCurrentImprovedContent(null);
+            setRefinementCount(0);
+          }}
           acceptAction={acceptAction}
           isAcceptPending={isAcceptPending}
           elapsedSeconds={improveTimer.final}
+          onRefine={handleRefine}
+          isRefinePending={isRefining}
+          refineElapsed={refineTimer.elapsed}
+          refineElapsedFinal={refineTimer.final}
+          refinementCount={refinementCount}
         />
       )}
 
@@ -169,12 +275,13 @@ export function AiReviewTab({
           <AiReviewDisplay
             categories={existingReview.categories}
             summary={existingReview.summary}
+            suggestedTitle={existingReview.suggestedTitle}
             suggestedDescription={existingReview.suggestedDescription}
             reviewedAt={existingReview.createdAt}
             modelName={existingReview.modelName}
             isAuthor={isAuthor}
             onImprove={isAuthor ? handleImprove : undefined}
-            isImprovePending={isImprovePending}
+            isImprovePending={isImproving}
             improveElapsed={improveTimer.elapsed}
           />
 
@@ -231,7 +338,9 @@ export function AiReviewTab({
           {isAuthor ? (
             <div className="text-center py-8">
               <p className="text-gray-500 mb-4">
-                Get an AI-powered review of your skill with scores and improvement suggestions.
+                {autoImprove
+                  ? "Starting AI review of your forked skill..."
+                  : "Get an AI-powered review of your skill with scores and improvement suggestions."}
               </p>
               <form action={reviewAction}>
                 <input type="hidden" name="skillId" value={skillId} />
@@ -269,20 +378,40 @@ function ImprovementPreview({
   originalContent,
   improvedContent,
   skillId,
+  suggestedTitle,
+  suggestedDescription,
+  forkedFromId,
+  parentContent,
   onDiscard,
   acceptAction,
   isAcceptPending,
   elapsedSeconds,
+  onRefine,
+  isRefinePending,
+  refineElapsed,
+  refineElapsedFinal,
+  refinementCount,
 }: {
   originalContent: string;
   improvedContent: string;
   skillId: string;
+  suggestedTitle?: string;
+  suggestedDescription?: string;
+  forkedFromId?: string;
+  parentContent?: string;
   onDiscard: () => void;
   acceptAction: (formData: FormData) => void;
   isAcceptPending: boolean;
   elapsedSeconds: number | null;
+  onRefine: (feedback: string) => void;
+  isRefinePending: boolean;
+  refineElapsed: number;
+  refineElapsedFinal: number | null;
+  refinementCount: number;
 }) {
   const [viewMode, setViewMode] = useState<DiffViewMode>("diff");
+  const [showRefineInput, setShowRefineInput] = useState(false);
+  const [refineFeedback, setRefineFeedback] = useState("");
 
   const diffParts = useMemo(
     () => diffLines(originalContent, improvedContent),
@@ -300,13 +429,26 @@ function ImprovementPreview({
     return { added, removed };
   }, [diffParts]);
 
+  const handleSubmitRefine = () => {
+    if (!refineFeedback.trim()) return;
+    onRefine(refineFeedback.trim());
+    setRefineFeedback("");
+    setShowRefineInput(false);
+  };
+
   return (
     <div className="rounded-lg border border-blue-200 bg-white p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h3 className="text-sm font-semibold text-gray-800">Review Changes</h3>
-          {elapsedSeconds !== null && (
+          {elapsedSeconds !== null && refinementCount === 0 && (
             <span className="text-xs text-gray-400">Generated in {elapsedSeconds}s</span>
+          )}
+          {refinementCount > 0 && (
+            <span className="text-xs text-blue-500 font-medium">
+              {refinementCount} refinement{refinementCount !== 1 ? "s" : ""} applied
+              {refineElapsedFinal !== null && ` (${refineElapsedFinal}s)`}
+            </span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -397,23 +539,91 @@ function ImprovementPreview({
         <SideBySideDiff diffParts={diffParts} />
       )}
 
+      {/* Refine input area */}
+      {showRefineInput && (
+        <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3 space-y-2">
+          <label className="text-sm font-medium text-gray-700">
+            How would you like to refine these changes?
+          </label>
+          <textarea
+            value={refineFeedback}
+            onChange={(e) => setRefineFeedback(e.target.value)}
+            placeholder="e.g., Add more examples, make the tone more conversational, expand the error handling section..."
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            rows={3}
+            disabled={isRefinePending}
+          />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSubmitRefine}
+              disabled={isRefinePending || !refineFeedback.trim()}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              {isRefinePending && <Spinner />}
+              {isRefinePending ? `Refining... ${refineElapsed}s` : "Apply Refinement"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowRefineInput(false);
+                setRefineFeedback("");
+              }}
+              disabled={isRefinePending}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-3">
         <form action={acceptAction}>
           <input type="hidden" name="skillId" value={skillId} />
           <input type="hidden" name="improvedContent" value={improvedContent} />
+          {suggestedTitle && <input type="hidden" name="suggestedTitle" value={suggestedTitle} />}
+          {suggestedDescription && (
+            <input type="hidden" name="suggestedDescription" value={suggestedDescription} />
+          )}
+          {forkedFromId && <input type="hidden" name="forkedFromId" value={forkedFromId} />}
+          {parentContent && <input type="hidden" name="parentContent" value={parentContent} />}
           <button
             type="submit"
-            disabled={isAcceptPending}
+            disabled={isAcceptPending || isRefinePending}
             className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             {isAcceptPending && <Spinner />}
             {isAcceptPending ? "Saving..." : "Accept & Save"}
           </button>
         </form>
+        {!showRefineInput && (
+          <button
+            type="button"
+            onClick={() => setShowRefineInput(true)}
+            disabled={isAcceptPending || isRefinePending}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+              />
+            </svg>
+            Refine
+          </button>
+        )}
         <button
           type="button"
           onClick={onDiscard}
-          disabled={isAcceptPending}
+          disabled={isAcceptPending || isRefinePending}
           className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
         >
           Discard
