@@ -45,11 +45,16 @@ function getCategoryLabel(key: keyof ReviewCategories): string {
 interface AiReviewDisplayProps {
   categories: ReviewCategories;
   summary: string;
+  suggestedTitle?: string;
   suggestedDescription?: string;
   reviewedAt: string;
   modelName: string;
   isAuthor?: boolean;
-  onImprove?: (selectedSuggestions: string[], useSuggestedDescription: boolean) => void;
+  onImprove?: (
+    selectedSuggestions: string[],
+    useSuggestedDescription: boolean,
+    useSuggestedTitle: boolean
+  ) => void;
   isImprovePending?: boolean;
   improveElapsed?: number;
 }
@@ -57,6 +62,7 @@ interface AiReviewDisplayProps {
 export function AiReviewDisplay({
   categories,
   summary,
+  suggestedTitle,
   suggestedDescription,
   reviewedAt,
   modelName,
@@ -67,6 +73,7 @@ export function AiReviewDisplay({
 }: AiReviewDisplayProps) {
   const categoryKeys = Object.keys(categoryLabels) as (keyof ReviewCategories)[];
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set());
+  const [useTitle, setUseTitle] = useState(false);
   const [useDescription, setUseDescription] = useState(false);
 
   // Compute overall score as average of the 3 category scores
@@ -88,7 +95,7 @@ export function AiReviewDisplay({
     });
   };
 
-  const totalSelected = selectedSuggestions.size + (useDescription ? 1 : 0);
+  const totalSelected = selectedSuggestions.size + (useTitle ? 1 : 0) + (useDescription ? 1 : 0);
 
   return (
     <div className="space-y-4">
@@ -109,6 +116,27 @@ export function AiReviewDisplay({
       <div className="border-l-4 border-blue-200 bg-gray-50 rounded-r-lg px-4 py-3">
         <p className="text-sm text-gray-700 leading-relaxed">{summary}</p>
       </div>
+
+      {/* Suggested title */}
+      {suggestedTitle && (
+        <div className="border border-blue-200 bg-blue-50 rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              {isAuthor && onImprove && (
+                <input
+                  type="checkbox"
+                  checked={useTitle}
+                  onChange={() => setUseTitle((prev) => !prev)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              )}
+              <span className="text-xs font-medium text-blue-700">Suggested Title</span>
+            </div>
+            <CopyButton text={suggestedTitle} />
+          </div>
+          <p className="text-sm text-gray-700 font-medium">{suggestedTitle}</p>
+        </div>
+      )}
 
       {/* Suggested description */}
       {suggestedDescription && (
@@ -188,7 +216,7 @@ export function AiReviewDisplay({
         <div className="sticky bottom-4 z-10">
           <button
             type="button"
-            onClick={() => onImprove(Array.from(selectedSuggestions), useDescription)}
+            onClick={() => onImprove(Array.from(selectedSuggestions), useDescription, useTitle)}
             disabled={isImprovePending}
             className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
           >

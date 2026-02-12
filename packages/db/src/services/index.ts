@@ -67,3 +67,4 @@ export {
   type DecisionWithReviewer,
 } from "./review-decisions";
 export { semanticSearchSkills, type SemanticSearchResult } from "./semantic-search";
+export { runIntegrityCheck, type IntegrityReport, type IntegrityIssue } from "./integrity-check";

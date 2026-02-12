@@ -1,10 +1,16 @@
 import { createMcpHandler, withMcpAuth } from "mcp-handler";
 import { z } from "zod";
 import { validateApiKey } from "@everyskill/db/services/api-keys";
-import { db } from "@everyskill/db";
+import { db, writeAuditLog } from "@everyskill/db";
 import { usageEvents } from "@everyskill/db/schema/usage-events";
 import { incrementSkillUses } from "@everyskill/db/services/skill-metrics";
 import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
+
+// ---------------------------------------------------------------------------
+// Read-only mode: when true, only read tools are registered (no writes)
+// Defaults to true for safety — set MCP_REMOTE_MODE=full to enable writes
+// ---------------------------------------------------------------------------
+const REMOTE_READONLY = process.env.MCP_REMOTE_MODE !== "full";
 
 // TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
 const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
@@ -60,6 +66,16 @@ async function trackUsage(
     if (!db) return;
     await db.insert(usageEvents).values({ tenantId: DEFAULT_TENANT_ID, ...event });
     if (event.skillId && !skipIncrement) await incrementSkillUses(event.skillId);
+
+    // Audit log — fire-and-forget
+    writeAuditLog({
+      actorId: event.userId,
+      tenantId: DEFAULT_TENANT_ID,
+      action: `mcp.${event.toolName}`,
+      resourceType: event.skillId ? "skill" : "mcp_tool",
+      resourceId: event.skillId || event.toolName,
+      metadata: { transport: "http", ...event.metadata },
+    }).catch(() => {});
   } catch (e) {
     console.error("Failed to track usage:", e);
   }
@@ -292,72 +308,79 @@ const handler = createMcpHandler(
     );
 
     // -----------------------------------------------------------------------
-    // confirm_install
+    // confirm_install (write tool — disabled in read-only mode)
     // -----------------------------------------------------------------------
-    server.registerTool(
-      "confirm_install",
-      {
-        description:
-          "Confirm that a skill has been saved/installed locally. Call this after saving a deployed skill file to log the installation.",
-        inputSchema: {
-          skillId: z.string().describe("The skill ID that was installed"),
+    if (!REMOTE_READONLY) {
+      server.registerTool(
+        "confirm_install",
+        {
+          description:
+            "Confirm that a skill has been saved/installed locally. Call this after saving a deployed skill file to log the installation.",
+          inputSchema: {
+            skillId: z.string().describe("The skill ID that was installed"),
+          },
         },
-      },
-      async ({ skillId }, extra) => {
-        const userId = extractUserId(extra);
-        const keyId = extractKeyId(extra);
-        if (keyId && !checkRateLimit(keyId)) return rateLimitError();
+        async ({ skillId }, extra) => {
+          const userId = extractUserId(extra);
+          const keyId = extractKeyId(extra);
+          if (keyId && !checkRateLimit(keyId)) return rateLimitError();
 
-        await trackUsage({ toolName: "confirm_install", skillId, userId }, { skipIncrement: true });
+          await trackUsage(
+            { toolName: "confirm_install", skillId, userId },
+            { skipIncrement: true }
+          );
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify({ success: true, message: "Installation confirmed" }),
-            },
-          ],
-        };
-      }
-    );
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({ success: true, message: "Installation confirmed" }),
+              },
+            ],
+          };
+        }
+      );
+    }
 
     // -----------------------------------------------------------------------
-    // log_skill_usage
+    // log_skill_usage (write tool — disabled in read-only mode)
     // -----------------------------------------------------------------------
-    server.registerTool(
-      "log_skill_usage",
-      {
-        description:
-          "Log that a skill is being used in a conversation. Call this when you actually use a deployed skill to track real usage.",
-        inputSchema: {
-          skillId: z.string().describe("The skill ID being used"),
-          action: z
-            .string()
-            .optional()
-            .default("use")
-            .describe("The action being performed (defaults to 'use')"),
+    if (!REMOTE_READONLY) {
+      server.registerTool(
+        "log_skill_usage",
+        {
+          description:
+            "Log that a skill is being used in a conversation. Call this when you actually use a deployed skill to track real usage.",
+          inputSchema: {
+            skillId: z.string().describe("The skill ID being used"),
+            action: z
+              .string()
+              .optional()
+              .default("use")
+              .describe("The action being performed (defaults to 'use')"),
+          },
         },
-      },
-      async ({ skillId, action }, extra) => {
-        const userId = extractUserId(extra);
-        const keyId = extractKeyId(extra);
-        if (keyId && !checkRateLimit(keyId)) return rateLimitError();
+        async ({ skillId, action }, extra) => {
+          const userId = extractUserId(extra);
+          const keyId = extractKeyId(extra);
+          if (keyId && !checkRateLimit(keyId)) return rateLimitError();
 
-        await trackUsage(
-          { toolName: "log_skill_usage", skillId, userId, metadata: { action } },
-          { skipIncrement: true }
-        );
+          await trackUsage(
+            { toolName: "log_skill_usage", skillId, userId, metadata: { action } },
+            { skipIncrement: true }
+          );
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify({ success: true, message: "Usage logged" }),
-            },
-          ],
-        };
-      }
-    );
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({ success: true, message: "Usage logged" }),
+              },
+            ],
+          };
+        }
+      );
+    }
 
     // -----------------------------------------------------------------------
     // server_info
@@ -382,6 +405,7 @@ const handler = createMcpHandler(
                 {
                   name: "EverySkill Skills",
                   version: "1.0.0",
+                  mode: REMOTE_READONLY ? "readonly" : "full",
                   categories: ["prompt", "workflow", "agent", "mcp"],
                   user: { id: userId },
                 },

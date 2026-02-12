@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 Phase: None -- between milestones
 Plan: N/A
 Status: Ready to plan
-Last activity: 2026-02-11 -- Post-v2.0 ad hoc features shipped (Fork & Improve, logo update)
+Last activity: 2026-02-11 -- Tech debt cleared (DB integrity checks, MCP audit logging, read-only mode)
 
 Progress: All milestones shipped (v1.0 → v2.0) + ad hoc features deployed
 
@@ -47,8 +47,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ### Pending Todos
 
 - AI-Independence -- platform-agnostic skill translation (future phase)
-- MCP security hardening -- audit logging, read-only remote mode, Cloudflare (pre-go-live)
-- Database integrity checks -- verify denormalized counters, tenant_id alignment, orphaned records from user migrations
+- ✓ MCP security hardening -- audit logging on both transports, read-only remote mode (Cloudflare DNS still manual)
+- ✓ Database integrity checks -- service + cron endpoint with auto-repair for counters and tenant alignment
 
 ### Blockers/Concerns
 
