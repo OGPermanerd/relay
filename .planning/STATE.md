@@ -2,7 +2,7 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-08)
+See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
 **Current focus:** Planning next milestone
@@ -12,9 +12,9 @@ See: .planning/PROJECT.md (updated 2026-02-08)
 Phase: None -- between milestones
 Plan: N/A
 Status: Ready to plan
-Last activity: 2026-02-08 -- v2.0 milestone complete
+Last activity: 2026-02-11 -- Post-v2.0 ad hoc features shipped (Fork & Improve, logo update)
 
-Progress: All milestones shipped (v1.0 → v2.0)
+Progress: All milestones shipped (v1.0 → v2.0) + ad hoc features deployed
 
 ## Milestones
 
@@ -59,6 +59,6 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 
 ## Session Continuity
 
-Last session: 2026-02-08
-Stopped at: v2.0 milestone archived -- ready for `/gsd:new-milestone`
+Last session: 2026-02-11
+Stopped at: Post-v2.0 ad hoc features shipped, deployed to staging + prod -- ready for `/gsd:new-milestone`
 Resume file: N/A

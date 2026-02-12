@@ -12,6 +12,8 @@ Skills get better as they pass through more hands, with real metrics proving tha
 
 **v2.0 shipped 2026-02-08** — Quality-gated skill publishing with AI review, admin approval, conversational MCP discovery, and fork drift detection.
 
+**Post-v2.0 (2026-02-11):** Fork & Improve with AI (iterative refinement + fork differentiation), new pacman gradient logo.
+
 Tech stack: Next.js 16.1.6, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, mcp-handler, Playwright, vitest, nuqs, react-swipeable, Recharts, Voyage AI, pgvector, Anthropic SDK, Ollama (nomic-embed-text)
 LOC: ~17,000 TypeScript across 350+ files
 
@@ -83,6 +85,14 @@ Previous milestones:
 ### Active
 
 (No active milestone — planning next)
+
+### Validated — Post-v2.0 (ad hoc)
+
+- ✓ Fork & Improve with AI — single-click fork + auto-triggered AI review + iterative refinement loop — 2026-02-11
+- ✓ AI refinement of improved content via user feedback with iteration counter — 2026-02-11
+- ✓ Fork differentiation summary auto-generated on accept (prepended to description) — 2026-02-11
+- ✓ Split fork button: "Fork & Improve" (primary, non-authors) + "Fork" (secondary) — 2026-02-11
+- ✓ New pacman gradient wordmark logo with transparent background — 2026-02-11
 
 ### Validated — v2.0 Skill Ecosystem
 
@@ -189,6 +199,10 @@ Previous milestones:
 | Self-contained MCP helpers | No cross-app imports; stdio protocol safety | ✓ Good |
 | Frontmatter-stripped hash for drift | Tracking hooks don't trigger false positive drift detection | ✓ Good |
 | Author-update vs non-author-fork | update_skill branches on userId === authorId | ✓ Good |
+| Combined fork + improve flow | Single button reduces friction; auto-trigger review on ?improve=1 query param | ✓ Good |
+| Local pending state over useActionState isPending | isPending unreliable for programmatic dispatch via startTransition | ✓ Good |
+| Fork differentiation non-fatal | If AI summary fails, still save content — skip summary silently | ✓ Good |
+| PNG logo over animated SVG | New brand identity; transparent background works on both light and dark headers | ✓ Good |
 
 ---
-*Last updated: 2026-02-08 after v2.0 milestone complete*
+*Last updated: 2026-02-11 after post-v2.0 ad hoc features*
