@@ -16,7 +16,7 @@ import { StatCard } from "@/components/stat-card";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { TrendingSection } from "@/components/trending-section";
 import { CompanyApprovedSection } from "@/components/company-approved-section";
-import { SearchWithDropdown } from "@/components/search-with-dropdown";
+import { DiscoverySearch } from "@/components/discovery-results";
 import { HomeTabs } from "@/components/home-tabs";
 import { MyLeverageView } from "@/components/my-leverage-view";
 import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
@@ -253,11 +253,9 @@ export default async function HomePage() {
         </p>
       </div>
 
-      {/* Search Bar */}
-      <div className="mb-8 flex items-center gap-4">
-        <div className="max-w-xl flex-1">
-          <SearchWithDropdown mode="navigate" />
-        </div>
+      {/* Discovery Search */}
+      <div className="mb-8">
+        <DiscoverySearch />
       </div>
 
       <HomeTabs browseContent={browseContent} leverageContent={leverageContent} />
