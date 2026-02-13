@@ -137,7 +137,7 @@ Total: 23 plans completed. 44 requirements across 6 categories.
 - Integer phases (40, 41, ...): Planned milestone work
 - Decimal phases (40.1, 40.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 40: Visibility Scoping** - Skill access control with tenant/personal visibility levels
+- [x] **Phase 40: Visibility Scoping** - Skill access control with tenant/personal visibility levels
 - [ ] **Phase 41: Loom Video Integration** - Video demos on skill pages and browse cards
 - [ ] **Phase 42: MCP Tool Unification** - Single `everyskill` tool with sub-commands for external discovery
 - [ ] **Phase 43: User Preferences** - Server-side preference storage with CLAUDE.md export
@@ -159,10 +159,10 @@ Total: 23 plans completed. 44 requirements across 6 categories.
 **Plans:** 4 plans
 
 Plans:
-- [ ] 40-01-PLAN.md — Schema, migration, and visibility filter helpers
-- [ ] 40-02-PLAN.md — Apply visibility to all web read/query paths
-- [ ] 40-03-PLAN.md — Visibility UI selector and write path integration
-- [ ] 40-04-PLAN.md — MCP tools visibility enforcement
+- [x] 40-01-PLAN.md — Schema, migration, and visibility filter helpers
+- [x] 40-02-PLAN.md — Apply visibility to all web read/query paths
+- [x] 40-03-PLAN.md — Visibility UI selector and write path integration
+- [x] 40-04-PLAN.md — MCP tools visibility enforcement
 
 #### Phase 41: Loom Video Integration
 **Goal**: Authors can add video demos to skills, and viewers watch them inline
@@ -310,7 +310,7 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
-| 40. Visibility Scoping | v3.0 | 0/4 | Planning | - |
+| 40. Visibility Scoping | v3.0 | 4/4 | Complete | 2026-02-13 |
 | 41. Loom Video | v3.0 | 0/TBD | Not started | - |
 | 42. MCP Unification | v3.0 | 0/TBD | Not started | - |
 | 43. User Preferences | v3.0 | 0/TBD | Not started | - |
