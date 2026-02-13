@@ -230,12 +230,12 @@ Plans:
   3. When intent is ambiguous or no semantic matches meet threshold, search falls back gracefully to keyword results without errors
   4. Search results never include skills the user should not see (respects personal/tenant visibility scoping)
   5. User sees streaming loading feedback during search processing, and results from preferred categories rank higher
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 45-01: TBD
-- [ ] 45-02: TBD
-- [ ] 45-03: TBD
+- [ ] 45-01-PLAN.md — Embedding backfill script and auto-generation on skill create/update
+- [ ] 45-02-PLAN.md — Hybrid search service with RRF SQL and discover server action
+- [ ] 45-03-PLAN.md — Discovery UI with result cards, rationale, and loading states
 
 #### Phase 46: Search Analytics
 **Goal**: Admins understand search behavior and identify skill gaps from query data
@@ -319,7 +319,7 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 42. MCP Unification | v3.0 | 2/2 | Complete | 2026-02-13 |
 | 43. User Preferences | v3.0 | 3/3 | Complete | 2026-02-13 |
 | 44. Admin Global Skills | v3.0 | 0/2 | Not started | - |
-| 45. Hybrid Search | v3.0 | 0/TBD | Not started | - |
+| 45. Hybrid Search | v3.0 | 0/3 | Not started | - |
 | 46. Search Analytics | v3.0 | 0/TBD | Not started | - |
 | 47. Homepage Research | v3.0 | 0/TBD | Not started | - |
 | 48. Homepage Redesign | v3.0 | 0/TBD | Not started | - |
