@@ -214,10 +214,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Admin can stamp any published skill as "Company Approved" via a dedicated action, and a distinctive badge appears on the skill card and detail page
   2. Company Approved skills appear in a dedicated "Company Recommended" section that is visually distinct from other skill listings
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 44-01: TBD
+- [ ] 44-01-PLAN.md — Schema, migration, server action, and admin table toggle
+- [ ] 44-02-PLAN.md — Badge component, display everywhere, and homepage Company Recommended section
 
 #### Phase 45: Hybrid Search & Discovery
 **Goal**: Users describe what they need in natural language and get intelligent, ranked skill recommendations
@@ -317,7 +318,7 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 41. Loom Video | v3.0 | 2/2 | Complete | 2026-02-13 |
 | 42. MCP Unification | v3.0 | 2/2 | Complete | 2026-02-13 |
 | 43. User Preferences | v3.0 | 3/3 | Complete | 2026-02-13 |
-| 44. Admin Global Skills | v3.0 | 0/TBD | Not started | - |
+| 44. Admin Global Skills | v3.0 | 0/2 | Not started | - |
 | 45. Hybrid Search | v3.0 | 0/TBD | Not started | - |
 | 46. Search Analytics | v3.0 | 0/TBD | Not started | - |
 | 47. Homepage Research | v3.0 | 0/TBD | Not started | - |
