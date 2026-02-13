@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { TrendingSkill } from "@/lib/trending";
 import { Sparkline } from "./sparkline";
+import { CompanyApprovedBadge } from "./company-approved-badge";
 
 interface TrendingSectionProps {
   skills: TrendingSkill[];
@@ -54,6 +55,7 @@ export function TrendingSection({ skills, trendData }: TrendingSectionProps) {
                     </svg>
                   </span>
                 )}
+                {skill.companyApproved && <CompanyApprovedBadge size="sm" />}
               </div>
             </div>
             <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">

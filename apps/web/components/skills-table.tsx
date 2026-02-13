@@ -19,6 +19,7 @@ export interface SkillTableRow {
   totalUses: number;
   averageRating: number | null;
   hoursSaved: number | null;
+  companyApproved?: boolean;
   loomUrl?: string | null;
   createdAt: string;
   author: {

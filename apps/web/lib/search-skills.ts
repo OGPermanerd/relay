@@ -13,6 +13,7 @@ export interface SearchSkillResult {
   averageRating: number | null;
   totalRatings: number;
   hoursSaved: number | null;
+  companyApproved: boolean;
   loomUrl: string | null;
   createdAt: Date;
   author: {
@@ -156,6 +157,7 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
         "totalRatings"
       ),
       hoursSaved: skills.hoursSaved,
+      companyApproved: skills.companyApproved,
       loomUrl: skills.loomUrl,
       createdAt: skills.createdAt,
       author: {

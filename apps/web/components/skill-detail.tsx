@@ -6,6 +6,7 @@ import type { SkillDetailTrends } from "@/lib/skill-detail-trends";
 import type { LoomOEmbedResponse } from "@/lib/loom";
 import { calculateQualityScore } from "@/lib/quality-score";
 import { QualityBadge } from "./quality-badge";
+import { CompanyApprovedBadge } from "./company-approved-badge";
 import { QualityBreakdown } from "./quality-breakdown";
 import { ForkAttribution } from "./fork-attribution";
 import { DriftIndicator } from "./drift-indicator";
@@ -23,6 +24,7 @@ interface SkillWithAuthor {
   hoursSaved: number | null;
   totalUses: number;
   averageRating: number | null;
+  companyApproved?: boolean;
   createdAt: Date;
   author: {
     id: string;
@@ -82,6 +84,7 @@ export function SkillDetail({
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold">{skill.name}</h1>
           <QualityBadge tier={tier} size="md" />
+          {skill.companyApproved && <CompanyApprovedBadge size="md" />}
         </div>
         {parentSkill && <ForkAttribution parentSkill={parentSkill} />}
         {driftStatus && <DriftIndicator driftStatus={driftStatus} compareSlug={compareSlug} />}

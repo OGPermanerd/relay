@@ -8,6 +8,7 @@ import { SkillAccordionContent } from "./skill-accordion-content";
 import { InstallButton } from "./install-button";
 import { RelativeTime } from "@/components/relative-time";
 import type { SkillTableRow } from "./skills-table";
+import { CompanyApprovedBadge } from "./company-approved-badge";
 import { FTE_HOURS_PER_YEAR } from "@/lib/constants";
 
 interface SkillsTableRowProps {
@@ -128,6 +129,11 @@ export function SkillsTableRow({
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
+            </span>
+          )}
+          {skill.companyApproved && (
+            <span className="ml-2">
+              <CompanyApprovedBadge size="sm" />
             </span>
           )}
         </td>
