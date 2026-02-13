@@ -199,11 +199,12 @@ Plans:
   1. User can access a preferences page to set preferred categories, default sort order, and notification preferences
   2. Preferences are stored server-side in JSONB with Zod validation, code-defined defaults, and immediate effect (no localStorage)
   3. User can generate a CLAUDE.md file from their skill portfolio and preferences, containing relevant skill references and personal workflow settings
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 43-01: TBD
-- [ ] 43-02: TBD
+- [ ] 43-01-PLAN.md — Schema, service, migration, and shared Zod defaults
+- [ ] 43-02-PLAN.md — Settings layout, preferences form, and profile page links
+- [ ] 43-03-PLAN.md — CLAUDE.md export server action and preview/download UI
 
 #### Phase 44: Admin Global Skills
 **Goal**: Admins curate a set of company-endorsed skills with visible badges
@@ -314,7 +315,7 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 40. Visibility Scoping | v3.0 | 4/4 | Complete | 2026-02-13 |
 | 41. Loom Video | v3.0 | 0/2 | Planned | - |
 | 42. MCP Unification | v3.0 | 0/TBD | Not started | - |
-| 43. User Preferences | v3.0 | 0/TBD | Not started | - |
+| 43. User Preferences | v3.0 | 0/3 | Planned | - |
 | 44. Admin Global Skills | v3.0 | 0/TBD | Not started | - |
 | 45. Hybrid Search | v3.0 | 0/TBD | Not started | - |
 | 46. Search Analytics | v3.0 | 0/TBD | Not started | - |
