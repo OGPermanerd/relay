@@ -165,6 +165,173 @@ Evaluate across all three categories (quality, clarity, completeness) with score
 }
 
 // ---------------------------------------------------------------------------
+// Handler: review_skill (advisory-only)
+// ---------------------------------------------------------------------------
+
+export async function handleReviewSkill({ skillId }: { skillId: string }) {
+  // Auth check
+  const userId = getUserId();
+  if (!userId) {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({
+            error: "Authentication required",
+            message:
+              "Set the EVERYSKILL_API_KEY environment variable to use review_skill. " +
+              "Get your key at https://everyskill.ai/settings.",
+          }),
+        },
+      ],
+      isError: true,
+    };
+  }
+
+  // DB check
+  if (!db) {
+    return {
+      content: [
+        { type: "text" as const, text: JSON.stringify({ error: "Database not configured" }) },
+      ],
+      isError: true,
+    };
+  }
+
+  // ANTHROPIC_API_KEY check
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({
+            error: "ANTHROPIC_API_KEY not configured",
+            message:
+              "The server administrator must set ANTHROPIC_API_KEY for AI review features. " +
+              "Get an API key from https://console.anthropic.com/settings/keys",
+          }),
+        },
+      ],
+      isError: true,
+    };
+  }
+
+  // Fetch skill (any visible skill — review_skill does NOT require ownership)
+  const tenantId = getTenantId();
+  const allSkills = await db.query.skills.findMany();
+  const skill = allSkills.find(
+    (s: { id: string; tenantId: string }) =>
+      s.id === skillId && (!tenantId || s.tenantId === tenantId)
+  );
+
+  if (!skill) {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({
+            error: "Skill not found",
+            message: `No skill found with ID: ${skillId}. Use list_skills or search_skills to find valid skill IDs.`,
+          }),
+        },
+      ],
+      isError: true,
+    };
+  }
+
+  // Run AI review
+  try {
+    const review = await generateSkillReview(
+      skill.name,
+      skill.description,
+      skill.content,
+      skill.category
+    );
+
+    // Store review result
+    const contentHash = await hashContent(skill.content);
+    const reviewTenantId = tenantId || DEFAULT_TENANT_ID;
+
+    await db.execute(sql`
+      INSERT INTO skill_reviews (id, tenant_id, skill_id, requested_by, categories, summary, suggested_description, reviewed_content_hash, model_name, is_visible, created_at)
+      VALUES (
+        ${crypto.randomUUID()},
+        ${reviewTenantId},
+        ${skillId},
+        ${userId},
+        ${JSON.stringify({
+          quality: review.quality,
+          clarity: review.clarity,
+          completeness: review.completeness,
+        })}::jsonb,
+        ${review.summary},
+        ${review.suggestedDescription},
+        ${contentHash},
+        ${REVIEW_MODEL},
+        true,
+        NOW()
+      )
+      ON CONFLICT (tenant_id, skill_id) DO UPDATE SET
+        requested_by = EXCLUDED.requested_by,
+        categories = EXCLUDED.categories,
+        summary = EXCLUDED.summary,
+        suggested_description = EXCLUDED.suggested_description,
+        reviewed_content_hash = EXCLUDED.reviewed_content_hash,
+        model_name = EXCLUDED.model_name,
+        created_at = NOW()
+    `);
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(
+            {
+              success: true,
+              advisory: true,
+              skillId,
+              skillName: skill.name,
+              model: REVIEW_MODEL,
+              scores: {
+                quality: review.quality.score,
+                clarity: review.clarity.score,
+                completeness: review.completeness.score,
+              },
+              review: {
+                quality: review.quality,
+                clarity: review.clarity,
+                completeness: review.completeness,
+                summary: review.summary,
+                suggestedDescription: review.suggestedDescription,
+              },
+              message:
+                "This is an advisory review only — the skill's status has not been changed. " +
+                "Use submit_for_review to trigger the full review pipeline.",
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    };
+  } catch (err) {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({
+            error: "Review generation failed",
+            message: err instanceof Error ? err.message : "Unknown error",
+            retryable: true,
+          }),
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // MCP Tool: review_skill (advisory-only)
 // ---------------------------------------------------------------------------
 
@@ -179,166 +346,5 @@ server.registerTool(
       skillId: z.string().describe("The skill ID to review"),
     },
   },
-  async ({ skillId }) => {
-    // Auth check
-    const userId = getUserId();
-    if (!userId) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify({
-              error: "Authentication required",
-              message:
-                "Set the EVERYSKILL_API_KEY environment variable to use review_skill. " +
-                "Get your key at https://everyskill.ai/settings.",
-            }),
-          },
-        ],
-        isError: true,
-      };
-    }
-
-    // DB check
-    if (!db) {
-      return {
-        content: [
-          { type: "text" as const, text: JSON.stringify({ error: "Database not configured" }) },
-        ],
-        isError: true,
-      };
-    }
-
-    // ANTHROPIC_API_KEY check
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify({
-              error: "ANTHROPIC_API_KEY not configured",
-              message:
-                "The server administrator must set ANTHROPIC_API_KEY for AI review features. " +
-                "Get an API key from https://console.anthropic.com/settings/keys",
-            }),
-          },
-        ],
-        isError: true,
-      };
-    }
-
-    // Fetch skill (any visible skill — review_skill does NOT require ownership)
-    const tenantId = getTenantId();
-    const allSkills = await db.query.skills.findMany();
-    const skill = allSkills.find(
-      (s: { id: string; tenantId: string }) =>
-        s.id === skillId && (!tenantId || s.tenantId === tenantId)
-    );
-
-    if (!skill) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify({
-              error: "Skill not found",
-              message: `No skill found with ID: ${skillId}. Use list_skills or search_skills to find valid skill IDs.`,
-            }),
-          },
-        ],
-        isError: true,
-      };
-    }
-
-    // Run AI review
-    try {
-      const review = await generateSkillReview(
-        skill.name,
-        skill.description,
-        skill.content,
-        skill.category
-      );
-
-      // Store review result
-      const contentHash = await hashContent(skill.content);
-      const reviewTenantId = tenantId || DEFAULT_TENANT_ID;
-
-      await db.execute(sql`
-        INSERT INTO skill_reviews (id, tenant_id, skill_id, requested_by, categories, summary, suggested_description, reviewed_content_hash, model_name, is_visible, created_at)
-        VALUES (
-          ${crypto.randomUUID()},
-          ${reviewTenantId},
-          ${skillId},
-          ${userId},
-          ${JSON.stringify({
-            quality: review.quality,
-            clarity: review.clarity,
-            completeness: review.completeness,
-          })}::jsonb,
-          ${review.summary},
-          ${review.suggestedDescription},
-          ${contentHash},
-          ${REVIEW_MODEL},
-          true,
-          NOW()
-        )
-        ON CONFLICT (tenant_id, skill_id) DO UPDATE SET
-          requested_by = EXCLUDED.requested_by,
-          categories = EXCLUDED.categories,
-          summary = EXCLUDED.summary,
-          suggested_description = EXCLUDED.suggested_description,
-          reviewed_content_hash = EXCLUDED.reviewed_content_hash,
-          model_name = EXCLUDED.model_name,
-          created_at = NOW()
-      `);
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(
-              {
-                success: true,
-                advisory: true,
-                skillId,
-                skillName: skill.name,
-                model: REVIEW_MODEL,
-                scores: {
-                  quality: review.quality.score,
-                  clarity: review.clarity.score,
-                  completeness: review.completeness.score,
-                },
-                review: {
-                  quality: review.quality,
-                  clarity: review.clarity,
-                  completeness: review.completeness,
-                  summary: review.summary,
-                  suggestedDescription: review.suggestedDescription,
-                },
-                message:
-                  "This is an advisory review only — the skill's status has not been changed. " +
-                  "Use submit_for_review to trigger the full review pipeline.",
-              },
-              null,
-              2
-            ),
-          },
-        ],
-      };
-    } catch (err) {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify({
-              error: "Review generation failed",
-              message: err instanceof Error ? err.message : "Unknown error",
-              retryable: true,
-            }),
-          },
-        ],
-        isError: true,
-      };
-    }
-  }
+  async ({ skillId }) => handleReviewSkill({ skillId })
 );
