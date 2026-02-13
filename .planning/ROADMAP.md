@@ -129,7 +129,7 @@ Total: 23 plans completed. 44 requirements across 6 categories.
 
 </details>
 
-### 🚧 v3.0 AI Discovery & Workflow Intelligence (In Progress)
+### v3.0 AI Discovery & Workflow Intelligence (In Progress)
 
 **Milestone Goal:** Transform EverySkill from a skill catalog into an intelligent discovery and adoption platform with visibility scoping, AI-powered search, video integration, user preferences, and a redesigned homepage.
 
@@ -172,10 +172,11 @@ Plans:
   1. Author can paste a Loom URL when creating or editing a skill, with format validation and error feedback
   2. Skill detail page displays a responsive embedded Loom video player that loads metadata (title, duration) from oEmbed
   3. Skill browse cards show a video thumbnail badge when a Loom URL is present, distinguishing video-equipped skills at a glance
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 41-01: TBD
+- [ ] 41-01-PLAN.md — Schema, migration, Loom utility library, Zod validation, and form field
+- [ ] 41-02-PLAN.md — LoomEmbed component, detail page integration, and browse/trending indicators
 
 #### Phase 42: MCP Tool Unification
 **Goal**: Users discover and interact with EverySkill through a single, well-described MCP tool
@@ -311,7 +312,7 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
 | 40. Visibility Scoping | v3.0 | 4/4 | Complete | 2026-02-13 |
-| 41. Loom Video | v3.0 | 0/TBD | Not started | - |
+| 41. Loom Video | v3.0 | 0/2 | Planned | - |
 | 42. MCP Unification | v3.0 | 0/TBD | Not started | - |
 | 43. User Preferences | v3.0 | 0/TBD | Not started | - |
 | 44. Admin Global Skills | v3.0 | 0/TBD | Not started | - |
