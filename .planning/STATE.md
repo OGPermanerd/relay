@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v3.0 Wave 2 in progress (Phase 45: 1/? plans complete)
+**Current focus:** v3.0 Wave 2 in progress (Phase 45: 2/? plans complete)
 
 ## Current Position
 
 Phase: 45 of 48 (Hybrid Search)
-Plan: 1 of TBD in Phase 45
+Plan: 2 of TBD in Phase 45
 Status: In progress
-Last activity: 2026-02-13 -- Completed 45-01-PLAN.md (embedding backfill + auto-generation wiring)
+Last activity: 2026-02-13 -- Completed 45-02-PLAN.md (hybrid search backend with RRF + fallback)
 
-Progress: [███████████████████████░░░░░░░] 78% (190/~TBD total)
+Progress: [███████████████████████░░░░░░░] 78% (191/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [███████████████████████
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 190
+- Total plans completed: 191
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 190 plans across 45 phases and 8 milestones
+- 191 plans across 45 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -69,6 +69,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - Unapproval clears both approvedAt and approvedBy to null (full audit reset)
 - Embedding backfill uses sequential direct Ollama fetch (10s timeout) to avoid overloading single-threaded model
 - Two embedding generators coexist: embedding-generator.ts (skill create/fork) and generate-skill-embedding.ts (review/approval paths)
+- Hybrid search: RRF k=60 with FULL OUTER JOIN, fetch limit+5 for post-preference-boost reranking
+- visibilitySQL() for raw SQL template queries, buildVisibilityFilter() for Drizzle query builder
 
 ### Pending Todos
 
@@ -85,5 +87,5 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed 45-01-PLAN.md -- Phase 45 in progress
-Resume file: .planning/phases/45-hybrid-search/45-01-SUMMARY.md
+Stopped at: Completed 45-02-PLAN.md -- Phase 45 in progress
+Resume file: .planning/phases/45-hybrid-search/45-02-SUMMARY.md
