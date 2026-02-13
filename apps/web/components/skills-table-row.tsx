@@ -123,6 +123,13 @@ export function SkillsTableRow({
           >
             {skill.name}
           </Link>
+          {skill.loomUrl && (
+            <span className="ml-2 inline-flex items-center text-blue-500" title="Has demo video">
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </span>
+          )}
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-center">
           <div className="inline-block">

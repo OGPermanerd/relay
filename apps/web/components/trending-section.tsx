@@ -43,9 +43,18 @@ export function TrendingSection({ skills, trendData }: TrendingSectionProps) {
                 </h3>
                 <p className="mt-1 line-clamp-2 text-sm text-gray-600">{skill.description}</p>
               </div>
-              <span className="ml-3 inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                {skill.category}
-              </span>
+              <div className="ml-3 flex items-center gap-1.5">
+                <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                  {skill.category}
+                </span>
+                {skill.loomUrl && (
+                  <span className="inline-flex items-center text-blue-500" title="Has demo video">
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </span>
+                )}
+              </div>
             </div>
             <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
               <span className="flex items-center gap-1">

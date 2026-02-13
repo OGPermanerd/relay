@@ -13,6 +13,7 @@ export interface TrendingSkill {
   recentUses: number;
   trendingScore: number;
   totalUses: number;
+  loomUrl: string | null;
 }
 
 /**
@@ -62,7 +63,8 @@ export async function getTrendingSkills(limit: number = 10): Promise<TrendingSki
       s.category,
       sru.recent_uses::integer as recent_uses,
       ((sru.recent_uses - 1) / POWER(sru.age_hours + 2, 1.8))::double precision as trending_score,
-      s.total_uses
+      s.total_uses,
+      s.loom_url
     FROM skill_recent_usage sru
     JOIN skills s ON s.id = sru.skill_id
     ORDER BY trending_score DESC
@@ -80,5 +82,6 @@ export async function getTrendingSkills(limit: number = 10): Promise<TrendingSki
     recentUses: Number(row.recent_uses),
     trendingScore: Number(row.trending_score),
     totalUses: Number(row.total_uses),
+    loomUrl: row.loom_url ? String(row.loom_url) : null,
   }));
 }
