@@ -59,6 +59,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - Browse/trending pages show play icon indicator only (no oEmbed calls) to avoid N+1
 - Unified everyskill tool uses STRAP action router pattern with exhaustive switch for compile-time safety
 - confirm_install excluded from unified tool (internal follow-up, not user-initiated action)
+- Legacy tool registrations centralized in legacy.ts with DEPRECATED notices; handler files are pure modules
+- routeEveryskillAction() exported for testability; 10 test cases cover routing and param validation
 - CLAUDE.md export uses hoursSaved column (plan-referenced avgHoursSaved does not exist)
 - Blob + createObjectURL for client-side file download without server round-trip
 - Settings layout is server component with client SettingsNav for active tab highlighting via usePathname
