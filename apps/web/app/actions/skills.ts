@@ -95,6 +95,7 @@ const createSkillSchema = z.object({
     .max(1000, "Hours saved must be 1000 or less")
     .default(1),
   content: z.string().min(1, "Content is required"),
+  visibility: z.enum(["tenant", "personal"]).default("tenant"),
 });
 
 import { checkSimilarSkills } from "@/lib/similar-skills";
@@ -179,6 +180,7 @@ export async function checkAndCreateSkill(
     usageInstructions: formData.get("usageInstructions"),
     hoursSaved: formData.get("hoursSaved"),
     content: formData.get("content"),
+    visibility: formData.get("visibility"),
   });
 
   if (!parsed.success) {
@@ -201,7 +203,7 @@ export async function checkAndCreateSkill(
   }
 
   // Step 2: create the skill
-  const { name, description, category, hoursSaved } = parsed.data;
+  const { name, description, category, hoursSaved, visibility } = parsed.data;
   const rawContent = stripEverySkillFrontmatter(parsed.data.content);
   const slug = await generateUniqueSlug(name, db);
 
@@ -224,6 +226,7 @@ export async function checkAndCreateSkill(
         authorId: session.user.id,
         forkedFromId: variationOf || undefined,
         status: "draft",
+        visibility,
       })
       .returning({ id: skills.id, slug: skills.slug });
     newSkill = inserted;
@@ -327,6 +330,7 @@ export async function checkSimilarity(
     usageInstructions: formData.get("usageInstructions"),
     hoursSaved: formData.get("hoursSaved"),
     content: formData.get("content"),
+    visibility: formData.get("visibility"),
   });
 
   if (!parsed.success) {
@@ -363,6 +367,7 @@ export async function createSkill(
     usageInstructions: formData.get("usageInstructions"),
     hoursSaved: formData.get("hoursSaved"),
     content: formData.get("content"),
+    visibility: formData.get("visibility"),
   });
 
   if (!parsed.success) {
@@ -376,6 +381,7 @@ export async function createSkill(
     description,
     category,
     hoursSaved,
+    visibility,
     tags: _tags,
     usageInstructions: _usageInstructions,
   } = parsed.data;
@@ -406,6 +412,7 @@ export async function createSkill(
         hoursSaved,
         authorId: session.user.id,
         status: "draft",
+        visibility,
       })
       .returning({ id: skills.id, slug: skills.slug });
 

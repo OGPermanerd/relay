@@ -80,6 +80,7 @@ export async function forkSkill(
         forkedAtContentHash: parentBodyHash,
         authorId: session.user.id,
         status: "draft",
+        visibility: "personal",
       })
       .returning({ id: skills.id, slug: skills.slug });
 
