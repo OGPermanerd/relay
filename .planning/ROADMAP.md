@@ -144,7 +144,7 @@ Total: 23 plans completed. 44 requirements across 6 categories.
 - [x] **Phase 44: Admin Global Skills** - Company Approved badge and admin stamping workflow
 - [x] **Phase 45: Hybrid Search & Discovery** - AI-powered intent search with semantic + full-text fusion
 - [ ] **Phase 46: Search Analytics** - Query logging and admin dashboard for search insights
-- [ ] **Phase 47: Homepage Research** - Competitive analysis and layout variant evaluation
+- [x] **Phase 47: Homepage Research** - Competitive analysis and layout variant evaluation
 - [ ] **Phase 48: Homepage Redesign** - Search-first hero with personalization and curated sections
 
 #### Phase 40: Visibility Scoping
@@ -261,7 +261,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 47-01-PLAN.md — Verify research completeness and present variants for user decision
+- [x] 47-01-PLAN.md — Verify research completeness and present variants for user decision (Selected: Hybrid A+B)
 
 #### Phase 48: Homepage Redesign
 **Goal**: The homepage becomes the intelligent entry point that surfaces discovery, curation, and personalization
@@ -322,7 +322,7 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 44. Admin Global Skills | v3.0 | 2/2 | Complete | 2026-02-13 |
 | 45. Hybrid Search | v3.0 | 3/3 | Complete | 2026-02-13 |
 | 46. Search Analytics | v3.0 | 0/2 | Not started | - |
-| 47. Homepage Research | v3.0 | 0/1 | Not started | - |
+| 47. Homepage Research | v3.0 | 1/1 | Complete | 2026-02-13 |
 | 48. Homepage Redesign | v3.0 | 0/TBD | Not started | - |
 
 **Total: 193 plans completed across 45 phases and 8 milestones. v3.0: 18/~TBD plans done, 6/9 phases complete.**
