@@ -1,4 +1,5 @@
 // Import tools to register them with the server
+import "./everyskill.js";
 import "./list.js";
 import "./search.js";
 import "./deploy.js";
