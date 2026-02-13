@@ -7,6 +7,7 @@ import {
   hybridSearchSkills,
   keywordSearchSkills,
   getOrCreateUserPreferences,
+  logSearchQuery,
   type HybridSearchResult,
 } from "@everyskill/db";
 
@@ -156,6 +157,16 @@ export async function discoverSkills(query: string, limit = 3): Promise<Discover
 
   const finalResults = applyPreferenceBoost(withRationale, preferredCategories);
 
-  // 5. Return top N
+  // 5. Log search query (fire-and-forget)
+  logSearchQuery({
+    tenantId,
+    userId: userId ?? null,
+    query: trimmed,
+    normalizedQuery: trimmed.toLowerCase(),
+    resultCount: finalResults.length,
+    searchType: "discover",
+  }).catch(() => {});
+
+  // 6. Return top N
   return finalResults.slice(0, limit);
 }

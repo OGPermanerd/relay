@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { searchSkills } from "@/lib/search-skills";
 import { getUsageTrends } from "@/lib/usage-trends";
 import { getLeaderboard } from "@/lib/leaderboard";
+import { logSearchQuery } from "@everyskill/db";
 import { TwoPanelLayout } from "@/components/two-panel-layout";
 import { SkillsTable } from "@/components/skills-table";
 import { LeaderboardTable } from "@/components/leaderboard-table";
@@ -32,11 +33,26 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   // Get session for visibility filtering
   const session = await auth();
 
+  const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
+
   // Fetch skills and leaderboard
   const [skills, contributors] = await Promise.all([
     searchSkills({ query, sortBy, authorId, categories, userId: session?.user?.id }),
     getLeaderboard(10),
   ]);
+
+  // Log browse search query (fire-and-forget, only when user actually searched)
+  if (query) {
+    const tenantId = session?.user?.tenantId ?? DEFAULT_TENANT_ID;
+    logSearchQuery({
+      tenantId,
+      userId: session?.user?.id ?? null,
+      query,
+      normalizedQuery: query.toLowerCase().trim(),
+      resultCount: skills.length,
+      searchType: "browse",
+    }).catch(() => {});
+  }
 
   // Fetch usage trends for sparklines (batched query)
   const skillIds = skills.map((s) => s.id);
