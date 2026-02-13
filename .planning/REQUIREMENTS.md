@@ -111,13 +111,48 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | — |
+| VIS-01 | Phase 40 | Pending |
+| VIS-02 | Phase 40 | Pending |
+| VIS-03 | Phase 40 | Pending |
+| VIS-04 | Phase 44 | Pending |
+| VIS-05 | Phase 44 | Pending |
+| VIS-06 | Phase 40 | Pending |
+| DISC-01 | Phase 45 | Pending |
+| DISC-02 | Phase 45 | Pending |
+| DISC-03 | Phase 45 | Pending |
+| DISC-04 | Phase 45 | Pending |
+| DISC-05 | Phase 45 | Pending |
+| DISC-06 | Phase 45 | Pending |
+| MCP-01 | Phase 42 | Pending |
+| MCP-02 | Phase 42 | Pending |
+| MCP-03 | Phase 42 | Pending |
+| LOOM-01 | Phase 41 | Pending |
+| LOOM-02 | Phase 41 | Pending |
+| LOOM-03 | Phase 41 | Pending |
+| LOOM-04 | Phase 41 | Pending |
+| PREF-01 | Phase 43 | Pending |
+| PREF-02 | Phase 43 | Pending |
+| PREF-03 | Phase 45 | Pending |
+| PREF-04 | Phase 43 | Pending |
+| PREF-05 | Phase 43 | Pending |
+| ANALYTICS-01 | Phase 46 | Pending |
+| ANALYTICS-02 | Phase 46 | Pending |
+| ANALYTICS-03 | Phase 46 | Pending |
+| HOME-01 | Phase 48 | Pending |
+| HOME-02 | Phase 48 | Pending |
+| HOME-03 | Phase 48 | Pending |
+| HOME-04 | Phase 48 | Pending |
+| HOME-05 | Phase 48 | Pending |
+| HOME-06 | Phase 48 | Pending |
+| HOME-07 | Phase 48 | Pending |
+| HOME-08 | Phase 47 | Pending |
+| HOME-09 | Phase 48 | Pending |
 
 **Coverage:**
-- v3.0 requirements: 31 total
-- Mapped to phases: 0
-- Unmapped: 31 (pending roadmap)
+- v3.0 requirements: 36 total
+- Mapped to phases: 36
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-13*
-*Last updated: 2026-02-13 after initial definition*
+*Last updated: 2026-02-13 — traceability added after roadmap creation*
