@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v3.0 Phase 43 -- User Preferences (In progress)
+**Current focus:** v3.0 Phase 42 -- MCP Unification (Plan 01 complete)
 
 ## Current Position
 
-Phase: 43 of 48 (User Preferences)
-Plan: 1 of 3 in current phase (complete: 01)
+Phase: 42 of 48 (MCP Unification)
+Plan: 1 of 2 in current phase (complete: 01)
 Status: In progress
-Last activity: 2026-02-13 -- Completed 43-01-PLAN.md (user preferences data layer)
+Last activity: 2026-02-13 -- Completed 42-01-PLAN.md (unified everyskill tool + handler extraction)
 
-Progress: [████████████████████░░░░░░░░░░] 72% (182/~TBD total)
+Progress: [████████████████████░░░░░░░░░░] 72% (183/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 182
+- Total plans completed: 183
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 182 plans across 43 phases and 8 milestones
+- 183 plans across 43 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -55,6 +55,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - JSONB user_preferences with code-defined defaults merged at read time (not DB defaults)
 - UserPreferencesData interface mirrored in packages/db and Zod schema in apps/web to avoid cross-package imports
 - Loom URL accepts /share/, /embed/, /i/ patterns; no index needed (read-only on detail page)
+- Unified everyskill tool uses STRAP action router pattern with exhaustive switch for compile-time safety
+- confirm_install excluded from unified tool (internal follow-up, not user-initiated action)
 
 ### Pending Todos
 
@@ -71,5 +73,5 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed Phase 41 Plan 01 (Loom schema+backend) -- Phase 43 Plan 01 also complete
-Resume file: .planning/phases/41-loom-video/41-02-PLAN.md
+Stopped at: Completed Phase 42 Plan 01 (unified everyskill tool) -- ready for 42-02
+Resume file: .planning/phases/42-mcp-unification/42-02-PLAN.md
