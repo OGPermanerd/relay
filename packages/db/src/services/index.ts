@@ -68,3 +68,4 @@ export {
 } from "./review-decisions";
 export { semanticSearchSkills, type SemanticSearchResult } from "./semantic-search";
 export { runIntegrityCheck, type IntegrityReport, type IntegrityIssue } from "./integrity-check";
+export { getOrCreateUserPreferences, updateUserPreferences } from "./user-preferences";

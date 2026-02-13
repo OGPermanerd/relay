@@ -13,6 +13,7 @@ import {
   notifications,
   notificationPreferences,
   reviewDecisions,
+  userPreferences,
 } from "../schema";
 
 /**
@@ -109,6 +110,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   apiKeys: many(apiKeys),
   notifications: many(notifications),
   notificationPreferences: many(notificationPreferences),
+  userPreferences: many(userPreferences),
   reviewDecisions: many(reviewDecisions),
 }));
 
@@ -162,6 +164,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   apiKeys: many(apiKeys),
   notifications: many(notifications),
   notificationPreferences: many(notificationPreferences),
+  userPreferences: many(userPreferences),
   reviewDecisions: many(reviewDecisions),
 }));
 
@@ -228,6 +231,22 @@ export const notificationPreferencesRelations = relations(notificationPreference
   }),
   user: one(users, {
     fields: [notificationPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * UserPreferences relations
+ * - tenant: many-to-one with tenants
+ * - user: many-to-one with users (one row per user)
+ */
+export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [userPreferences.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [userPreferences.userId],
     references: [users.id],
   }),
 }));
