@@ -1,875 +1,1170 @@
 # Architecture Patterns
 
-**Domain:** Skill marketplace ecosystem -- review pipeline, conversational MCP discovery, fork detection, admin review UI
-**Researched:** 2026-02-08
-**Confidence:** HIGH (based on direct codebase analysis of all referenced files)
+**Domain:** v3.0 AI Discovery & Workflow Intelligence -- integrating Google Workspace diagnostics, intent search, visibility scoping, Loom video, preferences, and homepage redesign into existing EverySkill monorepo
+**Researched:** 2026-02-13
+**Confidence:** HIGH for existing system analysis, MEDIUM for new integration patterns
 
-## Current Architecture Snapshot
+## Existing System Overview
 
-Before specifying new components, here is the verified state of what exists.
+Before defining new components, here is the verified state of what exists (confirmed via direct codebase analysis).
 
-### Existing Data Layer (packages/db)
+### Current Stack
+- **Monorepo:** `packages/db` (Drizzle ORM 0.42.0, PostgreSQL 15 + pgvector) + `apps/web` (Next.js 16.1.6) + `apps/mcp` (MCP server)
+- **Auth:** Auth.js v5 with JWT strategy, Google SSO, 8h session, domain-scoped cookies, domain-to-tenant mapping
+- **Multi-tenancy:** All tables have `tenant_id` NOT NULL FK, RLS policies via `app.current_tenant_id`, subdomain routing
+- **Search:** Dual-mode -- full-text (`tsvector` + `websearch_to_tsquery`) and semantic (Voyage AI / Ollama embeddings -> pgvector `cosineDistance`)
+- **AI:** Anthropic Claude for skill reviews/improvements, Voyage AI for embeddings, Ollama for local embeddings
+- **Deployment:** PM2 + Caddy, ports 2000/2001/2002
 
-| Table | Key Columns | Relevant to v2.0 |
-|-------|-------------|-------------------|
-| `skills` | id, tenantId, name, slug, content, publishedVersionId, draftVersionId, forkedFromId, authorId, contentHash (via versions) | YES -- needs `status` column for review pipeline |
-| `skill_versions` | id, skillId, version (sequential), contentHash, contentUrl, createdBy | YES -- contentHash is the fork-detection anchor |
-| `skill_reviews` | id, skillId, requestedBy, categories (JSONB), summary, reviewedContentHash, modelName | YES -- currently author-initiated AI review only; needs admin review concept |
-| `skill_embeddings` | id, skillId, embedding (vector 768d), inputHash | YES -- semantic search backbone for conversational discovery |
-| `notifications` | id, userId, type, title, message, actionUrl, metadata, isRead | YES -- new notification types needed |
-| `users` | id, tenantId, email, role (admin/member) | YES -- RBAC already exists |
+### Current Schema Tables (17 total)
+`tenants`, `users`, `accounts`, `sessions`, `verificationTokens`, `skills`, `skillVersions`, `skillEmbeddings`, `ratings`, `usageEvents`, `apiKeys`, `siteSettings`, `auditLogs`, `skillMessages`, `notifications`, `notificationPreferences`, `reviewDecisions`
 
-### Existing MCP Tools (apps/mcp/src/tools/)
-
-| Tool | Handler | Notes |
-|------|---------|-------|
-| `list_skills` | list.ts | Returns id, name, description, category, hoursSaved |
-| `search_skills` | search.ts | ILIKE search with field-weighted relevance scoring |
-| `deploy_skill` | deploy.ts | Fetches skill, injects frontmatter hooks, auto-saves to ~/.claude/skills/ |
-| `create_skill` | create.ts | Creates skill + version, publishes immediately, auto-saves |
-| `confirm_install` | confirm-install.ts | Post-install tracking |
-| `log_skill_usage` | log-usage.ts | DEPRECATED -- PostToolUse hooks handle this |
-
-### Existing Server Actions (apps/web/app/actions/)
-
-| Action | File | Notes |
-|--------|------|-------|
-| `checkAndCreateSkill` | skills.ts | Similarity check + create + auto-review, publishes immediately |
-| `requestAiReview` | ai-review.ts | Author-only, on-demand, advisory |
-| `forkSkill` | fork-skill.ts | Creates copy with `forkedFromId` set |
-| `getAdminSkills` / `deleteSkillAdminAction` / `bulkMergeSkillsAction` | admin-skills.ts | Admin skill management |
-
-### Key Existing Patterns
-
-1. **Raw SQL for MCP tools**: MCP tools use `db.execute(sql\`...\`)` due to node16 moduleResolution constraints. All new MCP tools must follow this pattern.
-2. **Fire-and-forget side effects**: Embedding generation, AI review are non-blocking (`.catch(() => {})`).
-3. **Content hashing**: `hashContent()` in `apps/web/lib/content-hash.ts` uses Web Crypto SHA-256. Same pattern in MCP `create.ts`. The `skill_versions.content_hash` column stores this.
-4. **RBAC**: `isAdmin(session)` checks `session.user.role === "admin"`. Admin layout at `/admin/` with nav items.
-5. **Tenant isolation**: RLS policies on every table. `DEFAULT_TENANT_ID` hardcoded. Connection-level `app.current_tenant_id`.
-6. **Notification system**: `createNotification()` service, types: `grouping_proposal | trending_digest | platform_update`. Bell UI + Resend email.
+### Key Architectural Decisions Already Made
+1. JWT strategy (not database sessions) -- tokens carry `tenantId` and `role`
+2. `accounts` table stores Google OAuth `access_token`, `refresh_token`, `scope`, `expires_at`
+3. `DEFAULT_TENANT_ID` hardcoded in 18+ files (not yet dynamic)
+4. Embedding generation is fire-and-forget (non-blocking, errors swallowed)
+5. RLS is ENABLED but not FORCED -- table owner bypasses RLS during single-tenant phase
+6. Skills have 7-status lifecycle: draft -> pending_review -> ai_reviewed -> approved/rejected/changes_requested -> published
 
 ---
 
-## Recommended Architecture for v2.0
+## Recommended Architecture for v3.0
 
-### Component Overview
+### Component Map
 
 ```
-                  MCP Client (Claude Code)
-                       |
-          +------------+-------------+
-          |            |             |
-   search_skills  recommend_skill  update_skill
-   (enhanced)     (NEW)           (NEW)
-          |            |             |
-          +-----+------+----+-------+
-                |            |
-          Semantic Search   Fork Detection
-          (pgvector)        (hash compare)
-                |            |
-                v            v
-          +------------------+--------+
-          |   packages/db             |
-          |   skills table            |
-          |   + status column (NEW)   |
-          |   skill_versions table    |
-          |   + contentHash           |
-          +-----|---------------------+
-                |
-    +-----------+-----------+
-    |                       |
-Admin Review Queue      Author Notification
-(NEW: /admin/review)    (review_decision type)
-    |
-    v
-Approve/Reject/Request Changes
-    |
-    v
-Status transition + notification dispatch
+                     +-------------------+
+                     |   Next.js App     |
+                     |  (apps/web)       |
+                     +---------+---------+
+                               |
+          +--------------------+--------------------+
+          |                    |                    |
+  +-------v--------+  +-------v--------+  +-------v---------+
+  | Intent Search   |  | Workspace      |  | Visibility      |
+  | Engine          |  | Integration    |  | Scoping         |
+  | (new)           |  | (new)          |  | (modify skills) |
+  +-------+--------+  +-------+--------+  +-------+---------+
+          |                    |                    |
+  +-------v--------+  +-------v--------+  +-------v---------+
+  | Hybrid Search   |  | Google OAuth   |  | Skills Schema   |
+  | Service (RRF)   |  | Token Store    |  | + Query Filters |
+  | (new)           |  | (new table)    |  | (modify)        |
+  +-------+--------+  +-------+--------+  +-------+---------+
+          |                    |                    |
+  +-------v----------------------------------------------v----+
+  |               packages/db (Drizzle + pgvector)            |
+  |  New tables: workspace_tokens, workspace_profiles,        |
+  |              user_preferences, search_history              |
+  |  Modified: skills (visibility, loom_url columns)           |
+  +-----------------------------------------------------------+
 ```
 
 ---
 
-## Component Boundaries
+## 1. Google Workspace OAuth: Incremental Scope Architecture
 
-### Component 1: Review Pipeline State Machine
+### The Problem
 
-**Responsibility:** Manage skill lifecycle status transitions with validation rules.
-**Communicates with:** skills table (new `status` column), notification service, admin review queue.
+EverySkill already uses Google OAuth for SSO login with default scopes (`openid email profile`). Workspace diagnostics needs additional Google API scopes (`directory.readonly` at minimum) to read organizational data. This must work alongside existing SSO without breaking the current auth flow.
 
-#### Schema Change: Add `status` to `skills` table
+### Critical Finding: Auth.js v5 Does NOT Support Incremental Authorization
+
+Auth.js v5 has no built-in support for incremental scope expansion. GitHub Discussion #10261 confirms that using `include_granted_scopes=true` does not correctly update stored tokens or track newly granted scopes. The stored `access_token` in the `accounts` table becomes invalid for the new scope set, and the `scope` column does not get updated.
+
+**Confidence:** HIGH -- confirmed via official Auth.js GitHub discussions and documentation review.
+
+### Recommended Approach: Separate OAuth Flow for Workspace Scopes
+
+Implement a dedicated Workspace connection flow as a completely separate OAuth dance, independent of Auth.js.
+
+```
+User clicks "Connect Workspace" in Settings ->
+  Custom API route (/api/workspace/connect) initiates OAuth2 ->
+  Google consent screen (directory.readonly scope) ->
+  Callback stores tokens (/api/workspace/callback) ->
+  workspace_tokens table stores encrypted access/refresh tokens
+```
+
+### Why Separate Routes Instead of Auth.js Provider
+
+Auth.js is designed for **authentication** (who you are), not **authorization** (what APIs you can access). Mixing workspace API scopes into the auth provider creates coupling between login flow and feature availability. A user who declines workspace scopes should not be blocked from signing in. Separating these concerns also means:
+
+- Workspace tokens can be revoked independently without logging the user out
+- Different team members can connect/disconnect workspace without affecting others' sessions
+- Token refresh for workspace APIs operates on its own schedule (not tied to session refresh)
+- Future integrations (Slack, Jira, etc.) follow the same pattern: separate OAuth + separate token table
+
+### Data Flow
+
+```
+1. User already authenticated via Auth.js (Google SSO)
+2. Admin navigates to Settings > Workspace Integration
+3. UI shows "Connect Google Workspace" button (admin-only)
+4. Click initiates OAuth2 Authorization Code flow:
+   - client_id: same Google Cloud project as SSO
+   - redirect_uri: /api/workspace/callback
+   - scope: https://www.googleapis.com/auth/directory.readonly
+   - access_type: offline (to receive refresh_token)
+   - prompt: consent (force consent screen to ensure refresh_token)
+   - login_hint: user's email (skip account chooser)
+   - state: HMAC-signed JSON { userId, tenantId, csrf }
+5. Google redirects to callback with authorization code
+6. Callback verifies state HMAC, exchanges code for tokens
+7. Tokens encrypted and stored in workspace_tokens table
+8. Immediate trigger: first directory sync (fire-and-forget)
+9. UI shows "Connected" status with last sync time
+```
+
+### New API Routes
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/api/workspace/connect` | GET | Initiates Google OAuth flow, admin-only |
+| `/api/workspace/callback` | GET | OAuth callback, stores tokens |
+| `/api/workspace/disconnect` | POST | Revokes tokens, deletes workspace data |
+| `/api/workspace/sync` | POST | Manual re-sync trigger, admin-only |
+| `/api/workspace/status` | GET | Connection status + last sync time |
+
+### Token Storage Schema
 
 ```typescript
-// New column on skills table
-status: text("status").notNull().default("published"),
-// Values: "draft" | "pending_review" | "ai_reviewed" | "approved" | "rejected" | "changes_requested" | "published"
+// packages/db/src/schema/workspace-tokens.ts
+export const workspaceTokens = pgTable("workspace_tokens", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  tenantId: text("tenant_id").notNull().references(() => tenants.id),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull().default("google"),  // future-proof for Slack, etc.
+  accessTokenEncrypted: text("access_token_encrypted").notNull(),
+  refreshTokenEncrypted: text("refresh_token_encrypted"),
+  scope: text("scope").notNull(),  // space-separated scopes granted
+  expiresAt: timestamp("expires_at"),
+  connectedAt: timestamp("connected_at").notNull().defaultNow(),
+  lastSyncAt: timestamp("last_sync_at"),
+  syncStatus: text("sync_status").default("pending"),  // pending | syncing | synced | error
+  syncError: text("sync_error"),
+}, (table) => [
+  index("workspace_tokens_tenant_id_idx").on(table.tenantId),
+  uniqueIndex("workspace_tokens_tenant_provider_unique").on(table.tenantId, table.provider),
+  pgPolicy("tenant_isolation", {
+    as: "restrictive",
+    for: "all",
+    using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+    withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+  }),
+]);
 ```
 
-**Why `text` not `pgEnum`:** The existing codebase uses `text` columns with application-layer validation for status fields (e.g., `skill_messages.status`, `notifications.type`). Only `users.role` uses `pgEnum`. Staying with `text` is consistent and avoids migration complexity when adding new states later.
+**Design decision: One token per tenant per provider, not per user.** Workspace integration is a tenant-level feature. Having one admin connect it serves the whole organization. The `userId` tracks WHO connected it (for audit), not who can use the data.
 
-**Why add to `skills` not a new table:** Status is an intrinsic property of the skill, read on every skill query (list, search, detail). A JOIN would add overhead for zero benefit. The `skill_reviews` table already has the AI review data; `status` is the workflow control field.
+### Token Encryption
 
-#### State Transitions
-
-```
-                  create_skill
-                      |
-                      v
-                   [draft]
-                      |
-            author submits for review
-                      |
-                      v
-               [pending_review]
-                      |
-            AI review runs automatically
-                      |
-                      v
-                [ai_reviewed]
-                      |
-         +------------+------------+
-         |            |            |
-  admin approves  admin rejects  admin requests changes
-         |            |            |
-         v            v            v
-    [approved]   [rejected]  [changes_requested]
-         |                        |
-  admin publishes        author resubmits
-         |                        |
-         v                        v
-    [published]            [pending_review]
-```
-
-#### Transition Rules (Application Layer)
-
-| From | To | Who | Trigger |
-|------|----|-----|---------|
-| (new) | draft | author | `create_skill` (MCP or web) |
-| draft | pending_review | author | Submit for review |
-| pending_review | ai_reviewed | system | Auto-runs after submission |
-| ai_reviewed | approved | admin | Admin approves |
-| ai_reviewed | rejected | admin | Admin rejects |
-| ai_reviewed | changes_requested | admin | Admin requests changes |
-| approved | published | admin | Admin publishes (or auto-publish if configured) |
-| changes_requested | pending_review | author | Author resubmits |
-| rejected | draft | author | Author revises |
-
-**Implementation location:** New service `packages/db/src/services/skill-lifecycle.ts`
+Access and refresh tokens MUST be encrypted at rest using AES-256-GCM. This is a SOC2 requirement and a security best practice.
 
 ```typescript
-// packages/db/src/services/skill-lifecycle.ts
-export type SkillStatus =
-  | "draft"
-  | "pending_review"
-  | "ai_reviewed"
-  | "approved"
-  | "rejected"
-  | "changes_requested"
-  | "published";
+// apps/web/lib/token-encryption.ts
+import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
-const VALID_TRANSITIONS: Record<SkillStatus, SkillStatus[]> = {
-  draft: ["pending_review"],
-  pending_review: ["ai_reviewed"],
-  ai_reviewed: ["approved", "rejected", "changes_requested"],
-  approved: ["published"],
-  rejected: ["draft"],
-  changes_requested: ["pending_review"],
-  published: ["pending_review"], // re-review after edit
-};
+const ALGORITHM = "aes-256-gcm";
+const KEY = Buffer.from(process.env.WORKSPACE_TOKEN_ENCRYPTION_KEY!, "hex");
+// WORKSPACE_TOKEN_ENCRYPTION_KEY must be a 64-char hex string (32 bytes)
 
-export async function transitionSkillStatus(
-  skillId: string,
-  toStatus: SkillStatus,
-  actorId: string,
-  reason?: string
-): Promise<{ success: boolean; error?: string }> {
-  // 1. Fetch current status
-  // 2. Validate transition is legal
-  // 3. Update skills.status
-  // 4. Write audit log
-  // 5. Dispatch notification to relevant party
+export function encryptToken(plaintext: string): string {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv(ALGORITHM, KEY, iv);
+  let encrypted = cipher.update(plaintext, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  const tag = cipher.getAuthTag().toString("hex");
+  return `${iv.toString("hex")}:${tag}:${encrypted}`;
+}
+
+export function decryptToken(ciphertext: string): string {
+  const [ivHex, tagHex, encrypted] = ciphertext.split(":");
+  const decipher = createDecipheriv(ALGORITHM, KEY, Buffer.from(ivHex, "hex"));
+  decipher.setAuthTag(Buffer.from(tagHex, "hex"));
+  let decrypted = decipher.update(encrypted, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
 }
 ```
 
-#### Backward Compatibility
+### Google API Scopes Strategy
 
-Existing skills have no `status` column. The migration must:
-1. Add `status` column with default `"published"` (all existing skills are already published).
-2. No data backfill needed -- the default handles it.
-3. Existing queries (list, search, deploy) need a WHERE clause filter: `status = 'published'` for public-facing queries. Admin queries show all statuses.
+| Feature | Scope Required | Admin Setup Required? |
+|---------|---------------|----------------------|
+| Read org directory (employee list, departments, titles) | `https://www.googleapis.com/auth/directory.readonly` | Yes -- admin must enable "Contact sharing" in Google Admin Console |
+| Read domain contacts | `https://www.googleapis.com/auth/contacts.other.readonly` | No |
+| Read user profiles | Already have via SSO (`openid profile email`) | No |
 
-**Impact on existing code:**
-- `search_skills` (MCP + web): Add `WHERE status = 'published'` filter
-- `list_skills` (MCP): Add `WHERE status = 'published'` filter
-- `deploy_skill` (MCP): Add `WHERE status = 'published'` filter
-- `getAdminSkills()`: Show all statuses, add status to returned fields
-- `checkAndCreateSkill()`: Change to set `status = 'draft'` instead of auto-publishing
+**Recommendation:** Request `directory.readonly` only. This is the People API "directory" scope, NOT the Admin SDK scope -- it does not require domain-wide delegation. However, the Google Workspace admin must have enabled "Directory: Sharing settings" to allow external apps to read domain profiles.
 
----
-
-### Component 2: Admin Review Page
-
-**Responsibility:** Queue-based admin interface for reviewing, approving, rejecting, and requesting changes on skills.
-**Communicates with:** skill-lifecycle service, skill_reviews table (AI review data), skill_versions table (diff view), notification service.
-
-#### Route Structure
-
-```
-apps/web/app/(protected)/admin/review/
-  page.tsx          -- Review queue (list of pending skills)
-  [skillId]/
-    page.tsx        -- Individual review page (diff view, AI review summary, actions)
-```
-
-#### New Admin Nav Item
-
-Add to `adminNavItems` in `apps/web/app/(protected)/admin/layout.tsx`:
-```typescript
-{ label: "Review", href: "/admin/review" },
-```
-
-#### Review Queue Page (`/admin/review`)
-
-**Data source:** New server action `getReviewQueue()` in `apps/web/app/actions/admin-review.ts`.
-
-```typescript
-export async function getReviewQueue(): Promise<ReviewQueueItem[]> {
-  // SELECT from skills WHERE status IN ('pending_review', 'ai_reviewed')
-  // JOIN skill_reviews for AI score summary
-  // JOIN users for author name
-  // ORDER BY: ai_reviewed first (ready for human), then pending_review, then by createdAt ASC
-}
-```
-
-**UI columns:** Skill name, author, status, AI score (avg of quality/clarity/completeness), submitted date, action buttons.
-
-#### Individual Review Page (`/admin/review/[skillId]`)
-
-**Layout:**
-
-```
-+-----------------------------------------------+
-| Skill: "Git PR Review Automation"              |
-| Author: jane@acme.com | Submitted: Feb 8 2026 |
-+-----------------------------------------------+
-| AI Review Summary                              |
-| Quality: 8/10 | Clarity: 7/10 | Complete: 9/10|
-| "Well-structured workflow with clear steps..." |
-+-----------------------------------------------+
-| Content Diff (if resubmission)                 |
-| [unified diff view of previous vs current]     |
-+-----------------------------------------------+
-| Admin Notes (optional textarea)                |
-| [                                            ] |
-+-----------------------------------------------+
-| [Approve] [Reject] [Request Changes]           |
-+-----------------------------------------------+
-```
-
-**Diff view:** Compare `skill_versions` entries. For first submission, show content only (no diff). For resubmissions after `changes_requested`, diff the previous version against the new submission.
-
-#### New Server Actions (`apps/web/app/actions/admin-review.ts`)
-
-```typescript
-export async function approveSkill(skillId: string, notes?: string): Promise<void>
-export async function rejectSkill(skillId: string, reason: string): Promise<void>
-export async function requestChanges(skillId: string, feedback: string): Promise<void>
-```
-
-Each action:
-1. Validates admin role via `isAdmin(session)`
-2. Calls `transitionSkillStatus()`
-3. Dispatches notification to skill author
-4. Writes audit log entry
-5. `revalidatePath("/admin/review")`
-
----
-
-### Component 3: Conversational MCP Discovery
-
-**Responsibility:** Multi-turn semantic search with recommend, describe, install, guide flow.
-**Communicates with:** skill_embeddings (pgvector), skills table, deploy_skill handler.
-
-#### New MCP Tool: `recommend_skill`
-
-**Purpose:** Semantic search using pgvector embeddings, returning richer results than `search_skills` (which uses ILIKE).
-
-```typescript
-// apps/mcp/src/tools/recommend.ts
-server.registerTool("recommend_skill", {
-  description: "Find skills semantically similar to a description of what you need. " +
-    "Better than search_skills for vague or conceptual queries. " +
-    "Returns skills ranked by relevance with similarity scores.",
-  inputSchema: {
-    description: z.string().min(5).describe(
-      "Describe what you're trying to accomplish (e.g., 'automate code review feedback')"
-    ),
-    category: z.enum(["prompt", "workflow", "agent", "mcp"]).optional(),
-    limit: z.number().min(1).max(10).default(5),
-  },
-});
-```
-
-**Implementation approach:** Reuse the existing `trySemanticSearch()` logic from `apps/web/lib/similar-skills.ts`, but adapted for MCP's raw SQL pattern.
-
-```typescript
-// Core query (raw SQL for MCP compatibility)
-const results = await db.execute(sql`
-  SELECT s.id, s.name, s.slug, s.description, s.category, s.hours_saved,
-         s.total_uses, s.average_rating,
-         ROUND(100 * (1 - (se.embedding <=> ${vectorStr}::vector) / 2))::int AS similarity_pct
-  FROM skill_embeddings se
-  JOIN skills s ON s.id = se.skill_id
-  WHERE s.status = 'published'
-    AND (se.embedding <=> ${vectorStr}::vector) < ${threshold}
-  ORDER BY se.embedding <=> ${vectorStr}::vector
-  LIMIT ${limit}
-`);
-```
-
-**Embedding generation in MCP context:** The MCP server currently has no embedding generation capability. Options:
-
-1. **Call Ollama from MCP** (recommended): The MCP server runs on the same host as Ollama. Port the `generateEmbedding()` function from `apps/web/lib/ollama.ts` into `apps/mcp/src/lib/embedding.ts`. This avoids an HTTP round-trip to the web server.
-
-2. **Call web API endpoint**: Add an `/api/embed` endpoint. Adds HTTP latency and auth complexity.
-
-**Recommendation:** Option 1. The MCP server already imports from `@everyskill/db` and has direct DB access. Adding an Ollama client is trivial -- it is a single `fetch()` call.
-
-**Ollama config for MCP:** The Ollama URL and model are stored in `site_settings` table. The MCP server can read these via `getSiteSettings()` from `@everyskill/db`.
-
-#### Enhanced `search_skills`
-
-The existing `search_skills` tool uses ILIKE. Enhance it to try semantic search first (like `checkSimilarSkills` does on the web side), falling back to ILIKE.
-
-```typescript
-// Modified search.ts handler
-export async function handleSearchSkills({ query, category, limit, userId, skipNudge }) {
-  // 1. Try semantic search first (if Ollama available + enabled)
-  const semanticResults = await trySemanticSearch(query, category, limit);
-  if (semanticResults && semanticResults.length > 0) {
-    // Return with matchType: "semantic" and similarity scores
-    return formatResults(semanticResults, query, "semantic");
-  }
-
-  // 2. Fall back to existing ILIKE search
-  const results = await searchSkillsByQuery({ query, category, limit, tenantId });
-  return formatResults(results, query, "text");
-}
-```
-
-#### Conversational Flow (Multi-Turn)
-
-MCP tools are stateless by design. Multi-turn conversation is managed by the LLM (Claude), not the MCP server. The architecture pattern:
-
-```
-User: "I need help with code review automation"
-  -> Claude calls recommend_skill(description: "code review automation")
-  -> MCP returns top 5 matches with descriptions
-
-User: "Tell me more about the first one"
-  -> Claude already has the skill ID from previous response
-  -> Claude constructs response from cached data in context
-
-User: "Install it"
-  -> Claude calls deploy_skill(skillId: "<id from earlier>")
-  -> MCP saves file locally
-
-User: "How do I use it?"
-  -> Claude reads the installed skill file from ~/.claude/skills/<slug>.md
-  -> Claude provides usage guidance based on skill content
-```
-
-**No server-side session state needed.** Claude maintains conversation context. Each MCP call is independent and idempotent.
-
----
-
-### Component 4: Fork-on-Modify Detection
-
-**Responsibility:** When a user modifies a locally-installed skill, detect the modification and offer to fork or push an update.
-**Communicates with:** skill_versions (contentHash), MCP tools, fork creation flow.
-
-#### Detection Mechanism
-
-The skill file on disk includes frontmatter with `everyskill_skill_id`. When a user modifies it:
-
-1. User runs the MCP tool (e.g., `update_skill` or a new `check_skill` tool).
-2. MCP reads the local file, extracts `everyskill_skill_id` from frontmatter.
-3. MCP hashes the local file content (stripping frontmatter) using SHA-256.
-4. MCP queries the DB for the skill's latest `content_hash` from `skill_versions`.
-5. If hashes differ, the skill has been modified locally.
-
-#### New MCP Tool: `update_skill`
-
-```typescript
-// apps/mcp/src/tools/update.ts
-server.registerTool("update_skill", {
-  description: "Push local modifications to a skill back to EverySkill. " +
-    "Reads the skill file from disk, detects changes via hash comparison, " +
-    "and creates either an update (if you're the author) or a fork (if you're not).",
-  inputSchema: {
-    filePath: z.string().describe("Path to the modified skill file"),
-  },
-});
-```
-
-**Handler flow:**
-
-```typescript
-async function handleUpdateSkill({ filePath, userId }) {
-  // 1. Read file from disk
-  const content = fs.readFileSync(filePath, "utf-8");
-
-  // 2. Extract skill ID from frontmatter
-  const skillId = extractFrontmatterField(content, "everyskill_skill_id");
-  if (!skillId) return error("No everyskill_skill_id in frontmatter");
-
-  // 3. Strip frontmatter for hashing
-  const rawContent = stripFrontmatter(content);
-  const localHash = await hashContent(rawContent);
-
-  // 4. Fetch remote skill and latest version hash
-  const skill = await db.execute(sql`
-    SELECT s.id, s.author_id, s.name, s.slug, s.status,
-           sv.content_hash AS remote_hash
-    FROM skills s
-    LEFT JOIN skill_versions sv ON sv.id = s.published_version_id
-    WHERE s.id = ${skillId}
-  `);
-
-  if (!skill[0]) return error("Skill not found in marketplace");
-
-  // 5. Compare hashes
-  if (localHash === skill[0].remote_hash) {
-    return { message: "Skill is up to date, no changes detected" };
-  }
-
-  // 6. Determine action: update or fork
-  if (skill[0].author_id === userId) {
-    // Author: create new version + submit for review
-    return createNewVersion(skillId, rawContent, userId);
-  } else {
-    // Non-author: offer fork
-    return offerFork(skillId, skill[0].name, rawContent, userId);
-  }
-}
-```
-
-**Author update path:**
-1. Create new `skill_versions` entry with incremented version number.
-2. Upload content to R2 (if configured).
-3. Set `skills.draftVersionId` to new version.
-4. Transition status to `pending_review` (if review pipeline enabled).
-5. Return success message with skill URL.
-
-**Non-author fork path:**
-1. Create new skill with `forkedFromId = originalSkillId`.
-2. Copy content, set author to current user.
-3. Start in `draft` status.
-4. Return fork URL + message explaining the fork.
-
-#### New MCP Tool: `check_skill_status`
-
-Lightweight tool to check if a local skill file has diverged from the marketplace version.
-
-```typescript
-server.registerTool("check_skill_status", {
-  description: "Check if a locally installed skill has been modified compared to the marketplace version.",
-  inputSchema: {
-    filePath: z.string().describe("Path to the skill file to check"),
-  },
-});
-```
-
-Returns: `{ modified: boolean, localHash, remoteHash, isAuthor, canUpdate, canFork }`.
-
----
-
-### Component 5: Notification Integration
-
-**Responsibility:** Dispatch notifications for review pipeline events.
-**Communicates with:** notification service, notification_preferences service.
-
-#### New Notification Types
-
-Add to the `notifications.type` domain:
-
-| Type | Recipient | When |
-|------|-----------|------|
-| `review_submitted` | all admins | Author submits skill for review |
-| `review_approved` | skill author | Admin approves |
-| `review_rejected` | skill author | Admin rejects (includes reason) |
-| `changes_requested` | skill author | Admin requests changes (includes feedback) |
-| `skill_published` | skill author | Admin publishes approved skill |
-
-**Implementation:** Extend `CreateNotificationParams.type` union in `packages/db/src/services/notifications.ts`:
-
-```typescript
-export type NotificationType =
-  | "grouping_proposal"
-  | "trending_digest"
-  | "platform_update"
-  | "review_submitted"
-  | "review_approved"
-  | "review_rejected"
-  | "changes_requested"
-  | "skill_published";
-```
-
-**Admin notification dispatch:** When a skill is submitted for review, find all users with `role = 'admin'` in the tenant and create a notification for each. This uses existing `getUserNotifications` infrastructure -- no new service needed.
-
----
-
-## Data Flow Changes
-
-### Current Flow: Skill Creation
-
-```
-Author -> checkAndCreateSkill() -> INSERT skills (published immediately)
-                                -> INSERT skill_versions
-                                -> Upload to R2
-                                -> Fire-and-forget: embedding + AI review
-```
-
-### New Flow: Skill Creation with Review Pipeline
-
-```
-Author -> checkAndCreateSkill() -> INSERT skills (status = 'draft')
-                                -> INSERT skill_versions (v1)
-                                -> Upload to R2
-                                -> Fire-and-forget: embedding
-       -> submitForReview()     -> UPDATE skills SET status = 'pending_review'
-                                -> Notify admins (review_submitted)
-                                -> Fire-and-forget: AI review
-       [AI review completes]    -> UPDATE skills SET status = 'ai_reviewed'
-       [Admin reviews]          -> UPDATE skills SET status = 'approved'/'rejected'/'changes_requested'
-                                -> Notify author
-       [Admin publishes]        -> UPDATE skills SET status = 'published', publishedVersionId = latest
-                                -> Notify author (skill_published)
-```
-
-### Current Flow: MCP Skill Search
-
-```
-Claude -> search_skills(query) -> ILIKE search -> return results
-```
-
-### New Flow: MCP Semantic Search
-
-```
-Claude -> search_skills(query) -> Ollama embed(query) -> pgvector cosine search
-                                  (fallback: ILIKE)    -> return results + similarity %
-       -> recommend_skill(desc) -> Ollama embed(desc) -> pgvector cosine search
-                                                       -> return ranked results
-```
-
-### Current Flow: MCP Create Skill
-
-```
-Claude -> create_skill(data) -> INSERT skills (published immediately)
-                              -> INSERT skill_versions
-                              -> Auto-save to ~/.claude/skills/
-```
-
-### New Flow: MCP Create + Update
-
-```
-Claude -> create_skill(data) -> INSERT skills (status = 'draft')
-                              -> INSERT skill_versions
-                              -> Auto-save to ~/.claude/skills/
-       -> update_skill(path) -> Read local file
-                              -> Hash comparison against skill_versions.content_hash
-                              -> If author: new version + submit for review
-                              -> If not author: create fork
-```
-
----
-
-## Integration Points (New vs Modified)
+**The app should detect and handle the case where directory sharing is not enabled** -- the Google API will return a 403 error. Display a clear "Ask your Google Workspace admin to enable directory sharing" message with a link to the relevant Google Admin Console page.
 
 ### New Files
 
-| File | Type | Purpose |
-|------|------|---------|
-| `packages/db/src/services/skill-lifecycle.ts` | Service | State machine for skill status transitions |
-| `apps/mcp/src/tools/recommend.ts` | MCP Tool | Semantic search via pgvector |
-| `apps/mcp/src/tools/update.ts` | MCP Tool | Push local modifications back |
-| `apps/mcp/src/tools/check-status.ts` | MCP Tool | Check local vs remote hash |
-| `apps/mcp/src/lib/embedding.ts` | Library | Ollama client for MCP context |
-| `apps/web/app/actions/admin-review.ts` | Server Action | Admin review queue + actions |
-| `apps/web/app/(protected)/admin/review/page.tsx` | Page | Review queue UI |
-| `apps/web/app/(protected)/admin/review/[skillId]/page.tsx` | Page | Individual review page |
-| `apps/web/components/review-queue-table.tsx` | Component | Review queue data table |
-| `apps/web/components/review-detail.tsx` | Component | Review detail with diff view |
-| DB migration | Migration | Add `status` column to skills |
+| File | Purpose |
+|------|---------|
+| `apps/web/app/api/workspace/connect/route.ts` | Initiate OAuth flow |
+| `apps/web/app/api/workspace/callback/route.ts` | Handle OAuth callback, store tokens |
+| `apps/web/app/api/workspace/disconnect/route.ts` | Revoke + delete |
+| `apps/web/app/api/workspace/sync/route.ts` | Manual sync trigger |
+| `apps/web/app/api/workspace/status/route.ts` | Connection status |
+| `apps/web/lib/token-encryption.ts` | AES-256-GCM encrypt/decrypt |
+| `apps/web/lib/google-workspace-client.ts` | Google API client wrapper |
+| `packages/db/src/schema/workspace-tokens.ts` | Token storage schema |
+| `packages/db/src/services/workspace-tokens.ts` | Token CRUD + refresh |
+
+---
+
+## 2. Workspace Diagnostics: Data Model and Sync Architecture
+
+### What is "Workspace Diagnostics"?
+
+Cross-reference Google Workspace organizational data (departments, titles, reporting structure) with EverySkill usage patterns. Answers questions like: "Which departments are using AI skills?", "What is the adoption rate per team?", "Who are the power users in Engineering?"
+
+### Directory Data Storage
+
+**Do NOT sync full Google directory into our database.** Cache only the minimal organizational metadata needed for analytics cross-referencing. This reduces privacy surface, storage, and GDPR/SOC2 exposure.
+
+```typescript
+// packages/db/src/schema/workspace-profiles.ts
+export const workspaceProfiles = pgTable("workspace_profiles", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  tenantId: text("tenant_id").notNull().references(() => tenants.id),
+  userId: text("user_id").references(() => users.id),  // nullable until matched
+  externalId: text("external_id").notNull(),  // Google directory user ID
+  email: text("email").notNull(),
+  name: text("name"),
+  department: text("department"),
+  title: text("title"),
+  orgUnitPath: text("org_unit_path"),  // e.g., "/Engineering/Frontend"
+  managerId: text("manager_id"),  // references externalId (not our user ID)
+  thumbnailUrl: text("thumbnail_url"),
+  syncedAt: timestamp("synced_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("workspace_profiles_tenant_external_unique").on(table.tenantId, table.externalId),
+  index("workspace_profiles_tenant_id_idx").on(table.tenantId),
+  index("workspace_profiles_tenant_email_idx").on(table.tenantId, table.email),
+  index("workspace_profiles_tenant_department_idx").on(table.tenantId, table.department),
+  pgPolicy("tenant_isolation", {
+    as: "restrictive",
+    for: "all",
+    using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+    withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+  }),
+]);
+```
+
+### Sync Strategy
+
+```
+Admin connects workspace ->
+  workspace_tokens row created ->
+  Immediate: fire-and-forget first sync (server action) ->
+    Fetch People API directory contacts (paginated, max 500/request) ->
+    Upsert workspace_profiles rows ->
+    Match email to existing users table (set userId FK) ->
+    Update workspace_tokens.lastSyncAt = now(), syncStatus = 'synced'
+
+Daily cron: /api/cron/workspace-sync ->
+  For each tenant with active workspace_tokens where syncStatus != 'error':
+    Re-fetch and upsert profiles
+    Remove profiles not in latest sync (employee left org)
+```
+
+**Key constraint:** Only tenant admins can connect Workspace. The `/api/workspace/connect` route must verify `session.user.role === "admin"` before initiating.
+
+### Diagnostic Queries
+
+New service file: `packages/db/src/services/workspace-diagnostics.ts`
+
+```typescript
+export interface DepartmentStats {
+  department: string;
+  totalEmployees: number;
+  activeUsers: number;        // matched to EverySkill users
+  skillsCreated: number;
+  skillsUsed: number;
+  adoptionPercent: number;    // activeUsers / totalEmployees * 100
+}
+
+export async function getDepartmentAdoption(tenantId: string): Promise<DepartmentStats[]>;
+export async function getTopDepartments(tenantId: string, limit?: number): Promise<DepartmentStats[]>;
+export async function getUnmatchedEmployees(tenantId: string): Promise<WorkspaceProfile[]>;
+```
+
+Example SQL for department adoption:
+
+```sql
+SELECT
+  wp.department,
+  COUNT(DISTINCT wp.id) as total_employees,
+  COUNT(DISTINCT u.id) as active_users,
+  COUNT(DISTINCT s.id) as skills_created,
+  COUNT(DISTINCT ue.id) as skills_used,
+  ROUND(
+    COUNT(DISTINCT u.id)::numeric /
+    NULLIF(COUNT(DISTINCT wp.id), 0) * 100, 1
+  ) as adoption_pct
+FROM workspace_profiles wp
+LEFT JOIN users u ON u.email = wp.email AND u.tenant_id = wp.tenant_id
+LEFT JOIN skills s ON s.author_id = u.id AND s.tenant_id = wp.tenant_id
+LEFT JOIN usage_events ue ON ue.user_id = u.id AND ue.tenant_id = wp.tenant_id
+WHERE wp.tenant_id = $1
+GROUP BY wp.department
+ORDER BY adoption_pct DESC;
+```
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `packages/db/src/schema/workspace-profiles.ts` | Directory profile cache |
+| `packages/db/src/services/workspace-profiles.ts` | CRUD, sync operations |
+| `packages/db/src/services/workspace-diagnostics.ts` | Analytics queries |
+| `apps/web/lib/workspace-sync.ts` | Google API fetch + sync orchestration |
+| `apps/web/app/actions/workspace.ts` | Server actions for connect/disconnect/sync |
+| `apps/web/app/api/cron/workspace-sync/route.ts` | Daily sync cron endpoint |
+| `apps/web/app/(protected)/admin/workspace/page.tsx` | Admin workspace settings page |
+| `apps/web/components/workspace-connect-button.tsx` | Connect/disconnect UI |
+| `apps/web/components/workspace-diagnostics-dashboard.tsx` | Department stats dashboard |
+
+---
+
+## 3. Skill Visibility Scoping
+
+### Adding Visibility to Skills
+
+```typescript
+// Add to skills table in packages/db/src/schema/skills.ts:
+visibility: text("visibility").notNull().default("tenant"),
+// Three levels:
+// 'global'   - visible across all tenants (curated marketplace content)
+// 'tenant'   - visible to everyone in same tenant (current default behavior)
+// 'personal' - visible only to the author
+```
+
+### Migration
+
+```sql
+-- 0019_add_skill_visibility.sql
+ALTER TABLE skills ADD COLUMN visibility text NOT NULL DEFAULT 'tenant';
+CREATE INDEX skills_visibility_idx ON skills (visibility);
+```
+
+**Default `'tenant'`** ensures all existing skills retain current behavior. No data backfill needed.
+
+### RLS Complication and Solution
+
+The current RLS policy is: `tenant_id = current_setting('app.current_tenant_id', true)`. This blocks ALL cross-tenant reads, including `visibility = 'global'` skills from other tenants.
+
+**Two options:**
+
+| Option | Approach | Pros | Cons |
+|--------|----------|------|------|
+| A: Materialized view | Separate `global_skills_mv` view outside RLS | Keeps RLS strict; simple read path | Requires refresh on publish; adds view maintenance |
+| B: Modified RLS policy | `OR visibility = 'global'` in RLS USING clause | No extra infrastructure | Weakens RLS guarantee; every query now checks visibility |
+
+**Recommendation: Defer global visibility to a later phase.** For v3.0, implement `tenant` and `personal` only. These do not require RLS changes:
+
+- `tenant` visibility: already handled by RLS (same tenant can see)
+- `personal` visibility: add `AND (visibility != 'personal' OR author_id = $userId)` to queries
+
+`global` visibility is a marketplace feature that requires careful design (content curation, cross-tenant embedding search, etc.) and should be a separate phase.
+
+### Visibility Query Filter
+
+```typescript
+// packages/db/src/services/visibility.ts
+import { sql, eq, or, and } from "drizzle-orm";
+import { skills } from "../schema/skills";
+
+/**
+ * Build a WHERE condition that respects visibility rules.
+ * Must be combined with existing status='published' filter.
+ */
+export function visibilityFilter(userId: string | null) {
+  if (!userId) {
+    // Unauthenticated: only tenant-visible (RLS handles tenant scoping)
+    return eq(skills.visibility, "tenant");
+  }
+
+  // Authenticated: tenant-visible OR (personal AND authored by this user)
+  return or(
+    eq(skills.visibility, "tenant"),
+    and(eq(skills.visibility, "personal"), eq(skills.authorId, userId))
+  );
+}
+```
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `packages/db/src/schema/skills.ts` | Add `visibility` column |
+| `packages/db/src/services/search-skills.ts` | Add visibility filter to WHERE clause |
+| `packages/db/src/services/semantic-search.ts` | Add visibility filter to WHERE clause |
+| `apps/web/lib/search-skills.ts` | Pass userId for visibility, add filter |
+| `apps/web/app/actions/search.ts` | Pass session userId to search |
+| `apps/web/app/actions/skills.ts` | Accept visibility on create/edit |
+| `apps/web/app/(protected)/skills/new/page.tsx` | Visibility selector in form |
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `packages/db/src/services/visibility.ts` | Visibility condition builder |
+| `apps/web/components/visibility-selector.tsx` | UI dropdown for visibility choice |
+| Migration `0019_add_skill_visibility.sql` | Column addition |
+
+---
+
+## 4. Intent Search Architecture
+
+### Current Search Limitations
+
+The existing search has two modes that operate independently:
+1. **Full-text:** `websearch_to_tsquery` + ILIKE fallback -- keyword matching, field-weighted scoring
+2. **Semantic:** pgvector `cosineDistance` on Voyage AI / Ollama embeddings -- meaning matching
+
+Neither mode understands user intent. "I need to summarize meeting notes" should find workflow skills about meeting summarization, not just skills with "meeting" in the title. The full-text search misses conceptual matches; the semantic search misses exact keyword matches.
+
+### Recommended Architecture: Hybrid Search with Optional Intent Classification
+
+**Do NOT build conversational multi-turn search.** Research (arxiv 2602.09552) confirms that for single-domain QA, the complexity of multi-turn RAG yields marginal improvement over well-tuned single-query approaches. For a skill marketplace with <10K skills per tenant, single-query hybrid search is the right tradeoff.
+
+**Architecture:**
+
+```
+User Query: "help me write better emails"
+    |
+    +---> [Parallel, no dependency between branches]
+    |
+    |     +---> Intent Classifier (Claude Haiku, <500ms, optional)
+    |     |     Output: { category: "prompt", semanticQuery: "email writing improvement" }
+    |     |
+    |     +---> Full-Text Search (existing searchSkills, ~50ms)
+    |     |     Uses: websearch_to_tsquery + ILIKE + field-weighted scoring
+    |     |
+    |     +---> Semantic Search (existing semanticSearchSkills, ~100ms)
+    |           Uses: Voyage AI / Ollama embedding -> pgvector cosine distance
+    |
+    v
+Reciprocal Rank Fusion (RRF, k=60)
+    |
+    v
+Optional: Preference Boost (if user_preferences exist)
+    |
+    v
+Visibility Filter (tenant + personal)
+    |
+    v
+Ranked Results (top 10)
+```
+
+### Reciprocal Rank Fusion (RRF)
+
+RRF is the standard method for combining two ranked lists without tuning weights. Each result gets `1 / (k + rank)` from each retrieval method; scores are summed.
+
+```typescript
+// packages/db/src/services/hybrid-search.ts
+
+export interface HybridSearchResult {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  category: string;
+  totalUses: number;
+  averageRating: number | null;
+  ftsRank?: number;    // position in full-text results (1-indexed)
+  semRank?: number;    // position in semantic results (1-indexed)
+  rrfScore: number;    // combined RRF score
+}
+
+export function reciprocalRankFusion(
+  ftsResults: { id: string }[],
+  semanticResults: { id: string }[],
+  k: number = 60
+): Map<string, { ftsRank?: number; semRank?: number; rrfScore: number }> {
+  const scores = new Map<string, { ftsRank?: number; semRank?: number; rrfScore: number }>();
+
+  ftsResults.forEach((r, i) => {
+    const rank = i + 1;
+    const existing = scores.get(r.id) || { rrfScore: 0 };
+    existing.ftsRank = rank;
+    existing.rrfScore += 1 / (k + rank);
+    scores.set(r.id, existing);
+  });
+
+  semanticResults.forEach((r, i) => {
+    const rank = i + 1;
+    const existing = scores.get(r.id) || { rrfScore: 0 };
+    existing.semRank = rank;
+    existing.rrfScore += 1 / (k + rank);
+    scores.set(r.id, existing);
+  });
+
+  return scores;
+}
+```
+
+### Intent Classifier (Optional Enhancement)
+
+Use Claude Haiku for fast, cheap query intent extraction. This runs in PARALLEL with search -- it does not add latency if it finishes before results come back. If it times out (>500ms), fall back to pure RRF.
+
+```typescript
+// apps/web/lib/intent-classifier.ts
+import Anthropic from "@anthropic-ai/sdk";
+
+interface SearchIntent {
+  category?: "prompt" | "workflow" | "agent" | "mcp";
+  taskType?: string;        // "summarize", "generate", "analyze", etc.
+  keywords: string[];       // extracted key terms for FTS boost
+  semanticQuery: string;    // rephrased query for better embedding
+}
+
+export async function classifyIntent(query: string): Promise<SearchIntent | null> {
+  try {
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const response = await Promise.race([
+      client.messages.create({
+        model: "claude-haiku-4-20250414",
+        max_tokens: 256,
+        system: "Extract search intent from user queries for an AI skill marketplace. Return JSON only.",
+        messages: [{ role: "user", content: `Classify this search query: "${query}"` }],
+      }),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 500)),
+    ]);
+
+    if (!response) return null;  // timeout
+    // parse and return
+  } catch {
+    return null;  // graceful degradation
+  }
+}
+```
+
+**Cost analysis:** Claude Haiku at ~$0.25/M input tokens and ~$1.25/M output tokens. A typical search query is ~50 tokens input + ~100 tokens output = ~$0.00014 per search. At 1000 searches/day = $0.14/day. Negligible.
+
+### Preference Boost
+
+Applied AFTER RRF, not during retrieval. Keeps search deterministic and debuggable.
+
+```typescript
+// Small additive boost, not multiplicative (prevents preferences from dominating)
+function applyPreferenceBoost(
+  rrfScores: Map<string, { rrfScore: number; category?: string }>,
+  preferences: { preferredCategories: string[] }
+): Map<string, { rrfScore: number }> {
+  const CATEGORY_BOOST = 0.002;  // ~equivalent to moving up 1 rank in a 60-item list
+
+  for (const [id, score] of rrfScores) {
+    if (score.category && preferences.preferredCategories.includes(score.category)) {
+      score.rrfScore += CATEGORY_BOOST;
+    }
+  }
+
+  return rrfScores;
+}
+```
+
+### Modified Search Flow
+
+The existing `quickSearch` server action in `apps/web/app/actions/search.ts` currently calls `searchSkills()` (FTS only). Modify it to use hybrid search:
+
+```typescript
+// apps/web/app/actions/search.ts (modified)
+export async function quickSearch(query: string): Promise<QuickSearchResult[]> {
+  if (!query?.trim()) return [];
+
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  // Run FTS, semantic, and intent classification in parallel
+  const [ftsResults, semanticResults, intent] = await Promise.all([
+    searchSkills({ query: query.trim() }),
+    trySemanticSearch(query.trim()),  // returns [] if embeddings not configured
+    classifyIntent(query.trim()),     // returns null on timeout/error
+  ]);
+
+  // Merge with RRF
+  const rrfScores = reciprocalRankFusion(ftsResults, semanticResults);
+
+  // Apply preference boost if user has preferences
+  if (userId) {
+    const prefs = await getUserPreferences(userId);
+    if (prefs) applyPreferenceBoost(rrfScores, prefs);
+  }
+
+  // Sort by RRF score, take top 10
+  // ... (merge back full result data from ftsResults + semanticResults)
+}
+```
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `packages/db/src/services/hybrid-search.ts` | RRF merge logic |
+| `apps/web/lib/intent-classifier.ts` | Claude Haiku intent extraction |
 
 ### Modified Files
 
-| File | Change | Reason |
+| File | Change |
+|------|--------|
+| `apps/web/app/actions/search.ts` | Use hybrid search |
+| `apps/web/lib/search-skills.ts` | Accept visibility filter param |
+| `apps/web/components/search-with-dropdown.tsx` | Show search mode indicator (optional) |
+
+---
+
+## 5. Personal Preferences Storage
+
+### Schema
+
+```typescript
+// packages/db/src/schema/user-preferences.ts
+export const userPreferences = pgTable("user_preferences", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  tenantId: text("tenant_id").notNull().references(() => tenants.id),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+
+  // Search preferences
+  preferredCategories: text("preferred_categories").array().default([]),
+  savedSearches: jsonb("saved_searches").$type<SavedSearch[]>().default([]),
+
+  // Display preferences
+  defaultView: text("default_view").default("grid"),   // "grid" | "list"
+  homepageTab: text("homepage_tab").default("browse"),  // "browse" | "leverage"
+
+  // Notification preferences already live in notification_preferences table
+  // DO NOT duplicate them here
+
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("user_preferences_tenant_user_unique").on(table.tenantId, table.userId),
+  index("user_preferences_tenant_id_idx").on(table.tenantId),
+  pgPolicy("tenant_isolation", {
+    as: "restrictive",
+    for: "all",
+    using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+    withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+  }),
+]);
+
+interface SavedSearch {
+  name: string;
+  query: string;
+  filters: Record<string, string>;
+  createdAt: string;  // ISO string
+}
+```
+
+### Sync Mechanism
+
+Preferences are **server-authoritative** (not localStorage). Client reads on page load via server component, writes on change via server action. No real-time sync needed -- preferences change infrequently.
+
+```typescript
+// apps/web/app/actions/preferences.ts
+"use server";
+
+export async function getPreferences(): Promise<UserPreferences | null>;
+export async function updatePreferences(updates: Partial<UpdateablePreferences>): Promise<void>;
+export async function addSavedSearch(search: SavedSearch): Promise<void>;
+export async function removeSavedSearch(name: string): Promise<void>;
+```
+
+**Why NOT localStorage:** Preferences must be available server-side for search ranking (preference boost). localStorage is not accessible in server components/actions. Server-authoritative storage also gives multi-device sync for free.
+
+### Search History (For Preference Learning)
+
+```typescript
+// packages/db/src/schema/search-history.ts
+export const searchHistory = pgTable("search_history", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  tenantId: text("tenant_id").notNull().references(() => tenants.id),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  query: text("query").notNull(),
+  resultCount: integer("result_count"),
+  clickedSkillId: text("clicked_skill_id"),  // which result they clicked (nullable)
+  searchMode: text("search_mode"),  // "fts" | "semantic" | "hybrid"
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("search_history_tenant_id_idx").on(table.tenantId),
+  index("search_history_user_created_idx").on(table.userId, table.createdAt),
+  pgPolicy("tenant_isolation", {
+    as: "restrictive",
+    for: "all",
+    using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+    withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+  }),
+]);
+```
+
+**Retention:** Delete entries older than 90 days via `/api/cron/cleanup` (add to existing cron infrastructure). Search history is fire-and-forget (write errors silently ignored).
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `packages/db/src/schema/user-preferences.ts` | Preferences schema |
+| `packages/db/src/schema/search-history.ts` | Search history schema |
+| `packages/db/src/services/user-preferences.ts` | CRUD operations |
+| `packages/db/src/services/search-history.ts` | Write + query operations |
+| `apps/web/app/actions/preferences.ts` | Server actions |
+| `apps/web/components/saved-searches.tsx` | Saved searches UI |
+| `apps/web/app/(protected)/settings/preferences/page.tsx` | Preferences page |
+
+---
+
+## 6. Loom Video Integration
+
+### Approach: URL-Only Storage + Client-Side iframe Embed
+
+**Do NOT use the Loom SDK.** Loom does not have an open API. Their SDK (`@loomhq/loom-embed`, ~45KB) is client-side only and primarily useful for recording workflows (which EverySkill does not need). Simple iframe embed provides identical viewing experience with zero bundle cost.
+
+### Schema Change
+
+```typescript
+// Add to skills table in packages/db/src/schema/skills.ts:
+loomUrl: text("loom_url"),  // nullable, e.g. "https://www.loom.com/share/abc123def456"
+```
+
+Single column addition on existing table. No separate table needed.
+
+### Migration
+
+```sql
+-- 0020_add_loom_url.sql
+ALTER TABLE skills ADD COLUMN loom_url text;
+```
+
+### URL Validation
+
+```typescript
+// apps/web/lib/loom.ts
+const LOOM_URL_PATTERN = /^https:\/\/(www\.)?loom\.com\/share\/[a-zA-Z0-9]+(\?.*)?$/;
+
+export function isValidLoomUrl(url: string): boolean {
+  return LOOM_URL_PATTERN.test(url);
+}
+
+export function extractLoomId(url: string): string | null {
+  const match = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
+  return match ? match[1] : null;
+}
+
+export function getLoomEmbedUrl(shareUrl: string): string | null {
+  const id = extractLoomId(shareUrl);
+  return id ? `https://www.loom.com/embed/${id}` : null;
+}
+```
+
+### Client-Side Embed Component
+
+```typescript
+// apps/web/components/loom-embed.tsx
+"use client";
+
+import { extractLoomId } from "@/lib/loom";
+
+interface LoomEmbedProps {
+  url: string;
+}
+
+export function LoomEmbed({ url }: LoomEmbedProps) {
+  const loomId = extractLoomId(url);
+  if (!loomId) return null;
+
+  return (
+    <div className="relative w-full overflow-hidden rounded-lg" style={{ paddingBottom: "56.25%" }}>
+      <iframe
+        src={`https://www.loom.com/embed/${loomId}`}
+        className="absolute inset-0 h-full w-full"
+        frameBorder="0"
+        allowFullScreen
+        allow="autoplay; fullscreen"
+      />
+    </div>
+  );
+}
+```
+
+### Integration Points
+
+| File | Change |
+|------|--------|
+| `packages/db/src/schema/skills.ts` | Add `loomUrl` column |
+| `apps/web/app/actions/skills.ts` | Validate + save loomUrl on create/edit |
+| `apps/web/components/skill-detail.tsx` | Render `<LoomEmbed>` when loomUrl present |
+| `apps/web/app/(protected)/skills/new/page.tsx` | Loom URL input field in form |
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `apps/web/components/loom-embed.tsx` | Responsive iframe embed |
+| `apps/web/lib/loom.ts` | URL validation + ID extraction |
+| Migration `0020_add_loom_url.sql` | Column addition |
+
+---
+
+## 7. Homepage Redesign: New Data Requirements
+
+### Current Homepage Data Flow
+
+The existing homepage (`apps/web/app/(protected)/page.tsx`) fetches 8 parallel queries:
+1. `getPlatformStats()` -- FTE years saved, total uses, total downloads, avg rating
+2. `getPlatformStatTrends()` -- sparkline data for stat cards
+3. `getTrendingSkills(6)` -- top 6 trending skills
+4. `getLeaderboard(5)` -- top 5 contributors
+5-8. My Leverage data (skills used/created + stats for each)
+
+### New Data for v3.0 Homepage
+
+| Data Need | Source | Status |
+|-----------|--------|--------|
+| Personalized skill recommendations | Hybrid search with empty query + user preferences + usage history | New |
+| "Continue where you left off" (recently used) | `usageEvents` for current user, last 5 | New query |
+| Saved searches | `userPreferences.savedSearches` | New (requires preferences) |
+| Department leaderboard | `workspaceProfiles` + `usageEvents` cross-ref | New (requires workspace) |
+| Loom video highlights | Skills with `loomUrl`, sorted by trending | New query filter |
+| Quick actions based on role | `session.user.role` + user preferences | Existing data, new UI |
+
+### Personalized Feed Service
+
+```typescript
+// apps/web/lib/personalized-feed.ts
+
+export interface PersonalizedFeed {
+  recommendations: SkillSummary[];    // based on usage patterns + preferences
+  recentlyUsed: SkillSummary[];       // last 5 skills used by this user
+  savedSearches: SavedSearch[];       // from user_preferences
+  departmentTrending?: SkillSummary[]; // trending in user's department (requires workspace)
+}
+
+export async function getPersonalizedFeed(
+  userId: string,
+  tenantId: string
+): Promise<PersonalizedFeed> {
+  const [prefs, recentUsage, departmentSkills] = await Promise.all([
+    getUserPreferences(userId, tenantId),
+    getRecentlyUsedSkills(userId, 5),
+    getWorkspaceDepartmentSkills(userId, tenantId).catch(() => undefined),
+  ]);
+
+  // Generate recommendations based on:
+  // 1. Categories the user hasn't explored (from preferences)
+  // 2. Skills popular in their department (from workspace)
+  // 3. Skills similar to ones they've used (from usage history + embeddings)
+  const recommendations = await generateRecommendations(userId, tenantId, prefs, recentUsage);
+
+  return {
+    recommendations,
+    recentlyUsed: recentUsage,
+    savedSearches: prefs?.savedSearches ?? [],
+    departmentTrending: departmentSkills,
+  };
+}
+```
+
+### Homepage Component Architecture
+
+```
+HomePage (server component)
+  |
+  +-- WelcomeSection (personalized greeting + quick actions)
+  |     - First name from session
+  |     - "Create a Skill" + "Browse Skills" CTAs (existing)
+  |     - Quick access to saved searches (new)
+  |
+  +-- SearchBar (enhanced intent search)
+  |     - SearchWithDropdown with hybrid backend (modified)
+  |
+  +-- HomeTabs (existing component, new tab added)
+       |
+       +-- BrowseTab
+       |    +-- PersonalizedRecommendations (new, replaces plain trending for logged-in users)
+       |    +-- TrendingSection (existing, kept as fallback / anonymous view)
+       |    +-- LeaderboardTable (existing)
+       |    +-- DepartmentHighlights (new, only if workspace connected)
+       |
+       +-- LeverageTab (existing MyLeverageView, unchanged)
+       |
+       +-- SavedTab (new, saved searches with one-click re-run)
+```
+
+### Graceful Degradation
+
+The homepage MUST work without any v3.0 features enabled:
+- No workspace connected? Skip department highlights, show trending instead
+- No preferences saved? Show default trending skills
+- No embeddings? Recommendations based on usage history only (no semantic similarity)
+- No search history? Show popular skills across tenant
+
+This is achieved by having each data function return sensible empty defaults and using conditional rendering.
+
+---
+
+## Complete New Tables Summary
+
+| Table | Purpose | Columns (key) | Tenant-scoped | RLS |
+|-------|---------|---------------|--------------|-----|
+| `workspace_tokens` | Encrypted Google API tokens | tenantId, userId, accessTokenEncrypted, refreshTokenEncrypted, scope, syncStatus | Yes | Yes |
+| `workspace_profiles` | Cached directory data | tenantId, userId (FK, nullable), externalId, email, department, title, orgUnitPath | Yes | Yes |
+| `user_preferences` | Search/display prefs | tenantId, userId, preferredCategories, savedSearches, defaultView, homepageTab | Yes | Yes |
+| `search_history` | Query analytics | tenantId, userId, query, resultCount, clickedSkillId, searchMode | Yes | Yes |
+
+### Modified Tables
+
+| Table | Column Added | Type | Default | Migration |
+|-------|-------------|------|---------|-----------|
+| `skills` | `visibility` | `text NOT NULL` | `'tenant'` | 0019 |
+| `skills` | `loom_url` | `text` (nullable) | `NULL` | 0020 |
+
+### Migration Sequence
+
+```
+0019_add_skill_visibility.sql       -- skills.visibility column
+0020_add_loom_url.sql               -- skills.loom_url column
+0021_create_workspace_tokens.sql    -- new table
+0022_create_workspace_profiles.sql  -- new table
+0023_create_user_preferences.sql    -- new table
+0024_create_search_history.sql      -- new table
+```
+
+---
+
+## Complete New File Inventory
+
+### Schema Files (`packages/db/src/schema/`)
+| File | Status | Purpose |
+|------|--------|---------|
+| `workspace-tokens.ts` | NEW | Token storage schema |
+| `workspace-profiles.ts` | NEW | Directory profile cache |
+| `user-preferences.ts` | NEW | User preferences schema |
+| `search-history.ts` | NEW | Search analytics schema |
+| `skills.ts` | MODIFIED | Add visibility, loomUrl columns |
+| `index.ts` | MODIFIED | Export new schemas |
+
+### Service Files (`packages/db/src/services/`)
+| File | Status | Purpose |
+|------|--------|---------|
+| `workspace-tokens.ts` | NEW | Token CRUD + refresh |
+| `workspace-profiles.ts` | NEW | Profile CRUD + sync |
+| `workspace-diagnostics.ts` | NEW | Analytics queries |
+| `hybrid-search.ts` | NEW | RRF merge logic |
+| `visibility.ts` | NEW | Visibility condition builder |
+| `user-preferences.ts` | NEW | Preferences CRUD |
+| `search-history.ts` | NEW | History write + query |
+| `semantic-search.ts` | MODIFIED | Add visibility filter |
+| `search-skills.ts` | MODIFIED | Add visibility filter |
+
+### Relations (`packages/db/src/relations/`)
+| File | Status | Change |
 |------|--------|--------|
-| `packages/db/src/schema/skills.ts` | Add `status` column | Review pipeline status tracking |
-| `packages/db/src/services/notifications.ts` | Extend type union | New notification types |
-| `apps/mcp/src/tools/index.ts` | Import new tools | Register recommend, update, check-status |
-| `apps/mcp/src/tools/search.ts` | Add semantic search path | Enhanced search with embedding fallback |
-| `apps/mcp/src/tools/create.ts` | Change default status | Skills created as `draft` instead of published |
-| `apps/mcp/src/tools/deploy.ts` | Add status filter | Only deploy `published` skills |
-| `apps/mcp/src/tools/list.ts` | Add status filter | Only list `published` skills |
-| `apps/web/app/actions/skills.ts` | Change default status | Create as `draft`, add `submitForReview` action |
-| `apps/web/app/(protected)/admin/layout.tsx` | Add nav item | "Review" link in admin nav |
-| `packages/db/src/relations/index.ts` | No change needed | Existing relations cover the needs |
+| `index.ts` | MODIFIED | Add relations for 4 new tables |
+
+### API Routes (`apps/web/app/api/`)
+| File | Status | Purpose |
+|------|--------|---------|
+| `workspace/connect/route.ts` | NEW | Initiate OAuth |
+| `workspace/callback/route.ts` | NEW | OAuth callback |
+| `workspace/disconnect/route.ts` | NEW | Revoke tokens |
+| `workspace/sync/route.ts` | NEW | Manual sync trigger |
+| `workspace/status/route.ts` | NEW | Connection status |
+| `cron/workspace-sync/route.ts` | NEW | Daily sync cron |
+
+### Server Actions (`apps/web/app/actions/`)
+| File | Status | Purpose |
+|------|--------|---------|
+| `workspace.ts` | NEW | Workspace management |
+| `preferences.ts` | NEW | User preferences |
+| `search.ts` | MODIFIED | Hybrid search integration |
+
+### Lib Files (`apps/web/lib/`)
+| File | Status | Purpose |
+|------|--------|---------|
+| `token-encryption.ts` | NEW | AES-256-GCM token encrypt/decrypt |
+| `google-workspace-client.ts` | NEW | Google API wrapper |
+| `workspace-sync.ts` | NEW | Sync orchestration |
+| `intent-classifier.ts` | NEW | Claude Haiku intent extraction |
+| `loom.ts` | NEW | URL validation + ID extraction |
+| `personalized-feed.ts` | NEW | Homepage data aggregation |
+| `search-skills.ts` | MODIFIED | Visibility + hybrid support |
+
+### Components (`apps/web/components/`)
+| File | Status | Purpose |
+|------|--------|---------|
+| `loom-embed.tsx` | NEW | Responsive iframe embed |
+| `workspace-connect-button.tsx` | NEW | Connect/disconnect UI |
+| `workspace-diagnostics-dashboard.tsx` | NEW | Department stats |
+| `visibility-selector.tsx` | NEW | Visibility dropdown |
+| `saved-searches.tsx` | NEW | Saved search list + re-run |
+| `personalized-feed.tsx` | NEW | Recommendation cards |
+| `search-with-dropdown.tsx` | MODIFIED | Enhanced with hybrid backend |
+| `skill-detail.tsx` | MODIFIED | Loom embed rendering |
+
+### Pages (`apps/web/app/(protected)/`)
+| File | Status | Purpose |
+|------|--------|---------|
+| `admin/workspace/page.tsx` | NEW | Workspace settings |
+| `settings/preferences/page.tsx` | NEW | User preferences |
+| `page.tsx` | MODIFIED | Homepage redesign |
 
 ---
 
 ## Patterns to Follow
 
-### Pattern 1: State Machine as Pure Functions
-
-**What:** Define valid transitions as a data structure, validate before executing.
-**When:** Any status field with constrained transitions.
-**Example:**
-
-```typescript
-// packages/db/src/services/skill-lifecycle.ts
-const VALID_TRANSITIONS: Record<SkillStatus, SkillStatus[]> = {
-  draft: ["pending_review"],
-  pending_review: ["ai_reviewed"],
-  ai_reviewed: ["approved", "rejected", "changes_requested"],
-  approved: ["published"],
-  rejected: ["draft"],
-  changes_requested: ["pending_review"],
-  published: ["pending_review"],
-};
-
-export function canTransition(from: SkillStatus, to: SkillStatus): boolean {
-  return VALID_TRANSITIONS[from]?.includes(to) ?? false;
-}
-```
-
-**Why:** Prevents invalid state, makes rules auditable, easy to test.
-
-### Pattern 2: MCP Tools Use Raw SQL
-
-**What:** All MCP tool database queries use `db.execute(sql\`...\`)`, not Drizzle query builder.
-**When:** Any code in `apps/mcp/src/`.
-**Why:** node16 moduleResolution prevents importing Drizzle schema objects in some paths. Existing MCP tools follow this pattern. Consistency prevents subtle import errors.
-
-### Pattern 3: Fire-and-Forget for Non-Critical Side Effects
-
-**What:** Embedding generation, AI review, notification dispatch use `.catch(() => {})`.
+### Pattern 1: Fire-and-Forget for Non-Critical Side Effects
+**What:** Embedding generation, search history logging, workspace sync triggers use `.catch(() => {})`.
 **When:** Side effects that should not block the primary operation.
-**Example:**
+**Already used:** `generateSkillEmbedding` in `apps/web/lib/embedding-generator.ts` swallows all errors.
+**Apply to:** `logSearchQuery()`, `triggerWorkspaceSync()`, `classifyIntent()` timeout fallback.
 
+### Pattern 2: Parallel Data Fetching with Promise.all
+**What:** Independent queries run in parallel.
+**When:** Homepage data (currently 8 queries), search (FTS + semantic + intent).
+**Already used:** Homepage and skill detail page.
+**Apply to:** `getPersonalizedFeed()`, hybrid search pipeline.
+
+### Pattern 3: Graceful Degradation
+**What:** Features work without optional integrations.
+**When:** Workspace not connected, embeddings not configured, intent classifier down.
+**Implementation:** Every new service returns sensible defaults when its dependency is unavailable. Never throw from an optional feature -- return empty/default and let the UI handle it.
+
+### Pattern 4: Schema Conventions (Mandatory for All New Tables)
+Every new table MUST have:
 ```typescript
-// After creating skill version
-generateSkillEmbedding(skillId, name, description).catch(() => {});
-autoGenerateReview(skillId, name, description, content, category, userId, tenantId).catch(() => {});
-notifyAdminsOfSubmission(skillId, tenantId).catch(() => {});
+id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+tenantId: text("tenant_id").notNull().references(() => tenants.id),
+// In table config:
+index("TABLE_NAME_tenant_id_idx").on(table.tenantId),
+pgPolicy("tenant_isolation", {
+  as: "restrictive",
+  for: "all",
+  using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+  withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+}),
 ```
+Plus type exports and relation definitions.
 
-**Why:** Existing pattern throughout the codebase. Skill creation must never fail because Ollama is down or notification dispatch throws.
-
-### Pattern 4: Admin Guard at Action Level
-
-**What:** Every admin action validates `isAdmin(session)` at the top. Page-level guards redirect.
-**When:** Any admin-only functionality.
-**Example:**
-
-```typescript
-// Server action
-export async function approveSkill(skillId: string): Promise<ActionResult> {
-  const session = await auth();
-  if (!session?.user?.id || !isAdmin(session)) {
-    return { error: "Unauthorized" };
-  }
-  // ... action logic
-}
-
-// Page component
-export default async function ReviewPage() {
-  const session = await auth();
-  if (!isAdmin(session)) redirect("/");
-  // ... page rendering
-}
-```
-
-### Pattern 5: Notification Dispatch Helper
-
-**What:** Centralize notification creation for review events in a single helper.
-**When:** Any review status transition.
-**Example:**
-
-```typescript
-// packages/db/src/services/skill-lifecycle.ts or apps/web/lib/review-notifications.ts
-export async function notifyReviewEvent(
-  event: "submitted" | "approved" | "rejected" | "changes_requested" | "published",
-  skillId: string,
-  skillName: string,
-  tenantId: string,
-  recipientId: string,
-  adminNote?: string
-): Promise<void> {
-  const templates = {
-    submitted: {
-      title: `New skill for review: ${skillName}`,
-      message: `A skill "${skillName}" has been submitted for review.`,
-      type: "review_submitted" as const,
-    },
-    approved: {
-      title: `Skill approved: ${skillName}`,
-      message: `Your skill "${skillName}" has been approved.${adminNote ? ` Note: ${adminNote}` : ""}`,
-      type: "review_approved" as const,
-    },
-    // ... etc
-  };
-
-  await createNotification({
-    tenantId,
-    userId: recipientId,
-    ...templates[event],
-    actionUrl: `/skills/${skillId}`,
-  });
-}
-```
+### Pattern 5: Admin Guards
+**What:** Admin-only features check `session.user.role === "admin"` at both page and action level.
+**When:** Workspace connection, diagnostic dashboard, any tenant-level settings.
+**Already used:** Admin review pages, admin skills management.
 
 ---
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Storing Review Pipeline State in skill_reviews
+### Anti-Pattern 1: Auth.js Scope Expansion
+**What:** Adding workspace scopes to the existing Google SSO provider in `auth.config.ts`.
+**Why bad:** Auth.js v5 does not support incremental authorization. The stored token becomes invalid, scope tracking breaks, and users who decline extra scopes may get locked out of regular SSO.
+**Instead:** Separate OAuth flow via custom API routes.
 
-**What:** Using the `skill_reviews` table to track review pipeline state.
-**Why bad:** `skill_reviews` is for AI-generated quality reviews (scores, suggestions). The review pipeline status is a workflow state machine concern. Conflating them makes queries complex and semantics ambiguous. Is `skill_reviews` empty because no AI review ran, or because no admin review happened?
-**Instead:** Add `status` to `skills` table. Keep `skill_reviews` for AI review data only. Admin review decisions are captured as status transitions + audit log entries + optional admin notes (in notifications metadata or a new `admin_review_notes` text column).
+### Anti-Pattern 2: Full Directory Sync
+**What:** Syncing all Google Workspace user data (photos, phone numbers, addresses, group memberships, etc.).
+**Why bad:** Privacy concerns, storage bloat, GDPR/SOC2 implications, stale data problems. Directory data can be hundreds of MB for large organizations.
+**Instead:** Cache only 7 fields needed for analytics (email, name, department, title, orgUnitPath, managerId, thumbnailUrl). Delete all data on workspace disconnect.
 
-### Anti-Pattern 2: Server-Side MCP Session State
+### Anti-Pattern 3: Multi-Turn Conversational Search
+**What:** Building a chatbot-style search with session memory and follow-up questions.
+**Why bad:** For a skill marketplace with <10K items per tenant, conversational search adds enormous complexity (session management, context window, per-request cost, conversation cleanup) with marginal improvement over intent-enhanced single query. Research confirms this (arxiv 2602.09552: "effective conversational RAG depends less on method complexity than on alignment between the retrieval strategy and the dataset structure").
+**Instead:** Single-query hybrid search with RRF. If multi-turn is later needed, it layers on top without rearchitecting.
 
-**What:** Maintaining conversation context in the MCP server for multi-turn discovery.
-**Why bad:** MCP tools are stateless by design. Adding session state creates complexity (session cleanup, memory leaks, race conditions) with zero benefit, because the LLM already maintains conversation context.
-**Instead:** Return rich enough data in each tool response that the LLM can reference previous results. Include skill IDs, names, and descriptions in every response so Claude can construct follow-up tool calls.
+### Anti-Pattern 4: Loom SDK Server-Side Usage
+**What:** Importing `@loomhq/loom-embed` in server components or using undocumented Loom API endpoints.
+**Why bad:** Loom has no open API. The SDK is client-only (45KB bundle). Server-side usage will fail.
+**Instead:** Store URL string, validate format client-side, render via responsive iframe.
 
-### Anti-Pattern 3: Blocking Skill Creation on Review Pipeline
+### Anti-Pattern 5: Storing Preferences in localStorage
+**What:** Using browser storage for user preferences.
+**Why bad:** Not accessible server-side (can't use for search ranking), lost on device switch, no multi-device sync, not auditable.
+**Instead:** Server-authoritative `user_preferences` table, read via server component on page load.
 
-**What:** Making `create_skill` (MCP) wait for AI review or admin approval before returning.
-**Why bad:** MCP tool calls should complete quickly. An AI review takes 5-10 seconds, admin review takes hours/days.
-**Instead:** Create skill synchronously, start review pipeline asynchronously. Return immediately with status `draft` and a message explaining next steps.
-
-### Anti-Pattern 4: Hash Comparison on Frontmatter-Included Content
-
-**What:** Hashing the full file content (including frontmatter) for fork detection.
-**Why bad:** Frontmatter contains metadata that changes between installs (tracking URLs, etc). Two identical skill contents with different frontmatter would appear as different.
-**Instead:** Always strip frontmatter before hashing. The existing `stripFrontmatter()` function handles this. The `skill_versions.content_hash` should be the hash of content WITHOUT frontmatter.
-
-**IMPORTANT NOTE:** The current `create.ts` MCP tool hashes content WITH frontmatter (`contentWithFrontmatter`). This is a latent bug that must be fixed as part of the fork-detection work. All content hashes should use stripped content.
+### Anti-Pattern 6: Modifying RLS for Global Visibility
+**What:** Adding `OR visibility = 'global'` to the RLS policy to allow cross-tenant reads.
+**Why bad:** Weakens the tenant isolation guarantee. Every query now implicitly can read other tenants' data if visibility is misconfigured. One bug = data leak.
+**Instead:** For v3.0, implement only `tenant` and `personal` visibility (both work within existing RLS). Defer `global` to a later phase with a dedicated solution (materialized view or separate API).
 
 ---
 
 ## Scalability Considerations
 
 | Concern | At 100 users | At 10K users | At 1M users |
-|---------|--------------|--------------|-------------|
-| Review queue | Single page, admin checks manually | Filter by status, sort by date, paginate | Queue routing, multiple reviewers, SLA tracking |
-| Semantic search | Ollama local, <50ms per query | Ollama with GPU, HNSW index tuning | Dedicated vector DB (Pinecone/Weaviate), cached embeddings |
-| Fork detection | Hash compare per tool call | Same -- O(1) lookup | Same -- indexed hash comparison |
-| Notifications | Direct DB insert | Batch notification dispatch | Message queue (Redis/SQS), async workers |
-| Admin review | Single admin per tenant | RBAC roles: reviewer vs admin | Review assignment, load balancing |
+|---------|-------------|-------------|-------------|
+| Hybrid search latency | <300ms (FTS + semantic + intent parallel) | <500ms (HNSW index tuning) | Dedicated search service needed |
+| Workspace sync | Inline in request (~2s for 100 employees) | Background job, paginated | Queue-based with Google API rate limiting |
+| Preference reads | Direct DB query (~5ms) | Cache in JWT claims (add preferredCategories) | Redis cache layer |
+| Search history writes | Fire-and-forget INSERT (~2ms) | Partition by month | TimescaleDB or archive to cold storage |
+| Intent classification | Per-query Claude Haiku (~$0.0002) | Cache common queries (LRU, 1h TTL) | Pre-computed intent categories per skill |
+| Loom embeds | Direct iframe load from Loom CDN | Same (Loom handles CDN) | Same |
 
 ---
 
-## Migration Strategy
+## Build Order (Dependency-Driven)
 
-### Database Migration
+```
+Phase 1: Foundation (no dependencies)
+  +-- Visibility scoping (schema + service + query mods)
+  +-- Loom URL integration (schema + component)
+  +-- User preferences table + service
 
-Single migration file: `packages/db/src/migrations/XXXX-add-skill-status.ts`
+Phase 2: Search Enhancement (depends on Phase 1 visibility + preferences)
+  +-- Hybrid search service (RRF merge)
+  +-- Intent classifier (optional, graceful degradation)
+  +-- Search history tracking
+  +-- Modified search components
 
-```sql
-ALTER TABLE skills ADD COLUMN status TEXT NOT NULL DEFAULT 'published';
-CREATE INDEX skills_status_idx ON skills (status);
-CREATE INDEX skills_tenant_status_idx ON skills (tenant_id, status);
+Phase 3: Workspace Integration (independent of Phase 2)
+  +-- Token encryption library
+  +-- Workspace OAuth routes
+  +-- workspace_tokens + workspace_profiles tables
+  +-- Google API client + sync service
+  +-- Diagnostic queries
+  +-- Admin workspace settings page
+
+Phase 4: Homepage Redesign (depends on Phases 1-3)
+  +-- Personalized feed service
+  +-- New homepage components
+  +-- Saved searches UI
+  +-- Department highlights (requires Phase 3)
+  +-- Integration of all v3.0 features into unified experience
 ```
 
-**Default `'published'`** ensures all existing skills remain visible. New skills will be created with explicit `'draft'` status by updated code.
-
-### Backward Compatibility for MCP Clients
-
-Existing MCP clients using `create_skill` will get skills created as `draft` instead of `published`. The tool response should clearly communicate this:
-
-```json
-{
-  "success": true,
-  "skill": { "id": "...", "status": "draft" },
-  "message": "Skill created as draft. Submit for review to make it available in the marketplace.",
-  "nextStep": "Use the submit_for_review action or visit the web UI to submit."
-}
-```
-
-**Feature flag consideration:** For a gradual rollout, add a `reviewPipelineEnabled` boolean to `site_settings`. When false, `create_skill` continues to publish immediately. When true, new skills start as `draft`. This allows per-tenant opt-in.
-
----
-
-## Suggested Build Order
-
-Based on dependency analysis:
-
-### Phase 1: Review Pipeline Foundation
-1. **DB migration** -- Add `status` column to skills (blocks everything)
-2. **skill-lifecycle.ts service** -- State machine logic (blocks admin review)
-3. **Update existing queries** -- Add `status = 'published'` filters to search/list/deploy (blocks nothing, but critical for correctness once status exists)
-
-### Phase 2: Admin Review UI
-4. **admin-review.ts server actions** -- getReviewQueue, approveSkill, rejectSkill, requestChanges (depends on Phase 1)
-5. **Admin review page + components** -- Queue + detail pages (depends on actions)
-6. **Notification dispatch for review events** -- Extend notification types (depends on lifecycle service)
-
-### Phase 3: MCP Enhancements
-7. **recommend_skill MCP tool** -- Semantic search (depends on nothing new, uses existing embeddings)
-8. **Enhanced search_skills** -- Add semantic search path (depends on recommend_skill's embedding logic)
-9. **update_skill MCP tool** -- Fork detection + push changes (depends on Phase 1 for draft status)
-10. **check_skill_status MCP tool** -- Lightweight hash comparison (depends on update_skill patterns)
-11. **Update create_skill** -- Create as draft, review pipeline integration (depends on Phase 1)
-
-### Phase 4: Integration Polish
-12. **Author notification UX** -- Review decision modal/page (depends on Phase 2 notifications)
-13. **Feature flag** -- reviewPipelineEnabled in site_settings (depends on Phase 1)
-
-**Rationale for ordering:**
-- Phase 1 is the foundation -- without `status`, nothing else works correctly.
-- Phase 2 builds the admin side -- without a way to approve/reject, the pipeline is incomplete.
-- Phase 3 adds MCP tools -- these can work independently of the admin UI (a skill can be created as draft even without admin review capability, though it would be stuck).
-- Phase 4 polishes the integration points and adds configuration.
+**Phase ordering rationale:**
+- Phase 1 has zero dependencies and modifies the skills table that everything else reads. Do it first.
+- Phase 2 depends on visibility (search must respect it) and preferences (boost uses them). Both from Phase 1.
+- Phase 3 is independent of search -- workspace integration is a self-contained feature. Can parallel with Phase 2.
+- Phase 4 ties everything together. It needs personalized data (Phase 2), workspace data (Phase 3), and visibility (Phase 1).
 
 ---
 
 ## Sources
 
-- All findings based on direct codebase analysis of the following files:
-  - `packages/db/src/schema/skills.ts` -- skills table with publishedVersionId, draftVersionId, forkedFromId
-  - `packages/db/src/schema/skill-versions.ts` -- contentHash column for integrity
-  - `packages/db/src/schema/skill-reviews.ts` -- AI review categories, reviewedContentHash
-  - `packages/db/src/schema/skill-embeddings.ts` -- pgvector 768d, HNSW index
-  - `packages/db/src/schema/notifications.ts` -- type, actionUrl, metadata
-  - `packages/db/src/schema/users.ts` -- role: admin/member enum
-  - `packages/db/src/services/skill-reviews.ts` -- upsertSkillReview, getSkillReview
-  - `packages/db/src/services/skill-forks.ts` -- getForkCount, getTopForks, getParentSkill
-  - `packages/db/src/services/search-skills.ts` -- ILIKE search with relevance scoring
-  - `packages/db/src/services/notifications.ts` -- createNotification, getUserNotifications
-  - `packages/db/src/services/skill-embeddings.ts` -- upsertSkillEmbedding
-  - `packages/db/src/services/skill-merge.ts` -- merge skills transaction
-  - `packages/db/src/client.ts` -- DEFAULT_TENANT_ID, connection-level RLS
-  - `packages/db/src/relations/index.ts` -- all relation definitions
-  - `apps/mcp/src/tools/*.ts` -- all 6 existing MCP tools
-  - `apps/mcp/src/auth.ts` -- userId/tenantId resolution from API key
-  - `apps/mcp/src/server.ts` -- McpServer instance, suggest_skills prompt
-  - `apps/mcp/src/tracking/events.ts` -- usage tracking
-  - `apps/web/app/actions/skills.ts` -- checkAndCreateSkill, createSkill
-  - `apps/web/app/actions/ai-review.ts` -- requestAiReview
-  - `apps/web/app/actions/fork-skill.ts` -- forkSkill
-  - `apps/web/app/actions/admin-skills.ts` -- getAdminSkills, deleteSkillAdminAction
-  - `apps/web/app/actions/notifications.ts` -- getMyNotifications, markRead
-  - `apps/web/app/(protected)/admin/layout.tsx` -- admin nav items
-  - `apps/web/app/(protected)/admin/skills/page.tsx` -- admin skills page
-  - `apps/web/middleware.ts` -- subdomain routing, auth check
-  - `apps/web/lib/admin.ts` -- isAdmin check
-  - `apps/web/lib/ai-review.ts` -- Anthropic SDK, structured output review
-  - `apps/web/lib/content-hash.ts` -- SHA-256 hashing
-  - `apps/web/lib/embedding-generator.ts` -- Ollama integration
-  - `apps/web/lib/similar-skills.ts` -- semantic + ILIKE similarity search
-  - `apps/web/lib/ollama.ts` -- Ollama API client
+- [Auth.js Incremental Authorization Discussion #10261](https://github.com/nextauthjs/next-auth/discussions/10261) -- HIGH confidence: confirms Auth.js v5 does not support incremental scope expansion
+- [Auth.js Configuring OAuth Providers](https://authjs.dev/guides/configuring-oauth-providers) -- MEDIUM confidence: shows scope override pattern
+- [Google Incremental Authorization](https://developers.google.com/identity/sign-in/web/incremental-auth) -- HIGH confidence: official docs on how incremental auth works at the OAuth2 level
+- [Google Admin SDK Directory API Overview](https://developers.google.com/workspace/admin/directory/v1/guides) -- HIGH confidence: official docs
+- [Google People API Directory Contacts](https://developers.google.com/people/v1/directory) -- HIGH confidence: scope requirements for directory access
+- [Domain-Wide Delegation Best Practices](https://support.google.com/a/answer/14437356) -- HIGH confidence: why to avoid DWD when possible
+- [Loom Embed SDK API](https://dev.loom.com/docs/embed-sdk/api) -- MEDIUM confidence: confirms client-only SDK, oEmbed metadata fields
+- [Loom Embed Documentation](https://support.atlassian.com/loom/docs/embed-your-video-into-a-webpage/) -- MEDIUM confidence: iframe embed pattern
+- [Hybrid Search in PostgreSQL (ParadeDB)](https://www.paradedb.com/blog/hybrid-search-in-postgresql-the-missing-manual) -- MEDIUM confidence: RRF and hybrid search patterns
+- [Hybrid Search with pgvector (Jonathan Katz)](https://jkatz05.com/post/postgres/hybrid-search-postgres-pgvector/) -- MEDIUM confidence: PostgreSQL-specific hybrid search
+- [RAG Methods Comparison (arxiv 2602.09552)](https://arxiv.org/abs/2602.09552) -- MEDIUM confidence: single-query vs multi-turn RAG effectiveness
+- Direct codebase analysis of all referenced files (HIGH confidence):
+  - `packages/db/src/schema/*.ts` (all 17 schema files)
+  - `packages/db/src/services/*.ts` (all 21 service files)
+  - `packages/db/src/client.ts`, `packages/db/src/tenant-context.ts`
+  - `packages/db/src/relations/index.ts`
+  - `apps/web/auth.ts`, `apps/web/auth.config.ts`, `apps/web/middleware.ts`
+  - `apps/web/app/actions/search.ts`, `apps/web/lib/search-skills.ts`
+  - `apps/web/lib/ai-review.ts`, `apps/web/lib/embedding-generator.ts`
+  - `apps/web/components/search-with-dropdown.tsx`
+  - `apps/web/app/(protected)/page.tsx` (homepage)
+  - `apps/web/app/(protected)/skills/[slug]/page.tsx` (skill detail)

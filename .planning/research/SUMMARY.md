@@ -1,183 +1,203 @@
 # Project Research Summary
 
-**Project:** EverySkill v2.0 — Skill Ecosystem Features
-**Domain:** Internal AI skill marketplace with review pipeline, conversational discovery, fork-on-modify detection
-**Researched:** 2026-02-08
-**Confidence:** HIGH
+**Project:** EverySkill v3.0 — AI Discovery & Workflow Intelligence
+**Domain:** Multi-tenant AI skill marketplace with Google Workspace integration, visibility scoping, intent search, video integration
+**Researched:** 2026-02-13
+**Confidence:** HIGH (core patterns), MEDIUM (Google Workspace integration complexity)
 
 ## Executive Summary
 
-EverySkill v2.0 extends the existing v1.5 marketplace (complete with CRUD, versioning, forking, AI review, semantic search, MCP tools, and notifications) by adding four critical ecosystem capabilities: a gated review pipeline (draft → AI review → admin approval → published), conversational MCP discovery (semantic search → recommend → describe → install → guide), fork-on-modify detection (hash comparison detects when local edits diverge from published versions), and an admin review UI. The research reveals a remarkable finding: **zero new npm dependencies required**. Every capability maps directly to existing stack components.
+EverySkill v3.0 extends the existing multi-tenant skill marketplace with eight capabilities that transform it from a catalog into an intelligent discovery and adoption platform. The research reveals a clear foundation-first architecture: visibility scoping is the bedrock that must be built before AI-powered features can safely operate. Google Workspace integration represents the highest-risk, highest-value feature, requiring separate OAuth flows and careful privacy handling. The recommended approach prioritizes quick wins (Loom video integration, MCP tool unification) in parallel with foundational work (visibility scoping, user preferences), followed by the intelligence layer (AI intent search, workspace diagnostics), and culminating in the homepage redesign that ties everything together.
 
-The recommended approach follows established patterns from Apple App Store (review workflow states), GitHub PR reviews (three-action model: approve/reject/request changes), and git divergence detection (SHA-256 content hash comparison). The critical architectural decision is to add a `status` column to the `skills` table with strict state machine transitions, while keeping the existing advisory AI review system separate from the new pipeline decision system. The review pipeline uses the existing Anthropic SDK for AI-generated quality gates, conversational discovery reuses the existing pgvector + Ollama semantic search infrastructure, and fork detection leverages the existing `contentHash` field from `skill_versions`.
+The core technical insight is that v3.0 adds capabilities without requiring stack replacement. Five new npm packages (3 Google API clients, 2 Vercel AI SDK packages) extend the existing Next.js + pgvector + Anthropic infrastructure. The existing Drizzle ORM patterns, RLS policies, and multi-tenancy architecture remain intact. The main architectural risk is the hardcoded `DEFAULT_TENANT_ID` in 30+ files — new code must never continue this pattern.
 
-Key risks center on query migration correctness (8 unguarded query paths must add `status = 'published'` filters to prevent pending skills from leaking into search results), MCP tool bypass (the MCP `create_skill` tool uses raw SQL and will bypass the pipeline unless explicitly updated), and embedding model consistency (conversational discovery must use the same Ollama `nomic-embed-text` model as stored skill embeddings, or vector comparisons will be mathematically invalid). Mitigation is straightforward: atomic migration with `DEFAULT 'published'`, systematic query path updates, and embedding model validation before building conversational features.
+Critical risks center on data isolation: visibility scoping without comprehensive query filtering causes cross-scope leakage (11+ query paths identified); Google Workspace integration without proper OAuth separation breaks existing auth flows; AI intent search without grounding in actual results hallucinates recommendations. The mitigation strategy is defense-in-depth: RLS for tenant isolation, application-layer visibility filters in every query path, structured output with Zod validation for LLM responses, and separate OAuth flows for Workspace scopes.
 
 ## Key Findings
 
 ### Recommended Stack
 
-**Zero new dependencies.** All v2.0 features map onto the existing stack: Anthropic SDK 0.72.1 for AI reviews with structured JSON output, MCP SDK 1.25.3 for new tools (recommend_skills, describe_skill, check_skill_drift), Drizzle ORM 0.42.0 for schema additions (status column, review workflow metadata), pgvector + Ollama for semantic search, and the existing notification + Resend infrastructure for review status changes. Version bumps are optional (latest Anthropic is 0.73.0, MCP is 1.26.0, Drizzle is 0.45.1) but not required—the current versions support all needed features.
+**Stack additions: 5 new npm packages, 0 existing changes.** The research validates the existing Next.js 16.1.6 + PostgreSQL + pgvector foundation and identifies minimal, high-value extensions. Google Workspace integration uses individual `@googleapis/*` packages (drive, calendar, gmail — 4.3MB total) rather than the monolithic 200MB `googleapis` package. AI intent search adds Vercel AI SDK (`ai` + `@ai-sdk/anthropic`) for streaming conversational UX, while keeping the existing `@anthropic-ai/sdk` for batch operations. Loom integration requires zero dependencies — oEmbed endpoint via HTTP fetch is simpler and more maintainable than the stale `@loomhq/loom-embed` SDK.
 
-**Core technologies (unchanged):**
-- **Anthropic SDK 0.72.1**: AI review generation with `output_config.format.type: "json_schema"` — already working in production for advisory reviews, same pattern for pipeline reviews
-- **MCP SDK 1.25.3**: New tools via `server.registerTool()` API — 6 tools already registered, adding 4 more follows identical pattern
-- **pgvector + Ollama (nomic-embed-text 768d)**: Semantic search backbone — existing `skill_embeddings` table with HNSW index, conversational discovery reuses exact pattern
-- **Drizzle ORM 0.42.0**: Schema additions for `status` column and review workflow — no new features needed, stable with 14 existing tables
-- **Resend + notification system**: Review status change notifications — existing types infrastructure, adds 5 new notification types
-
-**Rejected alternatives:**
-- State machine library (XState/Robot3): 5-state linear workflow doesn't justify 15KB+ library, simple switch statement suffices
-- Diff library (jsdiff/diff2html): Fork drift detection needs boolean "changed or not", not character-level diff—side-by-side text display is sufficient for v2.0
-- Vercel AI SDK: Already using Anthropic SDK directly with structured output, wrapper adds no value and creates API pattern confusion
+**Core technologies:**
+- **@googleapis/drive, calendar, gmail (^20.1.0, ^14.2.0, ^16.1.1):** Directory metadata for visibility scoping — individual packages share transitive deps, 98% smaller than monolith
+- **Vercel AI SDK (ai@^6.0.86, @ai-sdk/anthropic@^3.0.43):** Streaming search chat with tool calls — coexists with existing Anthropic SDK, eliminates ~80% of streaming boilerplate
+- **Loom oEmbed (no package):** Server-side metadata fetch + responsive iframe embed — avoids 45KB client-side SDK for functionality achievable in 20 lines
 
 ### Expected Features
 
-**Must have (review pipeline foundation):**
-- Status field on skills: draft | pending_review | ai_reviewed | approved | rejected | changes_requested | published — enables lifecycle tracking
-- Auto AI review on submission: Triggers automatically (not on-demand), transitions skill to ai_reviewed state when complete
-- Admin review queue: Centralized view of pending skills with AI scores, diff view, approve/reject/request-changes actions
-- Review notifications: Notify admins on submission, notify authors on approval/rejection/changes-requested decisions
-- MCP semantic discovery: recommend_skills tool (semantic search via embeddings), describe_skill tool (full metadata), enhanced search_skills with similarity scores
-- Fork drift detection: check_skill_status MCP tool (local hash vs DB hash), fork_skill MCP tool (create fork from modified content)
+**Must have (table stakes):**
+- **Visibility scoping (3 levels):** `tenant` (default, current behavior), `personal` (author-only), defer `global` (cross-tenant) to later phase — RLS handles tenant isolation, application-layer filters handle visibility within tenant
+- **AI intent search (semantic + keyword hybrid):** Natural language query "What are you trying to solve?" returns top-3 skills via Reciprocal Rank Fusion (RRF k=60) merging pgvector cosine + full-text search — NO conversational multi-turn (research confirms marginal benefit for single-domain QA)
+- **Loom video integration:** Optional `loomUrl` field on skills, oEmbed for metadata, responsive iframe embed on detail page — video thumbnails in browse cards
+- **MCP tool unification:** Single `everyskill` tool with search/install/describe sub-commands wrapping existing 16 MCP handlers — clean external discovery surface
 
-**Must have (UX polish):**
-- Skill detail page access control: Pending/draft skills only visible to author/admin, others get 404
-- Review queue pagination: 20 per page from day one, filter by status/category/date
-- Reviewer notes: Admin can attach feedback explaining rejection or change requests
-- Frontmatter stripping before hash comparison: Tracking hooks in frontmatter should not trigger false "modified" detection
+**Should have (competitive):**
+- **Admin-stamped global skills:** Department head + admin two-level approval workflow, "Company Approved" badge — separate from existing 7-status content review lifecycle
+- **Personal preference extraction:** JSONB preferences storage with Zod schema for defaults, CLAUDE.md generation from user's skill portfolio — NO programmatic Claude.ai Projects API (doesn't exist)
+- **Homepage redesign:** Search-first hero replacing metrics-first layout, personalized recommendations, company-approved section — additive changes preserving existing stat cards and leaderboard positions
 
-**Defer to post-v2.0:**
-- Auto-approval threshold: High-scoring skills (all categories >= 8) skip manual review—nice optimization but not blocking
-- "Apply suggestion" UI: One-click to adopt AI review suggestions—valuable but complex, defer to later phase
-- Skill compatibility checks: Tool introspection to warn about missing dependencies—requires capability discovery
-- Personalized recommendations: Requires usage history analysis and collaborative filtering—defer until sufficient usage volume
-- Web UI drift indicator: MCP-first fork detection is sufficient for v2.0, web UI secondary
+**Defer (v2+ or validate-first):**
+- **Google Workspace diagnostic:** Highest risk — requires separate OAuth flow (NOT via Auth.js), Directory API with admin setup, privacy/GDPR compliance, rate limit handling — build manual "time allocation survey" first to validate value prop before OAuth integration
+- **Personalized "For You" section:** Requires usage history analysis and preference learning — defer until visibility + preferences ship and generate data
+- **Department approval workflow:** Start with admin-only global stamping — add department chain if org structure demands it
+- **Multi-format preference export:** Start with CLAUDE.md only — add .cursorrules and AGENTS.md based on user demand
 
 ### Architecture Approach
 
-The architecture extends existing patterns with minimal disruption. The review pipeline adds a `status` column to `skills` with a pure-function state machine in a new `skill-lifecycle.ts` service, keeping transitions as a data structure (not code logic) for auditability. Admin review UI extends the existing `/admin/` layout with a new "Reviews" tab following the established admin page pattern. Conversational discovery adds 3 new MCP tools (recommend, describe, guide) that reuse the existing semantic search logic from `trySemanticSearch()` in `similar-skills.ts`, adapted to MCP's raw SQL pattern (node16 moduleResolution prevents Drizzle query builder imports). Fork detection adds 2 MCP tools (check-status, update) that leverage the existing `contentHash` field from `skill_versions`, with a critical architectural decision to strip frontmatter before hashing to avoid false positives from tracking hook changes.
+The recommended architecture is **foundation, intelligence, experience** layered. Visibility scoping modifies the existing skills schema and adds application-layer filters to all 11+ query paths — this is prerequisite infrastructure. Google Workspace integration uses a separate OAuth flow (custom API routes, not Auth.js) storing encrypted tokens in a new `workspace_tokens` table, with a `workspace_profiles` cache for directory metadata. AI intent search layers hybrid retrieval (RRF fusion) with optional Claude Haiku intent classification (parallel, sub-500ms timeout) on top of existing pgvector and full-text indexes. The homepage redesign is the integration point that surfaces all capabilities.
 
 **Major components:**
-1. **skill-lifecycle.ts service** — State machine for status transitions (draft → pending_review → ai_reviewed → approved/rejected/changes_requested → published), validates transitions via lookup table, dispatches notifications on state changes
-2. **Admin review pages** — Queue at `/admin/review` (list pending skills with AI scores), detail at `/admin/review/[skillId]` (diff view, actions), extends existing admin layout with nuqs URL state pattern
-3. **MCP semantic discovery tools** — recommend_skills (embedding query + pgvector cosine search), describe_skill (full metadata with reviews/stats/similar), guide_skill (usage instructions post-install)
-4. **MCP fork detection tools** — check_skill_status (local file hash vs DB hash comparison), update_skill (push modifications as new version if author, fork if not)
-5. **Review notification dispatcher** — Extends existing notification types with review_submitted/approved/rejected/changes_requested, groups all review notifications under single preference toggle
+1. **Visibility scoping service** — reusable `buildVisibilityFilter(userId, department?)` applied in every search/browse query path including MCP tools — status takes precedence (only published skills respect visibility)
+2. **Workspace OAuth integration** — custom `/api/workspace/connect` and `/callback` routes, AES-256-GCM token encryption, per-tenant service account credentials — completely independent of user auth flow
+3. **Hybrid search with RRF** — parallel full-text + semantic retrieval, Reciprocal Rank Fusion merge, optional preference boost — grounded recommendations via structured Zod-validated LLM output
+4. **User preferences infrastructure** — single `user_preferences` table with JSONB data + Zod schema, code-defined defaults, server-authoritative (not localStorage) for search ranking
+5. **Homepage personalization service** — aggregates recommendations, recent usage, saved searches, department highlights with graceful degradation when optional integrations unavailable
 
 ### Critical Pitfalls
 
-1. **Existing skills have no status column—query migration correctness** — 8 of 15 skill query paths lack published filters (search-skills.ts, similar-skills.ts, MCP list/search tools, skill detail page). Adding `status` column without updating all queries causes pending skills to leak into search results or existing skills to vanish. **Prevention:** Migration uses `DEFAULT 'published'` (all existing skills auto-tagged), then systematically add `WHERE status = 'published'` to all 8 paths before exposing new submission flow.
+1. **Google Workspace OAuth scope escalation breaks existing auth** — Adding Directory API scopes to the Google SSO provider in `auth.config.ts` forces re-consent for all users, and Directory API requires admin-level access that regular users don't have. Auth.js v5 does NOT support incremental authorization. **Prevention:** Use separate OAuth flow via custom API routes with service account + Domain-Wide Delegation for Directory access, stored per-tenant. User login and Workspace sync use different OAuth grants.
 
-2. **MCP create tool bypasses review pipeline** — MCP `create_skill` tool uses raw SQL and currently sets `published_version_id` immediately, creating a back door around the review pipeline. **Prevention:** Update MCP raw SQL to set `status = 'pending_review'` and remove immediate publish, change response message to "Skill submitted for review" instead of "Skill created and published."
+2. **Visibility scoping without comprehensive query filtering causes cross-scope data leakage** — The existing RLS policies check only `tenant_id`. Adding visibility as application-layer WHERE clauses works, but 11+ query paths exist (search, semantic search, trending, leaderboard, MCP tools, similar skills, direct URL access). Missing visibility filter in ANY path leaks private skills. **Prevention:** Create reusable `buildVisibilityFilter(userId, userDept?)` function imported in ALL query paths. Status takes precedence — only published skills respect visibility. MCP tools need userId parameter for filtering.
 
-3. **AI review has dual identity—advisory vs pipeline gate** — Existing `skill_reviews` table designed for author-initiated, fire-and-forget advisory reviews. Repurposing as pipeline gate creates conflicts: `requestedBy` assumes author (not system), unique constraint `(tenant_id, skill_id)` destroys audit trail on resubmission, `isVisible` toggle lets authors hide blocking reviews, fire-and-forget error handling means failed reviews cause skills to stuck in limbo. **Prevention:** Keep `skill_reviews` advisory, create separate `review_decisions` table for pipeline (insert-only, immutable audit), pipeline AI review must NOT be fire-and-forget (explicit error states).
+3. **AI intent search hallucinating skill recommendations** — LLM synthesizing search results can fabricate capabilities or non-existent skills if results are poor matches. The existing pgvector semantic search returns similarity scores but no LLM interpretation layer exists. **Prevention:** Ground ALL recommendations in actual search results. Use similarity threshold (min 0.3). Template prompt with structured output (Zod schema: `{recommendations: [{skillSlug, reason, confidence}]}`). Show raw results alongside AI summary. Link every recommendation to actual `/skills/[slug]`.
 
-4. **Fork-on-modify detection needs parent hash at fork time** — Current fork system copies content but doesn't store parent's content hash at fork time. Without this anchor, modification detection compares against parent's CURRENT hash (not fork-point hash), creating false positives when parent updates. **Prevention:** Add `forkedAtContentHash` column, populate on fork with `hashContent(parent.content)`, compare fork's current hash against this anchor (not parent's current hash).
+4. **DEFAULT_TENANT_ID hardcoded in 30+ files collides with multi-tenant Workspace sync** — Grep reveals hardcoded `"default-tenant-000-0000-000000000000"` in server actions, MCP tools, lib files, E2E tests. Workspace integration is inherently multi-tenant (each tenant connects their own Google Workspace). If Workspace sync uses DEFAULT_TENANT_ID, it merges all tenants' directory data into one namespace. **Prevention:** New v3.0 code must ALWAYS resolve tenant from `session.user.tenantId`. Create `resolveTenantId(session)` helper that throws if missing. Workspace credentials and directory cache keyed by `tenantId` parameter (required, not optional with DEFAULT fallback).
 
-5. **Embedding model consistency for semantic search** — Existing embeddings use Ollama `nomic-embed-text` (768d). Conversational discovery must use the same model for query embedding or vector comparisons are mathematically invalid (cannot compare Ollama embedding against Voyage/Anthropic embedding—different vector spaces). **Prevention:** Conversational discovery embeds user queries with Ollama (duplicate 15-line client code into MCP app), semantic search only on same-model embeddings, response generation can use Anthropic (separate concern).
+5. **Workspace directory sync rate limits and partial failures** — Google Directory API: 2,400 queries/min/user/project. Full sync for 5,000 users = 10 API calls (no problem), but 50,000 users = 100 calls. Simultaneous tenant onboarding hits quota. Partial sync failures leave stale data. **Prevention:** Incremental sync (not full), database-backed job queue per tenant with `lastPageToken` resume point, cache directory in `workspace_profiles` table (never query Google API at request time), store sync metadata (`lastFullSyncAt`, `syncStatus`, `totalUsersSynced`).
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure follows dependency chain from foundation (status column) → admin workflow (review UI) → independent features (discovery, fork detection):
+Based on research, suggested phase structure follows dependency ordering and risk isolation:
 
-### Phase 1: Review Pipeline Foundation
-**Rationale:** Status column blocks everything—no other v2.0 feature works without it. Schema migration, state machine logic, and query path updates must be atomic to avoid skills vanishing or pending skills leaking.
-**Delivers:** `status` column on skills with `DEFAULT 'published'`, skill-lifecycle service with state transition validation, all 8 unguarded query paths updated with status filters, MCP create_skill updated to create drafts instead of auto-publishing.
-**Addresses:** Status field (table stakes), backward compatibility for existing skills, MCP bypass prevention.
-**Avoids:** Pitfall 1 (query migration correctness), Pitfall 2 (MCP bypass), establishes foundation for Pitfall 3 prevention.
+### Phase 1: Foundation Layer (Parallel Execution)
+**Rationale:** These three features have zero dependencies on each other and establish prerequisites for later phases. Visibility scoping is the most critical — every feature built after it depends on proper access control. Loom and MCP are quick wins that deliver value immediately.
 
-### Phase 2: AI Review Integration
-**Rationale:** Auto AI review must happen before admin UI (admin needs AI scores to inform decisions). Separating advisory reviews from pipeline decisions prevents data model conflicts.
-**Delivers:** Auto-trigger `generateSkillReview()` on submit-for-review (not fire-and-forget, explicit error handling), transition to ai_reviewed when complete, new review_decisions table for pipeline (separate from advisory skill_reviews), scoring threshold logic for auto-approve/reject/needs-human-review.
-**Uses:** Existing Anthropic SDK with structured output (proven in lib/ai-review.ts), existing skill_reviews schema for AI data.
-**Avoids:** Pitfall 3 (dual identity of AI review), Pitfall 11 (race between AI and admin), Pitfall 13 (fire-and-forget in critical paths).
+**Delivers:**
+- Visibility scoping schema (`visibility` column: tenant/personal/global, defer global implementation) + reusable filter service
+- Loom video integration (`loomUrl` field, oEmbed metadata, responsive iframe embed component)
+- MCP tool unification (single `everyskill` tool wrapping existing 16 handlers with sub-commands)
 
-### Phase 3: Admin Review UI
-**Rationale:** Depends on Phase 1 (status field) and Phase 2 (AI review data). Admin workflow needs completed AI reviews to display scores and make informed decisions.
-**Delivers:** Admin review queue at /admin/review with pagination/filtering/sorting, individual review page with diff view and three-action model (approve/reject/request-changes), reviewer notes text field, review decision audit trail.
-**Implements:** Admin review page component, admin-review.ts server actions, review notification dispatch.
-**Avoids:** Pitfall 10 (pagination from day one), Pitfall 11 (optimistic locking for race conditions), Pitfall 8 (skill detail page access control).
+**Addresses:** Table stakes features — visibility control, video demos, external discovery
+**Avoids:** Pitfall 2 (cross-scope leakage via comprehensive filtering), Pitfall 13 (CSP for Loom embeds)
+**Research needed:** SKIP (established patterns, direct schema changes)
 
-### Phase 4: Review Notifications
-**Rationale:** Can build in parallel with Phase 3 admin UI. Notification dispatch is independent of UI rendering, uses existing infrastructure.
-**Delivers:** 5 new notification types (review_submitted, approved, rejected, changes_requested, skill_published), notification dispatch on state transitions, group all review notifications under single preference toggle (reviewNotificationsEmail/InApp).
-**Uses:** Existing notification service, Resend email dispatch, notification preferences system.
-**Avoids:** Pitfall 4 (notification system extensibility)—groups types instead of adding column per type.
+### Phase 2: User Preferences & Search Enhancement
+**Rationale:** Preferences infrastructure is needed for AI intent search's preference-boosted ranking. Both can build after visibility scoping ships (search must filter by visibility). Hybrid search extends existing full-text + semantic indexes without replacing them.
 
-### Phase 5: Conversational MCP Discovery
-**Rationale:** Independent of review pipeline (Phases 1-4). Can build in parallel with Phase 3-4. Depends only on existing pgvector + Ollama infrastructure.
-**Delivers:** recommend_skills MCP tool (semantic search with Ollama embedding + pgvector cosine query), describe_skill MCP tool (full metadata + reviews + similar skills), enhanced search_skills with semantic mode and richer metadata, usage guidance in deploy_skill response.
-**Implements:** Recommend, describe, guide MCP tools, Ollama client in MCP context (duplicate 15-line embedding function).
-**Avoids:** Pitfall 6 (embedding model consistency)—uses same Ollama model, Pitfall 16 (status filter in vector search).
+**Delivers:**
+- User preferences table (JSONB storage with Zod schema, code-defined defaults)
+- Hybrid search service (RRF k=60 fusion of full-text + pgvector semantic results)
+- Optional intent classification (Claude Haiku, <500ms timeout, graceful degradation)
+- Search history tracking (fire-and-forget, 90-day retention)
 
-### Phase 6: Fork-on-Modify Detection
-**Rationale:** Independent of all other phases. Can build in parallel. Depends only on existing contentHash and fork infrastructure.
-**Delivers:** check_skill_status MCP tool (local hash vs DB hash comparison), update_skill MCP tool (new version if author, fork if not), forkedAtContentHash column on skills, frontmatter stripping before hash comparison.
-**Implements:** Check-status and update MCP tools, fork hash anchor.
-**Avoids:** Pitfall 7 (parent hash at fork time), Pitfall 4 (frontmatter hash comparison), Pitfall 5 (fork orphaned skills).
+**Uses:** Vercel AI SDK for structured LLM output, existing pgvector + Voyage AI embeddings
+**Implements:** Preference boost layer (applied after RRF), visibility filtering in hybrid search path
+**Avoids:** Pitfall 3 (hallucination via grounding + similarity thresholds), Pitfall 14 (latency via parallel fetch + caching)
+**Research needed:** SKIP for hybrid search (RRF is standard), LIGHT for intent classifier (prompt engineering validation during implementation)
+
+### Phase 3: Workspace Integration (High-Risk, Validate-First)
+**Rationale:** Independent of search features but required for department-based visibility (deferred). Highest complexity due to OAuth, privacy, and rate limits. Build in isolation with feature flag.
+
+**Delivers:**
+- Separate Workspace OAuth flow (custom `/api/workspace/connect` + `/callback` routes)
+- Token encryption (AES-256-GCM) and secure storage (`workspace_tokens` table per tenant)
+- Directory sync service (incremental, paginated, resume-from-last-page)
+- Cached directory profiles (`workspace_profiles` table with email, name, department, title, orgUnitPath)
+- Admin Workspace settings page (connect/disconnect, sync status, data minimization consent)
+
+**Uses:** Individual `@googleapis/*` packages (drive, calendar, gmail)
+**Avoids:** Pitfall 1 (separate OAuth, not Auth.js scope expansion), Pitfall 5 (incremental sync + job queue), Pitfall 12 (privacy via data minimization + admin consent screen)
+**Research needed:** MEDIUM — OAuth verification process (2-4 weeks Google review), Directory API behavior (updatedMin parameter), GDPR compliance specifics depend on jurisdiction
+
+### Phase 4: Admin-Stamped Global Skills
+**Rationale:** Requires visibility scoping (Phase 1) to distinguish global from tenant scopes. Can build before or in parallel with Workspace sync — does NOT require department approval workflow initially.
+
+**Delivers:**
+- "Stamp as global" admin action on published skills
+- Global approval status field (separate from existing 7-status content lifecycle)
+- "Company Approved" badge component
+- "Company Recommended" homepage section
+
+**Addresses:** Competitive feature — governance and curation for enterprise adoption
+**Avoids:** Pitfall 15 (status + visibility interaction — status takes precedence)
+**Research needed:** SKIP (enterprise approval patterns well-documented)
+
+### Phase 5: Homepage Redesign (Integration Phase)
+**Rationale:** Requires visibility scoping (Phase 1), hybrid search (Phase 2), admin-stamped global skills (Phase 4). Optional: Workspace profiles (Phase 3) for department highlights. This phase surfaces all capabilities.
+
+**Delivers:**
+- Search-first hero layout (large search bar, category pills)
+- Personalized recommendations (hybrid search with empty query + user preferences)
+- Company Recommended section (admin-stamped global skills)
+- Redesigned trending/leaderboard as cards (not tables)
+- Condensed platform metrics banner
+
+**Implements:** Personalized feed service with graceful degradation (works without Workspace integration)
+**Avoids:** Pitfall 7 (performance via caching slow queries + Suspense boundaries + async AI), Pitfall 11 (breaking workflows via additive changes + feature flags)
+**Research needed:** SKIP (marketplace homepage patterns well-established)
 
 ### Phase Ordering Rationale
 
-- **Phases 1-2 are sequential dependencies:** Status column must exist before AI review can transition states, AI review must complete before admin sees results.
-- **Phase 3-4 can partially parallel:** Admin UI and notifications share same state transitions but UI rendering and email dispatch are independent paths.
-- **Phases 5-6 are fully parallel:** Conversational discovery and fork detection depend only on existing infrastructure (embeddings, contentHash), not on review pipeline. Can ship independently or together.
-- **No cross-phase blocking:** Review pipeline (1-4) and discovery/fork (5-6) have zero shared code paths beyond the status filter in search queries.
-
-Critical path: Phase 1 → Phase 2 → Phase 3 (admin can review) → Phase 4 (notifications complete loop). Phases 5-6 can ship before, during, or after 3-4 depending on business priority.
+- **Phase 1 parallelism:** Visibility, Loom, MCP have no shared files — safe parallel execution
+- **Phase 2 dependencies:** Preferences before hybrid search (search uses prefs for boost), both after visibility (search filters by visibility)
+- **Phase 3 isolation:** Workspace integration is highest risk — feature flag allows rollback without affecting other phases
+- **Phases 4-5 convergence:** Admin stamping and homepage redesign compose features from earlier phases, minimal new infrastructure
 
 ### Research Flags
 
-Phases with standard patterns (skip /gsd:research-phase):
-- **Phase 1-2 (Review pipeline):** Apple App Store and GitHub PR review patterns are exhaustively documented. State machine transitions are data structure, not complex logic.
-- **Phase 3 (Admin UI):** Extends existing admin layout, no new patterns. Diff view is side-by-side text (not character-level), no new libraries.
-- **Phase 4 (Notifications):** Adds types to existing notification infrastructure, proven pattern from Phase 33.
-- **Phase 5 (Conversational discovery):** Reuses existing semantic search logic from similar-skills.ts, MCP tool pattern proven across 6 existing tools.
-- **Phase 6 (Fork detection):** SHA-256 hash comparison is established pattern (git, SBOM), existing contentHash field provides anchor.
+**Phases needing deeper research during planning:**
+- **Phase 3 (Workspace):** OAuth verification timeline, Directory API `updatedMin` parameter behavior, GDPR compliance specifics for jurisdiction — allocate 2 weeks for verification process
+- **Phase 2 (Intent classifier):** Prompt engineering for intent extraction quality — validate with sample queries during implementation, not blocking
 
-Phases likely needing validation (not research):
-- **Phase 2 (AI review integration):** Test Anthropic SDK error handling under rate limit/API failure conditions (current code uses fire-and-forget, pipeline must propagate errors).
-- **Phase 5 (Conversational discovery):** Validate Ollama embedding latency for interactive use (~50ms local is acceptable, >200ms needs optimization or fallback).
+**Phases with standard patterns (skip research-phase):**
+- **Phase 1 (all):** Schema migrations, oEmbed patterns, MCP tool composition are well-documented
+- **Phase 2 (hybrid search):** RRF algorithm is standard, pgvector + full-text patterns already proven in codebase
+- **Phase 4:** Enterprise approval workflows are well-established (SharePoint, Confluence)
+- **Phase 5:** Marketplace homepage patterns are well-documented (Atlassian, Notion, Slack)
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Every feature verified against existing codebase files. Zero new dependencies claim validated by tracing each capability to installed package. |
-| Features | HIGH | Review pipeline patterns sourced from Apple App Store (official docs) and GitHub PR reviews (verified behavior). Conversational discovery matches Smithery.ai and Claude Skills patterns. Fork detection uses standard git divergence logic. |
-| Architecture | HIGH | Based on direct analysis of 14,700 LOC across 33 shipped phases. All component boundaries verified against existing service layer, MCP tool patterns, admin layout structure. |
-| Pitfalls | HIGH | Derived from codebase audit identifying 8 unguarded query paths, MCP raw SQL patterns, existing AI review fire-and-forget usage. All 16 pitfalls reference specific file paths and line numbers from source code. |
+| Stack | HIGH | Verified npm versions, compatibility matrix, existing codebase analysis (17K LOC audited). Vercel AI SDK peer deps match installed React 19.2.4 + Zod 3.25.76 exactly. Google API individual packages confirmed 98% smaller than monolith. |
+| Features | HIGH | Visibility scoping, Loom, homepage redesign based on established marketplace patterns (Atlassian, Notion, Linear). MEDIUM for AI intent search (prompt quality needs validation) and Workspace diagnostic (value prop unvalidated — survey-first recommended). |
+| Architecture | HIGH | Direct codebase analysis of schema (17 tables), services (21 files), auth flow (Auth.js v5 + JWT + RLS). Separate OAuth pattern verified against Auth.js limitations (GitHub #10261). RRF hybrid search is standard approach. |
+| Pitfalls | HIGH | Critical pitfalls verified via codebase grep (DEFAULT_TENANT_ID in 30+ files, 11+ query paths for visibility), Auth.js GitHub discussions (incremental auth not supported), Google API docs (rate limits, Directory API scopes). |
 
-**Overall confidence:** HIGH
+**Overall confidence:** HIGH for core patterns and infrastructure. MEDIUM for Google Workspace integration complexity (OAuth verification, privacy compliance, rate limits require careful handling but are manageable with research findings).
 
 ### Gaps to Address
 
-- **Ollama embedding latency for conversational use:** Existing embeddings are fire-and-forget (batch). Interactive conversational discovery requires sub-200ms embedding generation. Validate Ollama performance with GPU acceleration before committing to semantic search as primary discovery method. Fallback: ILIKE text search already works.
+- **Embedding model decision:** Current Ollama local (`nomic-embed-text` 768-dim) vs cloud provider (Voyage AI, OpenAI) affects AI intent search. Switching models invalidates all existing embeddings. **Resolution:** Decide before Phase 2 starts. If switching, plan re-embedding migration (batch process, exponential backoff on rate limits, use existing `inputHash` to skip unchanged skills).
 
-- **Review decision audit table schema:** Research recommends separate review_decisions table but doesn't specify exact schema. During Phase 2 planning, define: columns (skillId, versionId, reviewerType, decision, reason, reviewerId, createdAt), indexes (for admin history queries), retention policy (immutable forever or time-boxed).
+- **Department/team data dependency:** Visibility scoping Phase 1 should implement only `tenant` and `personal`. Defer `team` and `department` scopes to Phase 1b AFTER Workspace sync (Phase 3) populates organizational data. Alternative: manual team assignment in admin settings for non-Google orgs. **Resolution:** Phase 1 delivers two visibility levels, Phase 3 enables the other two.
 
-- **Auto-approval scoring threshold:** Research suggests "all categories >= 7" for auto-approve but this is arbitrary. During Phase 2, analyze distribution of existing AI review scores to set data-driven thresholds (e.g., if 90% of published skills score 6+, threshold should be 6, not 7).
+- **Google Workspace value validation:** Workspace diagnostic is highest risk, unvalidated feature. NO competitor does "workspace activity analysis → skill recommendation" in this exact pattern. **Resolution:** Build manual "time allocation survey" in Phase 3a before OAuth integration in Phase 3b. If survey engagement is low, skip OAuth entirely and archive the feature.
 
-- **Admin review queue SLA tracking:** Research mentions review analytics dashboard as differentiator (average time to review, approval rates). Not blocking for v2.0 but plan where this data lives—review_decisions table should store timestamps for SLA calculation later.
+- **Homepage performance budget:** Current homepage fetches 8 parallel queries. v3.0 adds 4-5 more (recommendations, activity feed, department highlights). Database connection pool default size (likely 10) insufficient. **Resolution:** Set performance budget in Phase 5 planning (TTFB < 400ms p95). Cache slow queries (platform stats, trending — 5min TTL), async-load AI recommendations via Suspense, monitor connection pool usage.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- **Codebase analysis:** Direct inspection of 18 schema files, 11 service files, 6 MCP tool files, 9 server action files, 12 query path files (total ~14,700 LOC verified)
-- **Stack verification:** package.json dependencies (Anthropic SDK 0.72.1, MCP SDK 1.25.3, Drizzle ORM 0.42.0), lib/ai-review.ts (structured output usage confirmed line 127), apps/mcp/src/server.ts (registerTool pattern confirmed across 6 tools)
-- **Apple App Store review workflow:** https://developer.apple.com/help/app-store-connect/reference/app-and-submission-statuses (complete state reference)
-- **GitHub PR reviews:** https://docs.github.com/articles/about-pull-request-reviews (three-action model: comment/approve/request-changes)
-- **NPM Registry:** @modelcontextprotocol/sdk (latest 1.26.0), @anthropic-ai/sdk (latest 0.73.0), drizzle-orm (latest 0.45.1)—confirmed current versions support all needed features
+- **Direct codebase analysis (17,000+ LOC):** 17 schema files, 21 service files, auth flow (auth.ts, auth.config.ts, middleware.ts), 11+ search query paths, homepage (8 parallel queries), 30+ files with DEFAULT_TENANT_ID hardcoded
+- **npm registry (verified 2026-02-13):** @googleapis/drive@20.1.0 (2.3MB), calendar@14.2.0 (809KB), gmail@16.1.1 (1.1MB) vs googleapis@171.4.0 (200MB), ai@6.0.86 + @ai-sdk/anthropic@3.0.43, @loomhq/loom-embed@1.7.0 (last published 2 years ago)
+- **Auth.js GitHub Discussions:** #10261 (incremental auth not supported), #3016 (refresh token issues)
+- **Google official docs:** Directory API rate limits (2,400 queries/min/user/project), OAuth scopes (directory.readonly requires admin or DWD), Domain-Wide Delegation setup
+- **Loom official docs:** oEmbed endpoint (https://www.loom.com/v1/oembed), Embed SDK API (client-side only)
 
 ### Secondary (MEDIUM confidence)
-- **Content moderation queues:** Stream dashboard design patterns (https://getstream.io/moderation/docs/dashboard/reviewing-content/), Reddit moderation queue (bulk actions, filtering), Higher Logic moderation (rejection notifications)
-- **Prompt marketplace quality:** PromptBase vs FlowGPT review (godofprompt.ai/blog/critical-review-popular-prompt-marketplace-platforms)—manual review vs no review comparison
-- **File hashing integrity:** SHA-256 comparison patterns (sasa-software.com/learning/what-is-file-hashing-in-cybersecurity), SBOM content-addressable references (ENISA SBOM analysis PDF)
+- **Hybrid search patterns:** ParadeDB hybrid search guide (RRF k=60 standard), pgvector Jonathan Katz hybrid search blog
+- **RAG research:** arxiv 2602.09552 (single-query vs multi-turn RAG effectiveness for single-domain QA), arxiv 2510.24476v1 (hallucination mitigation via grounding)
+- **Enterprise search UX:** Kore.ai enterprise search patterns (intent understanding), Algolia marketplace search UX (sub-200ms expectation)
+- **Marketplace design:** Atlassian Marketplace (hero search + category pills), Notion Template Gallery (visual cards), Slack App Directory (featured apps)
+- **Privacy compliance:** Google Workspace GDPR compliance guides (data minimization), Google Workspace API User Data Policy
 
-### Tertiary (LOW confidence, needs validation)
-- **Conversational discovery latency:** Ollama embedding speed for interactive use—no benchmarks available, must test in-situ during Phase 5
-- **AI review auto-approval threshold:** "All categories >= 7" threshold is inference from App Store quality expectations, not data-driven. Validate against historical score distribution.
+### Tertiary (validation needed)
+- **Voyage AI rate limits:** Project memory notes "tight rate limits" but specific QPM not documented — validate during Phase 2 if switching from Ollama
+- **Loom roadmap under Atlassian:** Loom acquired 2023, SDK v1.7.0 published 2 years ago, no public embed API roadmap — oEmbed approach mitigates SDK deprecation risk but long-term embed stability is LOW confidence
 
 ---
-*Research completed: 2026-02-08*
+*Research completed: 2026-02-13*
 *Ready for roadmap: yes*
+*Next step: Roadmapper agent consumes this summary to structure v3.0 phases*

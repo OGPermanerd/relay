@@ -1,317 +1,655 @@
-# Feature Landscape: v2.0 Skill Ecosystem
+# Feature Landscape: v3.0 AI Discovery & Workflow Intelligence
 
-**Domain:** Internal AI skill marketplace -- review pipeline, conversational discovery, fork-on-modify detection, admin review UI
-**Researched:** 2026-02-08
-**Overall confidence:** HIGH (patterns well-established across App Store, GitHub PR, marketplace ecosystems; codebase primitives already exist)
+**Domain:** Internal AI skill marketplace -- intent-based discovery, workspace diagnostics, visibility scoping, video integration, homepage redesign
+**Researched:** 2026-02-13
+**Overall confidence:** MEDIUM-HIGH (intent search and visibility scoping are well-established patterns; Google Workspace diagnostic and CLAUDE.md sync are novel combinations requiring deeper validation)
 
 ## Context
 
-EverySkill is at v1.5 with a complete internal skill marketplace: CRUD, versioning, forking, AI review (on-demand, advisory-only), semantic similarity via pgvector/Ollama, MCP tools (list, search, deploy, create), star ratings, quality badges, admin panel, notifications, and PostToolUse hook-based usage tracking.
+EverySkill is at v2.0 with a complete skill marketplace including: skill CRUD with 7-status lifecycle (draft through published), AI review with quality/clarity/completeness scoring, fork & improve with diff highlighting, MCP integration (16 tools: search, recommend, deploy, create, review, guide, etc.), multi-tenancy with subdomain routing, RBAC with admin roles, analytics dashboard, semantic search via pgvector + Voyage AI embeddings, and quality-gated publishing with auto-approval thresholds.
 
-v2.0 extends the ecosystem with four capabilities:
+v3.0 extends the ecosystem with eight capabilities:
 
-1. **Review pipeline** -- Transition from advisory AI review to gated publishing: create -> pending_review -> AI reviews -> author revises -> admin approves -> published
-2. **Review UX** -- In-app review page, notification+modal, and MCP-first review (Claude returns review results inline)
-3. **Conversational discovery** -- MCP semantic search -> recommend -> describe -> install -> guide usage, all within a conversation
-4. **Fork-on-modify detection** -- MCP tool compares local file hash vs DB hash, prompts fork when drift detected
+1. **AI-powered intent search** -- Conversational "What are you trying to solve?" with top-3 skill recommendations
+2. **`/everyskill` MCP tool** -- In-prompt discovery for any AI client (Claude, Cursor, Codex)
+3. **Google Workspace diagnostic** -- Connect Drive/Gmail/Calendar, analyze patterns, recommend automations
+4. **Skill visibility scoping** -- Global company / employee visible / employee invisible / personal
+5. **Admin-stamped global skills** -- Department approval workflow for company-wide skills
+6. **Personal preference extraction** -- Parse CLAUDE.md into portable cross-AI preferences
+7. **Loom video integration** -- Video demos attached to skills
+8. **Homepage redesign** -- Intent-first landing, not metrics-first
 
 **Existing infrastructure being extended:**
-- `skill_reviews` table with AI-generated quality/clarity/completeness scores (1-10), SHA-256 content hash comparison
-- `skill_versions` table with immutable version records, content hashes, R2 storage URLs
-- `skill_embeddings` table with pgvector HNSW index (768-dim Voyage AI/Ollama vectors)
-- `notifications` table with type-based routing and email preferences
-- `skills.forkedFromId` self-referential FK for fork tracking
-- `skills.publishedVersionId` / `skills.draftVersionId` for draft/published lifecycle
-- MCP `search_skills` tool with ILIKE relevance scoring
-- MCP `deploy_skill` tool with frontmatter injection and local file save
-- MCP `create_skill` tool that auto-publishes immediately (needs gating)
-- `hashContent()` SHA-256 utility in `apps/web/lib/content-hash.ts`
-- `generateSkillReview()` in `apps/web/lib/ai-review.ts` using Claude Sonnet structured output
+- `skills` table with `status` lifecycle, `searchVector` tsvector, pgvector `skill_embeddings`
+- `skill_reviews` table with AI-generated quality/clarity/completeness scores
+- MCP server with `search_skills`, `recommend_skills` (semantic), `deploy_skill`, `describe_skill`, `guide_skill`
+- Multi-tenant RLS with `tenant_id` on all tables, subdomain routing
+- `users` table with `role` field (admin/user), `isAdmin()` check
+- Notification system with type-based routing and email preferences
+- Quality scoring formula: usage(50%) + rating(35%) + metadata(15%)
 
 ---
 
-## Table Stakes
+## Feature Area 1: AI-Powered Intent Search
 
-Features users expect for a review pipeline, discovery flow, and fork detection system. Missing any of these means the v2.0 features feel incomplete.
-
-### 1. Review Pipeline State Machine
+### Table Stakes
 
 | Feature | Why Expected | Complexity | Depends On |
 |---------|--------------|------------|------------|
-| `status` field on skills | Skills need a lifecycle state beyond published/draft | LOW | Schema migration |
-| State transitions: draft -> pending_review -> in_review -> changes_requested -> approved -> published | Users expect a clear, predictable workflow modeled on App Store / GitHub PR review | MEDIUM | State machine logic |
-| AI auto-review on submission | When author submits for review, AI review runs automatically (not on-demand) | LOW | Existing `generateSkillReview()` |
-| Admin approve/reject/request-changes actions | Three-action model from GitHub PR reviews is the standard | MEDIUM | Admin authorization |
-| Author revision cycle | Author receives feedback, edits, resubmits -- re-triggers AI review | MEDIUM | State transition logic |
-| Review comments/notes | Admin can attach a text note explaining rejection or change request | LOW | New `reviewerNotes` field |
+| Natural language search bar on homepage | Users expect to describe problems, not type keywords | MEDIUM | Existing semantic search infrastructure |
+| Top-3 ranked recommendations with rationale | Users need a short, curated list with "why this matches" | MEDIUM | Embedding similarity + LLM explanation |
+| Fallback to keyword search when intent is ambiguous | System should degrade gracefully, not return zero results | LOW | Existing `searchSkills()` with ILIKE + tsvector |
+| Loading state with streaming feedback | Users need to know the system is thinking, not broken | LOW | React Suspense or streaming UI |
 
-**Expected behavior (modeled on App Store + GitHub PR workflow):**
+**Expected UX Flow:**
 
 ```
-DRAFT ──submit──> PENDING_REVIEW ──auto-AI-review──> IN_REVIEW
-                                                        |
-                                    ┌───────────────────┼───────────────────┐
-                                    v                   v                   v
-                              APPROVED           CHANGES_REQUESTED      REJECTED
-                                  |                   |
-                                  v                   v
-                              PUBLISHED         author edits, resubmits
-                                              ──> PENDING_REVIEW (cycle)
+1. User lands on homepage, sees prominent search bar
+   Placeholder: "What are you trying to solve today?"
+
+2. User types: "I need help reviewing pull requests faster"
+
+3. System processes (500-1500ms):
+   a. Generate embedding via Voyage AI
+   b. pgvector cosine similarity search
+   c. (Optional) LLM reranks top-5 into top-3 with match rationale
+
+4. Results appear inline (NOT a new page):
+   - Skill card with name, author, quality badge, usage count
+   - One-line rationale: "Matches because it automates PR feedback generation"
+   - "Install" and "Learn more" actions
+
+5. If no semantic matches: fall back to tsvector full-text search
+   If no results at all: "No skills match yet. Create one?"
 ```
 
-**States (modeled on Apple App Store + GitHub):**
-- `draft` -- Author is editing, not submitted for review
-- `pending_review` -- Submitted, waiting for AI review to complete
-- `in_review` -- AI review complete, awaiting admin decision
-- `approved` -- Admin approved, ready to publish (or auto-publishes)
-- `changes_requested` -- Admin wants modifications before approval
-- `rejected` -- Admin rejected entirely (rare, for policy violations)
-- `published` -- Live and visible to all users
+**Successful implementations to model:**
+- **Kore.ai enterprise search**: Understands intent behind query, maintains context, guides users from query to action. Their pattern of "query -> understand intent -> retrieve -> present with rationale" is the gold standard.
+- **Algolia InstantSearch**: Sub-200ms results with typo tolerance, faceted navigation. The speed expectation is critical -- anything over 2 seconds feels broken.
+- **Slack AI search**: Natural language across channels with source attribution. Key insight: show *why* a result matched, not just that it matched.
 
-**Why this specific state model:** Apple's App Store uses a similar flow (Waiting for Review -> In Review -> Approved/Rejected) and GitHub PRs use the three-action model (Comment, Approve, Request Changes). The combination gives authors clear expectations and admins clear actions. The `changes_requested` state is critical -- it differentiates "fix this and resubmit" from "this is rejected outright," which matches how 95% of review feedback works.
+**What would delight:**
+- Remembering the user's recent searches and usage patterns to personalize results
+- Multi-turn refinement: "Show me only workflow-type skills" after initial results
+- Proactive suggestions: "You used 3 code review skills this week. Trending: Advanced PR Automation (new this week)"
 
-**Implementation note:** The `skills` table already has `publishedVersionId` and `draftVersionId` columns. The `status` field governs the skill-level lifecycle. A skill in `changes_requested` still has its `draftVersionId` pointing to the version under review, and the author creates a new version when resubmitting.
+**What to avoid:**
+- Do NOT build a chatbot interface. This is search with intelligence, not a conversation. The search bar should feel instant, not like waiting for a chat response.
+- Do NOT show more than 5 results inline. Cognitive overload kills intent search. Top-3 is ideal; link to full results page for exploration.
+- Do NOT require the LLM for every search. Use embedding similarity as the primary path; LLM reranking is an optional enhancement for ambiguous queries.
 
-**Confidence:** HIGH -- This state machine maps directly to Apple App Store submission statuses and GitHub PR review states, both well-documented systems.
+**Confidence:** HIGH for the search UX pattern, MEDIUM for the LLM reranking quality. The existing pgvector infrastructure (768-dim Voyage AI embeddings, HNSW index, cosine similarity) handles the core matching. LLM reranking adds latency but improves explanation quality.
 
-### 2. Automatic AI Review on Submission
+### Differentiators
 
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| AI review triggers on submit-for-review | Authors should not manually request AI review before submitting | LOW | Existing `generateSkillReview()` |
-| Review results stored and displayed inline | Author sees quality/clarity/completeness scores immediately | LOW | Existing `skill_reviews` table |
-| Minimum score threshold for auto-approval (optional) | High-scoring skills skip manual review | MEDIUM | Configurable threshold in tenant settings |
-| Content hash comparison skips re-review if unchanged | Do not waste API calls re-reviewing identical content | LOW | Existing `reviewedContentHash` field |
-
-**Expected behavior:** Author clicks "Submit for Review." The system transitions the skill to `pending_review`, fires `generateSkillReview()` asynchronously, and transitions to `in_review` when the AI review completes. The AI review results (scores, suggestions, suggested description) are visible to both the author and the admin reviewer.
-
-**Optional auto-approval gate:** If all three category scores (quality, clarity, completeness) are >= 7 (configurable per tenant), the skill auto-transitions to `approved` without admin intervention. This reduces admin workload for high-quality submissions. Skills below the threshold require manual admin review.
-
-**Confidence:** HIGH -- The existing `generateSkillReview()` function already produces structured output. The only change is triggering it automatically instead of on-demand.
-
-### 3. Admin Review Queue and Dashboard
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| Review queue page listing skills in `in_review` state | Admins need a centralized view of pending reviews | MEDIUM | New admin page |
-| Skill diff view (previous version vs submitted version) | Admins need to see what changed, not read the entire skill | HIGH | Version comparison logic |
-| Approve / Request Changes / Reject actions | Three-action model per GitHub PR reviews | MEDIUM | State transition actions |
-| Reviewer notes text field | Admin explains their decision | LOW | Text input |
-| Review history (audit trail) | Who reviewed what, when, with what decision | MEDIUM | Review event records |
-| Queue filtering (by category, author, AI score) | Admins with many pending reviews need triage tools | LOW | Query parameters |
-| Bulk approve for high-scoring skills | When AI scores are all 8+, approve multiple at once | LOW | Bulk action UI |
-
-**Expected behavior (modeled on Reddit/Higher Logic moderation queues + GitHub PR review):**
-
-The admin review page shows a queue of skills in `in_review` status, sorted by submission date (oldest first). Each item shows:
-- Skill name, author, category, submission date
-- AI review scores (quality/clarity/completeness as color-coded badges)
-- AI-generated summary
-- "View" button that opens the full skill content with diff highlighting
-
-When an admin reviews a skill, they see:
-- Side-by-side or inline diff between the previous published version and the submitted version
-- AI review scores and suggestions
-- A text area for reviewer notes
-- Three action buttons: Approve, Request Changes, Reject
-
-On action:
-- **Approve:** Status -> `approved`, `publishedVersionId` updated, author notified
-- **Request Changes:** Status -> `changes_requested`, reviewer notes saved, author notified with specific feedback
-- **Reject:** Status -> `rejected`, reviewer notes saved, author notified with reason
-
-**Confidence:** HIGH -- Content moderation queues with approve/reject/request-changes are standardized across platforms (Reddit, Zendesk, Stream, Higher Logic). The three-action model from GitHub is widely understood.
-
-### 4. Review Notifications
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| Notify author when AI review completes | Author should know their review is ready | LOW | Existing notification system |
-| Notify admin when skill enters `in_review` | Admin needs to know there's work to do | LOW | Existing notification system |
-| Notify author on approve/reject/request-changes | Author needs the decision and feedback | LOW | Existing notification system |
-| Notification type: `skill_review` | Fits into existing type-based notification routing | LOW | New notification type |
-| Email notification for review decisions | Critical decisions should reach email, not just in-app bell | LOW | Existing email notification system |
-
-**Expected behavior:** The notification system already supports types (`grouping_proposal`, `trending_digest`, `platform_update`). Adding `skill_review_submitted`, `skill_review_complete`, `skill_approved`, `skill_changes_requested`, `skill_rejected` as new types integrates with existing notification preferences. Authors can opt out of email notifications for reviews if they prefer in-app only.
-
-**Confidence:** HIGH -- The notification infrastructure is already built (notifications table, preferences, email dispatch). This is adding new notification types to an existing system.
-
-### 5. Conversational Discovery via MCP
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| Semantic search MCP tool | Natural language queries like "help me write better code reviews" | MEDIUM | Existing pgvector embeddings |
-| Skill recommendation based on context | "Based on what you're working on, try these skills" | HIGH | Context analysis from conversation |
-| Skill detail retrieval via MCP | "Tell me more about that skill" -- returns full description, ratings, usage stats | LOW | New MCP tool or extend search |
-| Guided install flow via MCP | "Install it" triggers deploy_skill with contextual instructions | LOW | Existing deploy_skill tool |
-| Usage guidance after install | "Here's how to use this skill: ..." | LOW | Return skill content as guidance |
-
-**Expected behavior (modeled on conversational recommendation systems):**
-
-The MCP interface enables a multi-turn discovery conversation:
-
-```
-User: "I need help with database migrations"
-Claude: [calls search_skills with semantic query]
-       "I found 3 relevant skills:
-        1. Database Migration Helper (Gold, 45 uses) - Automates Drizzle migration generation
-        2. Schema Review Workflow (Silver, 23 uses) - Reviews schema changes for anti-patterns
-        3. SQL Query Optimizer (Bronze, 12 uses) - Optimizes slow queries
-        Want to know more about any of these?"
-
-User: "Tell me more about #1"
-Claude: [calls get_skill_details]
-       "Database Migration Helper:
-        - Author: Jane D.
-        - Quality: 8.5/10, Clarity: 9/10, Completeness: 7.5/10
-        - Description: Analyzes your current schema and generates...
-        Want me to install it?"
-
-User: "Yes, install it"
-Claude: [calls deploy_skill]
-       "Installed to ~/.claude/skills/database-migration-helper.md
-        To use it, just describe the migration you need..."
-```
-
-**Key design principle:** The MCP tools should return enough context for Claude to have a natural conversation about skills without requiring the user to visit the web UI. Search results should include ratings, usage stats, and quality tier so Claude can make informed recommendations.
-
-**New MCP tools needed:**
-- `get_skill_details` -- Returns full skill metadata (description, scores, author, usage stats, similar skills)
-- `recommend_skills` -- Given a natural language description of what the user needs, returns ranked recommendations using semantic similarity (pgvector cosine distance)
-
-**Existing tools enhanced:**
-- `search_skills` -- Add semantic search mode alongside ILIKE (use embeddings when available)
-- `deploy_skill` -- Already handles installation; add usage guidance in response
-
-**Confidence:** HIGH for the tool design, MEDIUM for semantic search quality. The pgvector infrastructure exists but the MCP `search_skills` tool currently uses ILIKE only (the web UI has full-text search with `websearch_to_tsquery`). Adding semantic search to MCP requires calling the embedding service from the MCP app, which currently only runs in the web app.
-
-### 6. Fork-on-Modify Detection
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| MCP tool: `check_skill_status` | Compare local file hash to DB hash | MEDIUM | New MCP tool |
-| Local file hash computation | SHA-256 of local `.claude/skills/{slug}.md` | LOW | fs.readFile + crypto |
-| DB hash lookup by skill ID | Query `skill_versions.contentHash` for published version | LOW | Existing schema |
-| Drift detection result | "modified" / "current" / "unknown" (no local file) | LOW | Hash comparison |
-| Fork prompt on drift | "Your local copy has been modified. Fork as a new skill?" | LOW | MCP response message |
-| One-step fork via MCP | `fork_skill` MCP tool creates fork from modified content | MEDIUM | Extend existing fork action |
-| Web UI drift indicator | Skill detail page shows "local copy modified" if hash mismatch detected | MEDIUM | API endpoint for hash check |
-
-**Expected behavior (modeled on git divergence detection):**
-
-When a user has installed a skill and later modified it locally, the system should detect this drift:
-
-```
-User: "Check if my skills are up to date"
-Claude: [calls check_skill_status for each installed skill]
-       "2 skills have been modified locally:
-        - Code Review Automation: modified (different from published v3)
-        - Git PR Workflow: current (matches published v2)
-
-        Would you like to fork the modified skills as your own versions?"
-
-User: "Yes, fork Code Review Automation"
-Claude: [calls fork_skill with local content]
-       "Created 'Code Review Automation (Fork)' with your modifications.
-        Your fork is now published and tracking separately."
-```
-
-**Hash comparison logic:**
-1. MCP tool reads local file at `~/.claude/skills/{slug}.md`
-2. Strips frontmatter (tracking hooks, metadata) before hashing -- compare content only
-3. Computes SHA-256 of stripped content
-4. Queries DB for the skill's `publishedVersionId` -> `skill_versions.contentHash`
-5. Compares hashes: match = "current", mismatch = "modified"
-
-**Critical design decision: Strip frontmatter before comparison.** The deploy_skill tool injects tracking hooks into frontmatter. The author's original content is stored separately. If the user modifies only the skill content (not the frontmatter), that should be detected. If the frontmatter was regenerated with a new tracking URL but content is identical, that should NOT trigger a fork prompt.
-
-**Web UI integration:** The skill detail page can show a "Check for local modifications" button that calls an API endpoint. This is secondary to the MCP flow -- most users will interact with skills via Claude, not the web UI.
-
-**Confidence:** HIGH -- Content hash comparison is a well-established pattern (git, SBOM integrity verification, file integrity monitoring). The existing `contentHash` field on `skill_versions` and `hashContent()` utility provide the foundation.
-
-### 7. MCP-First Review Experience
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| `review_skill` MCP tool | Author triggers review from within Claude conversation | MEDIUM | New MCP tool wrapping `generateSkillReview()` |
-| Inline review results in conversation | Claude presents scores, suggestions, and recommended actions | LOW | Structured MCP response |
-| `submit_for_review` MCP tool | Author submits skill for admin review via MCP | LOW | New MCP tool, state transition |
-| Review status check via MCP | "What's the status of my submitted skills?" | LOW | Query skills by author + status |
-
-**Expected behavior:**
-
-```
-User: "Review my code review automation skill before I submit it"
-Claude: [calls review_skill]
-       "AI Review Results for 'Code Review Automation':
-        - Quality: 8/10 - Well-structured with clear steps
-        - Clarity: 6/10 - Some jargon could be simplified
-          Suggestion: Replace 'LGTM heuristics' with 'approval criteria'
-        - Completeness: 7/10 - Missing error handling guidance
-          Suggestion: Add a section on what to do when review comments conflict
-
-        Overall: Good quality. Address clarity suggestions before submitting.
-        Ready to submit for admin review?"
-
-User: "Submit it"
-Claude: [calls submit_for_review]
-       "Submitted for review. You'll be notified when an admin reviews it."
-```
-
-**Why MCP-first matters:** EverySkill is a tool for Claude users. The primary interaction surface is the Claude conversation, not the web UI. Review, submission, and status checks should all be available without leaving the conversation.
-
-**Confidence:** HIGH -- This is a natural extension of the existing MCP tool pattern. The AI review logic already exists; wrapping it in an MCP tool is straightforward.
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Context-aware search (role, department, recent activity) | Results personalized to the user's context | HIGH | Requires usage history analysis |
+| "Did you mean?" suggestions for zero-result queries | Helps users reformulate without frustration | MEDIUM | Fuzzy matching on skill names |
+| Search analytics (what queries return zero results) | Admin insight into skill gaps -- what should be built | LOW | Log queries + result counts |
 
 ---
 
-## Differentiators
+## Feature Area 2: `/everyskill` MCP Tool for In-Prompt Discovery
 
-Features that set EverySkill apart from basic prompt marketplaces. Not required for v2.0 launch but high-value.
+### Table Stakes
 
-### Auto-Approval for High-Quality Skills
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| Single `everyskill` tool with sub-commands | Clean MCP tool surface -- one tool, multiple intents | LOW | Existing MCP server architecture |
+| `search` sub-command (semantic + text) | Natural language skill discovery from any AI prompt | LOW | Existing `recommend_skills` handler |
+| `install` sub-command | One-step deploy from conversation | LOW | Existing `deploy_skill` handler |
+| `describe` sub-command | Full skill details without leaving conversation | LOW | Existing `describe_skill` handler |
+| Automatic context injection | When a skill is installed, its content becomes available to the AI | MEDIUM | Frontmatter + content in response |
+
+**Expected UX Flow:**
+
+```
+User (in Claude Code): "I need to write a database migration"
+
+Claude: [automatically calls everyskill.search("database migration")]
+        "I found 3 relevant skills in your company's EverySkill marketplace:
+
+         1. Database Migration Helper (Gold, 45 uses, 8.5/10 quality)
+            Automates Drizzle migration generation from schema diffs
+
+         2. Schema Review Workflow (Silver, 23 uses, 7/10 quality)
+            Reviews schema changes for anti-patterns
+
+         3. SQL Query Optimizer (12 uses, 6.5/10 quality)
+            Optimizes slow queries with EXPLAIN analysis
+
+         Want me to install any of these?"
+
+User: "Install #1"
+
+Claude: [calls everyskill.install("database-migration-helper")]
+        "Installed. I now have access to the Database Migration Helper.
+         Let me help you with that migration..."
+```
+
+**Key design decisions:**
+
+1. **Single tool vs. multiple tools**: The existing MCP server has 16 tools. For external discovery (users who add EverySkill as an MCP server in their client), a single `everyskill` tool with sub-commands is cleaner than exposing all 16. The sub-command pattern (like `git`) keeps the tool surface small while maintaining full capability.
+
+2. **Tool description matters enormously**: The MCP tool description is what the AI reads to decide when to call it. The description should say: "Search and install AI skills from your company's EverySkill marketplace. Use when the user needs help with a task that might have a pre-built skill, workflow, or prompt available." This framing makes the AI proactively search EverySkill when relevant.
+
+3. **Response format for AI consumption**: Return structured JSON that the AI can naturally narrate. Include: skill name, quality badge, usage count, one-line description, install command. Do NOT return raw HTML or markdown tables -- the AI will format appropriately for its context.
+
+**Successful implementations to model:**
+- **MCP Market (mcpmarket.com)**: Agent Skills directory where tools are discoverable and installable from within AI conversations. Their pattern: browse -> inspect -> install is the standard flow.
+- **Composio MCP tools**: Dynamic tool discovery with clear naming conventions and parameter descriptions. Key insight: tools should be self-documenting.
+- **Docker MCP best practices**: Keep tool descriptions under 1024 characters, use clear parameter descriptions, return structured data.
+
+**What would delight:**
+- Proactive skill suggestion: When the AI detects the user is about to do something a skill covers, suggest it before being asked
+- Usage tracking from MCP: "You've used Database Migration Helper 12 times this month, saving an estimated 6 hours"
+- Skill recommendations based on what similar users installed
+
+**What to avoid:**
+- Do NOT expose internal admin tools (review, approve, reject) in the public MCP surface. The `/everyskill` tool is for consumers, not administrators.
+- Do NOT require authentication for read-only search. Anonymous search with usage tracking nudges toward authentication is the existing pattern. Keep it.
+- Do NOT return full skill content in search results. Return metadata only. The `install` command fetches content.
+
+**Confidence:** HIGH. The existing MCP server already has `search_skills`, `recommend_skills`, `deploy_skill`, and `describe_skill`. This feature is primarily about packaging them into a single discoverable tool with better descriptions.
+
+### Differentiators
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Configurable score threshold (e.g., all categories >= 8) | Reduces admin workload for obviously good skills | LOW | Tenant setting |
-| Auto-approve bypasses admin queue | Fast-tracks quality content | LOW | State transition shortcut |
-| Audit trail notes "auto-approved by AI" | Transparency about automated decisions | LOW | Review record metadata |
+| Auto-suggest on task detection | AI proactively searches EverySkill when it detects a relevant task | MEDIUM | Requires careful tool description engineering |
+| Cross-client compatibility (Claude, Cursor, Codex) | Works wherever MCP is supported | LOW | MCP is a standard protocol |
+| Skill usage logging from MCP with FTE-days attribution | Every MCP usage contributes to ROI metrics | LOW | Existing `trackUsage()` |
 
-**Why valuable:** PromptBase manually reviews every submission, which does not scale. FlowGPT has no review, which leads to quality variance. Auto-approval for high-scoring skills is the middle ground -- maintains quality without bottlenecking on admin availability.
+---
 
-### Suggested Edits (Apply AI Suggestions)
+## Feature Area 3: Google Workspace Diagnostic
+
+### Table Stakes
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| OAuth2 connection for Drive, Gmail, Calendar | Users connect their Google account once | HIGH | Google OAuth2 with restricted scopes |
+| Activity analysis: files viewed, emails sent, meetings attended | Users need a quantified view of where their time goes | HIGH | Google Reports API + Drive Activity API |
+| Time pattern visualization (weekly heatmap) | Show where time clusters -- meetings, email, document work | MEDIUM | Data aggregation + chart rendering |
+| Automation recommendations based on patterns | "You spend 3 hours/week on status update emails. Try this skill." | HIGH | Pattern analysis + skill matching |
+| Deployment plan for recommended automations | Step-by-step: install skill -> configure -> measure impact | MEDIUM | Skill matching + onboarding flow |
+
+**Expected UX Flow:**
+
+```
+1. Admin or user navigates to /diagnostics (new page)
+
+2. "Connect Google Workspace" button
+   - OAuth2 consent screen with MINIMAL scopes:
+     - drive.metadata.readonly (file metadata, not content)
+     - gmail.metadata (email metadata: to/from/subject, not body)
+     - calendar.readonly (event metadata)
+     - admin.reports.audit.readonly (org-level activity, admin only)
+   - CRITICAL: Never request content-reading scopes
+
+3. After connection, system analyzes last 30 days:
+   a. Drive Activity API: documents viewed, edited, shared
+   b. Gmail API: email volume, response times, recurring patterns
+   c. Calendar API: meeting frequency, duration, attendee overlap
+   d. Reports API (admin): org-wide activity patterns
+
+4. Dashboard shows:
+   - Time allocation pie chart (meetings / email / document work / other)
+   - Weekly activity heatmap
+   - Top time sinks: "You attended 12 hours of meetings last week"
+   - Recurring patterns: "Every Monday you send 5 status update emails"
+
+5. Automation recommendations:
+   - "Status Update Automation (matches your Monday email pattern)"
+   - "Meeting Summary Generator (you attend 15+ hours of meetings/week)"
+   - "Document Template Skill (you create similar docs weekly)"
+   - Each recommendation links to an existing EverySkill skill
+
+6. Deployment plan:
+   - Step 1: Install recommended skill
+   - Step 2: Configure for your workflow (guided setup)
+   - Step 3: Track time savings over 2 weeks
+   - Step 4: Report ROI
+```
+
+**Critical implementation considerations:**
+
+1. **Google OAuth scope classification**: Drive metadata and Calendar readonly are "sensitive" scopes requiring Google verification. Gmail metadata is also sensitive. The Reports API requires admin-level access. Budget 2-4 weeks for Google's OAuth verification process for production use.
+
+2. **No content access -- metadata only**: The Drive API returns `viewedByMeTime`, `modifiedByMeTime`, `mimeType`, `name` without reading file content. The Gmail API can list messages with metadata (subject, from, to, date) without reading bodies using `format: metadata`. Calendar events include title, duration, attendees. This is sufficient for pattern analysis and keeps scope minimal.
+
+3. **Data retention and privacy**: Store aggregated analytics only, not raw Google data. Show users exactly what data is analyzed. Provide delete/disconnect at any time. For SOC2 compliance, log all data access.
+
+4. **The "screen time" concept**: Google Workspace APIs do NOT provide actual screen time or active usage duration. They provide event timestamps (when a file was viewed, when an email was sent, when a meeting occurred). "Time analysis" is an inference: if a user edited a Doc from 9am-11am (based on revision history), that's ~2 hours of document work. This is an approximation, not tracking.
+
+**Successful implementations to model:**
+- **RescueTime / Clockwise**: Time analytics dashboards that show where time goes with recommendations for improvement. Their weekly summary email pattern is highly effective.
+- **Notion AI Q&A**: Connects to workspace data and provides insights. Key pattern: connect once, analyze continuously, surface insights proactively.
+
+**What would delight:**
+- Weekly digest email: "This week: 14h meetings, 8h email, 6h documents. 3 automation opportunities identified."
+- Team-level patterns (admin only): "Your engineering team spends 40% of time in meetings. Here are 5 meeting-related skills."
+- ROI tracking after deployment: "Since installing Meeting Summary Generator 2 weeks ago, you've saved an estimated 3 hours."
+
+**What to avoid:**
+- Do NOT build a real-time activity monitor. This is a periodic diagnostic (weekly/monthly), not surveillance.
+- Do NOT read email bodies or document content. Metadata analysis is sufficient and avoids enormous privacy concerns.
+- Do NOT store raw Google data long-term. Analyze, aggregate, discard.
+- Do NOT build this before validating with actual users that they want this level of analysis. This is the highest-risk feature in v3.0.
+
+**Confidence:** LOW-MEDIUM. The Google APIs support the data access needed, but the value proposition is unvalidated. No direct competitor does "workspace diagnostic -> skill recommendation" in this way. The OAuth verification process is a real blocker. Recommend building a manual "what do you spend time on?" survey first, then automating with Google APIs if the survey version proves valuable.
+
+### Differentiators
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| "Apply suggestion" button for AI review suggestions | One-click improvement, like GitHub suggested changes | MEDIUM | Edit + re-save |
-| Inline diff preview before applying | Author sees exactly what changes | MEDIUM | Diff rendering |
-| Apply suggested description | One-click to adopt AI's improved description | LOW | Field update |
+| Org-wide diagnostic (admin) | Department-level time allocation and automation opportunities | HIGH | Reports API requires admin access |
+| Skill gap analysis | "These patterns have no matching skills. Create them?" | MEDIUM | Compare patterns to skill inventory |
+| ROI projection | "If 50 employees install this skill, estimated annual savings: 400 FTE-days" | LOW | Math from hours_saved * usage projection |
 
-**Why valuable:** GitHub's "Apply suggestion" feature on PR reviews dramatically improved review UX. Authors can adopt improvements without manually editing. This is especially powerful for clarity/completeness suggestions where the AI can generate improved text.
+---
 
-### Skill Compatibility Check
+## Feature Area 4: Skill Visibility Scoping
+
+### Table Stakes
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| `visibility` field on skills: `global`, `team_visible`, `team_hidden`, `personal` | Users need to control who sees their skills | LOW | Schema migration, add column |
+| Global skills visible to entire organization | Company-wide skills are the default for published, admin-approved skills | LOW | Query filter |
+| Team-visible skills visible to same-department users | Department-specific skills (e.g., "Engineering Code Review") | MEDIUM | Department/team association on users |
+| Team-hidden skills visible only to author and admins | Work-in-progress that shouldn't distract colleagues | LOW | Author-only access check |
+| Personal skills visible only to the author | Private skills for personal productivity | LOW | `authorId` filter |
+| Visibility selector on skill creation form | Authors choose scope when creating/editing | LOW | UI dropdown |
+| Visibility filter on browse/search | Users can filter by visibility scope | LOW | Query parameter |
+
+**Expected UX Flow:**
+
+```
+Creating a skill:
+  - Author fills in name, description, content
+  - Visibility dropdown: "Who can see this?"
+    - "Everyone in the company" (global) -- default for published skills
+    - "My team" (team_visible) -- visible to same-department users
+    - "Only me and admins" (team_hidden) -- hidden from browse, discoverable by admin
+    - "Just me" (personal) -- completely private
+
+Browsing skills:
+  - Default view: shows global + team_visible (for user's team) skills
+  - Filter: "My skills" shows personal + team_hidden + user's authored skills
+  - Admin view: shows all skills regardless of visibility
+
+Search:
+  - Global and team_visible skills appear in search results
+  - Personal and team_hidden skills only appear when author searches
+  - MCP search returns only skills the authenticated user can see
+```
+
+**Data model:**
+
+The `skills` table needs a `visibility` column (text, enum: global/team_visible/team_hidden/personal). Additionally, a `team_id` or `department` association is needed on the `users` table to support team-scoped visibility.
+
+**Current gap**: The existing user model does not have a department/team field. Options:
+1. Add `department` text field to `users` table (simple, sufficient for v3.0)
+2. Create a `teams` table with many-to-many user-team relationship (more flexible, more complex)
+
+Recommendation: Start with a `department` text field on `users`. If team structures become more complex, migrate to a teams table later.
+
+**How visibility interacts with existing features:**
+- **Status lifecycle**: Visibility is orthogonal to status. A skill can be `published` + `personal` (live but only visible to author). Or `draft` + `global` (intending to share, not yet reviewed).
+- **RLS**: Visibility scoping adds a second filter layer on top of tenant_id RLS. The query pattern becomes: `WHERE tenant_id = current_tenant AND (visibility = 'global' OR (visibility = 'team_visible' AND department = user_department) OR author_id = user_id)`.
+- **MCP search**: The MCP search handler needs user context (authenticated user's department) to filter visibility. Currently, MCP search only has `userId` from the API key. Department would need to be resolved from the user record.
+
+**Successful implementations to model:**
+- **Salesforce record visibility**: Owner-based, role-based, and organization-wide defaults. Their "OWD (Organization-Wide Default) + sharing rules" pattern is the enterprise standard.
+- **Confluence space permissions**: Spaces have visibility levels (public, restricted, personal). The "personal space" concept maps directly to personal skills.
+- **Google Drive sharing**: Owner / Editor / Viewer with "anyone in organization" or "specific people." The simplicity of their model is what users expect.
+
+**What would delight:**
+- Default visibility based on context: Skills created via MCP default to `personal`, skills created via web UI default to `team_visible`
+- Visibility change notifications: "Jane shared 'Code Review Automation' with the Engineering team"
+- "Share with specific people" option for ad-hoc sharing outside team boundaries
+
+**What to avoid:**
+- Do NOT build complex ACL (Access Control Lists) with per-user permissions. Four visibility levels (global/team_visible/team_hidden/personal) cover 95% of use cases. Per-user sharing is an anti-feature at this scale.
+- Do NOT make all skills global by default. Personal skills are where users experiment. If everything is public immediately, users will be reluctant to create rough drafts.
+- Do NOT gate visibility behind the approval workflow. Visibility and approval are separate concerns. A personal skill does not need admin approval.
+
+**Confidence:** HIGH. Visibility scoping with 4 levels is a well-established pattern across Salesforce, Confluence, Google Drive, and SharePoint. The implementation is a column addition plus query filters.
+
+### Differentiators
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Check if skill's required tools are available | "This skill uses Bash and Write tools -- both available" | MEDIUM | Tool capability introspection |
-| Warn about unsupported features | "This skill requires MCP server X which is not installed" | MEDIUM | Dependency declaration |
-| Suggest prerequisites | "Install X before using this skill" | LOW | Response metadata |
+| Visibility analytics (admin) | "80% of skills are personal -- encourage sharing" | LOW | Aggregation query |
+| Suggest visibility upgrade | "This personal skill has been used 20 times. Share with your team?" | MEDIUM | Usage threshold notification |
+| Cross-team skill discovery | "Engineering team's most-used skills" visible to other teams | LOW | Team-filtered leaderboard |
 
-### Trending and Personalized Recommendations
+---
+
+## Feature Area 5: Admin-Stamped Global Skills with Department Approval
+
+### Table Stakes
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| "Stamp as global" admin action | Admin can elevate a team/personal skill to global visibility | LOW | Visibility field update with authorization |
+| Department approval workflow | Department head approves before skill goes global | MEDIUM | Approval chain logic |
+| Global skill badge/indicator | Users can see which skills are company-endorsed | LOW | UI badge component |
+| Audit trail for approval decisions | Who approved what, when, with what notes | LOW | Existing review_decisions table pattern |
+
+**Expected UX Flow:**
+
+```
+Promotion pathway:
+  1. Author creates skill (visibility: personal or team_visible)
+  2. Skill gains usage and positive ratings within team
+  3. Author or admin requests "global promotion"
+  4. Department approval workflow:
+     a. Department head receives notification
+     b. Reviews skill content, usage metrics, ratings
+     c. Approves or requests changes
+  5. Admin (org-level) gives final stamp
+  6. Skill visibility changes to "global" with "Admin Approved" badge
+  7. Skill appears in org-wide browse/search with endorsement indicator
+
+Admin stamp visual:
+  - Blue checkmark badge: "Company Approved"
+  - Shows approver name and date on skill detail page
+  - Appears in search results and browse grid
+```
+
+**Approval chain pattern:**
+
+```
+TEAM_VISIBLE ──request-global──> PENDING_DEPT_APPROVAL
+                                     |
+                              dept head reviews
+                                     |
+                         ┌───────────┼────────────┐
+                         v           v             v
+                   DEPT_APPROVED  CHANGES_REQ  DEPT_REJECTED
+                         |
+                    admin reviews
+                         |
+                    ┌────┼────┐
+                    v         v
+              GLOBAL     ADMIN_REJECTED
+              (stamped)
+```
+
+**How this interacts with the existing status lifecycle:**
+- The existing 7-status lifecycle (draft -> pending_review -> ai_reviewed -> approved -> published) governs content quality.
+- The global promotion workflow governs visibility scope.
+- These are separate concerns: a skill must be `published` (passed content review) before it can be promoted to `global`.
+- Implementation: Add a `globalApprovalStatus` field (pending/dept_approved/admin_approved/rejected) separate from the existing `status` field.
+
+**Successful implementations to model:**
+- **SharePoint Publishing Approval**: Content approval with multi-level sign-off (author -> reviewer -> publisher). Standard enterprise content governance pattern.
+- **Apple App Store review + editorial selection**: Content review (automated) is separate from editorial curation (human). Skills pass automated review to be published, then pass human curation to be featured/global.
+- **Confluence blueprints + admin templates**: Org-wide templates are admin-curated, team templates are self-service.
+
+**What would delight:**
+- Global skills highlighted in a "Company Recommended" section on the homepage
+- Notification to all users when a new global skill is approved: "New company skill: Meeting Summary Generator"
+- Usage metrics comparison: global skills vs team-only skills performance
+
+**What to avoid:**
+- Do NOT require global promotion for every skill. Most skills should be team-visible or personal. Global promotion is for the best-of-the-best.
+- Do NOT create a separate reviewer role for department heads. Use the existing admin role + a `department` field on users to determine departmental authority. If the requesting user's department matches the approver's department, they can approve. Keep it simple.
+- Do NOT block skill usage during the promotion workflow. The skill remains usable at its current visibility while the global promotion is pending.
+
+**Confidence:** MEDIUM-HIGH. Enterprise content approval with multi-level sign-off is well-established. The novel aspect is combining it with the existing skill status lifecycle, which requires careful state management.
+
+### Differentiators
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| "Trending this week" in MCP responses | Surface popular new skills | LOW | Query by recent usage growth |
-| "Based on your usage" recommendations | Personalized from user's install/usage history | HIGH | Collaborative filtering |
-| "Similar to skills you use" | Content-based filtering via embeddings | MEDIUM | Existing pgvector similarity |
+| Auto-nomination based on metrics | "This skill has 50+ uses and 4.5+ rating. Nominate for global?" | LOW | Threshold-based notification |
+| Department skill catalog | Each department has a curated page of their approved skills | MEDIUM | Department-filtered view |
+| Global skill retirement workflow | Admin can deprecate global skills with migration guidance | LOW | Status transition to deprecated |
 
-### Review Analytics Dashboard
+---
+
+## Feature Area 6: Personal Preference Extraction from CLAUDE.md
+
+### Table Stakes
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| CLAUDE.md upload/paste interface | Users provide their CLAUDE.md content | LOW | Text input or file upload |
+| Preference extraction via LLM | Parse CLAUDE.md into structured preferences | MEDIUM | LLM structured output (existing pattern) |
+| Portable preference profile | Extracted preferences stored in user profile | LOW | New profile fields |
+| Export to multiple AI configs | Generate CLAUDE.md, .cursorrules, AGENTS.md from preferences | MEDIUM | Template-based generation |
+
+**Expected UX Flow:**
+
+```
+1. User navigates to /profile/preferences (new page)
+
+2. "Import from CLAUDE.md" button
+   - Paste text or upload file
+
+3. LLM extracts structured preferences:
+   {
+     "coding_style": {
+       "language": "TypeScript",
+       "framework_preferences": ["Next.js", "Tailwind CSS"],
+       "testing": "Playwright for E2E, vitest for unit",
+       "formatting": "Prefer explicit types over inference"
+     },
+     "communication_style": {
+       "verbosity": "concise",
+       "tone": "direct, technical",
+       "avoid": ["emojis in code comments", "unnecessary abstractions"]
+     },
+     "workflow_preferences": {
+       "git": "conventional commits, no force push",
+       "reviews": "prefer small PRs",
+       "documentation": "inline comments over separate docs"
+     }
+   }
+
+4. User reviews and edits extracted preferences
+
+5. Export options:
+   - "Generate CLAUDE.md" -- for Claude Code
+   - "Generate .cursorrules" -- for Cursor
+   - "Generate AGENTS.md" -- for VS Code Copilot / Codex
+   - "Generate settings.json" -- for tool-specific configs
+   - "Copy to clipboard" -- universal
+
+6. Sync: when user updates preferences, regenerate all formats
+```
+
+**Key insight from research:**
+
+The problem of keeping AI configuration in sync across tools is real and growing. Projects like `dot-claude` and `claudius` exist specifically to sync rules across Claude, Codex, Gemini, and Cursor. The user's CLAUDE.md is the richest source of preferences because it evolves organically through use.
+
+**What the LLM extraction should parse:**
+- Language/framework preferences
+- Coding style rules (naming, formatting, patterns)
+- Communication preferences (verbosity, tone, format)
+- Workflow preferences (git, testing, CI/CD)
+- Tool-specific instructions (what to use, what to avoid)
+- Custom commands and aliases
+- Project-specific context (can be flagged as non-portable)
+
+**What to avoid extracting:**
+- API keys and secrets (flag and redact)
+- File paths specific to one machine
+- Project-specific state (current branch, active tasks)
+
+**Successful implementations to model:**
+- **Claudius**: Configuration management for multiple AI agents. Syncs settings across Claude, Codex, Gemini.
+- **dot-claude**: Syncs Claude Code rules to Droid, OpenCode, Codex, Qwen, Cursor, Copilot.
+- **kaush.io AGENTS.md sync**: "One source of truth" pattern -- write once, generate for each tool.
+
+**What would delight:**
+- Team preference templates: "Engineering team defaults" that new hires can start from
+- Preference diff: "Your CLAUDE.md changed since last import. Update preferences?"
+- Skill recommendations based on preferences: "Based on your TypeScript + Next.js preferences, try these skills"
+
+**What to avoid:**
+- Do NOT auto-sync without user confirmation. Preferences are personal; auto-pushing changes to active AI configs could disrupt workflows.
+- Do NOT store the raw CLAUDE.md. Extract structured preferences and discard the raw text (it may contain secrets).
+- Do NOT try to be a full configuration management tool. Extract and export preferences; do not manage the target tool's config files.
+
+**Confidence:** MEDIUM. The extraction concept is sound and the tools exist. The risk is in edge cases: CLAUDE.md files vary wildly in structure (some are 10 lines, some are 500+ lines). The LLM extraction quality depends heavily on the prompt engineering and validation UX. Recommend starting with a "review and edit" step rather than fully automated extraction.
+
+### Differentiators
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Average time to review | Track admin responsiveness | LOW | Timestamp deltas |
-| Approval/rejection rates | Quality trend monitoring | LOW | Status counts |
-| Common rejection reasons | Help authors improve upfront | MEDIUM | Text analysis of reviewer notes |
-| AI score distribution | Understand overall skill quality | LOW | Aggregation query |
+| Preference-aware skill recommendations | "Based on your style preferences, this skill fits your workflow" | HIGH | Cross-reference preferences with skill metadata |
+| Team preference analytics | "Most common preferences across Engineering: TypeScript, ESLint strict" | LOW | Aggregation of team preferences |
+| Preference evolution tracking | "Your preferences have shifted toward functional patterns this quarter" | MEDIUM | Preference history comparison |
+
+---
+
+## Feature Area 7: Loom Video Integration
+
+### Table Stakes
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| Loom URL field on skill creation/edit form | Authors paste a Loom URL to attach a demo video | LOW | New field on skills table |
+| Embedded video player on skill detail page | Video plays inline without leaving the page | LOW | Loom Embed SDK `oembed()` |
+| Video thumbnail in skill cards/browse | Visual preview of the demo video | LOW | `thumbnail_url` from oEmbed |
+| Video metadata display (duration, title) | Users know what they are about to watch | LOW | oEmbed response fields |
+
+**Expected UX Flow:**
+
+```
+Creating/editing a skill:
+  1. Author pastes Loom URL: https://www.loom.com/share/abc123
+  2. System validates URL format (must be loom.com/share/*)
+  3. System calls Loom oEmbed to fetch metadata
+  4. Preview shows: thumbnail, title, duration
+  5. Author confirms: "Attach this video"
+
+Viewing a skill:
+  1. Skill detail page shows video section below description
+  2. Embedded Loom player (responsive, 16:9 aspect ratio)
+  3. Video metadata: "Demo: Code Review Automation (2:34)"
+  4. Player supports play/pause, speed control, fullscreen (Loom defaults)
+
+Browse/search:
+  1. Skills with videos show a small camera icon on their card
+  2. Video thumbnail appears on hover (optional)
+  3. Filter: "Skills with demos" checkbox
+```
+
+**Implementation approach:**
+
+1. **Loom Embed SDK** (`@loomhq/loom-embed`): Install via npm. Use `oembed()` method to fetch metadata from URL. Returns `{ type, html, title, duration, thumbnail_url, thumbnail_width, thumbnail_height, width, height, provider_name }`.
+
+2. **No authentication required**: The Loom Embed SDK does not require API keys for basic oEmbed embedding. The video must be shared publicly (or with link access) for the embed to work.
+
+3. **Data model**: Add `loomUrl` (text, nullable) and `loomThumbnail` (text, nullable) fields to `skills` table. Store the URL and cached thumbnail. Fetch fresh oEmbed data on skill view for the embed HTML.
+
+4. **Server-side rendering**: Call `oembed()` server-side to get the embed HTML. Inject it into the page. This avoids client-side SDK loading and keeps the page fast.
+
+**Successful implementations to model:**
+- **Trainual**: Uses Loom Embed SDK to auto-convert Loom links into embedded players in training content. Clean, inline video experience.
+- **Linear**: Embeds Loom videos in issue descriptions. The video plays inline without navigating away.
+- **Notion**: oEmbed-based video embedding. Paste a Loom URL, get an embedded player. The simplest UX pattern.
+
+**What would delight:**
+- Auto-detect Loom URLs in skill content markdown and embed them automatically (using `textReplace()` from the SDK)
+- Video timestamp links: "Watch from 1:23 for the deployment step"
+- MCP tool returns video info: "This skill has a 2-minute demo video. View at: [URL]"
+
+**What to avoid:**
+- Do NOT build a custom video player or support arbitrary video URLs. Loom-only keeps scope manageable and the embed quality consistent.
+- Do NOT require video for every skill. The field should be optional. Many skills are text-only and that is fine.
+- Do NOT auto-play videos. Users should click to play. Auto-play is hostile UX.
+- Do NOT store video content or cache video files. Only store the URL and metadata. Loom hosts the video.
+
+**Confidence:** HIGH. Loom Embed SDK is well-documented, has no authentication requirement for basic embedding, and returns all needed metadata. The implementation is straightforward: URL field + oEmbed call + embed HTML injection.
+
+### Differentiators
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Video-first browse mode | Grid of skill demo thumbnails for visual discovery | LOW | Thumbnail grid view |
+| Loom URL auto-detection in markdown | Paste a Loom link in skill content, auto-embed | MEDIUM | `textReplace()` from SDK |
+| Video analytics (views, watch-through rate) | Track engagement with skill demos | HIGH | Would require Loom API (not available) |
+
+---
+
+## Feature Area 8: Homepage Redesign
+
+### Table Stakes
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| Intent-first hero with prominent search | Homepage centered on "What are you trying to solve?" not metrics | MEDIUM | Feature Area 1 (intent search) |
+| Curated sections: "Company Recommended" / "Trending" / "New" | Clear content categories for browsing | LOW | Existing trending + new global skills |
+| Personalized "For You" section | Skills based on user's usage, department, and preferences | MEDIUM | Usage history + department matching |
+| Clean, modern visual design | Current homepage is data-heavy; redesign should be inviting | MEDIUM | Tailwind CSS (existing) |
+| Mobile-responsive layout | Enterprise users access on multiple devices | LOW | Existing responsive framework |
+
+**Expected UX Flow:**
+
+```
+Current homepage structure (v2.0):
+  - Welcome message
+  - Search bar (small, secondary)
+  - Create/Install CTA cards
+  - Platform stats (FTE Years Saved, Total Uses, Downloads, Avg Rating)
+  - Trending Skills + Top Contributors
+  - Your Impact section
+
+Proposed homepage structure (v3.0):
+  - Hero: Large search bar with "What are you trying to solve today?"
+    Below: 3-4 quick category pills (Prompts, Workflows, Agents, MCP Tools)
+  - "Company Recommended" section (admin-stamped global skills)
+  - "For You" section (personalized based on usage + department)
+  - "Trending This Week" section (existing, redesigned as cards)
+  - "Recently Added" section (new skills in last 7 days)
+  - Platform impact metrics (condensed to a single banner, not 4 full stat cards)
+  - "Your Leverage" (moved to dedicated tab, not competing with discovery)
+```
+
+**Key design principles from research:**
+
+1. **5-Second Rule**: Users should understand what they can do within 5 seconds. The current homepage mixes metrics, navigation, and discovery. The redesign should prioritize one thing: **helping users find skills**.
+
+2. **Search-first, not metrics-first**: The current homepage leads with "Welcome back, [name]!" and platform stats. This is backwards for a marketplace. The hero should be the search bar. Metrics are important but secondary -- move them to a banner or separate analytics page.
+
+3. **Cards, not tables**: The skill browse page uses a table layout (SkillsTable). The homepage should use cards with visual elements (author avatar, quality badge, video thumbnail if available, usage sparkline). Cards invite exploration; tables invite scanning.
+
+4. **Progressive disclosure**: Show 3-4 skills per section with "See all" links. Do not dump 20 skills on the homepage. Curate aggressively.
+
+**Successful implementations to model:**
+- **Atlassian Marketplace**: Hero search bar + category pills + featured apps + trending apps. Clean, discoverable, low cognitive load.
+- **Notion Template Gallery**: Visual cards with preview thumbnails, category filters, "Featured" curation. The browse-by-category experience is outstanding.
+- **Slack App Directory**: Categories on the left, featured apps prominently displayed, search at top. The "categories as navigation" pattern is effective for skill types.
+- **Vercel Dashboard**: Clean, minimal, action-oriented. "What do you want to deploy?" as the primary interaction. Translates to "What do you want to solve?" for EverySkill.
+
+**What would delight:**
+- "Continue where you left off" section showing recently viewed/used skills
+- Seasonal or event-driven featured sections: "New quarter? Skills for planning and goal-setting"
+- Empty state for new users: guided onboarding with "Install your first skill in 60 seconds"
+- Search bar with typeahead showing skill names + categories as user types
+
+**What to avoid:**
+- Do NOT preserve the current layout with minor tweaks. The current homepage is a dashboard, not a marketplace. The redesign should fundamentally change the primary interaction from "view metrics" to "find skills."
+- Do NOT show platform stats prominently to regular users. Stats matter to admins and executives. Regular users care about finding skills. Move stats to analytics page or admin dashboard.
+- Do NOT use a carousel/slider for featured skills. Carousels have notoriously low engagement. Use a static grid of 3-4 featured skills.
+- Do NOT auto-rotate or auto-animate anything. Let users control their browsing pace.
+
+**Confidence:** HIGH. Marketplace homepage patterns are extremely well-established (Atlassian, Notion, Slack, Vercel, Figma Community). The current EverySkill homepage is a v1 dashboard; evolving it into a v3 marketplace landing follows proven patterns.
+
+### Differentiators
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Onboarding flow for new users | Guided "Install your first skill" reduces time-to-value | MEDIUM | Multi-step wizard |
+| Homepage customization | Users can pin sections, hide categories | HIGH | User-level preferences |
+| Admin-curated hero banner | Admins can feature a skill/announcement in the hero | LOW | Admin settings for hero content |
 
 ---
 
@@ -321,153 +659,154 @@ Features to explicitly NOT build. Tempting but counterproductive.
 
 | Anti-Feature | Why Tempting | Why Problematic | Do Instead |
 |--------------|-------------|-----------------|------------|
-| **Mandatory review for all edits** | "Quality control on every change" | Creates friction for minor typo fixes. Authors will avoid updating skills if every edit requires re-review. Updates to published skills should only trigger re-review if content changes substantially (hash comparison). | Re-review only when content hash changes. Metadata-only edits (tags, description) skip review. |
-| **Multiple reviewer approval** | "More eyes = better quality" | This is an internal tool, not a regulatory pipeline. Requiring 2+ approvers creates bottlenecks. One admin approval is sufficient. | Single admin approval. Add optional "second opinion" for disputed cases later if needed. |
-| **Real-time collaborative editing during review** | "Google Docs-style review" | Massive frontend complexity (CRDT, OT, WebSocket). Skills are markdown files -- not documents. The edit-submit-review cycle is sufficient. | Author edits locally, resubmits. Reviewer adds notes. Async workflow. |
-| **AI-generated skill improvements** | "AI should auto-fix the skill" | Rewriting author content without consent is overstepping. AI should suggest, not modify. Auto-applying changes violates author ownership. | AI suggests specific improvements. Author chooses what to apply. "Apply suggestion" button for one-click adoption. |
-| **Blocking deploy of unreviewed skills** | "Only approved skills should be installable" | Overly restrictive for an internal tool. Authors should be able to deploy their own drafts for personal testing. Only the "published" (visible to others) status should require review. | Draft skills deployable by author only. Published status requires review approval. |
-| **Complex permission model for reviewers** | "Separate reviewer role from admin" | YAGNI at current scale. Admins are reviewers. Adding a separate reviewer role means role management UI, permission checks, etc. | Admins review skills. If the team grows, add a reviewer role later. |
-| **Webhook notifications to external systems** | "Post to Slack when a skill is approved" | Out of scope for v2.0. Internal notification system is sufficient. Webhook integrations add authentication complexity, retry logic, and failure handling. | In-app + email notifications. Add Slack integration in a future milestone. |
-| **Full-text search in MCP tool** | "Use PostgreSQL websearch_to_tsquery in MCP" | The MCP app runs standalone without access to the web app's search infrastructure. Full-text search requires the database connection and tsvector index. | Use ILIKE search for MCP (already works), add semantic search via embedding endpoint. The web UI already has full-text search. |
+| **Full Google Workspace integration (read emails, documents)** | "More data = better recommendations" | Massive security/privacy concern. Reading email bodies and document content is a restricted Google scope requiring annual security audits. Users will NOT trust an internal tool with this access. | Metadata only. File names, timestamps, email counts -- never content. |
+| **Real-time activity tracking / screen time** | "Know exactly how time is spent" | Feels like surveillance. Google APIs do not provide screen time. Building it requires OS-level agents. Employee trust destruction. | Periodic diagnostic based on metadata. Weekly summary, not real-time monitoring. |
+| **Custom video hosting** | "Support any video platform" | Storage costs, transcoding pipeline, CDN setup, player development. Enormous scope for a feature that Loom already solves. | Loom-only via Embed SDK. If demand grows, add YouTube oEmbed as a second provider. |
+| **Full AI configuration management** | "Manage all your AI tools from EverySkill" | Scope explosion. Configuration management across Claude, Cursor, Copilot, Codex is a product in itself. | Extract and export preferences. Do not manage remote configs. |
+| **Per-user skill sharing (ACLs)** | "Share this skill with just Jane and Bob" | Complex permission model, UI for user selection, permission revocation, audit trail. 4 visibility levels cover 95% of cases. | Stick with global/team_visible/team_hidden/personal. If specific sharing is needed later, add as a separate feature. |
+| **AI chatbot on homepage** | "Conversational interface for discovery" | Adds latency, complexity, and cost to every homepage visit. Users expect instant search, not a chatbot. MCP is the conversational interface. | Intent search with semantic matching. Fast, inline results. MCP handles the conversational use case. |
+| **Multi-level approval chain (3+ approvers)** | "More approvers = better governance" | Creates bottlenecks. At 500 users, a 3-approver chain means skills sit in limbo. | Department head + admin (2 levels max). Single admin is sufficient for most orgs. |
+| **Preference auto-sync to AI tools** | "Automatically update CLAUDE.md when preferences change" | Writing to users' local files without explicit action is invasive. Auto-sync could break working configurations. | Export button generates config files. User copies/applies manually. Full control. |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[Review State Machine] (#1)
-    |--modifies--> skills table (add status column)
-    |--modifies--> create_skill MCP tool (default to draft, not auto-publish)
-    |--blocks----> Admin Review Queue (#3)
-    |--blocks----> Review Notifications (#4)
-    |--blocks----> MCP Review Tools (#7)
-
-[Auto AI Review on Submit] (#2)
-    |--requires--> [Review State Machine] (#1)
-    |--reuses----> generateSkillReview() (existing)
-    |--reuses----> skill_reviews table (existing)
-    |--modifies--> skill_reviews to track review-pipeline context (not just advisory)
-
-[Admin Review Queue] (#3)
-    |--requires--> [Review State Machine] (#1)
-    |--requires--> [Auto AI Review] (#2) for AI scores display
-    |--modifies--> admin panel (new /admin/reviews page)
-    |--reuses----> skill_versions for diff view
-    |--reuses----> isAdmin() authorization (existing)
-
-[Review Notifications] (#4)
-    |--requires--> [Review State Machine] (#1)
-    |--reuses----> notifications table (existing, add new types)
-    |--reuses----> notification-preferences (existing)
-    |--reuses----> email dispatch (existing)
-
-[Conversational Discovery] (#5)
-    |--independent of--> Review Pipeline (#1-4)
+[Intent Search] (#1)
+    |--extends---> existing SearchWithDropdown component
     |--reuses----> skill_embeddings + pgvector (existing)
-    |--reuses----> search_skills MCP tool (existing, enhanced)
-    |--creates---> get_skill_details MCP tool (new)
-    |--creates---> recommend_skills MCP tool (new)
-    |--modifies--> deploy_skill response (add usage guidance)
+    |--reuses----> Voyage AI embedding generation (existing)
+    |--creates---> new intent search component (homepage)
+    |--creates---> LLM reranking service (optional)
+    |--blocks----> Homepage Redesign (#8) hero section
 
-[Fork-on-Modify Detection] (#6)
-    |--independent of--> Review Pipeline (#1-4)
-    |--independent of--> Conversational Discovery (#5)
-    |--reuses----> skill_versions.contentHash (existing)
-    |--reuses----> hashContent() utility (existing)
-    |--reuses----> forkSkill() server action (existing)
-    |--creates---> check_skill_status MCP tool (new)
-    |--creates---> fork_skill MCP tool (new, wraps existing forkSkill)
+[/everyskill MCP Tool] (#2)
+    |--wraps-----> existing MCP handlers (search, recommend, deploy, describe)
+    |--reuses----> MCP server infrastructure (existing)
+    |--reuses----> trackUsage() (existing)
+    |--independent of--> all other features
 
-[MCP Review Tools] (#7)
-    |--requires--> [Review State Machine] (#1)
-    |--reuses----> generateSkillReview() (existing)
-    |--creates---> review_skill MCP tool (new)
-    |--creates---> submit_for_review MCP tool (new)
-    |--creates---> check_review_status MCP tool (new)
+[Google Workspace Diagnostic] (#3)
+    |--creates---> OAuth2 integration (new)
+    |--creates---> /diagnostics page (new)
+    |--creates---> activity analysis service (new)
+    |--requires--> Visibility Scoping (#4) for "recommend team skills"
+    |--benefits from--> Intent Search (#1) for matching patterns to skills
+    |--highest risk--> OAuth verification timeline, privacy concerns
+
+[Visibility Scoping] (#4)
+    |--modifies--> skills table (add visibility column)
+    |--modifies--> users table (add department field)
+    |--modifies--> ALL search/browse queries (add visibility filter)
+    |--modifies--> MCP search handlers (add visibility context)
+    |--blocks----> Admin-Stamped Global Skills (#5)
+    |--blocks----> Homepage "For You" section (#8)
+
+[Admin-Stamped Global Skills] (#5)
+    |--requires--> Visibility Scoping (#4) for global/team distinction
+    |--extends---> existing admin review actions
+    |--creates---> global promotion workflow
+    |--creates---> "Company Approved" badge component
+    |--blocks----> Homepage "Company Recommended" section (#8)
+
+[CLAUDE.md Preference Extraction] (#6)
+    |--creates---> /profile/preferences page (new)
+    |--creates---> LLM extraction service (new)
+    |--creates---> multi-format export (CLAUDE.md, .cursorrules, AGENTS.md)
+    |--independent of--> all other features
+    |--benefits from--> Intent Search (#1) preference-aware recommendations
+
+[Loom Video Integration] (#7)
+    |--modifies--> skills table (add loomUrl field)
+    |--modifies--> skill creation form (add URL field)
+    |--modifies--> skill detail page (add video player)
+    |--adds------> @loomhq/loom-embed dependency
+    |--independent of--> all other features
+
+[Homepage Redesign] (#8)
+    |--requires--> Intent Search (#1) for hero section
+    |--requires--> Visibility Scoping (#4) for "For You" personalization
+    |--requires--> Admin-Stamped Global (#5) for "Company Recommended"
+    |--benefits from--> Loom Video (#7) for video thumbnails in cards
+    |--modifies--> apps/web/app/(protected)/page.tsx (complete rewrite)
+    |--modifies--> multiple home-related components
 ```
 
 ### Critical Path
 
 ```
-Phase 1: Review Pipeline Foundation
-    Status field migration + state machine logic
-    Auto AI review on submit
-    (Must be first -- all review features depend on status field)
+Phase 1: Foundation Layer
+    Visibility scoping (schema + queries) -- blocks everything else
+    Loom video integration -- independent, small scope, quick win
+    /everyskill MCP tool -- independent, wraps existing handlers
 
-Phase 2: Admin Review UX
-    Admin review queue page
-    Diff view (version comparison)
-    Approve/reject/request-changes actions
-    Review notifications (all types)
-    (Requires Phase 1 state machine)
+Phase 2: Discovery Layer
+    Intent search (semantic + LLM reranking)
+    Admin-stamped global skills (requires visibility from Phase 1)
+    CLAUDE.md preference extraction -- independent
 
-Phase 3: Conversational Discovery
-    get_skill_details MCP tool
-    recommend_skills MCP tool (semantic search in MCP)
-    Enhanced search_skills with semantic mode
-    (Independent of Phase 1-2, can partially parallel)
+Phase 3: Experience Layer
+    Homepage redesign (requires intent search + visibility + global skills)
+    Google Workspace diagnostic -- independent but highest risk, research more first
 
-Phase 4: Fork-on-Modify Detection
-    check_skill_status MCP tool
-    fork_skill MCP tool
-    Web UI drift indicator
-    (Independent of Phase 1-3, can partially parallel)
-
-Phase 5: MCP Review Integration
-    review_skill MCP tool
-    submit_for_review MCP tool
-    check_review_status MCP tool
-    (Requires Phase 1 state machine, benefits from Phase 2 admin UX)
+Phase 4: Intelligence Layer (if Google diagnostic validated)
+    Google Workspace OAuth + analysis
+    Pattern-to-skill matching
+    ROI tracking
 ```
 
 ---
 
 ## MVP Recommendation
 
-### Must Have for v2.0
+### Must Have for v3.0
 
-**Review Pipeline (build first -- foundation for everything):**
-- [ ] `status` column on `skills` table: draft | pending_review | in_review | changes_requested | approved | rejected | published
-- [ ] State transition functions with authorization checks (who can transition to what)
-- [ ] `create_skill` MCP tool defaults to `draft` status instead of auto-publishing
-- [ ] Web UI "Submit for Review" button on draft skills
-- [ ] Auto-trigger `generateSkillReview()` on submit-for-review
-- [ ] Transition to `in_review` when AI review completes
+**Visibility Scoping (build first -- foundation):**
+- [ ] `visibility` column on `skills` table: global | team_visible | team_hidden | personal
+- [ ] `department` text field on `users` table
+- [ ] Visibility filter in search/browse queries
+- [ ] Visibility selector on skill creation/edit form
+- [ ] MCP search respects visibility based on authenticated user
 
-**Admin Review Queue (build second -- enables admin workflow):**
-- [ ] `/admin/reviews` page with queue of `in_review` skills
-- [ ] Skill diff view (compare submitted version to previous published version)
-- [ ] Approve / Request Changes / Reject action buttons
-- [ ] Reviewer notes text field
-- [ ] Review decision stored with audit trail (who, when, action, notes)
+**Intent Search (build second -- core UX):**
+- [ ] Prominent search bar on homepage: "What are you trying to solve today?"
+- [ ] Semantic search via existing pgvector + Voyage AI embeddings
+- [ ] Top-3 results inline with match rationale
+- [ ] Fallback to tsvector full-text search
 
-**Review Notifications (build with admin queue):**
-- [ ] Notification types: `skill_review_submitted`, `skill_approved`, `skill_changes_requested`, `skill_rejected`
-- [ ] Notify author on all review decisions
-- [ ] Notify admins when new skill enters `in_review`
-- [ ] Email notifications for review decisions (respecting preferences)
+**Admin-Stamped Global Skills (build with visibility):**
+- [ ] "Stamp as global" admin action on published skills
+- [ ] "Company Approved" badge on skill cards and detail page
+- [ ] Global skills appear in "Company Recommended" section
 
-**Conversational Discovery (build third -- independent track):**
-- [ ] `get_skill_details` MCP tool (full metadata: scores, author, usage, similar skills)
-- [ ] `recommend_skills` MCP tool (semantic search via embedding endpoint)
-- [ ] Enhanced `search_skills` to return richer metadata (ratings, quality tier, install count)
-- [ ] Usage guidance text in `deploy_skill` response
+**Loom Video Integration (quick win, build early):**
+- [ ] `loomUrl` field on skills table
+- [ ] Loom URL input on skill creation/edit form
+- [ ] Embedded video player on skill detail page via Loom Embed SDK
+- [ ] Video thumbnail in skill browse cards
 
-**Fork-on-Modify Detection (build fourth -- independent track):**
-- [ ] `check_skill_status` MCP tool (local hash vs DB hash comparison)
-- [ ] `fork_skill` MCP tool (create fork from local modified content)
-- [ ] Frontmatter stripping before hash comparison (ignore tracking hooks)
+**Homepage Redesign (build after above):**
+- [ ] Hero: large search bar with category pills
+- [ ] "Company Recommended" section (global skills)
+- [ ] "Trending This Week" section (redesigned as cards)
+- [ ] "Recently Added" section
+- [ ] Condensed platform metrics banner
 
-### Defer to Post-v2.0
+**/everyskill MCP Tool (build parallel):**
+- [ ] Single `everyskill` tool with search/install/describe sub-commands
+- [ ] Packaged for easy addition to any MCP client
+- [ ] Clear tool description for AI auto-invocation
 
-- [ ] Auto-approval for high-scoring skills (nice-to-have, not blocking)
-- [ ] Suggested edits / "Apply suggestion" UI (valuable but complex)
-- [ ] Skill compatibility checks (requires tool introspection)
-- [ ] Personalized recommendations (requires usage history analysis)
-- [ ] Review analytics dashboard (valuable but not blocking)
-- [ ] Web UI drift indicator (MCP-first is sufficient for v2.0)
-- [ ] Bulk approve actions (optimize later based on queue volume)
-- [ ] MCP review tools -- review_skill, submit_for_review, check_review_status (defer to after admin queue is working)
+### Defer to Post-v3.0
+
+- [ ] **Google Workspace Diagnostic**: Highest risk, unvalidated value prop. Build a manual "what do you spend time on?" survey first. If users engage, build the Google integration.
+- [ ] **CLAUDE.md Preference Extraction**: Valuable but niche. Start with a simple text import + manual tagging. LLM extraction is phase 2.
+- [ ] **Personalized "For You" section**: Requires usage history analysis. Build after visibility scoping is live and generating data.
+- [ ] **Department approval workflow**: Start with admin-only global stamping. Add department approval chain if org structure demands it.
+- [ ] **Multi-format preference export**: Start with CLAUDE.md export only. Add .cursorrules and AGENTS.md based on user demand.
+- [ ] **Homepage customization**: Users pinning sections is a post-launch optimization.
+- [ ] **Search analytics**: Log queries from day 1, build the dashboard later.
 
 ---
 
@@ -475,121 +814,81 @@ Phase 5: MCP Review Integration
 
 | Feature | User Value | Implementation Cost | Risk | Priority |
 |---------|------------|---------------------|------|----------|
-| Review state machine (status field + transitions) | HIGH (enables quality control) | MEDIUM | LOW | P0 |
-| Auto AI review on submit | HIGH (immediate quality feedback) | LOW | LOW | P0 |
-| Admin review queue page | HIGH (admin workflow) | MEDIUM | LOW | P0 |
-| Skill diff view | HIGH (review quality) | HIGH | MEDIUM | P0 |
-| Approve/reject/request-changes actions | HIGH (admin workflow) | MEDIUM | LOW | P0 |
-| Review notifications | MEDIUM (author awareness) | LOW | LOW | P0 |
-| get_skill_details MCP tool | HIGH (discovery UX) | LOW | LOW | P0 |
-| recommend_skills MCP tool | HIGH (discovery value) | MEDIUM | MEDIUM | P0 |
-| check_skill_status MCP tool | HIGH (fork detection) | MEDIUM | LOW | P0 |
-| fork_skill MCP tool | MEDIUM (fork UX) | MEDIUM | LOW | P0 |
-| Reviewer notes | MEDIUM (feedback quality) | LOW | LOW | P1 |
-| Review history audit trail | MEDIUM (accountability) | LOW | LOW | P1 |
-| Enhanced search_skills metadata | MEDIUM (discovery quality) | LOW | LOW | P1 |
-| Auto-approval threshold | MEDIUM (admin efficiency) | LOW | LOW | P2 |
-| "Apply suggestion" UI | MEDIUM (author UX) | HIGH | MEDIUM | P2 |
-| MCP review/submit tools | MEDIUM (MCP-first UX) | MEDIUM | LOW | P2 |
-| Web UI drift indicator | LOW (web secondary to MCP) | MEDIUM | LOW | P3 |
-| Personalized recommendations | LOW (requires usage volume) | HIGH | HIGH | P3 |
-
----
-
-## Technical Reference: Review Pipeline Patterns
-
-### State Transition Authorization Matrix
-
-| Current State | Action | Who Can Do It | Next State |
-|--------------|--------|---------------|------------|
-| draft | submit_for_review | author | pending_review |
-| pending_review | (auto: AI review completes) | system | in_review |
-| in_review | approve | admin | approved/published |
-| in_review | request_changes | admin | changes_requested |
-| in_review | reject | admin | rejected |
-| changes_requested | submit_for_review | author | pending_review |
-| rejected | submit_for_review | author | pending_review |
-| approved | publish | author or admin | published |
-| published | unpublish | author or admin | draft |
-
-### Review Quality Scoring (Existing, Reused)
-
-The existing AI review produces three scores (1-10):
-- **Quality:** Does it work well and produce good results?
-- **Clarity:** Is it clear, well-written, and easy to reuse?
-- **Completeness:** Is it thorough and self-contained?
-
-These scores inform the admin's decision but do not block any action. The admin can approve a low-scoring skill or reject a high-scoring one based on policy considerations.
-
-### Content Hash Comparison for Fork Detection
-
-```
-Local file: ~/.claude/skills/{slug}.md
-    |
-    v
-Strip YAML frontmatter (everything between --- markers)
-    |
-    v
-SHA-256 hash of remaining content
-    |
-    v
-Compare to skill_versions.contentHash WHERE id = skills.publishedVersionId
-    |
-    v
-Match? -> "current" (no drift)
-Mismatch? -> "modified" (drift detected, prompt fork)
-```
-
-**Important:** The `contentHash` in `skill_versions` is computed from the content stored in R2, which may or may not include frontmatter. The fork detection tool must normalize both sides (strip frontmatter from both local and DB content) before comparison. If DB stores content without frontmatter, only strip from local.
+| Visibility scoping (4 levels) | HIGH (privacy, control) | LOW | LOW | P0 |
+| Intent search (semantic, top-3) | HIGH (core discovery UX) | MEDIUM | LOW | P0 |
+| Homepage redesign (search-first) | HIGH (first impression) | MEDIUM | LOW | P0 |
+| Loom video integration | MEDIUM (demo quality) | LOW | LOW | P0 |
+| /everyskill MCP tool (unified) | HIGH (MCP discovery) | LOW | LOW | P0 |
+| Admin-stamped global skills | MEDIUM (governance) | LOW | LOW | P0 |
+| CLAUDE.md preference extraction | MEDIUM (developer UX) | MEDIUM | MEDIUM | P1 |
+| Department approval workflow | MEDIUM (governance) | MEDIUM | LOW | P1 |
+| Personalized "For You" section | MEDIUM (engagement) | HIGH | MEDIUM | P2 |
+| Google Workspace diagnostic | HIGH if validated (ROI) | HIGH | HIGH | P2 |
+| Multi-format preference export | LOW (niche) | MEDIUM | LOW | P3 |
+| Homepage customization | LOW (power users) | HIGH | LOW | P3 |
 
 ---
 
 ## Sources
 
-### Review Pipeline Patterns (HIGH confidence)
-- [Apple App Store: App and Submission Statuses](https://developer.apple.com/help/app-store-connect/reference/app-and-submission-statuses) -- Complete state reference
-- [GitHub: About Pull Request Reviews](https://docs.github.com/articles/about-pull-request-reviews) -- Three-action review model
-- [GitHub PR Reviews: Comment vs Approve vs Request Changes](https://dev.to/msnmongare/github-pr-reviews-comment-vs-approve-vs-request-changes-when-to-use-each-1ph2) -- When to use each action
-- [Approval Workflow Best Practices](https://zipboard.co/blog/collaboration/content-review-and-approval-best-practices-tools-automation/) -- Review pipeline design
+### Intent-Based Search (MEDIUM-HIGH confidence)
+- [Meilisearch: AI-Powered Search 2026](https://www.meilisearch.com/blog/ai-powered-search) -- Semantic search patterns
+- [Orbix: AI-Driven UX Patterns SaaS 2026](https://www.orbix.studio/blogs/ai-driven-ux-patterns-saas-2026) -- Conversational search UX
+- [Kore.ai: Best Enterprise Search Software 2026](https://www.kore.ai/blog/best-enterprise-search-software) -- Intent understanding in enterprise search
+- [Algolia: Best Marketplace UX for Search](https://www.algolia.com/blog/ecommerce/best-marketplace-ux-practices-for-search) -- Search UX patterns
+- [Slack: AI Enterprise Search Features 2026](https://slack.com/blog/productivity/ai-enterprise-search-top-features-and-tools-in-2025) -- Enterprise search patterns
 
-### Content Moderation Queues (HIGH confidence)
-- [Stream: Reviewing Content](https://getstream.io/moderation/docs/dashboard/reviewing-content/) -- Dashboard design patterns
-- [Reddit: Moderation Queue](https://support.reddithelp.com/hc/en-us/articles/15484440494356-Moderation-Queue) -- Queue management
-- [Higher Logic: Moderation Queue](https://support.higherlogic.com/hc/en-us/articles/360032694632-Manage-Your-Site-s-Moderation-Queue) -- Bulk actions, rejection notifications
+### MCP Discovery (HIGH confidence)
+- [MCP Market: Agent Skills Directory](https://mcpmarket.com/tools/skills) -- Skill marketplace UX
+- [Docker: MCP Server Best Practices](https://www.docker.com/blog/mcp-server-best-practices/) -- Tool description and naming
+- [Composio: Using MCP Prompts/Resources/Tools](https://composio.dev/blog/how-to-effectively-use-prompts-resources-and-tools-in-mcp) -- MCP tool design
+- [Speakeasy: Dynamic Tool Discovery in MCP](https://www.speakeasy.com/mcp/tool-design/dynamic-tool-discovery) -- Dynamic tool patterns
+- [MCP Specification: Tools](https://modelcontextprotocol.io/specification/2025-06-18/server/tools) -- Official tool spec
 
-### Prompt Marketplace Quality (MEDIUM confidence)
-- [PromptBase and FlowGPT Review](https://www.godofprompt.ai/blog/critical-review-popular-prompt-marketplace-platforms) -- Quality control comparison
-- [FlowGPT Review](https://skywork.ai/blog/flowgpt-review-2025-community-prompt-multimodel-chat/) -- Community-driven vs curated approaches
-- [Promptfoo: LLM Rubric](https://www.promptfoo.dev/docs/configuration/expected-outputs/model-graded/llm-rubric/) -- Automated quality scoring
+### Google Workspace APIs (MEDIUM confidence)
+- [Google Workspace Developer Products](https://developers.google.com/workspace/products) -- Available APIs
+- [Google Drive API: File Metadata](https://developers.google.com/workspace/drive/api/guides/file-metadata) -- viewedByMeTime, modifiedByMeTime
+- [Google Drive Activity API](https://developers.google.com/workspace/drive/activity/v2) -- Activity tracking
+- [Google Reports API Overview](https://developers.google.com/workspace/admin/reports/v1/get-start/overview) -- Org-level activity
+- [Google OAuth2 Scopes](https://developers.google.com/identity/protocols/oauth2/scopes) -- Scope classification
+- [Google Sensitive Scope Verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification) -- Verification requirements
 
-### Conversational Discovery (MEDIUM confidence)
-- [Claude Skills Explained](https://claude.com/blog/skills-explained) -- Skill discovery and loading mechanism
-- [Smithery: MCP Server Marketplace](https://smithery.ai/) -- MCP tool discovery patterns
-- [Glean: AI-Based Enterprise Search](https://www.glean.com/blog/the-definitive-guide-to-ai-based-enterprise-search-for-2025) -- Semantic search + conversational interfaces
+### Loom Integration (HIGH confidence)
+- [Loom Embed SDK: Getting Started](https://dev.loom.com/docs/embed-sdk/getting-started) -- Installation, methods
+- [Loom Embed SDK: API Reference](https://dev.loom.com/docs/embed-sdk/api) -- oembed(), linkReplace(), textReplace()
+- [Loom: Understanding Embedding](https://support.atlassian.com/loom/docs/understand-embedding-videos-gifs-and-thumbnails/) -- Embedding patterns
+- [Userpilot: Embed Loom in SaaS](https://userpilot.com/blog/embed-loom-video/) -- SaaS integration patterns
 
-### Fork Detection (HIGH confidence)
-- [File Hashing for Integrity](https://www.sasa-software.com/learning/what-is-file-hashing-in-cybersecurity/) -- SHA-256 comparison patterns
-- [Git Divergence Detection](https://labex.io/tutorials/git-how-to-check-if-a-git-branch-has-diverged-from-remote-560038) -- Divergence detection patterns
-- [ENISA: SBOM Landscape Analysis](https://www.enisa.europa.eu/sites/default/files/2025-12/SBOM%20Analysis%20-%20Towards%20an%20Implementation%20Guide_v1.20-Published.pdf) -- Content-addressable references via hashing
+### Visibility & Approval Patterns (HIGH confidence)
+- [RBAC Overview: osohq.com](https://www.osohq.com/learn/rbac-role-based-access-control) -- Role-based access patterns
+- [ButterCMS: Content Approval Process](https://buttercms.com/blog/establish-content-approval-process/) -- Enterprise approval workflows
+- [Wrike: Approval Workflow Guide](https://www.wrike.com/workflow-guide/approval-workflow/) -- Linear/parallel approval patterns
+
+### AI Config Sync (MEDIUM confidence)
+- [dot-claude: Multi-AI Rule Sync](https://github.com/CsHeng/dot-claude) -- Claude/Codex/Cursor sync
+- [Claudius: AI Config Management](https://github.com/cariandrum22/claudius) -- Multi-agent configuration
+- [kaush.io: Keep AGENTS.md in Sync](https://kau.sh/blog/agents-md/) -- One source of truth pattern
+- [Claude Code Settings Docs](https://code.claude.com/docs/en/settings) -- CLAUDE.md structure
+
+### Marketplace Homepage Design (HIGH confidence)
+- [Rigby: Marketplace UX Design Guide](https://www.rigbyjs.com/blog/marketplace-ux) -- Feature-by-feature UX guide
+- [Qubstudio: Marketplace UI/UX Best Practices](https://qubstudio.com/blog/marketplace-ui-ux-design-best-practices-and-features/) -- Cards, search, categories
+- [Excited Agency: Marketplace UX Best Practices](https://excited.agency/blog/marketplace-ux-design/) -- Hero section, navigation
 
 ### Existing Codebase (HIGH confidence)
-- `/home/dev/projects/relay/packages/db/src/schema/skills.ts` -- Skills schema with publishedVersionId, draftVersionId, forkedFromId
-- `/home/dev/projects/relay/packages/db/src/schema/skill-reviews.ts` -- AI review schema with categories, contentHash
-- `/home/dev/projects/relay/packages/db/src/schema/skill-versions.ts` -- Version records with contentHash
-- `/home/dev/projects/relay/packages/db/src/schema/skill-embeddings.ts` -- pgvector embeddings (768-dim, HNSW index)
-- `/home/dev/projects/relay/packages/db/src/schema/notifications.ts` -- Notification types and preferences
-- `/home/dev/projects/relay/apps/web/lib/ai-review.ts` -- generateSkillReview() with structured output
-- `/home/dev/projects/relay/apps/web/lib/content-hash.ts` -- hashContent() SHA-256 utility
-- `/home/dev/projects/relay/apps/web/lib/search-skills.ts` -- Full-text + ILIKE search with quality scoring
-- `/home/dev/projects/relay/apps/web/app/actions/ai-review.ts` -- On-demand AI review action
-- `/home/dev/projects/relay/apps/web/app/actions/fork-skill.ts` -- Fork skill action with embedding generation
-- `/home/dev/projects/relay/apps/mcp/src/tools/search.ts` -- MCP search tool (ILIKE only)
-- `/home/dev/projects/relay/apps/mcp/src/tools/create.ts` -- MCP create tool (auto-publishes, needs gating)
-- `/home/dev/projects/relay/apps/mcp/src/tools/deploy.ts` -- MCP deploy with frontmatter injection
-- `/home/dev/projects/relay/packages/db/src/services/skill-embeddings.ts` -- Embedding upsert/query
+- `packages/db/src/schema/skills.ts` -- Skills schema with status lifecycle, searchVector, visibility extension point
+- `packages/db/src/schema/skill-embeddings.ts` -- pgvector 768-dim embeddings, HNSW index
+- `packages/db/src/services/skill-status.ts` -- 7-status state machine, VALID_TRANSITIONS, canTransition()
+- `apps/web/lib/search-skills.ts` -- Full-text + ILIKE + quality scoring search
+- `apps/web/lib/similar-skills.ts` -- Semantic similarity via pgvector cosine distance
+- `apps/web/components/search-with-dropdown.tsx` -- Current search with debounced quick-search dropdown
+- `apps/web/app/(protected)/page.tsx` -- Current homepage (metrics-first layout)
+- `apps/mcp/src/tools/search.ts` -- MCP search with text matching
+- `apps/mcp/src/tools/recommend.ts` -- MCP semantic search with embedding fallback
+- `apps/web/lib/admin.ts` -- isAdmin() authorization check
 
 ---
 
-*Feature research for: EverySkill v2.0 Skill Ecosystem -- Review Pipeline, Conversational Discovery, Fork-on-Modify Detection*
-*Researched: 2026-02-08*
-*Confidence: HIGH for review pipeline and fork detection (well-established patterns, existing codebase primitives), MEDIUM for conversational discovery (semantic search quality depends on embedding coverage and MCP-to-embedding service bridge)*
+*Feature research for: EverySkill v3.0 AI Discovery & Workflow Intelligence*
+*Researched: 2026-02-13*
+*Confidence: HIGH for visibility scoping, Loom integration, homepage redesign, MCP tool (established patterns + existing infrastructure). MEDIUM for intent search and preference extraction (requires prompt engineering and validation). LOW-MEDIUM for Google Workspace diagnostic (unvalidated value proposition, OAuth verification blocker, privacy concerns).*
