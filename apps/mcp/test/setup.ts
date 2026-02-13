@@ -1,5 +1,14 @@
 import { vi } from "vitest";
 
+// Chain builder for db.select().from().where().limit() — returns empty array by default
+function createSelectChain(results: unknown[] = []) {
+  const chain: Record<string, unknown> = {};
+  chain.limit = vi.fn().mockResolvedValue(results);
+  chain.where = vi.fn().mockReturnValue(chain);
+  chain.from = vi.fn().mockReturnValue(chain);
+  return chain;
+}
+
 // Mock the database module
 vi.mock("@everyskill/db", () => ({
   db: {
@@ -9,10 +18,12 @@ vi.mock("@everyskill/db", () => ({
         findFirst: vi.fn(),
       },
     },
+    select: vi.fn(() => createSelectChain()),
     insert: vi.fn(() => ({
       values: vi.fn(),
     })),
   },
+  DEFAULT_TENANT_ID: "default-tenant-000-0000-000000000000",
 }));
 
 // Mock the usage events schema
