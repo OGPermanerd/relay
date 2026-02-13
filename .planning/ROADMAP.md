@@ -257,10 +257,10 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. 2-3 homepage layout variants are researched and presented, each inspired by a successful platform (Atlassian Marketplace, Notion Templates, Slack App Directory) with annotated screenshots and rationale
   2. User evaluates variants and selects one for implementation, with clear documentation of what was chosen and why
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 47-01: TBD
+- [ ] 47-01-PLAN.md — Verify research completeness and present variants for user decision
 
 #### Phase 48: Homepage Redesign
 **Goal**: The homepage becomes the intelligent entry point that surfaces discovery, curation, and personalization
@@ -321,7 +321,7 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 44. Admin Global Skills | v3.0 | 2/2 | Complete | 2026-02-13 |
 | 45. Hybrid Search | v3.0 | 3/3 | Complete | 2026-02-13 |
 | 46. Search Analytics | v3.0 | 0/TBD | Not started | - |
-| 47. Homepage Research | v3.0 | 0/TBD | Not started | - |
+| 47. Homepage Research | v3.0 | 0/1 | Not started | - |
 | 48. Homepage Redesign | v3.0 | 0/TBD | Not started | - |
 
 **Total: 193 plans completed across 45 phases and 8 milestones. v3.0: 18/~TBD plans done, 6/9 phases complete.**
