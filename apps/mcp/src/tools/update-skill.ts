@@ -54,10 +54,12 @@ export async function handleUpdateSkill({
   skillId,
   content,
   description,
+  visibility,
 }: {
   skillId: string;
   content: string;
   description?: string;
+  visibility?: "tenant" | "personal";
 }) {
   if (!db) {
     return {
@@ -138,13 +140,34 @@ export async function handleUpdateSkill({
       // Version record failed — not critical, continue with update
     }
 
-    // Update skill
-    if (description) {
+    // Update skill — conditionally set description and visibility when provided
+    if (description && visibility) {
       await db.execute(sql`
         UPDATE skills
         SET content = ${content},
             published_version_id = ${versionId},
             description = ${description},
+            visibility = ${visibility},
+            status = 'draft',
+            updated_at = NOW()
+        WHERE id = ${skillId}
+      `);
+    } else if (description) {
+      await db.execute(sql`
+        UPDATE skills
+        SET content = ${content},
+            published_version_id = ${versionId},
+            description = ${description},
+            status = 'draft',
+            updated_at = NOW()
+        WHERE id = ${skillId}
+      `);
+    } else if (visibility) {
+      await db.execute(sql`
+        UPDATE skills
+        SET content = ${content},
+            published_version_id = ${versionId},
+            visibility = ${visibility},
             status = 'draft',
             updated_at = NOW()
         WHERE id = ${skillId}
@@ -194,8 +217,8 @@ export async function handleUpdateSkill({
   // Insert forked skill
   try {
     await db.execute(sql`
-      INSERT INTO skills (id, tenant_id, name, slug, description, category, content, hours_saved, author_id, forked_from_id, forked_at_content_hash, status)
-      VALUES (${newSkillId}, ${tenantId}, ${forkName}, ${slug}, ${forkDescription}, ${skill.category}, ${content}, ${skill.hours_saved ?? 1}, ${userId}, ${skillId}, ${forkedAtContentHash}, 'draft')
+      INSERT INTO skills (id, tenant_id, name, slug, description, category, content, hours_saved, author_id, forked_from_id, forked_at_content_hash, status, visibility)
+      VALUES (${newSkillId}, ${tenantId}, ${forkName}, ${slug}, ${forkDescription}, ${skill.category}, ${content}, ${skill.hours_saved ?? 1}, ${userId}, ${skillId}, ${forkedAtContentHash}, 'draft', 'personal')
     `);
   } catch (err) {
     return {
@@ -267,7 +290,12 @@ server.registerTool(
         .string()
         .optional()
         .describe("Updated description (optional, keeps existing if omitted)"),
+      visibility: z
+        .enum(["tenant", "personal"])
+        .optional()
+        .describe("Skill visibility (optional, only applies when you are the author)"),
     },
   },
-  async ({ skillId, content, description }) => handleUpdateSkill({ skillId, content, description })
+  async ({ skillId, content, description, visibility }) =>
+    handleUpdateSkill({ skillId, content, description, visibility })
 );

@@ -29,6 +29,7 @@ export async function handleSearchSkills({
     category,
     limit,
     tenantId: tenantId ?? undefined,
+    userId,
   });
 
   if (!userId && !skipNudge) {

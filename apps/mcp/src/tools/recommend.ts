@@ -47,6 +47,7 @@ export async function handleRecommendSkills({
       limit,
       category,
       tenantId: tenantId ?? undefined,
+      userId,
     });
 
     if (semanticResults.length > 0) {
@@ -62,6 +63,7 @@ export async function handleRecommendSkills({
       category,
       limit,
       tenantId: tenantId ?? undefined,
+      userId,
     });
     searchMethod = "text";
   }

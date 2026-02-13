@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { server } from "../server.js";
 import { db } from "@everyskill/db";
+import { skills } from "@everyskill/db/schema/skills";
+import { eq, and } from "drizzle-orm";
+import { buildVisibilityFilter } from "@everyskill/db/lib/visibility";
 import { trackUsage } from "../tracking/events.js";
 import {
   getUserId,
@@ -35,31 +38,28 @@ export async function handleListSkills({
 
   const tenantId = getTenantId();
 
-  // Fetch all skills and filter in-memory to avoid TypeScript module resolution issues
-  const allResults = await db.query.skills.findMany({
-    limit: category || tenantId ? undefined : limit, // Fetch all if filtering
-    columns: {
-      id: true,
-      name: true,
-      description: true,
-      category: true,
-      hoursSaved: true,
-      tenantId: true,
-    },
-  });
+  // Build DB-level conditions: published + visibility + optional tenant/category
+  const conditions = [eq(skills.status, "published"), buildVisibilityFilter(userId)];
 
-  // Filter by published status first, then tenant, then category
-  const publishedFiltered = allResults.filter(
-    (s: Record<string, unknown>) => s.status === "published" || !s.status
-  );
-  const tenantFiltered = tenantId
-    ? publishedFiltered.filter((s: { tenantId: string }) => s.tenantId === tenantId)
-    : publishedFiltered;
-  const results = category
-    ? tenantFiltered
-        .filter((s: { category: string | null }) => s.category === category)
-        .slice(0, limit)
-    : tenantFiltered.slice(0, limit);
+  if (tenantId) {
+    conditions.push(eq(skills.tenantId, tenantId));
+  }
+
+  if (category) {
+    conditions.push(eq(skills.category, category));
+  }
+
+  const results = await db
+    .select({
+      id: skills.id,
+      name: skills.name,
+      description: skills.description,
+      category: skills.category,
+      hoursSaved: skills.hoursSaved,
+    })
+    .from(skills)
+    .where(and(...conditions))
+    .limit(limit);
 
   if (!userId && !skipNudge) {
     incrementAnonymousCount();

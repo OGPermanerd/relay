@@ -100,6 +100,7 @@ export async function handleCreateSkill({
   tags,
   hoursSaved,
   userId,
+  visibility,
 }: {
   name: string;
   description: string;
@@ -108,6 +109,7 @@ export async function handleCreateSkill({
   tags?: string[];
   hoursSaved: number;
   userId?: string;
+  visibility?: "tenant" | "personal";
 }) {
   if (!db) {
     return {
@@ -142,9 +144,10 @@ export async function handleCreateSkill({
 
   // Insert skill
   try {
+    const skillVisibility = visibility || "tenant";
     await db.execute(sql`
-      INSERT INTO skills (id, tenant_id, name, slug, description, category, content, hours_saved, author_id, tags, status)
-      VALUES (${skillId}, ${tenantId}, ${name}, ${slug}, ${description}, ${category}, ${rawContent}, ${hoursSaved}, ${userId}, ${tagsJson}::jsonb, 'draft')
+      INSERT INTO skills (id, tenant_id, name, slug, description, category, content, hours_saved, author_id, tags, status, visibility)
+      VALUES (${skillId}, ${tenantId}, ${name}, ${slug}, ${description}, ${category}, ${rawContent}, ${hoursSaved}, ${userId}, ${tagsJson}::jsonb, 'draft', ${skillVisibility})
     `);
   } catch (err) {
     return {
@@ -257,9 +260,13 @@ server.registerTool(
         .max(1000)
         .default(1)
         .describe("Estimated hours saved per use (default: 1)"),
+      visibility: z
+        .enum(["tenant", "personal"])
+        .optional()
+        .describe("Skill visibility: 'tenant' (default, visible to org) or 'personal' (only you)"),
     },
   },
-  async ({ name, description, category, content, tags, hoursSaved }) =>
+  async ({ name, description, category, content, tags, hoursSaved, visibility }) =>
     handleCreateSkill({
       name,
       description,
@@ -268,5 +275,6 @@ server.registerTool(
       tags,
       hoursSaved,
       userId: getUserId() ?? undefined,
+      visibility,
     })
 );

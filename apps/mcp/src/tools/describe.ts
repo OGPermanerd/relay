@@ -26,7 +26,13 @@ function deriveQualityTier(averageRating: number | null, totalUses: number): str
   return null;
 }
 
-export async function handleDescribeSkill({ skillId }: { skillId: string }) {
+export async function handleDescribeSkill({
+  skillId,
+  userId,
+}: {
+  skillId: string;
+  userId?: string;
+}) {
   if (!db) {
     return {
       content: [
@@ -58,10 +64,23 @@ export async function handleDescribeSkill({ skillId }: { skillId: string }) {
     };
   }
 
+  // Visibility check: personal skills only visible to their author
+  if (skill.visibility === "personal" && skill.authorId !== userId) {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({ error: "Skill not found or not published" }),
+        },
+      ],
+      isError: true,
+    };
+  }
+
   // Fetch supplementary data in parallel
   const [review, forkCount, ratingResult, embedding] = await Promise.all([
     getSkillReview(skillId),
-    getForkCount(skillId),
+    getForkCount(skillId, userId),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(ratings)
@@ -84,6 +103,7 @@ export async function handleDescribeSkill({ skillId }: { skillId: string }) {
       queryEmbedding: embedding.embedding as number[],
       limit: 4,
       tenantId: getTenantId() ?? undefined,
+      userId,
     });
     // Filter out the current skill and take first 3
     similarResults = searchResults
@@ -177,5 +197,5 @@ server.registerTool(
       skillId: z.string().describe("Skill ID to describe"),
     },
   },
-  async ({ skillId }) => handleDescribeSkill({ skillId })
+  async ({ skillId }) => handleDescribeSkill({ skillId, userId: getUserId() ?? undefined })
 );
