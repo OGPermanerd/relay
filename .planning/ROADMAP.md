@@ -138,9 +138,9 @@ Total: 23 plans completed. 44 requirements across 6 categories.
 - Decimal phases (40.1, 40.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 40: Visibility Scoping** - Skill access control with tenant/personal visibility levels
-- [ ] **Phase 41: Loom Video Integration** - Video demos on skill pages and browse cards
-- [ ] **Phase 42: MCP Tool Unification** - Single `everyskill` tool with sub-commands for external discovery
-- [ ] **Phase 43: User Preferences** - Server-side preference storage with CLAUDE.md export
+- [x] **Phase 41: Loom Video Integration** - Video demos on skill pages and browse cards
+- [x] **Phase 42: MCP Tool Unification** - Single `everyskill` tool with sub-commands for external discovery
+- [x] **Phase 43: User Preferences** - Server-side preference storage with CLAUDE.md export
 - [ ] **Phase 44: Admin Global Skills** - Company Approved badge and admin stamping workflow
 - [ ] **Phase 45: Hybrid Search & Discovery** - AI-powered intent search with semantic + full-text fusion
 - [ ] **Phase 46: Search Analytics** - Query logging and admin dashboard for search insights
@@ -175,8 +175,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 41-01-PLAN.md — Schema, migration, Loom utility library, Zod validation, and form field
-- [ ] 41-02-PLAN.md — LoomEmbed component, detail page integration, and browse/trending indicators
+- [x] 41-01-PLAN.md — Schema, migration, Loom utility library, Zod validation, and form field
+- [x] 41-02-PLAN.md — LoomEmbed component, detail page integration, and browse/trending indicators
 
 #### Phase 42: MCP Tool Unification
 **Goal**: Users discover and interact with EverySkill through a single, well-described MCP tool
@@ -189,8 +189,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 42-01-PLAN.md — Extract inline handlers, remove log_usage, create unified everyskill tool with STRAP action router
-- [ ] 42-02-PLAN.md — Centralize legacy deprecated wrappers, clean handler files, add routing tests
+- [x] 42-01-PLAN.md — Extract inline handlers, remove log_usage, create unified everyskill tool with STRAP action router
+- [x] 42-02-PLAN.md — Centralize legacy deprecated wrappers, clean handler files, add routing tests
 
 #### Phase 43: User Preferences
 **Goal**: Users configure personal settings that persist server-side and export as portable AI configuration
@@ -203,9 +203,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 43-01-PLAN.md — Schema, service, migration, and shared Zod defaults
-- [ ] 43-02-PLAN.md — Settings layout, preferences form, and profile page links
-- [ ] 43-03-PLAN.md — CLAUDE.md export server action and preview/download UI
+- [x] 43-01-PLAN.md — Schema, service, migration, and shared Zod defaults
+- [x] 43-02-PLAN.md — Settings layout, preferences form, and profile page links
+- [x] 43-03-PLAN.md — CLAUDE.md export server action and preview/download UI
 
 #### Phase 44: Admin Global Skills
 **Goal**: Admins curate a set of company-endorsed skills with visible badges
@@ -314,16 +314,16 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
 | 40. Visibility Scoping | v3.0 | 4/4 | Complete | 2026-02-13 |
-| 41. Loom Video | v3.0 | 0/2 | Planned | - |
-| 42. MCP Unification | v3.0 | 0/2 | Planned | - |
-| 43. User Preferences | v3.0 | 0/3 | Planned | - |
+| 41. Loom Video | v3.0 | 2/2 | Complete | 2026-02-13 |
+| 42. MCP Unification | v3.0 | 2/2 | Complete | 2026-02-13 |
+| 43. User Preferences | v3.0 | 3/3 | Complete | 2026-02-13 |
 | 44. Admin Global Skills | v3.0 | 0/TBD | Not started | - |
 | 45. Hybrid Search | v3.0 | 0/TBD | Not started | - |
 | 46. Search Analytics | v3.0 | 0/TBD | Not started | - |
 | 47. Homepage Research | v3.0 | 0/TBD | Not started | - |
 | 48. Homepage Redesign | v3.0 | 0/TBD | Not started | - |
 
-**Total: 175 plans completed across 39 phases and 8 milestones (v1.0-v2.0). v3.0: 9 phases planned.**
+**Total: 186 plans completed across 43 phases and 8 milestones. v3.0: 11/~TBD plans done, 4/9 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*

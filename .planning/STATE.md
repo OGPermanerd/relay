@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v3.0 Phase 43 -- User Preferences (In progress)
+**Current focus:** v3.0 Wave 1 complete (Phases 40-43) -- ready for Wave 2
 
 ## Current Position
 
-Phase: 43 of 48 (User Preferences)
-Plan: 2 of 3 in current phase (complete: 01, 02)
-Status: In progress
-Last activity: 2026-02-13 -- Completed 43-02-PLAN.md (settings UI and preferences form)
+Phase: 43 of 48 (Wave 1 complete)
+Plan: All Wave 1 plans complete (40: 4/4, 41: 2/2, 42: 2/2, 43: 3/3 = 11 plans)
+Status: Wave 1 complete, Wave 2 next (Phases 44, 45)
+Last activity: 2026-02-13 -- Completed Phases 40-43 (Wave 1)
 
-Progress: [█████████████████████░░░░░░░░░] 76% (187/~TBD total)
+Progress: [██████████████████████░░░░░░░░] 76% (188/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [█████████████████████░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 187
+- Total plans completed: 188
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 187 plans across 43 phases and 8 milestones
+- 188 plans across 43 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -81,5 +81,5 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed Phase 43 Plan 02 (settings UI and preferences form) -- ready for 43-03 (skill listing)
-Resume file: .planning/phases/43-user-preferences/43-03-PLAN.md
+Stopped at: Completed Wave 1 (Phases 40-43) -- ready for Wave 2 (Phases 44, 45)
+Resume file: .planning/ROADMAP.md (next phase planning)
