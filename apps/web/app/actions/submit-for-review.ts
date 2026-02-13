@@ -12,6 +12,7 @@ import { generateSkillReview, REVIEW_MODEL } from "@/lib/ai-review";
 import { hashContent } from "@/lib/content-hash";
 import { upsertSkillReview } from "@everyskill/db/services/skill-reviews";
 import { notifyReviewEvent } from "@/lib/notifications";
+import { generateAndStoreSkillEmbedding } from "@/lib/generate-skill-embedding";
 import { getAdminsInTenant } from "@everyskill/db";
 import { revalidatePath } from "next/cache";
 
@@ -105,6 +106,16 @@ export async function submitForReview(
         .update(skills)
         .set({ status: "ai_reviewed", updatedAt: new Date() })
         .where(eq(skills.id, skillId));
+    }
+
+    // Fire-and-forget: generate embedding when skill is published
+    if (autoApproved) {
+      void generateAndStoreSkillEmbedding({
+        skillId: skill.id,
+        tenantId: session.user.tenantId || "default-tenant-000-0000-000000000000",
+        name: skill.name,
+        description: skill.description ?? "",
+      });
     }
 
     revalidatePath("/my-skills");

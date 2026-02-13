@@ -9,6 +9,7 @@ import { notifyReviewEvent } from "@/lib/notifications";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { generateAndStoreSkillEmbedding } from "@/lib/generate-skill-embedding";
 
 // =============================================================================
 // Types
@@ -45,6 +46,7 @@ export async function approveSkillAction(skillId: string, notes?: string): Promi
       status: true,
       tenantId: true,
       content: true,
+      description: true,
       authorId: true,
       name: true,
       slug: true,
@@ -88,6 +90,14 @@ export async function approveSkillAction(skillId: string, notes?: string): Promi
       .update(skills)
       .set({ status: "published", updatedAt: new Date() })
       .where(eq(skills.id, skillId));
+  });
+
+  // Fire-and-forget: generate embedding for the newly published skill
+  void generateAndStoreSkillEmbedding({
+    skillId: skill.id,
+    tenantId: skill.tenantId,
+    name: skill.name,
+    description: skill.description ?? "",
   });
 
   // Fetch author info for notification
