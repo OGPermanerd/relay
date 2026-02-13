@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v3.0 Phase 43 -- User Preferences (complete)
+**Current focus:** v3.0 Phase 41 -- Loom Video (complete)
 
 ## Current Position
 
-Phase: 43 of 48 (User Preferences)
-Plan: 3 of 3 in current phase (complete: 01, 02, 03)
+Phase: 41 of 48 (Loom Video)
+Plan: 2 of 2 in current phase (complete: 01, 02)
 Status: Phase complete
-Last activity: 2026-02-13 -- Completed 43-03-PLAN.md (CLAUDE.md export page)
+Last activity: 2026-02-13 -- Completed 41-02-PLAN.md (Loom video display + indicators)
 
-Progress: [█████████████████████░░░░░░░░░] 74% (184/~TBD total)
+Progress: [█████████████████████░░░░░░░░░] 75% (185/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [█████████████████████░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 184
+- Total plans completed: 185
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 184 plans across 43 phases and 8 milestones
+- 185 plans across 43 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -55,6 +55,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - JSONB user_preferences with code-defined defaults merged at read time (not DB defaults)
 - UserPreferencesData interface mirrored in packages/db and Zod schema in apps/web to avoid cross-package imports
 - Loom URL accepts /share/, /embed/, /i/ patterns; no index needed (read-only on detail page)
+- LoomEmbed is a server component; oEmbed fetch parallelized in detail page Promise.all
+- Browse/trending pages show play icon indicator only (no oEmbed calls) to avoid N+1
 - Unified everyskill tool uses STRAP action router pattern with exhaustive switch for compile-time safety
 - confirm_install excluded from unified tool (internal follow-up, not user-initiated action)
 - CLAUDE.md export uses hoursSaved column (plan-referenced avgHoursSaved does not exist)
@@ -75,5 +77,5 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed Phase 43 Plan 03 (CLAUDE.md export) -- Phase 43 fully complete
+Stopped at: Completed Phase 41 Plan 02 (Loom video display + indicators) -- Phase 41 fully complete
 Resume file: .planning/phases/44-*/44-01-PLAN.md
