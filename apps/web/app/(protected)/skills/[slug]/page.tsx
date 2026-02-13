@@ -10,6 +10,7 @@ import { AiReviewTab } from "@/components/ai-review-tab";
 import { getSkillStats } from "@/lib/skill-stats";
 import { getSkillDetailTrends } from "@/lib/skill-detail-trends";
 import { hashContent } from "@/lib/content-hash";
+import { fetchLoomOEmbed, extractLoomVideoId } from "@/lib/loom";
 import { auth } from "@/auth";
 import { RatingForm } from "@/components/rating-form";
 import { ReviewsList } from "@/components/reviews-list";
@@ -72,7 +73,7 @@ export default async function SkillPage(props: SkillPageProps) {
     notFound();
   }
 
-  // Get usage statistics, trends, similar skills, review, content hash, and fork data in parallel
+  // Get usage statistics, trends, similar skills, review, content hash, fork data, and Loom oEmbed in parallel
   const [
     stats,
     trends,
@@ -82,6 +83,7 @@ export default async function SkillPage(props: SkillPageProps) {
     forkCount,
     topForks,
     parentSkill,
+    loomEmbed,
   ] = await Promise.all([
     getSkillStats(skill.id),
     getSkillDetailTrends(skill.id),
@@ -91,7 +93,11 @@ export default async function SkillPage(props: SkillPageProps) {
     getForkCount(skill.id),
     getTopForks(skill.id, 5),
     skill.forkedFromId ? getParentSkill(skill.forkedFromId) : Promise.resolve(null),
+    skill.loomUrl ? fetchLoomOEmbed(skill.loomUrl) : Promise.resolve(null),
   ]);
+
+  // Extract Loom video ID for embed component
+  const loomVideoId = skill.loomUrl ? extractLoomVideoId(skill.loomUrl) : null;
 
   // Fetch parent content for fork differentiation (only when skill is a fork)
   const parentContent = skill.forkedFromId
@@ -215,6 +221,8 @@ export default async function SkillPage(props: SkillPageProps) {
             parentSkill={parentSkill}
             driftStatus={driftStatus}
             compareSlug={skill.forkedFromId ? skill.slug : undefined}
+            loomVideoId={loomVideoId}
+            loomEmbed={loomEmbed}
           />
 
           {/* Install, Fork, and Delete buttons */}

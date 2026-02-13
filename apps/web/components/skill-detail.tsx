@@ -3,11 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import type { SkillStats } from "@/lib/skill-stats";
 import type { SkillDetailTrends } from "@/lib/skill-detail-trends";
+import type { LoomOEmbedResponse } from "@/lib/loom";
 import { calculateQualityScore } from "@/lib/quality-score";
 import { QualityBadge } from "./quality-badge";
 import { QualityBreakdown } from "./quality-breakdown";
 import { ForkAttribution } from "./fork-attribution";
 import { DriftIndicator } from "./drift-indicator";
+import { LoomEmbed } from "./loom-embed";
 import { RelativeTime } from "@/components/relative-time";
 import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
 
@@ -44,6 +46,8 @@ interface SkillDetailProps {
   parentSkill?: ParentSkillInfo | null;
   driftStatus?: "diverged" | "current" | "unknown";
   compareSlug?: string;
+  loomVideoId?: string | null;
+  loomEmbed?: LoomOEmbedResponse | null;
 }
 
 export function SkillDetail({
@@ -54,6 +58,8 @@ export function SkillDetail({
   parentSkill,
   driftStatus,
   compareSlug,
+  loomVideoId,
+  loomEmbed,
 }: SkillDetailProps) {
   // Calculate quality score for badge and breakdown
   const { score, tier, breakdown } = calculateQualityScore({
@@ -136,6 +142,18 @@ export function SkillDetail({
         />
         {forkCount != null && forkCount > 0 && <StatCard label="Forks" value={forkCount} />}
       </div>
+
+      {/* Demo Video section (Loom embed) */}
+      {loomVideoId && (
+        <div className="mt-8">
+          <h2 className="mb-2 text-xl font-semibold">Demo Video</h2>
+          <LoomEmbed
+            videoId={loomVideoId}
+            title={loomEmbed?.title}
+            duration={loomEmbed?.duration}
+          />
+        </div>
+      )}
 
       {/* Description section */}
       <div className="mt-8">
