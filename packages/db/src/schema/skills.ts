@@ -46,6 +46,7 @@ export const skills = pgTable(
     status: text("status").notNull().default("published"),
     statusMessage: text("status_message"),
     visibility: text("visibility").notNull().default("tenant"), // "tenant" or "personal"
+    loomUrl: text("loom_url"), // Optional Loom video demo URL
 
     // Version references (no FK due to circular dependency with skillVersions)
     publishedVersionId: text("published_version_id"), // Currently published version
