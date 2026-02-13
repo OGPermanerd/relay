@@ -141,8 +141,8 @@ Total: 23 plans completed. 44 requirements across 6 categories.
 - [x] **Phase 41: Loom Video Integration** - Video demos on skill pages and browse cards
 - [x] **Phase 42: MCP Tool Unification** - Single `everyskill` tool with sub-commands for external discovery
 - [x] **Phase 43: User Preferences** - Server-side preference storage with CLAUDE.md export
-- [ ] **Phase 44: Admin Global Skills** - Company Approved badge and admin stamping workflow
-- [ ] **Phase 45: Hybrid Search & Discovery** - AI-powered intent search with semantic + full-text fusion
+- [x] **Phase 44: Admin Global Skills** - Company Approved badge and admin stamping workflow
+- [x] **Phase 45: Hybrid Search & Discovery** - AI-powered intent search with semantic + full-text fusion
 - [ ] **Phase 46: Search Analytics** - Query logging and admin dashboard for search insights
 - [ ] **Phase 47: Homepage Research** - Competitive analysis and layout variant evaluation
 - [ ] **Phase 48: Homepage Redesign** - Search-first hero with personalization and curated sections
@@ -217,8 +217,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 44-01-PLAN.md — Schema, migration, server action, and admin table toggle
-- [ ] 44-02-PLAN.md — Badge component, display everywhere, and homepage Company Recommended section
+- [x] 44-01-PLAN.md — Schema, migration, server action, and admin table toggle
+- [x] 44-02-PLAN.md — Badge component, display everywhere, and homepage Company Recommended section
 
 #### Phase 45: Hybrid Search & Discovery
 **Goal**: Users describe what they need in natural language and get intelligent, ranked skill recommendations
@@ -233,9 +233,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 45-01-PLAN.md — Embedding backfill script and auto-generation on skill create/update
-- [ ] 45-02-PLAN.md — Hybrid search service with RRF SQL and discover server action
-- [ ] 45-03-PLAN.md — Discovery UI with result cards, rationale, and loading states
+- [x] 45-01-PLAN.md — Embedding backfill script and auto-generation on skill create/update
+- [x] 45-02-PLAN.md — Hybrid search service with RRF SQL and discover server action
+- [x] 45-03-PLAN.md — Discovery UI with result cards, rationale, and loading states
 
 #### Phase 46: Search Analytics
 **Goal**: Admins understand search behavior and identify skill gaps from query data
@@ -318,13 +318,13 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 41. Loom Video | v3.0 | 2/2 | Complete | 2026-02-13 |
 | 42. MCP Unification | v3.0 | 2/2 | Complete | 2026-02-13 |
 | 43. User Preferences | v3.0 | 3/3 | Complete | 2026-02-13 |
-| 44. Admin Global Skills | v3.0 | 0/2 | Not started | - |
-| 45. Hybrid Search | v3.0 | 0/3 | Not started | - |
+| 44. Admin Global Skills | v3.0 | 2/2 | Complete | 2026-02-13 |
+| 45. Hybrid Search | v3.0 | 3/3 | Complete | 2026-02-13 |
 | 46. Search Analytics | v3.0 | 0/TBD | Not started | - |
 | 47. Homepage Research | v3.0 | 0/TBD | Not started | - |
 | 48. Homepage Redesign | v3.0 | 0/TBD | Not started | - |
 
-**Total: 186 plans completed across 43 phases and 8 milestones. v3.0: 11/~TBD plans done, 4/9 phases complete.**
+**Total: 193 plans completed across 45 phases and 8 milestones. v3.0: 18/~TBD plans done, 6/9 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
