@@ -45,6 +45,7 @@ export const skills = pgTable(
     tags: text("tags").array().default([]),
     status: text("status").notNull().default("published"),
     statusMessage: text("status_message"),
+    visibility: text("visibility").notNull().default("tenant"), // "tenant" or "personal"
 
     // Version references (no FK due to circular dependency with skillVersions)
     publishedVersionId: text("published_version_id"), // Currently published version
