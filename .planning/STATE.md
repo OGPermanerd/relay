@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Planning next milestone
+**Current focus:** v3.0 AI Discovery & Workflow Intelligence
 
 ## Current Position
 
-Phase: None -- between milestones
-Plan: N/A
-Status: Ready to plan
-Last activity: 2026-02-11 -- Tech debt cleared (DB integrity checks, MCP audit logging, read-only mode)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Researching domain ecosystem
+Last activity: 2026-02-11 — Milestone v3.0 started
 
-Progress: All milestones shipped (v1.0 → v2.0) + ad hoc features deployed
+Progress: v1.0 → v2.0 shipped + ad hoc features deployed, v3.0 in planning
 
 ## Milestones
 

@@ -82,9 +82,22 @@ Previous milestones:
 - ✓ Web remote MCP via Streamable HTTP for Claude.ai browser access — v1.4
 - ✓ Extended MCP search matching author name and tags with field-weighted scoring — v1.4
 
-### Active
+### Active — v3.0 AI Discovery & Workflow Intelligence
 
-(No active milestone — planning next)
+## Current Milestone: v3.0 AI Discovery & Workflow Intelligence
+
+**Goal:** Transform EverySkill from a skill catalog into an intelligent workflow assistant — AI-powered discovery, workspace diagnostics, granular visibility scoping, and a redesigned homepage.
+
+**Target features:**
+- AI-powered intent search ("What are you trying to solve?") with top-3 skill recommendations
+- `/everyskill` MCP integration for in-context skill discovery from any prompt
+- Google Workspace connector (Drive, Gmail, Calendar) with screentime-style time analysis
+- Automation recommendations with deployment planning based on workspace diagnostic
+- Skill visibility scoping (global company / employee visible / employee invisible / personal)
+- Admin-stamped global skills with department approval workflows
+- Personal preference extraction and cross-AI pref sync (scan CLAUDE.md, push to claude.ai)
+- Loom video integration for skill demos (authors and reviewers)
+- Homepage redesign informed by analysis of successful similar platforms
 
 ### Validated — Post-v2.0 (ad hoc)
 
@@ -205,4 +218,4 @@ Previous milestones:
 | PNG logo over animated SVG | New brand identity; transparent background works on both light and dark headers | ✓ Good |
 
 ---
-*Last updated: 2026-02-11 after post-v2.0 ad hoc features*
+*Last updated: 2026-02-11 — v3.0 milestone started*
