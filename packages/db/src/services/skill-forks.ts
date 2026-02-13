@@ -1,6 +1,7 @@
 import { db } from "../client";
 import { skills } from "../schema";
 import { eq, desc, sql, and } from "drizzle-orm";
+import { buildVisibilityFilter } from "../lib/visibility";
 
 export interface ForkInfo {
   id: string;
@@ -15,13 +16,19 @@ export interface ForkInfo {
 /**
  * Get the fork count for a skill (how many skills forked from it)
  */
-export async function getForkCount(skillId: string): Promise<number> {
+export async function getForkCount(skillId: string, userId?: string): Promise<number> {
   if (!db) return 0;
 
   const result = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(skills)
-    .where(and(eq(skills.forkedFromId, skillId), eq(skills.status, "published")));
+    .where(
+      and(
+        eq(skills.forkedFromId, skillId),
+        eq(skills.status, "published"),
+        buildVisibilityFilter(userId)
+      )
+    );
 
   return result[0]?.count ?? 0;
 }
@@ -29,11 +36,19 @@ export async function getForkCount(skillId: string): Promise<number> {
 /**
  * Get top forks for a skill, ordered by highest rating first
  */
-export async function getTopForks(skillId: string, limit: number = 5): Promise<ForkInfo[]> {
+export async function getTopForks(
+  skillId: string,
+  limit: number = 5,
+  userId?: string
+): Promise<ForkInfo[]> {
   if (!db) return [];
 
   const forks = await db.query.skills.findMany({
-    where: and(eq(skills.forkedFromId, skillId), eq(skills.status, "published")),
+    where: and(
+      eq(skills.forkedFromId, skillId),
+      eq(skills.status, "published"),
+      buildVisibilityFilter(userId)
+    ),
     with: {
       author: {
         columns: { id: true, name: true },

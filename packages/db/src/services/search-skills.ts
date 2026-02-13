@@ -2,6 +2,7 @@ import { sql, eq, and } from "drizzle-orm";
 import { db } from "../client";
 import { skills } from "../schema/skills";
 import { users } from "../schema/users";
+import { buildVisibilityFilter } from "../lib/visibility";
 
 /**
  * Escape special ILIKE characters to prevent injection via % and _ in user input.
@@ -16,6 +17,7 @@ export interface SearchSkillsParams {
   category?: string;
   limit?: number; // default 50
   tenantId?: string;
+  userId?: string;
 }
 
 export interface SearchSkillResult {
@@ -67,7 +69,7 @@ export async function searchSkillsByQuery(
     return [];
   }
 
-  const { query, category, limit = 50, tenantId } = params;
+  const { query, category, limit = 50, tenantId, userId } = params;
   const trimmed = query.trim();
 
   if (!trimmed) {
@@ -84,7 +86,11 @@ export async function searchSkillsByQuery(
     OR array_to_string(${skills.tags}, ' ') ILIKE ${likePattern}
   )`;
 
-  const conditions = [matchCondition, eq(skills.status, "published")];
+  const conditions = [
+    matchCondition,
+    eq(skills.status, "published"),
+    buildVisibilityFilter(userId),
+  ];
 
   if (tenantId) {
     conditions.push(eq(skills.tenantId, tenantId));

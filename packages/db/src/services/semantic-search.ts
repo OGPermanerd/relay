@@ -3,6 +3,7 @@ import { cosineDistance } from "drizzle-orm/sql/functions/vector";
 import { db } from "../client";
 import { skills } from "../schema/skills";
 import { skillEmbeddings } from "../schema/skill-embeddings";
+import { buildVisibilityFilter } from "../lib/visibility";
 
 export interface SemanticSearchResult {
   id: string;
@@ -33,10 +34,11 @@ export async function semanticSearchSkills(params: {
   limit?: number;
   category?: string;
   tenantId?: string;
+  userId?: string;
 }): Promise<SemanticSearchResult[]> {
   if (!db) return [];
 
-  const { queryEmbedding, limit = 10, category, tenantId } = params;
+  const { queryEmbedding, limit = 10, category, tenantId, userId } = params;
 
   // Convert to pgvector string format
   const vectorStr = `[${queryEmbedding.join(",")}]`;
@@ -44,8 +46,8 @@ export async function semanticSearchSkills(params: {
   // Compute cosine distance for ordering and similarity calculation
   const distance = cosineDistance(skillEmbeddings.embedding, vectorStr);
 
-  // Build conditions: always filter to published skills (DISC-06)
-  const conditions = [eq(skills.status, "published")];
+  // Build conditions: always filter to published skills (DISC-06) + visibility
+  const conditions = [eq(skills.status, "published"), buildVisibilityFilter(userId)];
 
   if (category) {
     conditions.push(eq(skills.category, category));
