@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 ## Current Position
 
 Phase: 40 of 48 (Visibility Scoping)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-13 — v3.0 roadmap created (9 phases, 36 requirements)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-02-13 — Completed 40-01-PLAN.md (visibility schema & helpers)
 
-Progress: [████████████████████░░░░░░░░░░] 69% (175/~TBD total)
+Progress: [████████████████████░░░░░░░░░░] 70% (176/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 175
+- Total plans completed: 176
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 175 plans across 39 phases and 8 milestones
+- 176 plans across 40 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -44,6 +44,9 @@ Progress: [████████████████████░░░
 ### Decisions
 
 All decisions archived in PROJECT.md Key Decisions table and milestone archives.
+
+- Applied migrations via psql directly (drizzle-kit migrate replays all migrations, fails on existing tables)
+- Visibility helpers in packages/db/src/lib/ -- new pattern for reusable DB utilities
 
 ### Pending Todos
 
@@ -60,5 +63,5 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: v3.0 roadmap created -- ready for `/gsd:plan-phase 40`
-Resume file: N/A
+Stopped at: Completed 40-01 (visibility schema & helpers) -- ready for 40-02
+Resume file: .planning/phases/40-visibility-scoping/40-02-PLAN.md
