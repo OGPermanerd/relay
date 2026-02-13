@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v3.0 Phase 41 -- Loom Video (complete)
+**Current focus:** v3.0 Phase 43 -- User Preferences (In progress)
 
 ## Current Position
 
-Phase: 41 of 48 (Loom Video)
-Plan: 2 of 2 in current phase (complete: 01, 02)
-Status: Phase complete
-Last activity: 2026-02-13 -- Completed 41-02-PLAN.md (Loom video display + indicators)
+Phase: 43 of 48 (User Preferences)
+Plan: 2 of 3 in current phase (complete: 01, 02)
+Status: In progress
+Last activity: 2026-02-13 -- Completed 43-02-PLAN.md (settings UI and preferences form)
 
-Progress: [█████████████████████░░░░░░░░░] 75% (185/~TBD total)
+Progress: [█████████████████████░░░░░░░░░] 76% (187/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [█████████████████████░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 185
+- Total plans completed: 187
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 185 plans across 43 phases and 8 milestones
+- 187 plans across 43 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -61,6 +61,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - confirm_install excluded from unified tool (internal follow-up, not user-initiated action)
 - CLAUDE.md export uses hoursSaved column (plan-referenced avgHoursSaved does not exist)
 - Blob + createObjectURL for client-side file download without server round-trip
+- Settings layout is server component with client SettingsNav for active tab highlighting via usePathname
+- Notifications page wrapper stripped to fit within shared settings layout
 
 ### Pending Todos
 
@@ -77,5 +79,5 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed Phase 41 Plan 02 (Loom video display + indicators) -- Phase 41 fully complete
-Resume file: .planning/phases/44-*/44-01-PLAN.md
+Stopped at: Completed Phase 43 Plan 02 (settings UI and preferences form) -- ready for 43-03 (skill listing)
+Resume file: .planning/phases/43-user-preferences/43-03-PLAN.md
