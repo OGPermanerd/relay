@@ -14,7 +14,7 @@ Plan: 1 of 3 in current phase (complete: 01)
 Status: In progress
 Last activity: 2026-02-13 -- Completed 43-01-PLAN.md (user preferences data layer)
 
-Progress: [████████████████████░░░░░░░░░░] 72% (181/~TBD total)
+Progress: [████████████████████░░░░░░░░░░] 72% (182/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 181
+- Total plans completed: 182
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 181 plans across 43 phases and 8 milestones
+- 182 plans across 43 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -54,6 +54,7 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - Tags aggregation filtered to tenant-only since tags are an org-level concept
 - JSONB user_preferences with code-defined defaults merged at read time (not DB defaults)
 - UserPreferencesData interface mirrored in packages/db and Zod schema in apps/web to avoid cross-package imports
+- Loom URL accepts /share/, /embed/, /i/ patterns; no index needed (read-only on detail page)
 
 ### Pending Todos
 
@@ -70,5 +71,5 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed Phase 43 Plan 01 -- ready for 43-02 (settings UI) and 43-03 (skill listing)
-Resume file: .planning/phases/43-user-preferences/43-02-PLAN.md
+Stopped at: Completed Phase 41 Plan 01 (Loom schema+backend) -- Phase 43 Plan 01 also complete
+Resume file: .planning/phases/41-loom-video/41-02-PLAN.md
