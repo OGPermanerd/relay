@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v3.0 Phase 40 -- Visibility Scoping (COMPLETE)
+**Current focus:** v3.0 Phase 43 -- User Preferences (In progress)
 
 ## Current Position
 
-Phase: 40 of 48 (Visibility Scoping)
-Plan: 4 of 4 in current phase (all complete: 01, 02, 03, 04)
-Status: Phase complete
-Last activity: 2026-02-13 -- Completed 40-02-PLAN.md (web query path visibility scoping)
+Phase: 43 of 48 (User Preferences)
+Plan: 1 of 3 in current phase (complete: 01)
+Status: In progress
+Last activity: 2026-02-13 -- Completed 43-01-PLAN.md (user preferences data layer)
 
-Progress: [████████████████████░░░░░░░░░░] 71% (180/~TBD total)
+Progress: [████████████████████░░░░░░░░░░] 72% (181/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 180
+- Total plans completed: 181
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 180 plans across 40 phases and 8 milestones
+- 181 plans across 43 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -52,6 +52,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - MCP describe returns generic "not found" for inaccessible personal skills (no info leakage)
 - Org-level aggregations (trending, leaderboard, platform stats) always filter visibility='tenant' inline, not via helper
 - Tags aggregation filtered to tenant-only since tags are an org-level concept
+- JSONB user_preferences with code-defined defaults merged at read time (not DB defaults)
+- UserPreferencesData interface mirrored in packages/db and Zod schema in apps/web to avoid cross-package imports
 
 ### Pending Todos
 
@@ -68,5 +70,5 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed Phase 40 (all 4 plans) -- ready for Phase 41
-Resume file: .planning/ROADMAP.md (next phase planning)
+Stopped at: Completed Phase 43 Plan 01 -- ready for 43-02 (settings UI) and 43-03 (skill listing)
+Resume file: .planning/phases/43-user-preferences/43-02-PLAN.md
