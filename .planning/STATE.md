@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 ## Current Position
 
 Phase: 40 of 48 (Visibility Scoping)
-Plan: 3 of 4 in current phase
+Plan: 4 of 4 in current phase (3 complete: 01, 03, 04; remaining: 02)
 Status: In progress
-Last activity: 2026-02-13 — Completed 40-03-PLAN.md (visibility UI & server actions)
+Last activity: 2026-02-13 — Completed 40-04-PLAN.md (MCP visibility scoping)
 
-Progress: [████████████████████░░░░░░░░░░] 70% (178/~TBD total)
+Progress: [████████████████████░░░░░░░░░░] 70% (179/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 178
+- Total plans completed: 179
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 178 plans across 40 phases and 8 milestones
+- 179 plans across 40 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -48,6 +48,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - Applied migrations via psql directly (drizzle-kit migrate replays all migrations, fails on existing tables)
 - Visibility helpers in packages/db/src/lib/ -- new pattern for reusable DB utilities
 - Forked skills always default to personal visibility (never inherit parent) for privacy safety
+- MCP list tool rewrote from in-memory to DB-level WHERE for visibility + performance
+- MCP describe returns generic "not found" for inaccessible personal skills (no info leakage)
 
 ### Pending Todos
 
@@ -64,5 +66,5 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed 40-03 (visibility UI & server actions) -- ready for 40-04
-Resume file: .planning/phases/40-visibility-scoping/40-04-PLAN.md
+Stopped at: Completed 40-04 (MCP visibility scoping) -- 40-02 remaining in phase 40
+Resume file: .planning/phases/40-visibility-scoping/40-02-PLAN.md

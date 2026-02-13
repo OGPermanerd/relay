@@ -67,6 +67,11 @@ export default async function SkillPage(props: SkillPageProps) {
     notFound();
   }
 
+  // Visibility check: personal skills only visible to author and admins
+  if (skill.visibility === "personal" && !isAuthorOfSkill && !userIsAdmin) {
+    notFound();
+  }
+
   // Get usage statistics, trends, similar skills, review, content hash, and fork data in parallel
   const [
     stats,
@@ -80,7 +85,7 @@ export default async function SkillPage(props: SkillPageProps) {
   ] = await Promise.all([
     getSkillStats(skill.id),
     getSkillDetailTrends(skill.id),
-    findSimilarSkillsByName(skill.id, skill.name),
+    findSimilarSkillsByName(skill.id, skill.name, session?.user?.id),
     getSkillReview(skill.id),
     hashContent(skill.content),
     getForkCount(skill.id),

@@ -1,6 +1,7 @@
 "use server";
 
 import { db, skills, getSiteSettings, getSkillEmbedding } from "@everyskill/db";
+import { buildVisibilityFilter, visibilitySQL } from "@everyskill/db/lib/visibility";
 import { sql, and, ne, or, eq } from "drizzle-orm";
 import { generateEmbedding } from "./ollama";
 
@@ -37,7 +38,8 @@ function escapeLike(str: string): string {
  */
 async function trySemanticSearch(
   text: string,
-  excludeSkillId?: string
+  excludeSkillId?: string,
+  userId?: string
 ): Promise<SimilarSkillResult[] | null> {
   try {
     const settings = await getSiteSettings();
@@ -66,6 +68,7 @@ async function trySemanticSearch(
         WHERE (se.embedding <=> ${vectorStr}::vector) < ${threshold}
           AND s.id != ${excludeSkillId}
           AND s.status = 'published'
+          AND ${visibilitySQL(userId)}
         ORDER BY se.embedding <=> ${vectorStr}::vector
         LIMIT 5
       `);
@@ -80,6 +83,7 @@ async function trySemanticSearch(
         JOIN skills s ON s.id = se.skill_id
         WHERE (se.embedding <=> ${vectorStr}::vector) < ${threshold}
           AND s.status = 'published'
+          AND ${visibilitySQL(userId)}
         ORDER BY se.embedding <=> ${vectorStr}::vector
         LIMIT 5
       `);
@@ -101,7 +105,10 @@ async function trySemanticSearch(
  * Try semantic similarity for an existing skill using its stored embedding.
  * Returns matches or null if unavailable.
  */
-async function trySemanticSearchBySkill(skillId: string): Promise<SimilarSkillResult[] | null> {
+async function trySemanticSearchBySkill(
+  skillId: string,
+  userId?: string
+): Promise<SimilarSkillResult[] | null> {
   try {
     const settings = await getSiteSettings();
     if (!settings?.semanticSimilarityEnabled) return null;
@@ -124,6 +131,7 @@ async function trySemanticSearchBySkill(skillId: string): Promise<SimilarSkillRe
       WHERE (se.embedding <=> ${vectorStr}::vector) < ${threshold}
         AND s.id != ${skillId}
         AND s.status = 'published'
+        AND ${visibilitySQL(userId)}
       ORDER BY se.embedding <=> ${vectorStr}::vector
       LIMIT 5
     `);
@@ -151,7 +159,8 @@ async function trySemanticSearchBySkill(skillId: string): Promise<SimilarSkillRe
  * giving the UI visibility that the check didn't run.
  */
 export async function checkSimilarSkills(
-  input: CheckSimilarSkillsInput
+  input: CheckSimilarSkillsInput,
+  userId?: string
 ): Promise<SimilarityCheckResult> {
   try {
     if (!db) {
@@ -159,7 +168,11 @@ export async function checkSimilarSkills(
     }
 
     // Try semantic search first
-    const semanticResults = await trySemanticSearch(`${input.name} ${input.description}`);
+    const semanticResults = await trySemanticSearch(
+      `${input.name} ${input.description}`,
+      undefined,
+      userId
+    );
     if (semanticResults) {
       return { similarSkills: semanticResults, checkFailed: false };
     }
@@ -183,6 +196,7 @@ export async function checkSimilarSkills(
       .where(
         and(
           eq(skills.status, "published"),
+          buildVisibilityFilter(userId),
           or(
             sql`${skills.name} ILIKE ${namePattern}`,
             sql`${skills.description} ILIKE ${descPattern}`
@@ -210,13 +224,14 @@ export async function checkSimilarSkills(
  */
 export async function findSimilarSkillsByName(
   skillId: string,
-  skillName: string
+  skillName: string,
+  userId?: string
 ): Promise<SimilarSkillResult[]> {
   try {
     if (!db) return [];
 
     // Try semantic search using stored embedding
-    const semanticResults = await trySemanticSearchBySkill(skillId);
+    const semanticResults = await trySemanticSearchBySkill(skillId, userId);
     if (semanticResults) {
       return semanticResults;
     }
@@ -243,7 +258,14 @@ export async function findSimilarSkillsByName(
         authorId: skills.authorId,
       })
       .from(skills)
-      .where(and(ne(skills.id, skillId), eq(skills.status, "published"), or(...conditions)))
+      .where(
+        and(
+          ne(skills.id, skillId),
+          eq(skills.status, "published"),
+          buildVisibilityFilter(userId),
+          or(...conditions)
+        )
+      )
       .limit(5);
 
     return results.map((r) => ({ ...r, matchType: "name" as const }));

@@ -193,10 +193,13 @@ export async function checkAndCreateSkill(
   // Step 1: check for similar skills (unless skipped)
   const skipCheck = formData.get("_skipCheck") === "true";
   if (!skipCheck) {
-    const result = await checkSimilarSkills({
-      name: parsed.data.name,
-      description: parsed.data.description,
-    });
+    const result = await checkSimilarSkills(
+      {
+        name: parsed.data.name,
+        description: parsed.data.description,
+      },
+      session.user.id
+    );
     if (result.similarSkills.length > 0) {
       return { similarSkills: result.similarSkills };
     }
@@ -340,10 +343,13 @@ export async function checkSimilarity(
   }
 
   // Check for similar skills
-  const result = await checkSimilarSkills({
-    name: parsed.data.name,
-    description: parsed.data.description,
-  });
+  const result = await checkSimilarSkills(
+    {
+      name: parsed.data.name,
+      description: parsed.data.description,
+    },
+    session.user.id
+  );
 
   return { similarSkills: result.similarSkills };
 }

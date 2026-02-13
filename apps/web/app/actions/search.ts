@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@/auth";
 import { searchSkills } from "@/lib/search-skills";
 
 export interface QuickSearchResult {
@@ -19,7 +20,8 @@ export async function quickSearch(query: string): Promise<QuickSearchResult[]> {
     return [];
   }
 
-  const results = await searchSkills({ query: query.trim() });
+  const session = await auth();
+  const results = await searchSkills({ query: query.trim(), userId: session?.user?.id });
 
   return results.slice(0, 10).map((s) => ({
     id: s.id,

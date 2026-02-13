@@ -1,4 +1,5 @@
 import { db, skills, users } from "@everyskill/db";
+import { buildVisibilityFilter } from "@everyskill/db/lib/visibility";
 import { sql, eq, desc, and } from "drizzle-orm";
 
 export interface SearchSkillResult {
@@ -28,6 +29,7 @@ export interface SearchParams {
   qualityTier?: "gold" | "silver" | "bronze";
   sortBy?: "uses" | "quality" | "rating" | "days_saved";
   authorId?: string;
+  userId?: string;
 }
 
 // Quality tier thresholds
@@ -58,6 +60,9 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
 
   // Only show published skills in public search results
   conditions.push(eq(skills.status, "published"));
+
+  // Visibility filter: exclude other users' personal skills
+  conditions.push(buildVisibilityFilter(params.userId));
 
   // Search condition: combine full-text search with ILIKE for substring/prefix matching
   if (params.query && params.query.trim()) {
@@ -202,8 +207,9 @@ export async function getAvailableTags(): Promise<string[]> {
   }
 
   // Use unnest to flatten arrays, then select distinct
+  // Only include tags from tenant-visible skills (personal skills excluded from tag aggregation)
   const result = await db.execute(
-    sql`SELECT DISTINCT unnest(tags) as tag FROM skills WHERE tags IS NOT NULL AND status = 'published' ORDER BY tag`
+    sql`SELECT DISTINCT unnest(tags) as tag FROM skills WHERE tags IS NOT NULL AND status = 'published' AND visibility = 'tenant' ORDER BY tag`
   );
 
   // db.execute returns RowList which is array-like, cast to array for mapping

@@ -45,11 +45,18 @@ export async function forkSkill(
       category: true,
       content: true,
       tags: true,
+      visibility: true,
+      authorId: true,
     },
   });
 
   if (!parent) {
     return { error: "Skill not found" };
+  }
+
+  // Visibility check: cannot fork another user's personal skill
+  if (parent.visibility === "personal" && parent.authorId !== session.user.id) {
+    return { error: "This skill is not available for forking" };
   }
 
   // Create forked skill

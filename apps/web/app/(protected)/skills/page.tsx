@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import { searchSkills } from "@/lib/search-skills";
 import { getUsageTrends } from "@/lib/usage-trends";
 import { getLeaderboard } from "@/lib/leaderboard";
@@ -28,9 +29,12 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   const authorId = params.author || undefined;
   const categories = getCategoriesToFilter(params.type);
 
+  // Get session for visibility filtering
+  const session = await auth();
+
   // Fetch skills and leaderboard
   const [skills, contributors] = await Promise.all([
-    searchSkills({ query, sortBy, authorId, categories }),
+    searchSkills({ query, sortBy, authorId, categories, userId: session?.user?.id }),
     getLeaderboard(10),
   ]);
 
