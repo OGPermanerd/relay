@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getPlatformStats } from "@/lib/platform-stats";
 import { getPlatformStatTrends } from "@/lib/platform-stat-trends";
 import { getTrendingSkills } from "@/lib/trending";
+import { getCompanyApprovedSkills } from "@/lib/company-approved";
 import { getLeaderboard } from "@/lib/leaderboard";
 import {
   getSkillsUsed,
@@ -14,6 +15,7 @@ import {
 import { StatCard } from "@/components/stat-card";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { TrendingSection } from "@/components/trending-section";
+import { CompanyApprovedSection } from "@/components/company-approved-section";
 import { SearchWithDropdown } from "@/components/search-with-dropdown";
 import { HomeTabs } from "@/components/home-tabs";
 import { MyLeverageView } from "@/components/my-leverage-view";
@@ -113,6 +115,7 @@ export default async function HomePage() {
     skillsUsedStats,
     skillsCreatedResult,
     skillsCreatedStats,
+    companyApproved,
   ] = await Promise.all([
     getPlatformStats(),
     getPlatformStatTrends(),
@@ -122,6 +125,7 @@ export default async function HomePage() {
     getSkillsUsedStats(user.id!),
     getSkillsCreated(user.id!),
     getSkillsCreatedStats(user.id!),
+    getCompanyApprovedSkills(6),
   ]);
 
   // Serialize timeline entry timestamps to ISO strings for client component
@@ -190,6 +194,13 @@ export default async function HomePage() {
           icon={<StarIcon />}
         />
       </div>
+
+      {/* Company Recommended */}
+      {companyApproved.length > 0 && (
+        <div className="mb-8">
+          <CompanyApprovedSection skills={companyApproved} />
+        </div>
+      )}
 
       {/* Trending and Leaderboard */}
       <div className="mb-8 grid gap-8 lg:grid-cols-3">
