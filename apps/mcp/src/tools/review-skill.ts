@@ -1,7 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
-import { server } from "../server.js";
 import { db, DEFAULT_TENANT_ID } from "@everyskill/db";
 import { getUserId, getTenantId } from "../auth.js";
 
@@ -330,21 +329,3 @@ export async function handleReviewSkill({ skillId }: { skillId: string }) {
     };
   }
 }
-
-// ---------------------------------------------------------------------------
-// MCP Tool: review_skill (advisory-only)
-// ---------------------------------------------------------------------------
-
-server.registerTool(
-  "review_skill",
-  {
-    description:
-      "Run an advisory AI review on a skill. Returns quality, clarity, and completeness scores (1-10) " +
-      "with actionable suggestions. This is advisory-only — it does NOT change the skill's status. " +
-      "Any authenticated user can review any published skill. Requires EVERYSKILL_API_KEY and ANTHROPIC_API_KEY.",
-    inputSchema: {
-      skillId: z.string().describe("The skill ID to review"),
-    },
-  },
-  async ({ skillId }) => handleReviewSkill({ skillId })
-);

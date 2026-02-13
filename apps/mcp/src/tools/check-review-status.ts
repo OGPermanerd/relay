@@ -1,6 +1,4 @@
-import { z } from "zod";
 import { sql } from "drizzle-orm";
-import { server } from "../server.js";
 import { db } from "@everyskill/db";
 import { getUserId, getTenantId } from "../auth.js";
 
@@ -224,19 +222,3 @@ export async function handleCheckReviewStatus({ skillId }: { skillId?: string })
     ],
   };
 }
-
-server.registerTool(
-  "check_review_status",
-  {
-    description:
-      "Check the review pipeline status and AI review scores for your skills. " +
-      "Without a skillId, returns all skills currently in the review pipeline " +
-      "(pending_review, ai_reviewed, approved, rejected, changes_requested). " +
-      "With a skillId, returns detailed status for that specific skill. " +
-      "Requires EVERYSKILL_API_KEY.",
-    inputSchema: {
-      skillId: z.string().optional().describe("Optional: check a specific skill by ID"),
-    },
-  },
-  async ({ skillId }) => handleCheckReviewStatus({ skillId })
-);

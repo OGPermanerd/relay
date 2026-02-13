@@ -1,6 +1,4 @@
-import { z } from "zod";
 import { sql } from "drizzle-orm";
-import { server } from "../server.js";
 import { db, DEFAULT_TENANT_ID } from "@everyskill/db";
 import { getUserId, getTenantId } from "../auth.js";
 import { generateSkillReview, hashContent, REVIEW_MODEL } from "./review-skill.js";
@@ -356,18 +354,3 @@ export async function handleSubmitForReview({ skillId }: { skillId: string }) {
     };
   }
 }
-
-server.registerTool(
-  "submit_for_review",
-  {
-    description:
-      "Submit a skill for the full review pipeline. Triggers AI review, stores scores, and " +
-      "auto-approves + publishes if all scores meet the threshold (7/10). " +
-      "The skill must be in 'draft' or 'changes_requested' status. " +
-      "Requires EVERYSKILL_API_KEY and ANTHROPIC_API_KEY.",
-    inputSchema: {
-      skillId: z.string().describe("The skill ID to submit for review"),
-    },
-  },
-  async ({ skillId }) => handleSubmitForReview({ skillId })
-);

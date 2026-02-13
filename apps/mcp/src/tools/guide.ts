@@ -1,5 +1,3 @@
-import { z } from "zod";
-import { server } from "../server.js";
 import { db } from "@everyskill/db";
 import { skills } from "@everyskill/db/schema/skills";
 import { eq, and } from "drizzle-orm";
@@ -95,15 +93,3 @@ export async function handleGuideSkill({ skillId }: { skillId: string }) {
     ],
   };
 }
-
-server.registerTool(
-  "guide_skill",
-  {
-    description:
-      "Get usage guidance and implementation instructions for an installed skill. Returns the skill content along with category-specific tips on how to use it effectively.",
-    inputSchema: {
-      skillId: z.string().describe("Skill ID to get guidance for"),
-    },
-  },
-  async ({ skillId }) => handleGuideSkill({ skillId })
-);

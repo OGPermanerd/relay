@@ -1,14 +1,6 @@
-import { z } from "zod";
-import { server } from "../server.js";
 import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
 import { trackUsage } from "../tracking/events.js";
-import {
-  getUserId,
-  getTenantId,
-  shouldNudge,
-  incrementAnonymousCount,
-  getFirstAuthMessage,
-} from "../auth.js";
+import { getTenantId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
 
 export async function handleSearchSkills({
   query,
@@ -78,21 +70,3 @@ export async function handleSearchSkills({
 
   return { content };
 }
-
-server.registerTool(
-  "search_skills",
-  {
-    description:
-      "Search for skills in the EverySkill marketplace by query. Matches against name, description, author name, and tags.",
-    inputSchema: {
-      query: z.string().min(1).describe("Search query (matches name, description, author, tags)"),
-      category: z
-        .enum(["prompt", "workflow", "agent", "mcp"])
-        .optional()
-        .describe("Filter by skill category"),
-      limit: z.number().min(1).max(50).default(10).describe("Maximum number of results"),
-    },
-  },
-  async ({ query, category, limit }) =>
-    handleSearchSkills({ query, category, limit, userId: getUserId() ?? undefined })
-);

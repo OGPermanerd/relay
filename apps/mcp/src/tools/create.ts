@@ -1,13 +1,11 @@
-import { z } from "zod";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
 import { sql } from "drizzle-orm";
-import { server } from "../server.js";
 import { db, DEFAULT_TENANT_ID } from "@everyskill/db";
 import { trackUsage } from "../tracking/events.js";
-import { getUserId, getTenantId } from "../auth.js";
+import { getTenantId } from "../auth.js";
 
 // ---------------------------------------------------------------------------
 // Helpers (self-contained — MCP server runs standalone)
@@ -236,45 +234,3 @@ export async function handleCreateSkill({
     content: [{ type: "text" as const, text: JSON.stringify(responseBody, null, 2) }],
   };
 }
-
-// ---------------------------------------------------------------------------
-// Tool registration
-// ---------------------------------------------------------------------------
-
-server.registerTool(
-  "create_skill",
-  {
-    description:
-      "Create and publish a new skill on EverySkill. Takes a process, workflow, or prompt and publishes it as a reusable skill. The skill is saved locally and published to the marketplace. Requires EVERYSKILL_API_KEY.",
-    inputSchema: {
-      name: z.string().min(1).max(100).describe("Skill name (e.g. 'Git PR Review Automation')"),
-      description: z.string().min(1).max(2000).describe("What this skill does and when to use it"),
-      category: z
-        .enum(["prompt", "workflow", "agent", "mcp"])
-        .describe("Skill type: prompt, workflow, agent, or mcp"),
-      content: z.string().min(1).describe("The full skill content (markdown)"),
-      tags: z.array(z.string()).max(10).optional().describe("Optional tags for discovery (max 10)"),
-      hoursSaved: z
-        .number()
-        .min(0)
-        .max(1000)
-        .default(1)
-        .describe("Estimated hours saved per use (default: 1)"),
-      visibility: z
-        .enum(["tenant", "personal"])
-        .optional()
-        .describe("Skill visibility: 'tenant' (default, visible to org) or 'personal' (only you)"),
-    },
-  },
-  async ({ name, description, category, content, tags, hoursSaved, visibility }) =>
-    handleCreateSkill({
-      name,
-      description,
-      category,
-      content,
-      tags,
-      hoursSaved,
-      userId: getUserId() ?? undefined,
-      visibility,
-    })
-);

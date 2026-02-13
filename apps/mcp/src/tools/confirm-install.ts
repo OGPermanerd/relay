@@ -1,5 +1,3 @@
-import { z } from "zod";
-import { server } from "../server.js";
 import { trackUsage } from "../tracking/events.js";
 import { getUserId } from "../auth.js";
 
@@ -17,15 +15,3 @@ export async function handleConfirmInstall({ skillId }: { skillId: string }) {
     ],
   };
 }
-
-server.registerTool(
-  "confirm_install",
-  {
-    description:
-      "Confirm that a skill has been saved/installed locally. Call this after saving a deployed skill file to log the installation.",
-    inputSchema: {
-      skillId: z.string().describe("The skill ID that was installed"),
-    },
-  },
-  async ({ skillId }) => handleConfirmInstall({ skillId })
-);

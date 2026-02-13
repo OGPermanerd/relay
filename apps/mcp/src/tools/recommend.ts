@@ -1,16 +1,8 @@
-import { z } from "zod";
-import { server } from "../server.js";
 import { semanticSearchSkills } from "@everyskill/db/services/semantic-search";
 import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
 import { generateEmbedding, OLLAMA_DEFAULTS } from "../lib/ollama.js";
 import { trackUsage } from "../tracking/events.js";
-import {
-  getUserId,
-  getTenantId,
-  shouldNudge,
-  incrementAnonymousCount,
-  getFirstAuthMessage,
-} from "../auth.js";
+import { getTenantId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
 
 export async function handleRecommendSkills({
   query,
@@ -110,31 +102,3 @@ export async function handleRecommendSkills({
 
   return { content };
 }
-
-server.registerTool(
-  "recommend_skills",
-  {
-    description:
-      "Discover skills using natural language. Describe what you need and get semantically relevant recommendations. Uses AI-powered search when available, falls back to text matching.",
-    inputSchema: {
-      query: z
-        .string()
-        .min(1)
-        .describe(
-          "Natural language description of what you need (e.g., 'help me write better code reviews')"
-        ),
-      category: z
-        .enum(["prompt", "workflow", "agent", "mcp"])
-        .optional()
-        .describe("Filter by skill category"),
-      limit: z.number().min(1).max(20).default(5).describe("Maximum number of recommendations"),
-    },
-  },
-  async ({ query, category, limit }) =>
-    handleRecommendSkills({
-      query,
-      category,
-      limit,
-      userId: getUserId() ?? undefined,
-    })
-);

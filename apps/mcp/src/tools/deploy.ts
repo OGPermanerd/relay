@@ -1,17 +1,9 @@
-import { z } from "zod";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { server } from "../server.js";
 import { db } from "@everyskill/db";
 import { trackUsage } from "../tracking/events.js";
-import {
-  getUserId,
-  getTenantId,
-  shouldNudge,
-  incrementAnonymousCount,
-  getFirstAuthMessage,
-} from "../auth.js";
+import { getTenantId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
 
 /**
  * Build YAML frontmatter with PostToolUse hooks for automatic usage tracking.
@@ -235,15 +227,3 @@ export async function handleDeploySkill({
 
   return { content };
 }
-
-server.registerTool(
-  "deploy_skill",
-  {
-    description:
-      "Deploy a skill from EverySkill to your local Claude environment. Returns the skill content and filename for you to save. Use the skill ID from list_skills or search_skills results.",
-    inputSchema: {
-      skillId: z.string().describe("Skill ID from search/list results"),
-    },
-  },
-  async ({ skillId }) => handleDeploySkill({ skillId, userId: getUserId() ?? undefined })
-);

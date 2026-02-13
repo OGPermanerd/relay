@@ -1,7 +1,5 @@
-import { z } from "zod";
 import crypto from "node:crypto";
 import { sql } from "drizzle-orm";
-import { server } from "../server.js";
 import { db, DEFAULT_TENANT_ID } from "@everyskill/db";
 import { getUserId, getTenantId } from "../auth.js";
 
@@ -273,29 +271,3 @@ export async function handleUpdateSkill({
     ],
   };
 }
-
-// ---------------------------------------------------------------------------
-// Tool registration
-// ---------------------------------------------------------------------------
-
-server.registerTool(
-  "update_skill",
-  {
-    description:
-      "Push local skill modifications back to EverySkill. If you are the skill author, creates a new version (set to draft for re-review). If not the author, creates a fork. Requires EVERYSKILL_API_KEY.",
-    inputSchema: {
-      skillId: z.string().describe("Skill ID to update"),
-      content: z.string().describe("Updated skill content (full markdown)"),
-      description: z
-        .string()
-        .optional()
-        .describe("Updated description (optional, keeps existing if omitted)"),
-      visibility: z
-        .enum(["tenant", "personal"])
-        .optional()
-        .describe("Skill visibility (optional, only applies when you are the author)"),
-    },
-  },
-  async ({ skillId, content, description, visibility }) =>
-    handleUpdateSkill({ skillId, content, description, visibility })
-);

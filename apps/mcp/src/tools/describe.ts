@@ -1,5 +1,3 @@
-import { z } from "zod";
-import { server } from "../server.js";
 import { db } from "@everyskill/db";
 import { skills } from "@everyskill/db/schema/skills";
 import { ratings } from "@everyskill/db/schema/ratings";
@@ -187,15 +185,3 @@ export async function handleDescribeSkill({
     ],
   };
 }
-
-server.registerTool(
-  "describe_skill",
-  {
-    description:
-      "Get comprehensive details about a skill including AI review scores, ratings, usage statistics, similar skills, and install instructions. Use a skill ID from search_skills or recommend_skills results.",
-    inputSchema: {
-      skillId: z.string().describe("Skill ID to describe"),
-    },
-  },
-  async ({ skillId }) => handleDescribeSkill({ skillId, userId: getUserId() ?? undefined })
-);
