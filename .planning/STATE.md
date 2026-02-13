@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v3.0 Wave 2 in progress (Phase 44: 1/? plans complete)
+**Current focus:** v3.0 Wave 2 in progress (Phase 45: 1/? plans complete)
 
 ## Current Position
 
-Phase: 44 of 48 (Admin Global Skills)
-Plan: 1 of TBD in Phase 44
+Phase: 45 of 48 (Hybrid Search)
+Plan: 1 of TBD in Phase 45
 Status: In progress
-Last activity: 2026-02-13 -- Completed 44-01-PLAN.md (company-approved schema + admin toggle)
+Last activity: 2026-02-13 -- Completed 45-01-PLAN.md (embedding backfill + auto-generation wiring)
 
-Progress: [███████████████████████░░░░░░░] 77% (189/~TBD total)
+Progress: [███████████████████████░░░░░░░] 78% (190/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [███████████████████████
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 189
+- Total plans completed: 190
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 189 plans across 44 phases and 8 milestones
+- 190 plans across 45 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -67,6 +67,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - Notifications page wrapper stripped to fit within shared settings layout
 - Company approval uses per-row form toggle with hidden fields (same pattern as deleteSkillAdminAction)
 - Unapproval clears both approvedAt and approvedBy to null (full audit reset)
+- Embedding backfill uses sequential direct Ollama fetch (10s timeout) to avoid overloading single-threaded model
+- Two embedding generators coexist: embedding-generator.ts (skill create/fork) and generate-skill-embedding.ts (review/approval paths)
 
 ### Pending Todos
 
@@ -77,11 +79,11 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 
 - ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
 - DEFAULT_TENANT_ID hardcoded in 18+ files -- new v3.0 code must not continue this pattern
-- Embedding model decision needed before Phase 45 (Ollama local vs Voyage AI cloud)
+- Embedding model: Ollama nomic-embed-text (768 dims) -- decision resolved in Phase 45
 - Homepage performance budget: sub-400ms TTFB p95 with caching strategy needed for Phase 48
 
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed 44-01-PLAN.md -- Phase 44 in progress
-Resume file: .planning/phases/44-admin-global-skills/44-01-SUMMARY.md
+Stopped at: Completed 45-01-PLAN.md -- Phase 45 in progress
+Resume file: .planning/phases/45-hybrid-search/45-01-SUMMARY.md
