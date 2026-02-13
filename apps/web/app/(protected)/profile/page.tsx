@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getUserStats } from "@/lib/user-stats";
@@ -96,6 +97,44 @@ export default async function ProfilePage() {
         >
           Go to My Skills &rarr;
         </a>
+      </div>
+
+      {/* Settings */}
+      <div className="mt-8">
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">Settings</h2>
+        <div className="rounded-lg bg-white p-6 shadow-sm">
+          <Link
+            href="/settings/preferences"
+            className="flex items-center justify-between border-b border-gray-100 pb-4"
+          >
+            <div>
+              <span className="text-sm font-medium text-blue-600">Preferences</span>
+              <p className="mt-0.5 text-sm text-gray-500">
+                Preferred categories, default sort, workflow notes
+              </p>
+            </div>
+            <span className="text-gray-400">&rarr;</span>
+          </Link>
+          <Link
+            href="/settings/notifications"
+            className="flex items-center justify-between border-b border-gray-100 py-4"
+          >
+            <div>
+              <span className="text-sm font-medium text-blue-600">Notifications</span>
+              <p className="mt-0.5 text-sm text-gray-500">Email and in-app notification settings</p>
+            </div>
+            <span className="text-gray-400">&rarr;</span>
+          </Link>
+          <Link href="/settings/export" className="flex items-center justify-between pt-4">
+            <div>
+              <span className="text-sm font-medium text-blue-600">AI Export</span>
+              <p className="mt-0.5 text-sm text-gray-500">
+                Generate a CLAUDE.md file from your skills
+              </p>
+            </div>
+            <span className="text-gray-400">&rarr;</span>
+          </Link>
+        </div>
       </div>
 
       {/* Account Info */}

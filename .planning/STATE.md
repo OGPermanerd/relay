@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v3.0 Phase 42 -- MCP Unification (Plan 01 complete)
+**Current focus:** v3.0 Phase 43 -- User Preferences (complete)
 
 ## Current Position
 
-Phase: 42 of 48 (MCP Unification)
-Plan: 1 of 2 in current phase (complete: 01)
-Status: In progress
-Last activity: 2026-02-13 -- Completed 42-01-PLAN.md (unified everyskill tool + handler extraction)
+Phase: 43 of 48 (User Preferences)
+Plan: 3 of 3 in current phase (complete: 01, 02, 03)
+Status: Phase complete
+Last activity: 2026-02-13 -- Completed 43-03-PLAN.md (CLAUDE.md export page)
 
-Progress: [████████████████████░░░░░░░░░░] 72% (183/~TBD total)
+Progress: [█████████████████████░░░░░░░░░] 74% (184/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 183
+- Total plans completed: 184
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 183 plans across 43 phases and 8 milestones
+- 184 plans across 43 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -57,6 +57,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - Loom URL accepts /share/, /embed/, /i/ patterns; no index needed (read-only on detail page)
 - Unified everyskill tool uses STRAP action router pattern with exhaustive switch for compile-time safety
 - confirm_install excluded from unified tool (internal follow-up, not user-initiated action)
+- CLAUDE.md export uses hoursSaved column (plan-referenced avgHoursSaved does not exist)
+- Blob + createObjectURL for client-side file download without server round-trip
 
 ### Pending Todos
 
@@ -73,5 +75,5 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed Phase 42 Plan 01 (unified everyskill tool) -- ready for 42-02
-Resume file: .planning/phases/42-mcp-unification/42-02-PLAN.md
+Stopped at: Completed Phase 43 Plan 03 (CLAUDE.md export) -- Phase 43 fully complete
+Resume file: .planning/phases/44-*/44-01-PLAN.md
