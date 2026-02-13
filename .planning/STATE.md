@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v3.0 Wave 1 complete (Phases 40-43) -- ready for Wave 2
+**Current focus:** v3.0 Wave 2 in progress (Phase 44: 1/? plans complete)
 
 ## Current Position
 
-Phase: 43 of 48 (Wave 1 complete)
-Plan: All Wave 1 plans complete (40: 4/4, 41: 2/2, 42: 2/2, 43: 3/3 = 11 plans)
-Status: Wave 1 complete, Wave 2 next (Phases 44, 45)
-Last activity: 2026-02-13 -- Completed Phases 40-43 (Wave 1)
+Phase: 44 of 48 (Admin Global Skills)
+Plan: 1 of TBD in Phase 44
+Status: In progress
+Last activity: 2026-02-13 -- Completed 44-01-PLAN.md (company-approved schema + admin toggle)
 
-Progress: [██████████████████████░░░░░░░░] 76% (188/~TBD total)
+Progress: [███████████████████████░░░░░░░] 77% (189/~TBD total)
 
 ## Milestones
 
@@ -30,12 +30,12 @@ Progress: [██████████████████████░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 188
+- Total plans completed: 189
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 188 plans across 43 phases and 8 milestones
+- 189 plans across 44 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -65,6 +65,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - Blob + createObjectURL for client-side file download without server round-trip
 - Settings layout is server component with client SettingsNav for active tab highlighting via usePathname
 - Notifications page wrapper stripped to fit within shared settings layout
+- Company approval uses per-row form toggle with hidden fields (same pattern as deleteSkillAdminAction)
+- Unapproval clears both approvedAt and approvedBy to null (full audit reset)
 
 ### Pending Todos
 
@@ -81,5 +83,5 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed Wave 1 (Phases 40-43) -- ready for Wave 2 (Phases 44, 45)
-Resume file: .planning/ROADMAP.md (next phase planning)
+Stopped at: Completed 44-01-PLAN.md -- Phase 44 in progress
+Resume file: .planning/phases/44-admin-global-skills/44-01-SUMMARY.md
