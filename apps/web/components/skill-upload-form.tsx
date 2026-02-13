@@ -27,6 +27,7 @@ export function SkillUploadForm() {
     usageInstructions: "",
     content: "",
     hoursSaved: "1",
+    visibility: "tenant",
   });
 
   const setField = useCallback((name: string, value: string) => {
@@ -190,6 +191,43 @@ export function SkillUploadForm() {
             </select>
             {errors?.category && <p className="mt-1 text-sm text-red-600">{errors.category[0]}</p>}
           </div>
+
+          {/* Visibility field */}
+          <fieldset>
+            <legend className="block text-sm font-medium text-gray-700">Visibility</legend>
+            <div className="mt-2 flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="visibility"
+                  value="tenant"
+                  checked={fields.visibility === "tenant"}
+                  onChange={(e) => setField("visibility", e.target.value)}
+                  disabled={isPending}
+                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-900">Team</span>
+                  <p className="text-xs text-gray-500">Everyone in your org can see this</p>
+                </div>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="visibility"
+                  value="personal"
+                  checked={fields.visibility === "personal"}
+                  onChange={(e) => setField("visibility", e.target.value)}
+                  disabled={isPending}
+                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-900">Personal</span>
+                  <p className="text-xs text-gray-500">Only you can see this</p>
+                </div>
+              </label>
+            </div>
+          </fieldset>
 
           {/* Tags field */}
           <div>
