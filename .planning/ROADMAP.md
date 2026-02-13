@@ -245,10 +245,11 @@ Plans:
   1. All search queries are logged with result counts in a fire-and-forget manner that adds no perceptible latency to search
   2. Admin dashboard displays zero-result queries, highlighting terms where users searched but found nothing (skill gap signals)
   3. Admin dashboard displays most-searched terms and trending queries, sorted by frequency and recency
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 46-01: TBD
+- [ ] 46-01-PLAN.md — Schema, service, migration, and fire-and-forget logging in all search paths
+- [ ] 46-02-PLAN.md — Admin search analytics dashboard with summary cards and tabbed query tables
 
 #### Phase 47: Homepage Research
 **Goal**: Data-driven evaluation of homepage layout options before committing to implementation
@@ -320,7 +321,7 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 43. User Preferences | v3.0 | 3/3 | Complete | 2026-02-13 |
 | 44. Admin Global Skills | v3.0 | 2/2 | Complete | 2026-02-13 |
 | 45. Hybrid Search | v3.0 | 3/3 | Complete | 2026-02-13 |
-| 46. Search Analytics | v3.0 | 0/TBD | Not started | - |
+| 46. Search Analytics | v3.0 | 0/2 | Not started | - |
 | 47. Homepage Research | v3.0 | 0/1 | Not started | - |
 | 48. Homepage Redesign | v3.0 | 0/TBD | Not started | - |
 
