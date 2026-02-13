@@ -12,6 +12,7 @@ const adminNavItems = [
   { label: "Merge", href: "/admin/merge" },
   { label: "API Keys", href: "/admin/keys" },
   { label: "Compliance", href: "/admin/compliance" },
+  { label: "Search", href: "/admin/search" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
