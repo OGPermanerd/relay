@@ -37,82 +37,83 @@ test.describe("Authentication Flow", () => {
 });
 
 // Authenticated home page tests (use default authenticated storage state)
-test.describe("Home Page Tabs", () => {
-  test("should show Browse Skills tab by default with CTAs", async ({ page }) => {
+test.describe("Home Page", () => {
+  test("should show search-first hero with discovery search", async ({ page }) => {
     await page.goto("/");
 
-    // Check for Browse Skills tab button
-    await expect(page.getByRole("button", { name: /Browse Skills/i })).toBeVisible();
+    // Welcome heading should be visible
+    await expect(page.getByRole("heading", { name: /Welcome back/i })).toBeVisible();
 
-    // The browse content should be visible (e.g., "Trending Skills" heading)
+    // Discovery search input should be visible
+    await expect(page.getByPlaceholder(/Describe what you need/i)).toBeVisible();
+  });
+
+  test("should show category tiles", async ({ page }) => {
+    await page.goto("/");
+
+    // Category tile labels should be visible (use heading role for specificity)
+    await expect(page.getByRole("heading", { name: "Prompts" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Workflows" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Agents" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "MCP Tools" })).toBeVisible();
+  });
+
+  test("should show trending skills section", async ({ page }) => {
+    await page.goto("/");
+
+    // Trending Skills heading should be visible
     await expect(page.getByRole("heading", { name: "Trending Skills" })).toBeVisible();
+  });
 
-    // CTA cards should be visible (use link roles to avoid matching empty-state text)
+  test("should show compact stats bar", async ({ page }) => {
+    await page.goto("/");
+
+    // Stats bar should show key metrics inline text (use specific patterns to avoid ambiguity)
+    await expect(page.getByText(/\d+ contributors/i)).toBeVisible();
+    await expect(page.getByText(/\d[\d.]* FTE years saved/i)).toBeVisible();
+  });
+
+  test("should show top contributors leaderboard", async ({ page }) => {
+    await page.goto("/");
+
+    // Top Contributors heading should be visible
+    await expect(page.getByRole("heading", { name: "Top Contributors" })).toBeVisible();
+  });
+
+  test("should show mini leverage widget with Your Impact", async ({ page }) => {
+    await page.goto("/");
+
+    // Your Impact heading should be visible
+    await expect(page.getByText("Your Impact")).toBeVisible();
+
+    // Link to full leverage page
+    await expect(page.getByRole("link", { name: /View full details/i })).toBeVisible();
+  });
+
+  test("should show CTA cards for sharing and browsing skills", async ({ page }) => {
+    await page.goto("/");
+
+    // CTA cards should be visible
     await expect(page.getByRole("link", { name: /Create Leverage.*Share a Skill/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Get Leverage.*Install a Skill/i })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Get Leverage.*Browse All Skills/i })
+    ).toBeVisible();
   });
 
-  test("should show My Leverage tab when clicked", async ({ page }) => {
+  test("should not have any tab navigation", async ({ page }) => {
     await page.goto("/");
 
-    // Click the My Leverage tab
-    await page.getByRole("button", { name: /My Leverage/i }).click();
-
-    // URL should update with ?view=leverage
-    await expect(page).toHaveURL(/[?&]view=leverage/);
-
-    // Leverage content should be visible (use heading role to avoid ambiguity with stat card labels)
-    await expect(page.getByRole("heading", { name: "Skills Used" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Skills Created" })).toBeVisible();
+    // No tab buttons should exist (old UI had Browse Skills and My Leverage tabs)
+    await expect(page.getByRole("button", { name: /Browse Skills/i })).not.toBeVisible();
+    await expect(page.getByRole("button", { name: /My Leverage/i })).not.toBeVisible();
   });
 
-  test("should load My Leverage tab directly via URL", async ({ page }) => {
-    await page.goto("/?view=leverage");
+  test("should have category tiles that link to filtered browse", async ({ page }) => {
+    await page.goto("/");
 
-    // My Leverage content should be visible (use heading role to avoid ambiguity)
-    await expect(page.getByRole("heading", { name: "Skills Used" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Skills Created" })).toBeVisible();
-  });
-
-  test("should show Skills Used and Skills Created headings on leverage tab", async ({ page }) => {
-    await page.goto("/?view=leverage");
-
-    // Both section headings should be visible
-    const skillsUsedHeading = page.locator("h2").filter({ hasText: "Skills Used" });
-    const skillsCreatedHeading = page.locator("h2").filter({ hasText: "Skills Created" });
-
-    await expect(skillsUsedHeading).toBeVisible();
-    await expect(skillsCreatedHeading).toBeVisible();
-  });
-
-  test("should render stat cards on leverage tab", async ({ page }) => {
-    await page.goto("/?view=leverage");
-
-    // StatCard labels from the MyLeverageView component
-    // Skills Used section stat cards
-    await expect(page.getByText("Years Saved", { exact: true })).toBeVisible();
-    await expect(page.getByText("Total Actions")).toBeVisible();
-    await expect(page.getByText("Most Used")).toBeVisible();
-
-    // Skills Created section stat cards
-    await expect(page.getByText("Skills Published")).toBeVisible();
-    await expect(page.getByText("Years Saved by Others")).toBeVisible();
-    await expect(page.getByText("Unique Users")).toBeVisible();
-  });
-
-  test("should switch back to Browse Skills from leverage tab", async ({ page }) => {
-    await page.goto("/?view=leverage");
-
-    // Verify leverage content is showing
-    await expect(page.getByText("Years Saved", { exact: true })).toBeVisible();
-
-    // Click Browse Skills tab
-    await page.getByRole("button", { name: /Browse Skills/i }).click();
-
-    // Browse content should now be visible
-    await expect(page.getByRole("heading", { name: "Trending Skills" })).toBeVisible();
-
-    // Leverage-specific content should not be visible
-    await expect(page.getByText("Years Saved", { exact: true })).not.toBeVisible();
+    // Category tiles should link to /skills?category=X
+    const promptLink = page.getByRole("link", { name: /Prompts.*skills/i });
+    await expect(promptLink).toBeVisible();
+    await expect(promptLink).toHaveAttribute("href", "/skills?category=prompt");
   });
 });
