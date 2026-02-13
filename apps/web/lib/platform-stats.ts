@@ -42,7 +42,13 @@ export async function getPlatformStats(): Promise<PlatformStats> {
         totalFteDays: sql<number>`COALESCE(SUM(${skills.totalUses} * ${skills.hoursSaved}) / 8.0, 0)`,
       })
       .from(skills)
-      .where(and(isNotNull(skills.publishedVersionId), eq(skills.status, "published"))),
+      .where(
+        and(
+          isNotNull(skills.publishedVersionId),
+          eq(skills.status, "published"),
+          eq(skills.visibility, "tenant")
+        )
+      ),
 
     // Query 2: Count unique contributors with published skills
     db
@@ -51,7 +57,13 @@ export async function getPlatformStats(): Promise<PlatformStats> {
       })
       .from(users)
       .innerJoin(skills, eq(skills.authorId, users.id))
-      .where(and(isNotNull(skills.publishedVersionId), eq(skills.status, "published"))),
+      .where(
+        and(
+          isNotNull(skills.publishedVersionId),
+          eq(skills.status, "published"),
+          eq(skills.visibility, "tenant")
+        )
+      ),
 
     // Query 3: Average rating across all ratings
     db

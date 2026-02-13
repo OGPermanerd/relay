@@ -56,6 +56,7 @@ export async function getLeaderboard(limit: number = 10): Promise<LeaderboardEnt
       LEFT JOIN skills s ON s.author_id = u.id
         AND s.published_version_id IS NOT NULL
         AND s.status = 'published'
+        AND s.visibility = 'tenant'
       GROUP BY u.id, u.name, u.image
     )
     SELECT
