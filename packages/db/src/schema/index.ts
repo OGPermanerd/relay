@@ -21,3 +21,4 @@ export * from "./notifications";
 export * from "./notification-preferences";
 export * from "./review-decisions";
 export * from "./user-preferences";
+export * from "./search-queries";

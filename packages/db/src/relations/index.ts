@@ -14,6 +14,7 @@ import {
   notificationPreferences,
   reviewDecisions,
   userPreferences,
+  searchQueries,
 } from "../schema";
 
 /**
@@ -117,6 +118,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   notificationPreferences: many(notificationPreferences),
   userPreferences: many(userPreferences),
   reviewDecisions: many(reviewDecisions),
+  searchQueries: many(searchQueries),
 }));
 
 /**
@@ -171,6 +173,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   notificationPreferences: many(notificationPreferences),
   userPreferences: many(userPreferences),
   reviewDecisions: many(reviewDecisions),
+  searchQueries: many(searchQueries),
 }));
 
 /**
@@ -273,6 +276,22 @@ export const reviewDecisionsRelations = relations(reviewDecisions, ({ one }) => 
   }),
   reviewer: one(users, {
     fields: [reviewDecisions.reviewerId],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * SearchQueries relations
+ * - tenant: many-to-one with tenants
+ * - user: many-to-one with users (nullable)
+ */
+export const searchQueriesRelations = relations(searchQueries, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [searchQueries.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [searchQueries.userId],
     references: [users.id],
   }),
 }));

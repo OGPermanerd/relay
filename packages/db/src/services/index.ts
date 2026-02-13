@@ -70,3 +70,11 @@ export { semanticSearchSkills, type SemanticSearchResult } from "./semantic-sear
 export { runIntegrityCheck, type IntegrityReport, type IntegrityIssue } from "./integrity-check";
 export { getOrCreateUserPreferences, updateUserPreferences } from "./user-preferences";
 export { hybridSearchSkills, keywordSearchSkills, type HybridSearchResult } from "./hybrid-search";
+export {
+  logSearchQuery,
+  getSearchSummaryStats,
+  getTopQueries,
+  getZeroResultQueries,
+  getTrendingQueries,
+  type SearchQueryEntry,
+} from "./search-analytics";
