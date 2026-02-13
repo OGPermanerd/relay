@@ -28,6 +28,7 @@ export function SkillUploadForm() {
     content: "",
     hoursSaved: "1",
     visibility: "tenant",
+    loomUrl: "",
   });
 
   const setField = useCallback((name: string, value: string) => {
@@ -294,6 +295,27 @@ export function SkillUploadForm() {
             {errors?.hoursSaved && (
               <p className="mt-1 text-sm text-red-600">{errors.hoursSaved[0]}</p>
             )}
+          </div>
+
+          {/* Loom Video URL (optional) */}
+          <div>
+            <label htmlFor="loomUrl" className="block text-sm font-medium text-gray-700">
+              Demo Video (Loom)
+            </label>
+            <input
+              type="url"
+              id="loomUrl"
+              name="loomUrl"
+              disabled={isPending}
+              value={fields.loomUrl}
+              onChange={(e) => setField("loomUrl", e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
+              placeholder="https://www.loom.com/share/..."
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              Optional: Add a Loom video demo of this skill
+            </p>
+            {errors?.loomUrl && <p className="mt-1 text-sm text-red-600">{errors.loomUrl[0]}</p>}
           </div>
 
           {/* Content field */}

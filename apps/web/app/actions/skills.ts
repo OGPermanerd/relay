@@ -96,6 +96,15 @@ const createSkillSchema = z.object({
     .default(1),
   content: z.string().min(1, "Content is required"),
   visibility: z.enum(["tenant", "personal"]).default("tenant"),
+  loomUrl: z
+    .string()
+    .url("Must be a valid URL")
+    .regex(
+      /^https?:\/\/(www\.)?loom\.com\/(share|embed|i)\/[a-f0-9]{32}(\?.*)?$/,
+      "Must be a Loom video URL (e.g. https://www.loom.com/share/...)"
+    )
+    .optional()
+    .or(z.literal("")),
 });
 
 import { checkSimilarSkills } from "@/lib/similar-skills";
@@ -181,6 +190,7 @@ export async function checkAndCreateSkill(
     hoursSaved: formData.get("hoursSaved"),
     content: formData.get("content"),
     visibility: formData.get("visibility"),
+    loomUrl: formData.get("loomUrl"),
   });
 
   if (!parsed.success) {
@@ -230,6 +240,7 @@ export async function checkAndCreateSkill(
         forkedFromId: variationOf || undefined,
         status: "draft",
         visibility,
+        loomUrl: parsed.data.loomUrl || null,
       })
       .returning({ id: skills.id, slug: skills.slug });
     newSkill = inserted;
@@ -334,6 +345,7 @@ export async function checkSimilarity(
     hoursSaved: formData.get("hoursSaved"),
     content: formData.get("content"),
     visibility: formData.get("visibility"),
+    loomUrl: formData.get("loomUrl"),
   });
 
   if (!parsed.success) {
@@ -374,6 +386,7 @@ export async function createSkill(
     hoursSaved: formData.get("hoursSaved"),
     content: formData.get("content"),
     visibility: formData.get("visibility"),
+    loomUrl: formData.get("loomUrl"),
   });
 
   if (!parsed.success) {
@@ -419,6 +432,7 @@ export async function createSkill(
         authorId: session.user.id,
         status: "draft",
         visibility,
+        loomUrl: parsed.data.loomUrl || null,
       })
       .returning({ id: skills.id, slug: skills.slug });
 
