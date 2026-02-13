@@ -56,6 +56,11 @@ export const skillsRelations = relations(skills, ({ one, many }) => ({
   }),
   forks: many(skills, { relationName: "forks" }),
   reviewDecisions: many(reviewDecisions),
+  approvedByUser: one(users, {
+    fields: [skills.approvedBy],
+    references: [users.id],
+    relationName: "approvedSkills",
+  }),
 }));
 
 /**

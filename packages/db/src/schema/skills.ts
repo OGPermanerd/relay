@@ -3,6 +3,7 @@ import {
   text,
   timestamp,
   integer,
+  boolean,
   index,
   uniqueIndex,
   customType,
@@ -47,6 +48,11 @@ export const skills = pgTable(
     statusMessage: text("status_message"),
     visibility: text("visibility").notNull().default("tenant"), // "tenant" or "personal"
     loomUrl: text("loom_url"), // Optional Loom video demo URL
+
+    // Company approval tracking
+    companyApproved: boolean("company_approved").notNull().default(false),
+    approvedAt: timestamp("approved_at"),
+    approvedBy: text("approved_by").references(() => users.id),
 
     // Version references (no FK due to circular dependency with skillVersions)
     publishedVersionId: text("published_version_id"), // Currently published version
