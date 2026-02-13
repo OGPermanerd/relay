@@ -273,12 +273,11 @@ Plans:
   3. Trending skills and leaderboard appear as visual cards (not tables), with platform metrics displayed as a condensed banner
   4. Homepage maintains sub-400ms TTFB at p95 with caching for slow queries (recommendations, trending, platform stats)
   5. Selected homepage variant is implemented with the ability to A/B test against the current layout
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 48-01: TBD
-- [ ] 48-02: TBD
-- [ ] 48-03: TBD
+- [ ] 48-01-PLAN.md — Core homepage restructure: remove tabs, add category tiles, compact stats bar, reorder sections
+- [ ] 48-02-PLAN.md — Dedicated /my-leverage page for full leverage dashboard
 
 #### Dependency Graph
 
@@ -323,9 +322,9 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 45. Hybrid Search | v3.0 | 3/3 | Complete | 2026-02-13 |
 | 46. Search Analytics | v3.0 | 0/2 | Not started | - |
 | 47. Homepage Research | v3.0 | 1/1 | Complete | 2026-02-13 |
-| 48. Homepage Redesign | v3.0 | 0/TBD | Not started | - |
+| 48. Homepage Redesign | v3.0 | 0/2 | Not started | - |
 
-**Total: 193 plans completed across 45 phases and 8 milestones. v3.0: 18/~TBD plans done, 6/9 phases complete.**
+**Total: 193 plans completed across 45 phases and 8 milestones. v3.0: 18/~20 plans done, 6/9 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
