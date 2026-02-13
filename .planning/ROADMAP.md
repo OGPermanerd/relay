@@ -156,11 +156,13 @@ Total: 23 plans completed. 44 requirements across 6 categories.
   2. User browsing skills never sees another user's personal skills — only their own personal skills and all tenant-visible skills appear
   3. MCP search and recommend tools return only skills the authenticated user is allowed to see
   4. All existing skills have "tenant" visibility after migration, with no change in browse behavior
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 40-01: TBD
-- [ ] 40-02: TBD
+- [ ] 40-01-PLAN.md — Schema, migration, and visibility filter helpers
+- [ ] 40-02-PLAN.md — Apply visibility to all web read/query paths
+- [ ] 40-03-PLAN.md — Visibility UI selector and write path integration
+- [ ] 40-04-PLAN.md — MCP tools visibility enforcement
 
 #### Phase 41: Loom Video Integration
 **Goal**: Authors can add video demos to skills, and viewers watch them inline
@@ -308,7 +310,7 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
-| 40. Visibility Scoping | v3.0 | 0/TBD | Not started | - |
+| 40. Visibility Scoping | v3.0 | 0/4 | Planning | - |
 | 41. Loom Video | v3.0 | 0/TBD | Not started | - |
 | 42. MCP Unification | v3.0 | 0/TBD | Not started | - |
 | 43. User Preferences | v3.0 | 0/TBD | Not started | - |
