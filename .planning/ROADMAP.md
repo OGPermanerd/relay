@@ -186,10 +186,11 @@ Plans:
   1. User can invoke `everyskill` as a single MCP tool with sub-commands (search, install, describe) from any AI client
   2. All existing MCP functionality (search, recommend, install, describe, review, drift check) works identically through the unified tool wrapper
   3. AI clients proactively suggest the `everyskill` tool when users ask skill-related questions, due to the tool description being crafted for discoverability
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 42-01: TBD
+- [ ] 42-01-PLAN.md — Extract inline handlers, remove log_usage, create unified everyskill tool with STRAP action router
+- [ ] 42-02-PLAN.md — Centralize legacy deprecated wrappers, clean handler files, add routing tests
 
 #### Phase 43: User Preferences
 **Goal**: Users configure personal settings that persist server-side and export as portable AI configuration
@@ -314,7 +315,7 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
 | 40. Visibility Scoping | v3.0 | 4/4 | Complete | 2026-02-13 |
 | 41. Loom Video | v3.0 | 0/2 | Planned | - |
-| 42. MCP Unification | v3.0 | 0/TBD | Not started | - |
+| 42. MCP Unification | v3.0 | 0/2 | Planned | - |
 | 43. User Preferences | v3.0 | 0/3 | Planned | - |
 | 44. Admin Global Skills | v3.0 | 0/TBD | Not started | - |
 | 45. Hybrid Search | v3.0 | 0/TBD | Not started | - |
