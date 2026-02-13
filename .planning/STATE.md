@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v3.0 Wave 2 in progress (Phase 45: 2/? plans complete)
+**Current focus:** v3.0 Wave 2 in progress (Phase 44: 2/2 plans complete, Phase 45: 2/? plans complete)
 
 ## Current Position
 
@@ -30,12 +30,12 @@ Progress: [███████████████████████
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 191
+- Total plans completed: 192
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 191 plans across 45 phases and 8 milestones
+- 192 plans across 45 phases and 8 milestones
 - ~17,000 LOC TypeScript
 - 8 days total development time
 
@@ -67,6 +67,8 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 - Notifications page wrapper stripped to fit within shared settings layout
 - Company approval uses per-row form toggle with hidden fields (same pattern as deleteSkillAdminAction)
 - Unapproval clears both approvedAt and approvedBy to null (full audit reset)
+- CompanyApprovedBadge: indigo shield-check, sm=icon only, md=icon+text; displayed on detail, browse, trending
+- Homepage Company Recommended section hidden when no approved skills (renders null from empty array)
 - Embedding backfill uses sequential direct Ollama fetch (10s timeout) to avoid overloading single-threaded model
 - Two embedding generators coexist: embedding-generator.ts (skill create/fork) and generate-skill-embedding.ts (review/approval paths)
 - Hybrid search: RRF k=60 with FULL OUTER JOIN, fetch limit+5 for post-preference-boost reranking
