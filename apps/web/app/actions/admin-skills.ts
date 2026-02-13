@@ -11,6 +11,7 @@ export type AdminSkill = {
   name: string;
   slug: string;
   totalUses: number;
+  companyApproved: boolean;
   authorName: string | null;
   createdAt: string;
 };
@@ -30,6 +31,7 @@ export async function getAdminSkills(): Promise<AdminSkill[]> {
       name: skills.name,
       slug: skills.slug,
       totalUses: skills.totalUses,
+      companyApproved: skills.companyApproved,
       authorName: users.name,
       createdAt: skills.createdAt,
     })
@@ -42,6 +44,7 @@ export async function getAdminSkills(): Promise<AdminSkill[]> {
     name: r.name,
     slug: r.slug,
     totalUses: r.totalUses,
+    companyApproved: r.companyApproved,
     authorName: r.authorName,
     createdAt: r.createdAt.toISOString(),
   }));
@@ -124,4 +127,53 @@ export async function bulkMergeSkillsAction(
   }
 
   return { success: true, merged };
+}
+
+export type ToggleApprovalState = {
+  success?: boolean;
+  error?: string;
+};
+
+export async function toggleCompanyApproval(
+  prevState: ToggleApprovalState,
+  formData: FormData
+): Promise<ToggleApprovalState> {
+  const session = await auth();
+  if (!session?.user?.id || !isAdmin(session)) {
+    return { error: "Unauthorized" };
+  }
+
+  const skillId = formData.get("skillId") as string;
+  const currentlyApproved = formData.get("currentlyApproved") === "true";
+
+  if (!skillId) {
+    return { error: "Skill ID is required" };
+  }
+
+  if (!db) return { error: "Database not available" };
+
+  // Toggle: if currently approved, remove approval; otherwise, approve
+  if (currentlyApproved) {
+    await db
+      .update(skills)
+      .set({
+        companyApproved: false,
+        approvedAt: null,
+        approvedBy: null,
+      })
+      .where(eq(skills.id, skillId));
+  } else {
+    await db
+      .update(skills)
+      .set({
+        companyApproved: true,
+        approvedAt: new Date(),
+        approvedBy: session.user.id,
+      })
+      .where(eq(skills.id, skillId));
+  }
+
+  revalidatePath("/admin/skills");
+  revalidatePath("/"); // Homepage Company Recommended section
+  return { success: true };
 }
