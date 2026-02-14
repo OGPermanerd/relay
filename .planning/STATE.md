@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 ## Current Position
 
 Phase: 49 of 54 (Tenant Resolution Cleanup)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-14 -- v4.0 roadmap created (6 phases, 23 requirements)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-14 -- Completed 49-01-PLAN.md (JWT tenantId + utility function params)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 33%
 
 ## Milestones
 
@@ -31,12 +31,12 @@ Progress: [░░░░░░░░░░] 0%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 197
+- Total plans completed: 198
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 197 plans across 48 phases and 8 milestones
+- 198 plans across 49 phases and 8 milestones
 - ~18,000 LOC TypeScript
 - 8 days total development time
 
@@ -54,6 +54,10 @@ Key v4.0 research decisions:
 - Analyze and discard: raw metadata only in memory, persist only aggregate stats
 - ~$0.17-0.20 per scan cost (Claude Sonnet for classification)
 
+Phase 49 decisions:
+- Transitional `session.user.tenantId ?? DEFAULT_TENANT_ID` pattern in callers (Plan 02 will make strict)
+- Utility functions (embedding-generator, greeting-pool) accept tenantId as parameter, never hardcode it
+
 ### Pending Todos
 
 - AI-Independence -- platform-agnostic skill translation (future milestone)
@@ -69,5 +73,5 @@ Key v4.0 research decisions:
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: v4.0 roadmap created -- 6 phases mapped to 23 requirements
-Resume file: .planning/ROADMAP.md
+Stopped at: Phase 49 Plan 01 complete -- JWT tenantId + utility function params
+Resume file: .planning/phases/49-tenant-resolution-cleanup/49-02-PLAN.md
