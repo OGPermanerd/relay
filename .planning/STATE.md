@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 ## Current Position
 
 Phase: 51 of 54 (Email Analysis Pipeline)
-Plan: 1 of 5 in current phase (51-01-PLAN.md completed)
+Plan: 4 of 5 in current phase (51-04-PLAN.md completed)
 Status: In progress
-Last activity: 2026-02-14 -- Completed 51-01-PLAN.md (Email diagnostics schema and service)
+Last activity: 2026-02-14 -- Completed 51-04-PLAN.md (Time estimator + aggregator + server action orchestrator)
 
-Progress: [███████████░] 20%
+Progress: [███████████░] 80%
 
 ## Milestones
 
@@ -31,12 +31,12 @@ Progress: [███████████░] 20%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 203
+- Total plans completed: 204
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 204 plans across 51 phases and 9 milestones
+- 205 plans across 51 phases and 9 milestones
 - ~18,900 LOC TypeScript
 - 8 days total development time
 
@@ -93,6 +93,13 @@ Phase 51 decisions (Plan 03):
 - Privacy-first AI input: only domain, subject preview (100 chars), metadata flags (no full addresses or content)
 - Fallback to "direct-message" category if AI response missing email ID
 
+Phase 51 decisions (Plan 04):
+- Time weights based on industry research: newsletters 0.5min, automated-notification 0.3min, meeting-invite 2min, direct-message 3min, internal-thread 4min, vendor-external 3.5min, support-ticket 5min
+- Pattern insights compute busiest hour (0-23) and day of week from message timestamps
+- Server action processes 90 days / 5000 max messages entirely in-memory before saving aggregates
+- Raw email metadata (From, Subject, Date) never persisted - only category counts and time estimates stored
+- Error handling for GmailNotConnectedError and GmailTokenRevokedError with user-friendly messages
+
 ### Pending Todos
 
 - AI-Independence -- platform-agnostic skill translation (future milestone)
@@ -108,5 +115,5 @@ Phase 51 decisions (Plan 03):
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 51 Plan 01 complete -- Email diagnostics schema and service
-Resume file: .planning/phases/51-email-analysis-pipeline/51-02-PLAN.md (Gmail API client)
+Stopped at: Phase 51 Plan 04 complete -- Time estimator + aggregator + server action orchestrator
+Resume file: .planning/phases/51-email-analysis-pipeline/51-05-PLAN.md (E2E test for full pipeline)
