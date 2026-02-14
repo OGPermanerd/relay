@@ -7,9 +7,6 @@ import {
 } from "@everyskill/db/services/user-preferences";
 import { userPreferencesSchema, SKILL_CATEGORIES } from "@/lib/preferences-defaults";
 
-// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
 export type UserPreferencesResult = {
   preferredCategories: string[];
   defaultSort: string;
@@ -24,7 +21,8 @@ export async function getMyUserPreferences(): Promise<UserPreferencesResult> {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const tenantId = session.user.tenantId || DEFAULT_TENANT_ID;
+  const tenantId = session.user.tenantId;
+  if (!tenantId) return null;
   const prefs = await getOrCreateUserPreferences(session.user.id, tenantId);
   if (!prefs) return null;
 

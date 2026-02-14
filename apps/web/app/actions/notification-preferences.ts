@@ -6,9 +6,6 @@ import {
   updatePreferences,
 } from "@everyskill/db/services/notification-preferences";
 
-// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
 export type PreferencesResult = {
   groupingProposalEmail: boolean;
   groupingProposalInApp: boolean;
@@ -27,7 +24,8 @@ export async function getMyPreferences(): Promise<PreferencesResult> {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const tenantId = session.user.tenantId || DEFAULT_TENANT_ID;
+  const tenantId = session.user.tenantId;
+  if (!tenantId) return null;
   const prefs = await getOrCreatePreferences(session.user.id, tenantId);
   if (!prefs) return null;
 

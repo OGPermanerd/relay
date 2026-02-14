@@ -9,9 +9,6 @@ import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
 const nameSchema = z
   .string()
   .min(1, "Name is required")
@@ -27,6 +24,11 @@ export async function generateApiKey(
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "You must be signed in to generate an API key" };
+  }
+
+  const tenantId = session.user.tenantId;
+  if (!tenantId) {
+    return { error: "Tenant not resolved" };
   }
 
   const rawName = formData.get("name");
@@ -55,7 +57,7 @@ export async function generateApiKey(
 
   try {
     await db.insert(apiKeys).values({
-      tenantId: DEFAULT_TENANT_ID,
+      tenantId,
       userId: targetUserId,
       keyHash,
       keyPrefix,
@@ -120,6 +122,11 @@ export async function rotateApiKey(formData: FormData): Promise<{ key?: string; 
     return { error: "You must be signed in to rotate API keys" };
   }
 
+  const rotateTenantId = session.user.tenantId;
+  if (!rotateTenantId) {
+    return { error: "Tenant not resolved" };
+  }
+
   if (!db) {
     return { error: "Database not configured" };
   }
@@ -137,7 +144,7 @@ export async function rotateApiKey(formData: FormData): Promise<{ key?: string; 
 
   try {
     await db.insert(apiKeys).values({
-      tenantId: DEFAULT_TENANT_ID,
+      tenantId: rotateTenantId,
       userId: session.user.id,
       keyHash,
       keyPrefix,

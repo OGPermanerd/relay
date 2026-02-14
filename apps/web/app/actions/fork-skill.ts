@@ -10,9 +10,6 @@ import { generateUniqueSlug } from "@/lib/slug";
 import { generateSkillEmbedding } from "@/lib/embedding-generator";
 import { hashContent } from "@/lib/content-hash";
 
-// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
 export type ForkSkillState = {
   error?: string;
 };
@@ -28,6 +25,11 @@ export async function forkSkill(
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "You must be signed in to fork a skill" };
+  }
+
+  const tenantId = session.user.tenantId;
+  if (!tenantId) {
+    return { error: "Tenant not resolved" };
   }
 
   const skillId = formData.get("skillId") as string;
@@ -60,7 +62,6 @@ export async function forkSkill(
   }
 
   // Create forked skill
-  const tenantId = session.user.tenantId ?? DEFAULT_TENANT_ID;
   const forkName = `${parent.name} (Fork)`;
   const slug = await generateUniqueSlug(forkName, db);
 
@@ -76,7 +77,7 @@ export async function forkSkill(
     const [inserted] = await db
       .insert(skills)
       .values({
-        tenantId: DEFAULT_TENANT_ID,
+        tenantId,
         name: forkName,
         slug,
         description: parent.description,
@@ -109,7 +110,7 @@ export async function forkSkill(
       .insert(skillVersions)
       .values({
         id: versionId,
-        tenantId: DEFAULT_TENANT_ID,
+        tenantId,
         skillId: newSkill.id,
         version: 1,
         contentUrl: "",

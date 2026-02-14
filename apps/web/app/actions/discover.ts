@@ -11,7 +11,6 @@ import {
   type HybridSearchResult,
 } from "@everyskill/db";
 
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
 const PREFERENCE_BOOST = 1.3;
 
 export interface DiscoveryResult {
@@ -93,8 +92,11 @@ export async function discoverSkills(query: string, limit = 3): Promise<Discover
 
   const trimmed = query.trim();
   const session = await auth();
-  const userId = session?.user?.id;
-  const tenantId = session?.user?.tenantId ?? DEFAULT_TENANT_ID;
+  if (!session?.user?.id) return [];
+
+  const userId = session.user.id;
+  const tenantId = session.user.tenantId;
+  if (!tenantId) return [];
 
   // 1. Try to get query embedding for semantic search
   let queryEmbedding: number[] | null = null;
@@ -160,7 +162,7 @@ export async function discoverSkills(query: string, limit = 3): Promise<Discover
   // 5. Log search query (fire-and-forget)
   logSearchQuery({
     tenantId,
-    userId: userId ?? null,
+    userId,
     query: trimmed,
     normalizedQuery: trimmed.toLowerCase(),
     resultCount: finalResults.length,

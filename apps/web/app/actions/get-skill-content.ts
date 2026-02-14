@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
-import { db, skills, DEFAULT_TENANT_ID } from "@everyskill/db";
+import { db, skills } from "@everyskill/db";
 import { usageEvents } from "@everyskill/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -29,10 +29,10 @@ export async function getSkillContent(
   }
 
   // Fire-and-forget: log download event
-  if (session?.user?.id) {
+  if (session?.user?.id && session.user.tenantId) {
     db.insert(usageEvents)
       .values({
-        tenantId: session.user.tenantId ?? DEFAULT_TENANT_ID,
+        tenantId: session.user.tenantId,
         toolName: "skill_download",
         skillId,
         userId: session.user.id,

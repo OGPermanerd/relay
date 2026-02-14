@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { DEFAULT_TENANT_ID } from "@everyskill/db";
 import { getPlatformStats } from "@/lib/platform-stats";
 import { getTrendingSkills } from "@/lib/trending";
 import { getCompanyApprovedSkills } from "@/lib/company-approved";
@@ -25,7 +24,10 @@ export default async function HomePage() {
   }
 
   const { user } = session;
-  const tenantId = user.tenantId ?? DEFAULT_TENANT_ID;
+  const tenantId = user.tenantId;
+  if (!tenantId) {
+    redirect("/");
+  }
   const firstName = user.name?.split(" ")[0] || "there";
 
   // Fetch all data in parallel

@@ -110,9 +110,6 @@ const createSkillSchema = z.object({
 import { checkSimilarSkills } from "@/lib/similar-skills";
 import type { SimilarSkillResult } from "@/lib/similar-skills";
 
-// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
 /**
  * Fire-and-forget AI review generation after skill creation.
  * Failures are intentionally swallowed -- review is advisory, not blocking.
@@ -183,6 +180,11 @@ export async function checkAndCreateSkill(
     return { errors: { _form: ["You must be signed in to create a skill"] } };
   }
 
+  const tenantId = session.user.tenantId;
+  if (!tenantId) {
+    return { errors: { _form: ["Tenant not resolved"] } };
+  }
+
   const parsed = createSkillSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
@@ -218,7 +220,6 @@ export async function checkAndCreateSkill(
   }
 
   // Step 2: create the skill
-  const tenantId = session.user.tenantId ?? DEFAULT_TENANT_ID;
   const { name, description, category, hoursSaved, visibility } = parsed.data;
   const rawContent = stripEverySkillFrontmatter(parsed.data.content);
   const slug = await generateUniqueSlug(name, db);
@@ -232,7 +233,7 @@ export async function checkAndCreateSkill(
     const [inserted] = await db
       .insert(skills)
       .values({
-        tenantId: DEFAULT_TENANT_ID,
+        tenantId,
         name,
         slug,
         description,
@@ -279,7 +280,7 @@ export async function checkAndCreateSkill(
       const [version] = await db
         .insert(skillVersions)
         .values({
-          tenantId: DEFAULT_TENANT_ID,
+          tenantId,
           skillId: newSkill.id,
           version: 1,
           contentUrl: uploadResult.objectKey,
@@ -382,6 +383,11 @@ export async function createSkill(
     return { message: "You must be signed in to create a skill" };
   }
 
+  const tenantId = session.user.tenantId;
+  if (!tenantId) {
+    return { message: "Tenant not resolved" };
+  }
+
   // Parse and validate form data
   const parsed = createSkillSchema.safeParse({
     name: formData.get("name"),
@@ -400,8 +406,6 @@ export async function createSkill(
       errors: parsed.error.flatten().fieldErrors,
     };
   }
-
-  const tenantId = session.user.tenantId ?? DEFAULT_TENANT_ID;
   const {
     name,
     description,
@@ -429,7 +433,7 @@ export async function createSkill(
     const [inserted] = await db
       .insert(skills)
       .values({
-        tenantId: DEFAULT_TENANT_ID,
+        tenantId,
         name,
         slug,
         description,
@@ -484,7 +488,7 @@ export async function createSkill(
       const [version] = await db
         .insert(skillVersions)
         .values({
-          tenantId: DEFAULT_TENANT_ID,
+          tenantId,
           skillId: newSkill.id,
           version: 1,
           contentUrl: uploadResult.objectKey,

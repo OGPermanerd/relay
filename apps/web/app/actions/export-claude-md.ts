@@ -6,8 +6,6 @@ import { getOrCreateUserPreferences } from "@everyskill/db/services/user-prefere
 import { PREFERENCES_DEFAULTS } from "@/lib/preferences-defaults";
 import { eq, and, desc } from "drizzle-orm";
 
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
 /** Human-readable labels for sort options */
 const SORT_LABELS: Record<string, string> = {
   uses: "Most Used",
@@ -23,8 +21,12 @@ export async function generateClaudeMd(): Promise<{ markdown: string } | { error
       return { error: "Must be signed in" };
     }
 
+    const tenantId = session.user.tenantId;
+    if (!tenantId) {
+      return { error: "Tenant not resolved" };
+    }
+
     const userId = session.user.id;
-    const tenantId = (session.user as { tenantId?: string }).tenantId || DEFAULT_TENANT_ID;
     const userName = session.user.name || "User";
 
     // Fetch user preferences

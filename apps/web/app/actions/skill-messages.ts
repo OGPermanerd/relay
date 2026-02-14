@@ -10,8 +10,6 @@ import { db, users, skills } from "@everyskill/db";
 import { eq } from "drizzle-orm";
 import { notifyGroupingProposal } from "@/lib/notifications";
 
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
 export type MessageState = { error?: string; success?: boolean };
 
 export async function sendGroupingProposal(
@@ -20,6 +18,9 @@ export async function sendGroupingProposal(
 ): Promise<MessageState> {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated" };
+
+  const tenantId = session.user.tenantId;
+  if (!tenantId) return { error: "Tenant not resolved" };
 
   const toUserId = formData.get("toUserId") as string;
   const subjectSkillId = formData.get("subjectSkillId") as string;
@@ -30,8 +31,6 @@ export async function sendGroupingProposal(
   if (message.length > 1000) return { error: "Message too long (max 1000 chars)" };
 
   try {
-    const tenantId = session.user.tenantId || DEFAULT_TENANT_ID;
-
     const id = await sendSkillMessage({
       tenantId,
       fromUserId: session.user.id,

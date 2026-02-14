@@ -23,6 +23,12 @@ export async function submitForReview(
   if (!session?.user?.id) {
     return { error: "Not authenticated" };
   }
+
+  const tenantId = session.user.tenantId;
+  if (!tenantId) {
+    return { error: "Tenant not resolved" };
+  }
+
   if (!db) return { error: "Database not configured" };
 
   // Fetch skill with fields needed for AI review
@@ -73,6 +79,7 @@ export async function submitForReview(
     const contentHash = await hashContent(skill.content);
     await upsertSkillReview({
       skillId: skill.id,
+      tenantId,
       requestedBy: session.user.id,
       categories: reviewResult,
       summary: reviewResult.summary,
@@ -112,7 +119,7 @@ export async function submitForReview(
     if (autoApproved) {
       void generateAndStoreSkillEmbedding({
         skillId: skill.id,
-        tenantId: session.user.tenantId || "default-tenant-000-0000-000000000000",
+        tenantId,
         name: skill.name,
         description: skill.description ?? "",
       });
@@ -121,7 +128,6 @@ export async function submitForReview(
     revalidatePath("/my-skills");
 
     // --- Notification dispatch (fire-and-forget, AFTER all DB work) ---
-    const tenantId = session.user.tenantId!;
     if (autoApproved) {
       // RVNT-05: Notify author their skill was auto-published
       notifyReviewEvent({

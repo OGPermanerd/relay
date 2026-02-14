@@ -59,6 +59,11 @@ export async function requestAiReview(
     return { error: "You must be signed in" };
   }
 
+  const tenantId = session.user.tenantId;
+  if (!tenantId) {
+    return { error: "Tenant not resolved" };
+  }
+
   // Extract skill ID
   const skillId = formData.get("skillId") as string;
   if (!skillId) {
@@ -114,6 +119,7 @@ export async function requestAiReview(
 
     await upsertSkillReview({
       skillId,
+      tenantId,
       requestedBy: session.user.id,
       categories,
       summary,
