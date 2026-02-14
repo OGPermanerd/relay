@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 ## Current Position
 
 Phase: 50 of 54 (Gmail OAuth Infrastructure)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-14 -- Completed 50-02-PLAN.md (OAuth API routes)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-14 -- Completed 50-03-PLAN.md (Gmail settings UI)
 
-Progress: [██████░░░░] 67%
+Progress: [██████████] 100%
 
 ## Milestones
 
@@ -31,13 +31,13 @@ Progress: [██████░░░░] 67%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 202
+- Total plans completed: 203
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 202 plans across 50 phases and 9 milestones
-- ~18,200 LOC TypeScript
+- 203 plans across 50 phases and 9 milestones
+- ~18,400 LOC TypeScript
 - 8 days total development time
 
 ## Accumulated Context
@@ -72,6 +72,8 @@ Phase 50 decisions:
 - Only /api/gmail/callback exempted in middleware; connect/disconnect/status need auth
 - State cookie (gmail_oauth_state) with base64url-encoded JSON for CSRF, 10-min TTL
 - Best-effort Google token revocation on disconnect (non-fatal)
+- GmailConnectionCard uses <a href> for /api/gmail/connect (API redirect, not next/link)
+- Admin form sections preserve all settings via hidden fields to prevent reset on save
 
 ### Pending Todos
 
@@ -88,5 +90,5 @@ Phase 50 decisions:
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 50 Plan 02 complete -- ready for Plan 03 (Gmail settings UI)
-Resume file: .planning/phases/50-gmail-oauth-infrastructure/50-03-PLAN.md
+Stopped at: Phase 50 complete -- Gmail OAuth Infrastructure fully shipped (schema, API routes, UI)
+Resume file: Next phase (51 - Gmail Scan Engine)
