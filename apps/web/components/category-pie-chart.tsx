@@ -45,7 +45,10 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
             cx="50%"
             cy="50%"
             outerRadius={80}
-            label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
+            label={(entry) => {
+              const item = entry as unknown as (typeof chartData)[0];
+              return `${item.name}: ${item.percentage.toFixed(1)}%`;
+            }}
             labelLine={true}
           >
             {chartData.map((entry, index) => (
