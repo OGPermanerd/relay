@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 ## Current Position
 
 Phase: 49 of 54 (Tenant Resolution Cleanup)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase (01+03 done, 02 remaining)
 Status: In progress
-Last activity: 2026-02-14 -- Completed 49-01-PLAN.md (JWT tenantId + utility function params)
+Last activity: 2026-02-14 -- Completed 49-03-PLAN.md (MCP & API route tenant resolution)
 
-Progress: [███░░░░░░░] 33%
+Progress: [██████░░░░] 67%
 
 ## Milestones
 
@@ -31,12 +31,12 @@ Progress: [███░░░░░░░] 33%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 198
+- Total plans completed: 199
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 198 plans across 49 phases and 8 milestones
+- 199 plans across 49 phases and 8 milestones
 - ~18,000 LOC TypeScript
 - 8 days total development time
 
@@ -57,6 +57,9 @@ Key v4.0 research decisions:
 Phase 49 decisions:
 - Transitional `session.user.tenantId ?? DEFAULT_TENANT_ID` pattern in callers (Plan 02 will make strict)
 - Utility functions (embedding-generator, greeting-pool) accept tenantId as parameter, never hardcode it
+- MCP tools return explicit error when tenant not resolved (not silent fallback)
+- Tracking functions silently skip when no tenant (non-critical fire-and-forget)
+- install-callback keeps DEFAULT_TENANT_ID as sole legitimate anonymous fallback
 
 ### Pending Todos
 
@@ -73,5 +76,5 @@ Phase 49 decisions:
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 49 Plan 01 complete -- JWT tenantId + utility function params
+Stopped at: Phase 49 Plans 01+03 complete -- MCP & API route tenant resolution
 Resume file: .planning/phases/49-tenant-resolution-cleanup/49-02-PLAN.md
