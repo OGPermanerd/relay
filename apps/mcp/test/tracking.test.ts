@@ -2,13 +2,22 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { db } from "@everyskill/db";
 import { trackUsage } from "../src/tracking/events.js";
 import { incrementSkillUses } from "@everyskill/db/services/skill-metrics";
+import { getTenantId } from "../src/auth.js";
+
+vi.mock("../src/auth.js", () => ({
+  getTenantId: vi.fn(() => "test-tenant-000-0000-000000000000"),
+}));
 
 const mockDb = vi.mocked(db);
 const mockIncrementSkillUses = vi.mocked(incrementSkillUses);
+const mockGetTenantId = vi.mocked(getTenantId);
+
+const TEST_TENANT_ID = "test-tenant-000-0000-000000000000";
 
 describe("trackUsage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetTenantId.mockReturnValue(TEST_TENANT_ID);
     // Reset insert mock to return chainable .values()
     mockDb.insert.mockReturnValue({
       values: vi.fn().mockResolvedValue(undefined),
@@ -26,7 +35,7 @@ describe("trackUsage", () => {
 
     expect(mockDb.insert).toHaveBeenCalledTimes(1);
     const valuesCall = mockDb.insert.mock.results[0].value.values;
-    expect(valuesCall).toHaveBeenCalledWith(event);
+    expect(valuesCall).toHaveBeenCalledWith({ ...event, tenantId: TEST_TENANT_ID });
   });
 
   it("calls incrementSkillUses when skillId is provided", async () => {
@@ -76,7 +85,7 @@ describe("trackUsage", () => {
 
     expect(mockDb.insert).toHaveBeenCalledTimes(1);
     const valuesCall = mockDb.insert.mock.results[0].value.values;
-    expect(valuesCall).toHaveBeenCalledWith(event);
+    expect(valuesCall).toHaveBeenCalledWith({ ...event, tenantId: TEST_TENANT_ID });
     expect(mockIncrementSkillUses).not.toHaveBeenCalled();
   });
 
@@ -91,7 +100,20 @@ describe("trackUsage", () => {
 
     expect(mockDb.insert).toHaveBeenCalledTimes(1);
     const valuesCall = mockDb.insert.mock.results[0].value.values;
-    expect(valuesCall).toHaveBeenCalledWith(event);
+    expect(valuesCall).toHaveBeenCalledWith({ ...event, tenantId: TEST_TENANT_ID });
     expect(mockIncrementSkillUses).toHaveBeenCalledWith("skill-3");
+  });
+
+  it("skips tracking when no tenant resolved", async () => {
+    mockGetTenantId.mockReturnValue(null);
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await trackUsage({ toolName: "list_skills", metadata: {} });
+
+    expect(mockDb.insert).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "[tracking] Skipping usage tracking: no tenant resolved"
+    );
+    consoleSpy.mockRestore();
   });
 });

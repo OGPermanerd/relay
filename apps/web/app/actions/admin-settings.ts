@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/admin";
-import { db, skills, updateSiteSettings, getSiteSettings, DEFAULT_TENANT_ID } from "@everyskill/db";
+import { db, skills, updateSiteSettings, getSiteSettings } from "@everyskill/db";
 import { testOllamaConnection, startOllama, stopOllama } from "@/lib/ollama";
 import { generateSkillEmbedding } from "@/lib/embedding-generator";
 import { revalidatePath } from "next/cache";
@@ -138,7 +138,8 @@ export async function backfillEmbeddingsAction(
     .from(skills)
     .where(sql`${skills.id} NOT IN (SELECT skill_id FROM skill_embeddings)`);
 
-  const tenantId = session.user.tenantId ?? DEFAULT_TENANT_ID;
+  const tenantId = session.user.tenantId;
+  if (!tenantId) return { error: "Tenant not resolved" };
   let generated = 0;
   for (const skill of missing) {
     await generateSkillEmbedding(skill.id, skill.name, skill.description, tenantId);
