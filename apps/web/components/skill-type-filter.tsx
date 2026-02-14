@@ -2,24 +2,22 @@
 
 import { useQueryState, parseAsStringEnum } from "nuqs";
 import { useTransition } from "react";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  CATEGORY_STYLES,
+  CATEGORY_ACTIVE_COLORS,
+  CATEGORY_INACTIVE_COLORS,
+} from "@/lib/categories";
 
-const SKILL_TYPES = ["all", "claude-skill", "ai-prompt", "other"] as const;
+const SKILL_TYPES = ["all", ...CATEGORIES] as const;
 type SkillType = (typeof SKILL_TYPES)[number];
-
-const TYPE_LABELS: Record<SkillType, string> = {
-  all: "All",
-  "claude-skill": "Claude Skill",
-  "ai-prompt": "AI Prompt",
-  other: "Other",
-};
 
 /**
  * Skill type filter buttons with URL synchronization
  *
- * Maps to database categories:
- * - Claude Skill = "agent"
- * - AI Prompt = "prompt"
- * - Other = "workflow", "mcp"
+ * Maps directly to database categories:
+ * - productivity, wiring, doc-production, data-viz, code
  */
 export function SkillTypeFilter() {
   const [skillType, setSkillType] = useQueryState(
@@ -40,21 +38,48 @@ export function SkillTypeFilter() {
     });
   };
 
+  const active = (skillType || "all") as SkillType;
+
   return (
-    <div className="flex items-center gap-1">
-      {SKILL_TYPES.map((type) => {
-        const isActive = (skillType || "all") === type;
+    <div className="flex items-center gap-1.5 overflow-x-auto">
+      {/* All button */}
+      <button
+        type="button"
+        onClick={() => handleClick("all")}
+        disabled={isPending}
+        className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+          active === "all"
+            ? "bg-gray-800 text-white"
+            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+        } disabled:opacity-50`}
+      >
+        All
+      </button>
+
+      {/* Category buttons */}
+      {CATEGORIES.map((cat) => {
+        const isActive = active === cat;
+        const style = CATEGORY_STYLES[cat];
+        const colorClass = isActive ? CATEGORY_ACTIVE_COLORS[cat] : CATEGORY_INACTIVE_COLORS[cat];
+
         return (
           <button
-            key={type}
+            key={cat}
             type="button"
-            onClick={() => handleClick(type)}
+            onClick={() => handleClick(cat)}
             disabled={isPending}
-            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-              isActive ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            } disabled:opacity-50`}
+            className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${colorClass} disabled:opacity-50`}
           >
-            {TYPE_LABELS[type]}
+            <svg
+              className="h-4 w-4 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d={style.iconPath} />
+            </svg>
+            {CATEGORY_LABELS[cat]}
           </button>
         );
       })}

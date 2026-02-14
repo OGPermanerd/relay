@@ -52,10 +52,11 @@ test.describe("Home Page", () => {
     await page.goto("/");
 
     // Category tile labels should be visible (use heading role for specificity)
-    await expect(page.getByRole("heading", { name: "Prompts" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Workflows" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Agents" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "MCP Tools" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Productivity" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Wiring" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Doc Production" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Data & Viz" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Code" })).toBeVisible();
   });
 
   test("should show trending skills section", async ({ page }) => {
@@ -90,14 +91,12 @@ test.describe("Home Page", () => {
     await expect(page.getByRole("link", { name: /View full details/i })).toBeVisible();
   });
 
-  test("should show CTA cards for sharing and browsing skills", async ({ page }) => {
+  test("should show CTA buttons for sharing and finding skills", async ({ page }) => {
     await page.goto("/");
 
-    // CTA cards should be visible
-    await expect(page.getByRole("link", { name: /Create Leverage.*Share a Skill/i })).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: /Get Leverage.*Browse All Skills/i })
-    ).toBeVisible();
+    // Compact CTA buttons should be visible at top
+    await expect(page.getByRole("link", { name: /Share a Skill/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Find a Skill/i })).toBeVisible();
   });
 
   test("should not have any tab navigation", async ({ page }) => {
@@ -111,9 +110,9 @@ test.describe("Home Page", () => {
   test("should have category tiles that link to filtered browse", async ({ page }) => {
     await page.goto("/");
 
-    // Category tiles should link to /skills?category=X
-    const promptLink = page.getByRole("link", { name: /Prompts.*skills/i });
-    await expect(promptLink).toBeVisible();
-    await expect(promptLink).toHaveAttribute("href", "/skills?category=prompt");
+    // Category tiles should link to /skills?type=X
+    const productivityLink = page.getByRole("link", { name: /Productivity.*skills/i });
+    await expect(productivityLink).toBeVisible();
+    await expect(productivityLink).toHaveAttribute("href", "/skills?type=productivity");
   });
 });

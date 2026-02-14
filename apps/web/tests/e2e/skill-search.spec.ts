@@ -20,11 +20,10 @@ test.describe("Skill Search and Browse", () => {
     await expect(searchInput).toBeVisible();
     await expect(searchInput).toHaveAttribute("placeholder", "Search skills...");
 
-    // Category filter buttons: All, Claude Skill, AI Prompt, Other
+    // Category filter buttons: All, Productivity, Wiring, Doc Production, Data & Viz, Code
     await expect(page.getByRole("button", { name: "All", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Claude Skill", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "AI Prompt", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Other", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Productivity", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Code", exact: true })).toBeVisible();
   });
 
   test("should update URL when searching", async ({ page }) => {
@@ -44,23 +43,23 @@ test.describe("Skill Search and Browse", () => {
   test("should update URL when selecting type filter", async ({ page }) => {
     await page.goto("/skills");
 
-    // Click on AI Prompt filter
-    await page.getByRole("button", { name: "AI Prompt" }).click();
+    // Click on Productivity filter
+    await page.getByRole("button", { name: "Productivity" }).click();
 
     // URL should contain type parameter
-    await expect(page).toHaveURL(/\?.*type=ai-prompt/);
+    await expect(page).toHaveURL(/\?.*type=productivity/);
 
-    // The selected button should have active styling (bg-blue-600)
-    const aiPromptButton = page.getByRole("button", { name: "AI Prompt" });
-    await expect(aiPromptButton).toHaveClass(/bg-blue-600/);
+    // The selected button should have active styling (category-specific color)
+    const productivityButton = page.getByRole("button", { name: "Productivity" });
+    await expect(productivityButton).toHaveClass(/bg-blue-600/);
   });
 
   test("should clear type filter when clicking All", async ({ page }) => {
     // Start with a type filter
-    await page.goto("/skills?type=claude-skill");
+    await page.goto("/skills?type=code");
 
-    // Claude Skill button should be active
-    await expect(page.getByRole("button", { name: "Claude Skill" })).toHaveClass(/bg-blue-600/);
+    // Code button should be active (rose color for code category)
+    await expect(page.getByRole("button", { name: "Code" })).toHaveClass(/bg-rose-600/);
 
     // Click All button
     await page.getByRole("button", { name: "All", exact: true }).click();
@@ -84,8 +83,8 @@ test.describe("Skill Search and Browse", () => {
   });
 
   test("should show skills or empty state when filtering by type", async ({ page }) => {
-    // Filter by Other type (maps to workflow + mcp categories)
-    await page.goto("/skills?type=other");
+    // Filter by wiring type
+    await page.goto("/skills?type=wiring");
 
     // Wait for page to load
     await page.waitForLoadState("networkidle");
@@ -135,11 +134,11 @@ test.describe("Skill Search and Browse", () => {
     await page.waitForTimeout(500);
 
     // Select type
-    await page.getByRole("button", { name: "AI Prompt" }).click();
+    await page.getByRole("button", { name: "Code" }).click();
 
     // URL should have both parameters
     await expect(page).toHaveURL(/q=combined/);
-    await expect(page).toHaveURL(/type=ai-prompt/);
+    await expect(page).toHaveURL(/type=code/);
   });
 
   test("should show live search dropdown with results", async ({ page }) => {

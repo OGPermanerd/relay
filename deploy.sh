@@ -59,7 +59,7 @@ deploy_staging() {
     source .env.staging 2>/dev/null || true
     export DATABASE_URL
     pnpm db:migrate
-  ) || log "WARN: Migrations failed or not needed"
+  )
 
   log "Reloading everyskill-staging..."
   pm2 reload everyskill-staging --update-env 2>/dev/null \
@@ -99,7 +99,7 @@ promote_to_production() {
     source .env.production 2>/dev/null || true
     export DATABASE_URL
     pnpm db:migrate
-  ) || log "WARN: Migrations failed or not needed"
+  )
 
   log "Reloading everyskill-prod..."
   pm2 reload everyskill-prod --update-env 2>/dev/null \
