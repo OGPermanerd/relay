@@ -189,7 +189,11 @@ Plans:
   3. User can click "Disconnect Gmail" and all tokens are immediately deleted from the database and revoked with Google, with the UI reverting to "not connected" state
   4. Token refresh happens automatically and race-condition-safely when access tokens expire, so returning users never see auth errors
   5. Admin can toggle the Gmail diagnostic feature on/off per tenant from the admin panel, and when disabled, the "Connect Gmail" option is hidden for that tenant's users
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 50-01-PLAN.md -- Schema, crypto, migration, and gmail token service
+- [ ] 50-02-PLAN.md -- OAuth API routes (connect, callback, disconnect, status) and middleware
+- [ ] 50-03-PLAN.md -- Settings connections UI and admin toggle
 
 #### Phase 51: Email Analysis Pipeline
 **Goal**: The system fetches 90 days of email headers, classifies them into categories using rules and AI, estimates time spent, and stores only anonymous aggregate results
@@ -271,7 +275,7 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
 | 40-48 | v3.0 | 21/21 | Complete | 2026-02-13 |
 | 49. Tenant Cleanup | v4.0 | 3/3 | Complete | 2026-02-14 |
-| 50. Gmail OAuth | v4.0 | 0/TBD | Not started | - |
+| 50. Gmail OAuth | v4.0 | 0/3 | Not started | - |
 | 51. Email Analysis | v4.0 | 0/TBD | Not started | - |
 | 52. Dashboard | v4.0 | 0/TBD | Not started | - |
 | 53. Recommendations | v4.0 | 0/TBD | Not started | - |
