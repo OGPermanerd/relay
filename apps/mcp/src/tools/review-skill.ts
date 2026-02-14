@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
-import { db, DEFAULT_TENANT_ID } from "@everyskill/db";
+import { db } from "@everyskill/db";
 import { getUserId, getTenantId } from "../auth.js";
 
 /**
@@ -249,7 +249,22 @@ export async function handleReviewSkill({ skillId }: { skillId: string }) {
 
     // Store review result
     const contentHash = await hashContent(skill.content);
-    const reviewTenantId = tenantId || DEFAULT_TENANT_ID;
+    if (!tenantId) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({
+              error: "Tenant not resolved",
+              message:
+                "API key does not have a tenant association. Please re-generate your API key.",
+            }),
+          },
+        ],
+        isError: true,
+      };
+    }
+    const reviewTenantId = tenantId;
 
     await db.execute(sql`
       INSERT INTO skill_reviews (id, tenant_id, skill_id, requested_by, categories, summary, suggested_description, reviewed_content_hash, model_name, is_visible, created_at)

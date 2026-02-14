@@ -3,7 +3,7 @@ import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
 import { sql } from "drizzle-orm";
-import { db, DEFAULT_TENANT_ID } from "@everyskill/db";
+import { db } from "@everyskill/db";
 import { trackUsage } from "../tracking/events.js";
 import { getTenantId } from "../auth.js";
 
@@ -134,7 +134,22 @@ export async function handleCreateSkill({
     };
   }
 
-  const tenantId = getTenantId() || DEFAULT_TENANT_ID;
+  const tenantId = getTenantId();
+  if (!tenantId) {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({
+            error: "Tenant not resolved",
+            message: "API key does not have a tenant association. Please re-generate your API key.",
+          }),
+        },
+      ],
+      isError: true,
+    };
+  }
+
   const rawContent = stripFrontmatter(content);
   const slug = await generateUniqueSlug(name);
   const skillId = crypto.randomUUID();

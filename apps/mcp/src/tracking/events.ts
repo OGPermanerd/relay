@@ -4,9 +4,6 @@ import { incrementSkillUses } from "@everyskill/db/services/skill-metrics";
 import { writeAuditLog } from "@everyskill/db/services/audit";
 import { getTenantId } from "../auth.js";
 
-// Fallback tenant ID for anonymous MCP usage (no API key configured)
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
 /**
  * Track MCP tool usage for analytics and write audit log entry.
  * Called within each tool handler after successful execution.
@@ -20,7 +17,11 @@ export async function trackUsage(
       console.error("Database not configured, skipping usage tracking");
       return;
     }
-    const tenantId = event.tenantId || getTenantId() || DEFAULT_TENANT_ID;
+    const tenantId = event.tenantId || getTenantId();
+    if (!tenantId) {
+      console.warn("[tracking] Skipping usage tracking: no tenant resolved");
+      return;
+    }
     await db.insert(usageEvents).values({ ...event, tenantId });
 
     // Increment skill usage counter for denormalized totalUses

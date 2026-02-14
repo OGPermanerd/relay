@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { sql } from "drizzle-orm";
-import { db, DEFAULT_TENANT_ID } from "@everyskill/db";
+import { db } from "@everyskill/db";
 import { getUserId, getTenantId } from "../auth.js";
 
 // ---------------------------------------------------------------------------
@@ -85,7 +85,21 @@ export async function handleUpdateSkill({
     };
   }
 
-  const tenantId = getTenantId() || DEFAULT_TENANT_ID;
+  const tenantId = getTenantId();
+  if (!tenantId) {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({
+            error: "Tenant not resolved",
+            message: "API key does not have a tenant association. Please re-generate your API key.",
+          }),
+        },
+      ],
+      isError: true,
+    };
+  }
 
   // Fetch skill from DB
   const result = (await db.execute(
