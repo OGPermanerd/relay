@@ -247,7 +247,10 @@ Plans:
   1. A ranked skill adoption list orders recommended skills by estimated time savings (highest ROI first), with each entry showing the skill name, matched email category, and projected hours saved per week
   2. A cumulative FTE Days Saved projection chart (Recharts AreaChart) shows expected savings accumulating over time as each skill is adopted in sequence
   3. A sequential "start here" adoption order suggests which skill to try first with clear reasoning, guiding users from their biggest time sink to progressively smaller ones
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 54-01-PLAN.md -- AreaChart component + deployment plan page + dashboard
+- [ ] 54-02-PLAN.md -- Recommendations link + E2E tests
 
 #### Dependency Graph
 
@@ -291,7 +294,7 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 | 51. Email Analysis | v4.0 | 5/5 | Complete | 2026-02-14 |
 | 52. Dashboard | v4.0 | 2/2 | Complete | 2026-02-14 |
 | 53. Recommendations | v4.0 | 2/2 | Complete | 2026-02-14 |
-| 54. Deployment Plan | v4.0 | 0/TBD | Not started | - |
+| 54. Deployment Plan | v4.0 | 0/2 | Not started | - |
 
 **Total: 215 plans completed across 53 phases and 9 milestones. v4.0: 15 plans done, 5/6 phases complete.**
 
