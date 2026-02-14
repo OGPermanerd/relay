@@ -161,8 +161,8 @@ Total: 21 plans completed. 9 phases, 26 requirements.
 - [x] **Phase 49: Tenant Resolution Cleanup** - Eliminate DEFAULT_TENANT_ID hardcoding across codebase
 - [x] **Phase 50: Gmail OAuth Infrastructure** - Separate OAuth flow for Gmail with encrypted token storage
 - [x] **Phase 51: Email Analysis Pipeline** - Fetch, classify, and aggregate 90 days of email metadata
-- [ ] **Phase 52: Diagnostic Dashboard** - Visual email time breakdown with charts and KPIs
-- [ ] **Phase 53: Skill Recommendations** - AI-powered skill matching based on email patterns
+- [x] **Phase 52: Diagnostic Dashboard** - Visual email time breakdown with charts and KPIs
+- [x] **Phase 53: Skill Recommendations** - AI-powered skill matching based on email patterns
 - [ ] **Phase 54: Deployment Plan** - Ranked adoption sequence with projected time savings
 
 #### Phase 49: Tenant Resolution Cleanup
@@ -223,8 +223,8 @@ Plans:
   3. User can click "Re-run Diagnostic" to trigger a fresh 90-day analysis, and the dashboard updates with the new results, showing the date of the last scan
 **Plans**: 2 plans
 Plans:
-- [ ] 52-01-PLAN.md -- Chart components (category PieChart, time BarChart)
-- [ ] 52-02-PLAN.md -- Dashboard page + re-run + email-diagnostic-card link
+- [x] 52-01-PLAN.md -- Chart components (category PieChart, time BarChart)
+- [x] 52-02-PLAN.md -- Dashboard page + re-run + email-diagnostic-card link
 
 #### Phase 53: Skill Recommendations
 **Goal**: AI analyzes the user's email patterns and recommends specific EverySkill skills that would save them the most time, with personalized reasoning
@@ -236,8 +236,8 @@ Plans:
   3. Each recommendation card includes a one-click install button that launches the existing install flow, so users can go from insight to deployment without leaving the diagnostic page
 **Plans**: 2 plans
 Plans:
-- [ ] 53-01-PLAN.md -- AI recommendation engine (query generation, search, ranking)
-- [ ] 53-02-PLAN.md -- Recommendation UI (cards, section, my-leverage integration)
+- [x] 53-01-PLAN.md -- AI recommendation engine (query generation, search, ranking)
+- [x] 53-02-PLAN.md -- Recommendation UI (cards, section, my-leverage integration)
 
 #### Phase 54: Deployment Plan
 **Goal**: Users see a prioritized skill adoption roadmap with projected cumulative time savings
@@ -289,11 +289,11 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 | 49. Tenant Cleanup | v4.0 | 3/3 | Complete | 2026-02-14 |
 | 50. Gmail OAuth | v4.0 | 3/3 | Complete | 2026-02-14 |
 | 51. Email Analysis | v4.0 | 5/5 | Complete | 2026-02-14 |
-| 52. Dashboard | v4.0 | 0/2 | Not started | - |
-| 53. Recommendations | v4.0 | 0/2 | Not started | - |
+| 52. Dashboard | v4.0 | 2/2 | Complete | 2026-02-14 |
+| 53. Recommendations | v4.0 | 2/2 | Complete | 2026-02-14 |
 | 54. Deployment Plan | v4.0 | 0/TBD | Not started | - |
 
-**Total: 208 plans completed across 51 phases and 9 milestones. v4.0: 11 plans done, 3/6 phases complete.**
+**Total: 215 plans completed across 53 phases and 9 milestones. v4.0: 15 plans done, 5/6 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
