@@ -221,7 +221,10 @@ Plans:
   1. Diagnostic dashboard page displays an email category breakdown chart (Recharts PieChart or BarChart) showing the distribution of email types with counts and percentages
   2. A "screentime"-style time-per-category visualization shows how many hours per week each email category consumes, with the total estimated weekly email hours displayed prominently as a hero KPI
   3. User can click "Re-run Diagnostic" to trigger a fresh 90-day analysis, and the dashboard updates with the new results, showing the date of the last scan
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 52-01-PLAN.md -- Chart components (category PieChart, time BarChart)
+- [ ] 52-02-PLAN.md -- Dashboard page + re-run + email-diagnostic-card link
 
 #### Phase 53: Skill Recommendations
 **Goal**: AI analyzes the user's email patterns and recommends specific EverySkill skills that would save them the most time, with personalized reasoning
@@ -283,7 +286,7 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 | 49. Tenant Cleanup | v4.0 | 3/3 | Complete | 2026-02-14 |
 | 50. Gmail OAuth | v4.0 | 3/3 | Complete | 2026-02-14 |
 | 51. Email Analysis | v4.0 | 5/5 | Complete | 2026-02-14 |
-| 52. Dashboard | v4.0 | 0/TBD | Not started | - |
+| 52. Dashboard | v4.0 | 0/2 | Not started | - |
 | 53. Recommendations | v4.0 | 0/TBD | Not started | - |
 | 54. Deployment Plan | v4.0 | 0/TBD | Not started | - |
 
@@ -295,7 +298,7 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 *v1.1 completed: 2026-02-01*
 *v1.2 completed: 2026-02-02*
 *v1.3 completed: 2026-02-04*
-*v1.4 completed: 2026-02-06*
+*v1.4 completed: 2026-06*
 *v1.5 completed: 2026-02-08*
 *v2.0 completed: 2026-08*
 *v3.0 completed: 2026-02-13*
