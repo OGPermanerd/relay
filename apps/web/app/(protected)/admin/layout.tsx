@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
 import { getPendingReviewCount } from "@/lib/review-queries";
-import { DEFAULT_TENANT_ID } from "@everyskill/db";
 import Link from "next/link";
 
 const adminNavItems = [
@@ -21,7 +20,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/");
   }
 
-  const pendingCount = await getPendingReviewCount(session?.user?.tenantId || DEFAULT_TENANT_ID);
+  const tenantId = session?.user?.tenantId;
+  if (!tenantId) {
+    redirect("/");
+  }
+
+  const pendingCount = await getPendingReviewCount(tenantId);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">

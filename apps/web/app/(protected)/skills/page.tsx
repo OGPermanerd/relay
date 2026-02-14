@@ -33,8 +33,6 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   // Get session for visibility filtering
   const session = await auth();
 
-  const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
   // Fetch skills and leaderboard
   const [skills, contributors] = await Promise.all([
     searchSkills({ query, sortBy, authorId, categories, userId: session?.user?.id }),
@@ -42,11 +40,10 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   ]);
 
   // Log browse search query (fire-and-forget, only when user actually searched)
-  if (query) {
-    const tenantId = session?.user?.tenantId ?? DEFAULT_TENANT_ID;
+  if (query && session?.user?.id && session.user.tenantId) {
     logSearchQuery({
-      tenantId,
-      userId: session?.user?.id ?? null,
+      tenantId: session.user.tenantId,
+      userId: session.user.id,
       query,
       normalizedQuery: query.toLowerCase().trim(),
       resultCount: skills.length,

@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
-import { DEFAULT_TENANT_ID } from "@everyskill/db";
 import { getReviewQueue } from "@/lib/review-queries";
 import { AdminReviewQueue } from "@/components/admin-review-queue";
 
@@ -21,11 +20,14 @@ export default async function AdminReviewsPage({
     redirect("/");
   }
 
+  const tenantId = session.user.tenantId;
+  if (!tenantId) {
+    redirect("/");
+  }
+
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const pageSize = 20;
-
-  const tenantId = session.user.tenantId || DEFAULT_TENANT_ID;
 
   const { skills, total } = await getReviewQueue({
     tenantId,

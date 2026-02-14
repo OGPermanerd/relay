@@ -9,15 +9,16 @@ import {
 } from "@everyskill/db";
 import { AdminSearchTable } from "@/components/admin-search-table";
 
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
 export default async function AdminSearchPage() {
   const session = await auth();
   if (!session?.user?.id || !isAdmin(session)) {
     redirect("/");
   }
 
-  const tenantId = session.user.tenantId || DEFAULT_TENANT_ID;
+  const tenantId = session.user.tenantId;
+  if (!tenantId) {
+    redirect("/");
+  }
 
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

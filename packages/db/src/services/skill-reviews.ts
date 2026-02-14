@@ -8,7 +8,7 @@ import type { SkillReview, ReviewCategories } from "../schema";
  */
 export interface UpsertSkillReviewParams {
   skillId: string;
-  tenantId?: string;
+  tenantId: string;
   requestedBy: string;
   categories: ReviewCategories;
   summary: string;
@@ -54,7 +54,7 @@ export async function upsertSkillReview(data: UpsertSkillReviewParams): Promise<
     INSERT INTO skill_reviews (id, tenant_id, skill_id, requested_by, categories, summary, suggested_title, suggested_description, reviewed_content_hash, model_name, is_visible, created_at)
     VALUES (
       ${crypto.randomUUID()},
-      ${data.tenantId ?? "default-tenant-000-0000-000000000000"},
+      ${data.tenantId},
       ${data.skillId},
       ${data.requestedBy},
       ${JSON.stringify(data.categories)}::jsonb,

@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { isAdmin } from "@/lib/admin";
-import { DEFAULT_TENANT_ID } from "@everyskill/db";
 import { getReviewDetail } from "@/lib/review-queries";
 import { AdminReviewDetail } from "@/components/admin-review-detail";
 
@@ -16,8 +15,12 @@ export default async function AdminReviewDetailPage({
     redirect("/");
   }
 
+  const tenantId = session.user.tenantId;
+  if (!tenantId) {
+    redirect("/");
+  }
+
   const { skillId } = await params;
-  const tenantId = session.user.tenantId || DEFAULT_TENANT_ID;
 
   const detail = await getReviewDetail(skillId, tenantId);
   if (!detail) {
