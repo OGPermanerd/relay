@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 ## Current Position
 
 Phase: 49 of 54 (Tenant Resolution Cleanup)
-Plan: 2 of 3 in current phase (01+03 done, 02 remaining)
-Status: In progress
-Last activity: 2026-02-14 -- Completed 49-03-PLAN.md (MCP & API route tenant resolution)
+Plan: 3 of 3 in current phase (all complete)
+Status: Phase complete
+Last activity: 2026-02-14 -- Completed 49-02-PLAN.md (server actions & components tenant resolution)
 
-Progress: [██████░░░░] 67%
+Progress: [██████████] 100%
 
 ## Milestones
 
@@ -31,12 +31,12 @@ Progress: [██████░░░░] 67%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 199
+- Total plans completed: 200
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 199 plans across 49 phases and 8 milestones
+- 200 plans across 49 phases and 8 milestones
 - ~18,000 LOC TypeScript
 - 8 days total development time
 
@@ -55,11 +55,13 @@ Key v4.0 research decisions:
 - ~$0.17-0.20 per scan cost (Claude Sonnet for classification)
 
 Phase 49 decisions:
-- Transitional `session.user.tenantId ?? DEFAULT_TENANT_ID` pattern in callers (Plan 02 will make strict)
+- All server actions derive tenantId strictly from session.user.tenantId (no fallback)
+- Server actions return error matching existing pattern per file; server components redirect
 - Utility functions (embedding-generator, greeting-pool) accept tenantId as parameter, never hardcode it
 - MCP tools return explicit error when tenant not resolved (not silent fallback)
 - Tracking functions silently skip when no tenant (non-critical fire-and-forget)
 - install-callback keeps DEFAULT_TENANT_ID as sole legitimate anonymous fallback
+- upsertSkillReview tenantId is now required (not optional)
 
 ### Pending Todos
 
@@ -70,11 +72,11 @@ Phase 49 decisions:
 
 - Gmail API requires Google Cloud Console configuration (enable Gmail API, add `gmail.readonly` scope to OAuth consent screen)
 - GMAIL_ENCRYPTION_KEY env var needed for AES-256-GCM token encryption
-- DEFAULT_TENANT_ID hardcoded in 18+ files -- Phase 49 addresses this first
+- DEFAULT_TENANT_ID cleanup complete for server actions, components, and DB services (Phase 49)
 - Google OAuth verification needed if serving >100 external users (Internal user type bypasses this)
 
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 49 Plans 01+03 complete -- MCP & API route tenant resolution
-Resume file: .planning/phases/49-tenant-resolution-cleanup/49-02-PLAN.md
+Stopped at: Phase 49 complete -- all 3 plans done (tenant resolution cleanup)
+Resume file: Next phase (50+)
