@@ -8,6 +8,7 @@ import {
   getSkillsCreatedStats,
 } from "@/lib/my-leverage";
 import { MyLeverageView } from "@/components/my-leverage-view";
+import { RecommendationsSection } from "@/components/recommendations-section";
 import { EmailDiagnosticCard } from "./email-diagnostic-card";
 
 export const metadata = { title: "My Leverage | EverySkill" };
@@ -58,6 +59,11 @@ export default async function MyLeveragePage() {
       {/* Email Diagnostic Card */}
       <div className="mb-8">
         <EmailDiagnosticCard />
+      </div>
+
+      {/* Skill Recommendations */}
+      <div className="mb-8">
+        <RecommendationsSection />
       </div>
 
       {/* Full leverage dashboard */}
