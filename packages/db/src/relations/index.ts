@@ -16,6 +16,7 @@ import {
   userPreferences,
   searchQueries,
   gmailTokens,
+  emailDiagnostics,
 } from "../schema";
 
 /**
@@ -121,6 +122,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   reviewDecisions: many(reviewDecisions),
   searchQueries: many(searchQueries),
   gmailToken: one(gmailTokens),
+  emailDiagnostics: many(emailDiagnostics),
 }));
 
 /**
@@ -177,6 +179,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   reviewDecisions: many(reviewDecisions),
   searchQueries: many(searchQueries),
   gmailTokens: many(gmailTokens),
+  emailDiagnostics: many(emailDiagnostics),
 }));
 
 /**
@@ -311,6 +314,22 @@ export const gmailTokensRelations = relations(gmailTokens, ({ one }) => ({
   }),
   tenant: one(tenants, {
     fields: [gmailTokens.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
+/**
+ * EmailDiagnostics relations
+ * - user: many-to-one with users
+ * - tenant: many-to-one with tenants
+ */
+export const emailDiagnosticsRelations = relations(emailDiagnostics, ({ one }) => ({
+  user: one(users, {
+    fields: [emailDiagnostics.userId],
+    references: [users.id],
+  }),
+  tenant: one(tenants, {
+    fields: [emailDiagnostics.tenantId],
     references: [tenants.id],
   }),
 }));

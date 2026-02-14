@@ -23,3 +23,4 @@ export * from "./review-decisions";
 export * from "./user-preferences";
 export * from "./search-queries";
 export * from "./gmail-tokens";
+export * from "./email-diagnostics";
