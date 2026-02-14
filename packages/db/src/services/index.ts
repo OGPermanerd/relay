@@ -89,3 +89,11 @@ export {
   type UpsertGmailTokensParams,
   type DecryptedGmailToken,
 } from "./gmail-tokens";
+export {
+  saveEmailDiagnostic,
+  getLatestDiagnostic,
+  getDiagnosticHistory,
+  type SaveEmailDiagnosticParams,
+  type CategoryBreakdownItem,
+  type PatternInsights,
+} from "./email-diagnostics";
