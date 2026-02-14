@@ -63,6 +63,7 @@ setup("authenticate", async ({ page }) => {
       email: TEST_USER.email,
       name: TEST_USER.name,
       sub: TEST_USER.id,
+      tenantId: DEFAULT_TENANT_ID,
       iat: now,
       exp: expiresAt,
     },
