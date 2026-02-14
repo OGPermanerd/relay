@@ -78,3 +78,14 @@ export {
   getTrendingQueries,
   type SearchQueryEntry,
 } from "./search-analytics";
+export {
+  upsertGmailTokens,
+  getGmailTokenDecrypted,
+  deleteGmailTokens,
+  hasActiveGmailConnection,
+  getValidGmailToken,
+  GmailNotConnectedError,
+  GmailTokenRevokedError,
+  type UpsertGmailTokensParams,
+  type DecryptedGmailToken,
+} from "./gmail-tokens";
