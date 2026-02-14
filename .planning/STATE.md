@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 
 ## Current Position
 
-Phase: 53 of 54 (Skill Recommendations)
-Plan: 1 of 1 (complete)
+Phase: 52 of 54 (Diagnostic Dashboard)
+Plan: 2 of 2 (complete)
 Status: Phase complete
-Last activity: 2026-02-14 -- Completed Phase 53 Plan 01 (AI Recommendation Engine)
+Last activity: 2026-02-14 -- Completed 52-02-PLAN.md (Dashboard page with charts)
 
-Progress: [████████████░] 87%
+Progress: [█████████████░] 91%
 
 ## Milestones
 
@@ -31,7 +31,7 @@ Progress: [████████████░] 87%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 210
+- Total plans completed: 211
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10.6 hours
 
@@ -70,6 +70,10 @@ Phase 52-01 key decisions:
 - Category colors consistent across PieChart and BarChart
 - Empty state handling with dashed border pattern from usage-area-chart.tsx
 
+Phase 52-02 key decisions:
+- estimatedHoursPerWeek in AggregateResults (server action) is actual hours, NOT tenths -- only DB storage uses tenths encoding
+- Regex-based number formatting instead of toLocaleString to prevent hydration mismatches
+
 Phase 53-01 key decisions:
 - Claude Haiku 4.5 for cost-efficient query generation (not Sonnet)
 - Filter to high-time categories only: >10% OR >30 min/week
@@ -93,5 +97,5 @@ Phase 53-01 key decisions:
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 53 complete (Skill Recommendations) -- AI engine ready for dashboard integration
-Resume file: .planning/ROADMAP.md -- Phase 52 (Dashboard) and Phase 54 (Diagnostic Cron) remaining
+Stopped at: Phase 52 complete (Diagnostic Dashboard) -- full dashboard page with charts and re-run
+Resume file: .planning/ROADMAP.md -- Phase 54 (Diagnostic Cron) remaining
