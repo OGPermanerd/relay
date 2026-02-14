@@ -8,6 +8,7 @@ import {
   getSkillsCreatedStats,
 } from "@/lib/my-leverage";
 import { MyLeverageView } from "@/components/my-leverage-view";
+import { EmailDiagnosticCard } from "./email-diagnostic-card";
 
 export const metadata = { title: "My Leverage | EverySkill" };
 
@@ -52,6 +53,11 @@ export default async function MyLeveragePage() {
         <p className="mt-2 text-gray-600">
           Track your impact &mdash; skills you use and skills you create
         </p>
+      </div>
+
+      {/* Email Diagnostic Card */}
+      <div className="mb-8">
+        <EmailDiagnosticCard />
       </div>
 
       {/* Full leverage dashboard */}
