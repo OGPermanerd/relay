@@ -93,23 +93,24 @@ test.describe("MCP HTTP Endpoint", () => {
 // Test Group 2: MCP Connect UI on Profile
 // ---------------------------------------------------------------------------
 test.describe("MCP Connect UI on Profile", () => {
-  test("profile page shows MCP Connection section", async ({ page }) => {
+  test("profile page shows Integration Setup section", async ({ page }) => {
     await page.goto("/profile");
 
-    // Check for MCP Connection heading
-    await expect(page.locator("text=MCP Connection")).toBeVisible();
+    // Check for Integration Setup heading (SetupWizard component)
+    await expect(page.locator("text=Integration Setup")).toBeVisible();
 
-    // Check for Connect to Claude.ai heading within the component
-    await expect(page.locator("text=Connect to Claude.ai")).toBeVisible();
-
-    // Check that the MCP server URL is displayed
-    await expect(page.locator("text=api/mcp/mcp")).toBeVisible();
-
-    // Check that the Copy URL button is visible
-    await expect(page.getByRole("button", { name: /Copy URL/i })).toBeVisible();
-
-    // Check setup instructions are present
-    await expect(page.locator("text=Setup instructions")).toBeVisible();
-    await expect(page.locator("text=Open Claude.ai Settings")).toBeVisible();
+    // New users see "Connect to Claude" wizard step
+    // Existing users with keys see "Connected" status with Manage Keys button
+    const hasKeys = await page
+      .locator("text=Connected")
+      .isVisible()
+      .catch(() => false);
+    if (hasKeys) {
+      await expect(page.getByRole("button", { name: /Manage Keys/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: /Reconfigure/i })).toBeVisible();
+    } else {
+      await expect(page.locator("text=Connect to Claude")).toBeVisible();
+      await expect(page.getByRole("button", { name: /Generate Connection Key/i })).toBeVisible();
+    }
   });
 });

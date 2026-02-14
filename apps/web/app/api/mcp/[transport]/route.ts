@@ -480,12 +480,21 @@ export async function OPTIONS(request: Request) {
 // ---------------------------------------------------------------------------
 async function withCors(request: Request): Promise<Response> {
   const origin = request.headers.get("Origin") ?? "";
-  const response = await authHandler(request);
-  const headers = corsHeaders(origin);
-  for (const [key, value] of Object.entries(headers)) {
-    if (value) response.headers.set(key, value);
+  try {
+    const response = await authHandler(request);
+    const headers = corsHeaders(origin);
+    for (const [key, value] of Object.entries(headers)) {
+      if (value) response.headers.set(key, value);
+    }
+    return response;
+  } catch (error) {
+    console.error("[MCP] Handler error:", error);
+    const headers = corsHeaders(origin);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", ...headers },
+    });
   }
-  return response;
 }
 
 // ---------------------------------------------------------------------------
