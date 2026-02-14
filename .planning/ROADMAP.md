@@ -160,7 +160,7 @@ Total: 21 plans completed. 9 phases, 26 requirements.
 
 - [x] **Phase 49: Tenant Resolution Cleanup** - Eliminate DEFAULT_TENANT_ID hardcoding across codebase
 - [x] **Phase 50: Gmail OAuth Infrastructure** - Separate OAuth flow for Gmail with encrypted token storage
-- [ ] **Phase 51: Email Analysis Pipeline** - Fetch, classify, and aggregate 90 days of email metadata
+- [x] **Phase 51: Email Analysis Pipeline** - Fetch, classify, and aggregate 90 days of email metadata
 - [ ] **Phase 52: Diagnostic Dashboard** - Visual email time breakdown with charts and KPIs
 - [ ] **Phase 53: Skill Recommendations** - AI-powered skill matching based on email patterns
 - [ ] **Phase 54: Deployment Plan** - Ranked adoption sequence with projected time savings
@@ -207,11 +207,11 @@ Plans:
   5. The scan handles large mailboxes gracefully with batched API calls, date-range filtering, sampling for 5000+ message mailboxes, and a progress indicator during the 60-90 second analysis
 **Plans**: 5 plans
 Plans:
-- [ ] 51-01-PLAN.md -- Schema and service for email_diagnostics table (aggregate-only storage)
-- [ ] 51-02-PLAN.md -- Gmail client: fetch email metadata with batching and pagination
-- [ ] 51-03-PLAN.md -- Two-pass email classifier (rule-based + AI)
-- [ ] 51-04-PLAN.md -- Time estimator + aggregator + server action orchestrator
-- [ ] 51-05-PLAN.md -- Diagnostic card UI with progress indicator
+- [x] 51-01-PLAN.md -- Schema and service for email_diagnostics table (aggregate-only storage)
+- [x] 51-02-PLAN.md -- Gmail client: fetch email metadata with batching and pagination
+- [x] 51-03-PLAN.md -- Two-pass email classifier (rule-based + AI)
+- [x] 51-04-PLAN.md -- Time estimator + aggregator + server action orchestrator
+- [x] 51-05-PLAN.md -- Diagnostic card UI with progress indicator
 
 #### Phase 52: Diagnostic Dashboard
 **Goal**: Users see a visual breakdown of where their email time goes, with clear charts and the ability to re-run the analysis
@@ -282,12 +282,12 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 | 40-48 | v3.0 | 21/21 | Complete | 2026-02-13 |
 | 49. Tenant Cleanup | v4.0 | 3/3 | Complete | 2026-02-14 |
 | 50. Gmail OAuth | v4.0 | 3/3 | Complete | 2026-02-14 |
-| 51. Email Analysis | v4.0 | 0/5 | Not started | - |
+| 51. Email Analysis | v4.0 | 5/5 | Complete | 2026-02-14 |
 | 52. Dashboard | v4.0 | 0/TBD | Not started | - |
 | 53. Recommendations | v4.0 | 0/TBD | Not started | - |
 | 54. Deployment Plan | v4.0 | 0/TBD | Not started | - |
 
-**Total: 203 plans completed across 50 phases and 9 milestones. v4.0: 6 plans done, 2/6 phases complete.**
+**Total: 208 plans completed across 51 phases and 9 milestones. v4.0: 11 plans done, 3/6 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
