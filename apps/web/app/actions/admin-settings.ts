@@ -51,14 +51,17 @@ export async function saveSettingsAction(
       stopOllama();
     }
 
-    await updateSiteSettings({
-      semanticSimilarityEnabled,
-      ollamaUrl,
-      ollamaModel,
-      embeddingDimensions,
-      allowSkillDownload,
-      gmailDiagnosticEnabled,
-    });
+    await updateSiteSettings(
+      {
+        semanticSimilarityEnabled,
+        ollamaUrl,
+        ollamaModel,
+        embeddingDimensions,
+        allowSkillDownload,
+        gmailDiagnosticEnabled,
+      },
+      session.user.tenantId
+    );
     revalidatePath("/admin/settings");
     revalidatePath("/settings/connections");
     return { success: true };
@@ -97,9 +100,7 @@ export async function testConnectionAction(
 
   if (result.ok) {
     // Update last successful connection timestamp
-    await updateSiteSettings({
-      lastSuccessfulConnection: new Date(),
-    });
+    await updateSiteSettings({ lastSuccessfulConnection: new Date() }, session.user.tenantId);
     return { success: true, models: result.models };
   }
 
