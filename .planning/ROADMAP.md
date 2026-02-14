@@ -234,7 +234,10 @@ Plans:
   1. After a diagnostic scan, Claude AI analyzes the user's email category breakdown and generates search queries that map each high-time category to potential skill automation opportunities, using existing hybrid search to find matching skills
   2. Top 3-5 skill recommendations are displayed with personalized explanations (e.g., "You spend 4.2 hrs/week on newsletters -- this Email Digest skill could automate summarization and save ~3 hrs/week")
   3. Each recommendation card includes a one-click install button that launches the existing install flow, so users can go from insight to deployment without leaving the diagnostic page
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 53-01-PLAN.md -- AI recommendation engine (query generation, search, ranking)
+- [ ] 53-02-PLAN.md -- Recommendation UI (cards, section, my-leverage integration)
 
 #### Phase 54: Deployment Plan
 **Goal**: Users see a prioritized skill adoption roadmap with projected cumulative time savings
@@ -287,7 +290,7 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 | 50. Gmail OAuth | v4.0 | 3/3 | Complete | 2026-02-14 |
 | 51. Email Analysis | v4.0 | 5/5 | Complete | 2026-02-14 |
 | 52. Dashboard | v4.0 | 0/2 | Not started | - |
-| 53. Recommendations | v4.0 | 0/TBD | Not started | - |
+| 53. Recommendations | v4.0 | 0/2 | Not started | - |
 | 54. Deployment Plan | v4.0 | 0/TBD | Not started | - |
 
 **Total: 208 plans completed across 51 phases and 9 milestones. v4.0: 11 plans done, 3/6 phases complete.**
