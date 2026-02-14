@@ -1,4 +1,4 @@
-import { google } from "@googleapis/gmail";
+import { gmail, auth as gAuth } from "@googleapis/gmail";
 import { getValidGmailToken } from "@everyskill/db/services/gmail-tokens";
 
 /**
@@ -62,15 +62,15 @@ export async function fetchEmailMetadata(
   const token = await getValidGmailToken(userId);
 
   // 2. Create OAuth2 client
-  const auth = new google.auth.OAuth2();
-  auth.setCredentials({
+  const oauth2Client = new gAuth.OAuth2();
+  oauth2Client.setCredentials({
     access_token: token.accessToken,
     refresh_token: token.refreshToken,
     expiry_date: token.expiresAt.getTime(),
   });
 
   // 3. Create Gmail client
-  const gmail = google.gmail({ version: "v1", auth });
+  const gmailClient = gmail({ version: "v1", auth: oauth2Client });
 
   // 4. Calculate date filter
   const afterDate = new Date();
@@ -83,14 +83,15 @@ export async function fetchEmailMetadata(
 
   try {
     while (messageIds.length < options.maxMessages) {
-      const listResponse = await gmail.users.messages.list({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const listResponse: any = await gmailClient.users.messages.list({
         userId: "me",
         maxResults: LIST_PAGE_SIZE,
         pageToken,
         q: `after:${afterDateStr}`,
       });
 
-      const messages = listResponse.data.messages || [];
+      const messages = (listResponse.data.messages || []) as Array<{ id?: string | null }>;
       const idsToAdd = messages.map((m) => m.id!).slice(0, options.maxMessages - messageIds.length);
 
       messageIds.push(...idsToAdd);
@@ -109,16 +110,18 @@ export async function fetchEmailMetadata(
     for (let i = 0; i < messageIds.length; i += BATCH_SIZE) {
       const chunk = messageIds.slice(i, i + BATCH_SIZE);
 
-      const chunkResults = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const chunkResults: any[] = await Promise.all(
         chunk.map((id) =>
-          gmail.users.messages
+          gmailClient.users.messages
             .get({
               userId: "me",
               id,
               format: "metadata",
               metadataHeaders: ["From", "Subject", "Date", "List-Unsubscribe", "In-Reply-To"],
             })
-            .then((res) => res.data)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .then((res: any) => res.data)
             .catch(() => {
               // Individual message fetch errors are silently skipped to continue batch
               return null;
@@ -132,7 +135,9 @@ export async function fetchEmailMetadata(
 
         const headers = message.payload?.headers || [];
         const getHeader = (name: string): string | null => {
-          const header = headers.find((h) => h.name?.toLowerCase() === name.toLowerCase());
+          const header = headers.find(
+            (h: { name?: string; value?: string }) => h.name?.toLowerCase() === name.toLowerCase()
+          );
           return header?.value || null;
         };
 

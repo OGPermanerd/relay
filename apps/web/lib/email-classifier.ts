@@ -19,10 +19,11 @@ import { z } from "zod";
  */
 export interface EmailMetadata {
   id: string;
+  date: Date;
   from: string;
   subject: string;
-  listUnsubscribe?: string;
-  inReplyTo?: string;
+  listUnsubscribe: string | null;
+  inReplyTo: string | null;
 }
 
 // ---------------------------------------------------------------------------
