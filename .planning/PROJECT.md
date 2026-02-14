@@ -10,14 +10,16 @@ Skills get better as they pass through more hands, with real metrics proving tha
 
 ## Current State
 
-**v2.0 shipped 2026-02-08** — Quality-gated skill publishing with AI review, admin approval, conversational MCP discovery, and fork drift detection.
+**v3.0 shipped 2026-02-13** — AI discovery, hybrid search, Loom video, MCP unification, user preferences, admin global skills, search analytics, homepage redesign.
 
-**Post-v2.0 (2026-02-11):** Fork & Improve with AI (iterative refinement + fork differentiation), new pacman gradient logo.
+**Post-v3.0 (2026-02-14):** Homepage dynamic greeting, skills table reorder (Days Saved), install flow improvements (claude:// deep link, admin download toggle, download tracking), staging smoke tests.
 
 Tech stack: Next.js 16.1.6, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, mcp-handler, Playwright, vitest, nuqs, react-swipeable, Recharts, Voyage AI, pgvector, Anthropic SDK, Ollama (nomic-embed-text)
-LOC: ~17,000 TypeScript across 350+ files
+LOC: ~18,000 TypeScript across 350+ files
 
 Previous milestones:
+- v3.0 shipped 2026-02-13 — AI discovery, hybrid search, homepage redesign, user preferences
+- v2.0 shipped 2026-02-08 — Quality-gated publishing, conversational MCP, fork drift detection
 - v1.5 shipped 2026-02-08 — Production deployment, multi-tenancy, RBAC, branding, email notifications
 - v1.4 shipped 2026-02-06 — Employee analytics, remote MCP, extended search
 - v1.3 shipped 2026-02-04 — AI-driven skill review, semantic similarity, fork-based versioning, cross-platform install
@@ -82,22 +84,32 @@ Previous milestones:
 - ✓ Web remote MCP via Streamable HTTP for Claude.ai browser access — v1.4
 - ✓ Extended MCP search matching author name and tags with field-weighted scoring — v1.4
 
-### Active — v3.0 AI Discovery & Workflow Intelligence
+### Validated — v3.0 AI Discovery & Workflow Intelligence
 
-## Current Milestone: v3.0 AI Discovery & Workflow Intelligence
+- ✓ Skill visibility scoping (global company / employee visible / employee invisible / personal) — v3.0
+- ✓ Loom video integration for skill demos (authors and reviewers) — v3.0
+- ✓ `/everyskill` unified MCP tool with STRAP action router pattern — v3.0
+- ✓ Personal preference extraction and cross-AI pref sync (CLAUDE.md export) — v3.0
+- ✓ Admin-stamped global skills with company approval workflows — v3.0
+- ✓ Hybrid search with pgvector + ILIKE + RRF fusion — v3.0
+- ✓ Search analytics with normalized query tracking and admin dashboard — v3.0
+- ✓ Homepage redesign with AI greeting, compact stats, category tiles, discovery search — v3.0
 
-**Goal:** Transform EverySkill from a skill catalog into an intelligent workflow assistant — AI-powered discovery, workspace diagnostics, granular visibility scoping, and a redesigned homepage.
+### Active — v4.0 Gmail Workflow Diagnostic
+
+## Current Milestone: v4.0 Gmail Workflow Diagnostic
+
+**Goal:** Transform EverySkill from a passive skill catalog into a proactive workflow advisor — connect to Gmail, analyze email patterns with AI, and recommend skills that save the most time, with a visual dashboard and deployment plan.
 
 **Target features:**
-- AI-powered intent search ("What are you trying to solve?") with top-3 skill recommendations
-- `/everyskill` MCP integration for in-context skill discovery from any prompt
-- Google Workspace connector (Drive, Gmail, Calendar) with screentime-style time analysis
-- Automation recommendations with deployment planning based on workspace diagnostic
-- Skill visibility scoping (global company / employee visible / employee invisible / personal)
-- Admin-stamped global skills with department approval workflows
-- Personal preference extraction and cross-AI pref sync (scan CLAUDE.md, push to claude.ai)
-- Loom video integration for skill demos (authors and reviewers)
-- Homepage redesign informed by analysis of successful similar platforms
+- Gmail connector via extended Google OAuth (readonly scope on existing sign-in)
+- Email pattern analysis (volume, types, response patterns, recurring email categories)
+- AI-powered recommendations — Claude analyzes patterns, matches to existing skills with reasoning
+- Diagnostic dashboard with visual time breakdown showing where time goes
+- Deployment plan with ranked skill recommendations and suggested adoption order
+- Privacy-first: analyze and discard raw data, persist only summary/recommendations
+- DEFAULT_TENANT_ID cleanup (resolve tenant from session in all code paths)
+- General stability hardening
 
 ### Validated — Post-v2.0 (ad hoc)
 
@@ -218,4 +230,4 @@ Previous milestones:
 | PNG logo over animated SVG | New brand identity; transparent background works on both light and dark headers | ✓ Good |
 
 ---
-*Last updated: 2026-02-11 — v3.0 milestone started*
+*Last updated: 2026-02-14 — v4.0 milestone started*

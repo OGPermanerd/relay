@@ -2,19 +2,17 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-11)
+See: .planning/PROJECT.md (updated 2026-02-14)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v3.0 COMPLETE — All 9 phases shipped
+**Current focus:** v4.0 Gmail Workflow Diagnostic
 
 ## Current Position
 
-Phase: 48 of 48 (Homepage Redesign)
-Plan: 2 of 2 in Phase 48
-Status: MILESTONE COMPLETE
-Last activity: 2026-02-13 -- v3.0 milestone shipped (all 9 phases, 21 plans)
-
-Progress: [██████████████████████████████] 100% (197/197 total)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-14 — Milestone v4.0 started
 
 ## Milestones
 
@@ -26,6 +24,7 @@ Progress: [███████████████████████
 - v1.5 Production & Multi-Tenancy - 55 plans - shipped 2026-02-08
 - v2.0 Skill Ecosystem - 23 plans - shipped 2026-02-08
 - v3.0 AI Discovery & Workflow Intelligence - 21 plans - shipped 2026-02-13
+- v4.0 Gmail Workflow Diagnostic - in progress
 
 ## Performance Metrics
 
@@ -84,17 +83,18 @@ All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 
 ### Pending Todos
 
-- AI-Independence -- platform-agnostic skill translation (future phase)
-- DEFAULT_TENANT_ID cleanup -- new v3.0 code must ALWAYS resolve tenant from session
+- AI-Independence -- platform-agnostic skill translation (future milestone)
+- DEFAULT_TENANT_ID cleanup -- included in v4.0 scope
 
 ### Blockers/Concerns
 
 - ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
-- DEFAULT_TENANT_ID hardcoded in 18+ files -- new v3.0 code must not continue this pattern
+- DEFAULT_TENANT_ID hardcoded in 18+ files -- v4.0 will address this
 - Embedding model: Ollama nomic-embed-text (768 dims) -- decision resolved in Phase 45
+- Gmail API requires Google Cloud Console configuration (enable Gmail API, update OAuth consent screen scopes)
 
 ## Session Continuity
 
-Last session: 2026-02-13
-Stopped at: v3.0 milestone complete -- all 9 phases shipped
+Last session: 2026-02-14
+Stopped at: v4.0 milestone initialization — defining requirements
 Resume file: .planning/ROADMAP.md
