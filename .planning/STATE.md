@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 ## Current Position
 
 Phase: 51 of 54 (Email Analysis Pipeline)
-Plan: 2 of 5 in current phase (51-02-PLAN.md completed)
+Plan: 1 of 5 in current phase (51-01-PLAN.md completed)
 Status: In progress
-Last activity: 2026-02-14 -- Completed 51-02-PLAN.md (Gmail API client for metadata fetching)
+Last activity: 2026-02-14 -- Completed 51-01-PLAN.md (Email diagnostics schema and service)
 
-Progress: [███████████░] 40%
+Progress: [███████████░] 20%
 
 ## Milestones
 
@@ -36,8 +36,8 @@ Progress: [███████████░] 40%
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 205 plans across 51 phases and 9 milestones
-- ~18,850 LOC TypeScript
+- 204 plans across 51 phases and 9 milestones
+- ~18,900 LOC TypeScript
 - 8 days total development time
 
 ## Accumulated Context
@@ -80,6 +80,12 @@ Phase 51 decisions (Plan 02):
 - Batch 100 messages per Promise.all to respect Gmail API rate limits (250 units/user/sec)
 - Silent error handling for individual message fetch failures to continue batch processing
 
+Phase 51 decisions (Plan 01):
+- Store estimated_hours_per_week as tenths (integer) to avoid floating point precision issues
+- Use JSONB for category_breakdown and pattern_insights for flexible aggregate storage
+- No individual email columns (From/Subject/Date) - aggregate stats only
+- RLS tenant_isolation policy enforced on all operations
+
 Phase 51 decisions (Plan 03):
 - Two-pass email classification: rule-based first (~70% coverage), AI second for ambiguous cases
 - Claude Haiku 4.5 for cost efficiency on high-volume classification (vs Sonnet)
@@ -102,5 +108,5 @@ Phase 51 decisions (Plan 03):
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 51 Plan 02 complete -- Gmail API client for metadata fetching
-Resume file: .planning/phases/51-email-analysis-pipeline/51-04-PLAN.md (Email insight extraction)
+Stopped at: Phase 51 Plan 01 complete -- Email diagnostics schema and service
+Resume file: .planning/phases/51-email-analysis-pipeline/51-02-PLAN.md (Gmail API client)
