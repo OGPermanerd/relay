@@ -63,11 +63,16 @@ function createAuthConfig(): NextAuthConfig {
               try {
                 await db!.update(users).set({ tenantId: tenant.id }).where(eq(users.id, user.id));
 
-                // First-user-admin: if this is the first user in the tenant, promote to admin
-                const isFirst = await isFirstUserInTenant(tenant.id);
-                const role = isFirst ? ("admin" as const) : ("member" as const);
-                await setUserRole(user.id, role);
-                token.role = role;
+                // Read existing role from DB; only auto-promote if first user in tenant
+                const existingRole = await getUserRole(user.id);
+                if (existingRole) {
+                  token.role = existingRole;
+                } else {
+                  const isFirst = await isFirstUserInTenant(tenant.id);
+                  const role = isFirst ? ("admin" as const) : ("member" as const);
+                  await setUserRole(user.id, role);
+                  token.role = role;
+                }
               } catch (e) {
                 console.error("Failed to update user tenantId/role:", e);
               }
