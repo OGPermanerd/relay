@@ -83,8 +83,6 @@ export function NotificationBell({
     });
   }, []);
 
-  const displayCount = count > 99 ? "99+" : count;
-
   return (
     <div ref={containerRef} className="relative">
       <button
@@ -112,11 +110,11 @@ export function NotificationBell({
           />
         </svg>
 
-        {/* Unread badge */}
+        {/* Unread dot */}
         {count > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-            {displayCount}
-          </span>
+          <span
+            className={`absolute right-0 top-0 h-2 w-2 rounded-full bg-red-500 ring-2 ${dark ? "ring-[#0b1624]" : "ring-white"}`}
+          />
         )}
       </button>
 
