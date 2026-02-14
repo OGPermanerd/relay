@@ -4,7 +4,9 @@ import { incrementSkillUses } from "@everyskill/db/services/skill-metrics";
 import { db } from "@everyskill/db";
 import { usageEvents } from "@everyskill/db/schema";
 
-// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
+// Anonymous installs (no API key) are tracked under the default tenant as "unattributed".
+// This is the only legitimate runtime use of DEFAULT_TENANT_ID -- all authenticated
+// code paths resolve tenant from session or API key.
 const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
 
 /**

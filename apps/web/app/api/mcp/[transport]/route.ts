@@ -12,9 +12,6 @@ import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
 // ---------------------------------------------------------------------------
 const REMOTE_READONLY = process.env.MCP_REMOTE_MODE !== "full";
 
-// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
 // ---------------------------------------------------------------------------
 // CORS
 // ---------------------------------------------------------------------------
@@ -58,19 +55,25 @@ async function trackUsage(
     toolName: string;
     skillId?: string;
     userId?: string;
+    tenantId?: string;
     metadata?: Record<string, unknown>;
   },
   { skipIncrement = false }: { skipIncrement?: boolean } = {}
 ) {
   try {
     if (!db) return;
-    await db.insert(usageEvents).values({ tenantId: DEFAULT_TENANT_ID, ...event });
+    const tenantId = event.tenantId;
+    if (!tenantId) {
+      console.warn("[tracking] Skipping HTTP MCP usage tracking: no tenant resolved");
+      return;
+    }
+    await db.insert(usageEvents).values({ tenantId, ...event });
     if (event.skillId && !skipIncrement) await incrementSkillUses(event.skillId);
 
     // Audit log — fire-and-forget
     writeAuditLog({
       actorId: event.userId,
-      tenantId: DEFAULT_TENANT_ID,
+      tenantId,
       action: `mcp.${event.toolName}`,
       resourceType: event.skillId ? "skill" : "mcp_tool",
       resourceId: event.skillId || event.toolName,
@@ -88,6 +91,12 @@ function extractUserId(extra: {
   authInfo?: { extra?: Record<string, unknown> };
 }): string | undefined {
   return extra.authInfo?.extra?.userId as string | undefined;
+}
+
+function extractTenantId(extra: {
+  authInfo?: { extra?: Record<string, unknown> };
+}): string | undefined {
+  return extra.authInfo?.extra?.tenantId as string | undefined;
 }
 
 function extractKeyId(extra: { authInfo?: { clientId?: string } }): string | undefined {
@@ -131,6 +140,7 @@ const handler = createMcpHandler(
       },
       async ({ category, limit }, extra) => {
         const userId = extractUserId(extra);
+        const tenantId = extractTenantId(extra);
         const keyId = extractKeyId(extra);
         if (keyId && !checkRateLimit(keyId)) return rateLimitError();
 
@@ -164,6 +174,7 @@ const handler = createMcpHandler(
         await trackUsage({
           toolName: "list_skills",
           userId,
+          tenantId,
           metadata: { category, limit, resultCount: results.length },
         });
 
@@ -200,6 +211,7 @@ const handler = createMcpHandler(
       },
       async ({ query, category, limit }, extra) => {
         const userId = extractUserId(extra);
+        const tenantId = extractTenantId(extra);
         const keyId = extractKeyId(extra);
         if (keyId && !checkRateLimit(keyId)) return rateLimitError();
 
@@ -208,6 +220,7 @@ const handler = createMcpHandler(
         await trackUsage({
           toolName: "search_skills",
           userId,
+          tenantId,
           metadata: { query, category, resultCount: results.length },
         });
 
@@ -236,6 +249,7 @@ const handler = createMcpHandler(
       },
       async ({ skillId }, extra) => {
         const userId = extractUserId(extra);
+        const tenantId = extractTenantId(extra);
         const keyId = extractKeyId(extra);
         if (keyId && !checkRateLimit(keyId)) return rateLimitError();
 
@@ -278,6 +292,7 @@ const handler = createMcpHandler(
           toolName: "deploy_skill",
           skillId: skill.id,
           userId,
+          tenantId,
           metadata: { skillName: skill.name, skillCategory: skill.category },
         });
 
@@ -322,11 +337,12 @@ const handler = createMcpHandler(
         },
         async ({ skillId }, extra) => {
           const userId = extractUserId(extra);
+          const tenantId = extractTenantId(extra);
           const keyId = extractKeyId(extra);
           if (keyId && !checkRateLimit(keyId)) return rateLimitError();
 
           await trackUsage(
-            { toolName: "confirm_install", skillId, userId },
+            { toolName: "confirm_install", skillId, userId, tenantId },
             { skipIncrement: true }
           );
 
@@ -362,11 +378,12 @@ const handler = createMcpHandler(
         },
         async ({ skillId, action }, extra) => {
           const userId = extractUserId(extra);
+          const tenantId = extractTenantId(extra);
           const keyId = extractKeyId(extra);
           if (keyId && !checkRateLimit(keyId)) return rateLimitError();
 
           await trackUsage(
-            { toolName: "log_skill_usage", skillId, userId, metadata: { action } },
+            { toolName: "log_skill_usage", skillId, userId, tenantId, metadata: { action } },
             { skipIncrement: true }
           );
 
@@ -458,7 +475,7 @@ const authHandler = withMcpAuth(
       token: bearerToken,
       clientId: result.keyId,
       scopes: [],
-      extra: { userId: result.userId },
+      extra: { userId: result.userId, tenantId: result.tenantId },
     };
   },
   { required: true }
