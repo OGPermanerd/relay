@@ -10,6 +10,7 @@
 - ✅ **v1.5 Production, Multi-Tenancy & Reliable Usage Tracking** - Phases 25-33 (shipped 2026-02-08)
 - ✅ **v2.0 Skill Ecosystem** - Phases 34-39 (shipped 2026-02-08)
 - ✅ **v3.0 AI Discovery & Workflow Intelligence** - Phases 40-48 (shipped 2026-02-13)
+- 🚧 **v4.0 Gmail Workflow Diagnostic** - Phases 49-54 (in progress)
 
 ## Phases
 
@@ -129,181 +130,131 @@ Total: 23 plans completed. 44 requirements across 6 categories.
 
 </details>
 
-### v3.0 AI Discovery & Workflow Intelligence (In Progress)
+<details>
+<summary>✅ v3.0 AI Discovery & Workflow Intelligence (Phases 40-48) - SHIPPED 2026-02-13</summary>
 
-**Milestone Goal:** Transform EverySkill from a skill catalog into an intelligent discovery and adoption platform with visibility scoping, AI-powered search, video integration, user preferences, and a redesigned homepage.
+See archived roadmap: .planning/milestones/v3.0-ROADMAP.md
+
+**Summary:**
+- Phase 40: Visibility Scoping (4 plans)
+- Phase 41: Loom Video Integration (2 plans)
+- Phase 42: MCP Tool Unification (2 plans)
+- Phase 43: User Preferences (3 plans)
+- Phase 44: Admin Global Skills (2 plans)
+- Phase 45: Hybrid Search & Discovery (3 plans)
+- Phase 46: Search Analytics (2 plans)
+- Phase 47: Homepage Research (1 plan)
+- Phase 48: Homepage Redesign (2 plans)
+
+Total: 21 plans completed. 9 phases, 26 requirements.
+
+</details>
+
+### 🚧 v4.0 Gmail Workflow Diagnostic (In Progress)
+
+**Milestone Goal:** Transform EverySkill from a passive skill catalog into a proactive workflow advisor -- connect to Gmail, analyze email patterns with AI, and recommend skills that save the most time, with a visual dashboard and deployment plan. Privacy-first: analyze and discard raw data, persist only aggregates.
 
 **Phase Numbering:**
-- Integer phases (40, 41, ...): Planned milestone work
-- Decimal phases (40.1, 40.2): Urgent insertions (marked with INSERTED)
+- Integer phases (49, 50, ...): Planned milestone work
+- Decimal phases (49.1, 49.2): Urgent insertions (marked with INSERTED)
 
-- [x] **Phase 40: Visibility Scoping** - Skill access control with tenant/personal visibility levels
-- [x] **Phase 41: Loom Video Integration** - Video demos on skill pages and browse cards
-- [x] **Phase 42: MCP Tool Unification** - Single `everyskill` tool with sub-commands for external discovery
-- [x] **Phase 43: User Preferences** - Server-side preference storage with CLAUDE.md export
-- [x] **Phase 44: Admin Global Skills** - Company Approved badge and admin stamping workflow
-- [x] **Phase 45: Hybrid Search & Discovery** - AI-powered intent search with semantic + full-text fusion
-- [x] **Phase 46: Search Analytics** - Query logging and admin dashboard for search insights
-- [x] **Phase 47: Homepage Research** - Competitive analysis and layout variant evaluation
-- [x] **Phase 48: Homepage Redesign** - Search-first hero with personalization and curated sections
+- [ ] **Phase 49: Tenant Resolution Cleanup** - Eliminate DEFAULT_TENANT_ID hardcoding across codebase
+- [ ] **Phase 50: Gmail OAuth Infrastructure** - Separate OAuth flow for Gmail with encrypted token storage
+- [ ] **Phase 51: Email Analysis Pipeline** - Fetch, classify, and aggregate 90 days of email metadata
+- [ ] **Phase 52: Diagnostic Dashboard** - Visual email time breakdown with charts and KPIs
+- [ ] **Phase 53: Skill Recommendations** - AI-powered skill matching based on email patterns
+- [ ] **Phase 54: Deployment Plan** - Ranked adoption sequence with projected time savings
 
-#### Phase 40: Visibility Scoping
-**Goal**: Users control who can see their skills, and the platform enforces visibility boundaries everywhere
-**Depends on**: Nothing (foundation phase)
-**Requirements**: VIS-01, VIS-02, VIS-03, VIS-06
+#### Phase 49: Tenant Resolution Cleanup
+**Goal**: All code paths resolve tenant from the authenticated session, eliminating the hardcoded DEFAULT_TENANT_ID constant
+**Depends on**: Nothing (foundation cleanup, must precede new tables)
+**Requirements**: CLEAN-01
 **Success Criteria** (what must be TRUE):
-  1. User can set a skill's visibility to "tenant" or "personal" when creating or editing it
-  2. User browsing skills never sees another user's personal skills — only their own personal skills and all tenant-visible skills appear
-  3. MCP search and recommend tools return only skills the authenticated user is allowed to see
-  4. All existing skills have "tenant" visibility after migration, with no change in browse behavior
-**Plans:** 4 plans
+  1. No code path references the DEFAULT_TENANT_ID constant for runtime tenant resolution -- every query, insert, and filter derives tenant from the user session
+  2. All existing functionality (skills CRUD, search, analytics, MCP, admin) continues working identically after the change -- no regressions in E2E tests
+  3. A new user signing in for the first time is correctly assigned to a tenant via the existing domain-to-tenant mapping without any hardcoded fallback
+**Plans**: TBD
 
-Plans:
-- [x] 40-01-PLAN.md — Schema, migration, and visibility filter helpers
-- [x] 40-02-PLAN.md — Apply visibility to all web read/query paths
-- [x] 40-03-PLAN.md — Visibility UI selector and write path integration
-- [x] 40-04-PLAN.md — MCP tools visibility enforcement
-
-#### Phase 41: Loom Video Integration
-**Goal**: Authors can add video demos to skills, and viewers watch them inline
-**Depends on**: Nothing (parallel with Phase 40, 42)
-**Requirements**: LOOM-01, LOOM-02, LOOM-03, LOOM-04
+#### Phase 50: Gmail OAuth Infrastructure
+**Goal**: Users can securely connect and disconnect their Gmail account via a dedicated OAuth flow, with encrypted token storage and admin control
+**Depends on**: Phase 49 (tenant resolution must be dynamic before adding new tenant-scoped tables)
+**Requirements**: GMAIL-01, GMAIL-02, GMAIL-03, GMAIL-04, GMAIL-05, GMAIL-06
 **Success Criteria** (what must be TRUE):
-  1. Author can paste a Loom URL when creating or editing a skill, with format validation and error feedback
-  2. Skill detail page displays a responsive embedded Loom video player that loads metadata (title, duration) from oEmbed
-  3. Skill browse cards show a video thumbnail badge when a Loom URL is present, distinguishing video-equipped skills at a glance
-**Plans:** 2 plans
+  1. User can click "Connect Gmail" on a settings page, complete a Google OAuth consent flow requesting `gmail.readonly` scope, and return to see their Gmail shown as connected
+  2. Gmail OAuth tokens are stored in a dedicated `gmail_tokens` table with AES-256-GCM encryption at rest -- access tokens, refresh tokens, and expiry timestamps are never stored in plaintext
+  3. User can click "Disconnect Gmail" and all tokens are immediately deleted from the database and revoked with Google, with the UI reverting to "not connected" state
+  4. Token refresh happens automatically and race-condition-safely when access tokens expire, so returning users never see auth errors
+  5. Admin can toggle the Gmail diagnostic feature on/off per tenant from the admin panel, and when disabled, the "Connect Gmail" option is hidden for that tenant's users
+**Plans**: TBD
 
-Plans:
-- [x] 41-01-PLAN.md — Schema, migration, Loom utility library, Zod validation, and form field
-- [x] 41-02-PLAN.md — LoomEmbed component, detail page integration, and browse/trending indicators
-
-#### Phase 42: MCP Tool Unification
-**Goal**: Users discover and interact with EverySkill through a single, well-described MCP tool
-**Depends on**: Nothing (parallel with Phase 40, 41)
-**Requirements**: MCP-01, MCP-02, MCP-03
+#### Phase 51: Email Analysis Pipeline
+**Goal**: The system fetches 90 days of email headers, classifies them into categories using rules and AI, estimates time spent, and stores only anonymous aggregate results
+**Depends on**: Phase 50 (Gmail tokens must exist to make API calls)
+**Requirements**: ANAL-01, ANAL-02, ANAL-03, ANAL-04, ANAL-05, ANAL-06
 **Success Criteria** (what must be TRUE):
-  1. User can invoke `everyskill` as a single MCP tool with sub-commands (search, install, describe) from any AI client
-  2. All existing MCP functionality (search, recommend, install, describe, review, drift check) works identically through the unified tool wrapper
-  3. AI clients proactively suggest the `everyskill` tool when users ask skill-related questions, due to the tool description being crafted for discoverability
-**Plans:** 2 plans
+  1. User can trigger a diagnostic scan that fetches email metadata (From, Subject, Date, List-Unsubscribe headers) for the last 90 days via Gmail API using `gmail.readonly` scope with `format: 'metadata'` -- no email bodies are ever accessed
+  2. Emails are categorized into distinct types (newsletters, notifications, internal threads, external correspondence, meetings, action items) with rule-based classification handling ~70% and Claude AI classifying the remaining ~30% ambiguous emails
+  3. Time estimates are calculated per category using a transparent heuristic model (category-weighted base time multiplied by thread depth and reply factors), producing a total weekly email hours estimate
+  4. After analysis completes, only aggregate statistics (counts, percentages, time estimates per category) are persisted in the database -- raw email metadata is discarded and never written to any persistent storage
+  5. The scan handles large mailboxes gracefully with batched API calls, date-range filtering, sampling for 5000+ message mailboxes, and a progress indicator during the 60-90 second analysis
+**Plans**: TBD
 
-Plans:
-- [x] 42-01-PLAN.md — Extract inline handlers, remove log_usage, create unified everyskill tool with STRAP action router
-- [x] 42-02-PLAN.md — Centralize legacy deprecated wrappers, clean handler files, add routing tests
-
-#### Phase 43: User Preferences
-**Goal**: Users configure personal settings that persist server-side and export as portable AI configuration
-**Depends on**: Nothing (can run parallel with 40-42)
-**Requirements**: PREF-01, PREF-02, PREF-04, PREF-05
+#### Phase 52: Diagnostic Dashboard
+**Goal**: Users see a visual breakdown of where their email time goes, with clear charts and the ability to re-run the analysis
+**Depends on**: Phase 51 (aggregate diagnostic data must exist to display)
+**Requirements**: DASH-01, DASH-02, DASH-03, DASH-04
 **Success Criteria** (what must be TRUE):
-  1. User can access a preferences page to set preferred categories, default sort order, and notification preferences
-  2. Preferences are stored server-side in JSONB with Zod validation, code-defined defaults, and immediate effect (no localStorage)
-  3. User can generate a CLAUDE.md file from their skill portfolio and preferences, containing relevant skill references and personal workflow settings
-**Plans:** 3 plans
+  1. Diagnostic dashboard page displays an email category breakdown chart (Recharts PieChart or BarChart) showing the distribution of email types with counts and percentages
+  2. A "screentime"-style time-per-category visualization shows how many hours per week each email category consumes, with the total estimated weekly email hours displayed prominently as a hero KPI
+  3. User can click "Re-run Diagnostic" to trigger a fresh 90-day analysis, and the dashboard updates with the new results, showing the date of the last scan
+**Plans**: TBD
 
-Plans:
-- [x] 43-01-PLAN.md — Schema, service, migration, and shared Zod defaults
-- [x] 43-02-PLAN.md — Settings layout, preferences form, and profile page links
-- [x] 43-03-PLAN.md — CLAUDE.md export server action and preview/download UI
-
-#### Phase 44: Admin Global Skills
-**Goal**: Admins curate a set of company-endorsed skills with visible badges
-**Depends on**: Phase 40 (visibility infrastructure must exist)
-**Requirements**: VIS-04, VIS-05
+#### Phase 53: Skill Recommendations
+**Goal**: AI analyzes the user's email patterns and recommends specific EverySkill skills that would save them the most time, with personalized reasoning
+**Depends on**: Phase 51 (diagnostic results needed for matching), Phase 52 can run in parallel if files are separate
+**Requirements**: RECO-01, RECO-02, RECO-03
 **Success Criteria** (what must be TRUE):
-  1. Admin can stamp any published skill as "Company Approved" via a dedicated action, and a distinctive badge appears on the skill card and detail page
-  2. Company Approved skills appear in a dedicated "Company Recommended" section that is visually distinct from other skill listings
-**Plans:** 2 plans
+  1. After a diagnostic scan, Claude AI analyzes the user's email category breakdown and generates search queries that map each high-time category to potential skill automation opportunities, using existing hybrid search to find matching skills
+  2. Top 3-5 skill recommendations are displayed with personalized explanations (e.g., "You spend 4.2 hrs/week on newsletters -- this Email Digest skill could automate summarization and save ~3 hrs/week")
+  3. Each recommendation card includes a one-click install button that launches the existing install flow, so users can go from insight to deployment without leaving the diagnostic page
+**Plans**: TBD
 
-Plans:
-- [x] 44-01-PLAN.md — Schema, migration, server action, and admin table toggle
-- [x] 44-02-PLAN.md — Badge component, display everywhere, and homepage Company Recommended section
-
-#### Phase 45: Hybrid Search & Discovery
-**Goal**: Users describe what they need in natural language and get intelligent, ranked skill recommendations
-**Depends on**: Phase 40 (visibility-aware search), Phase 43 (preference-boosted ranking)
-**Requirements**: DISC-01, DISC-02, DISC-03, DISC-04, DISC-05, DISC-06, PREF-03
+#### Phase 54: Deployment Plan
+**Goal**: Users see a prioritized skill adoption roadmap with projected cumulative time savings
+**Depends on**: Phase 53 (skill recommendations must exist to sequence)
+**Requirements**: PLAN-01, PLAN-02, PLAN-03
 **Success Criteria** (what must be TRUE):
-  1. User can type a natural language query in a prominent search bar and receive top-3 ranked skill recommendations with match rationale for each
-  2. Search uses hybrid retrieval (pgvector semantic + tsvector full-text) merged via Reciprocal Rank Fusion, producing better results than either method alone
-  3. When intent is ambiguous or no semantic matches meet threshold, search falls back gracefully to keyword results without errors
-  4. Search results never include skills the user should not see (respects personal/tenant visibility scoping)
-  5. User sees streaming loading feedback during search processing, and results from preferred categories rank higher
-**Plans:** 3 plans
-
-Plans:
-- [x] 45-01-PLAN.md — Embedding backfill script and auto-generation on skill create/update
-- [x] 45-02-PLAN.md — Hybrid search service with RRF SQL and discover server action
-- [x] 45-03-PLAN.md — Discovery UI with result cards, rationale, and loading states
-
-#### Phase 46: Search Analytics
-**Goal**: Admins understand search behavior and identify skill gaps from query data
-**Depends on**: Phase 45 (search infrastructure must exist to generate query logs)
-**Requirements**: ANALYTICS-01, ANALYTICS-02, ANALYTICS-03
-**Success Criteria** (what must be TRUE):
-  1. All search queries are logged with result counts in a fire-and-forget manner that adds no perceptible latency to search
-  2. Admin dashboard displays zero-result queries, highlighting terms where users searched but found nothing (skill gap signals)
-  3. Admin dashboard displays most-searched terms and trending queries, sorted by frequency and recency
-**Plans:** 2 plans
-
-Plans:
-- [x] 46-01-PLAN.md — Schema, service, migration, and fire-and-forget logging in all search paths
-- [x] 46-02-PLAN.md — Admin search analytics dashboard with summary cards and tabbed query tables
-
-#### Phase 47: Homepage Research
-**Goal**: Data-driven evaluation of homepage layout options before committing to implementation
-**Depends on**: Nothing (research phase, no technical dependencies)
-**Requirements**: HOME-08
-**Success Criteria** (what must be TRUE):
-  1. 2-3 homepage layout variants are researched and presented, each inspired by a successful platform (Atlassian Marketplace, Notion Templates, Slack App Directory) with annotated screenshots and rationale
-  2. User evaluates variants and selects one for implementation, with clear documentation of what was chosen and why
-**Plans:** 1 plan
-
-Plans:
-- [x] 47-01-PLAN.md — Verify research completeness and present variants for user decision (Selected: Hybrid A+B)
-
-#### Phase 48: Homepage Redesign
-**Goal**: The homepage becomes the intelligent entry point that surfaces discovery, curation, and personalization
-**Depends on**: Phase 44 (Company Approved section), Phase 45 (search-first hero), Phase 43 (personalized "For You"), Phase 47 (selected variant)
-**Requirements**: HOME-01, HOME-02, HOME-03, HOME-04, HOME-05, HOME-06, HOME-07, HOME-09
-**Success Criteria** (what must be TRUE):
-  1. Homepage features a search-first hero layout with prominent natural language search bar and category pills for quick filtered browsing
-  2. "Company Recommended" section displays admin-stamped skills, and "For You" section shows personalized recommendations based on user preferences and usage
-  3. Trending skills and leaderboard appear as visual cards (not tables), with platform metrics displayed as a condensed banner
-  4. Homepage maintains sub-400ms TTFB at p95 with caching for slow queries (recommendations, trending, platform stats)
-  5. Selected homepage variant is implemented with the ability to A/B test against the current layout
-**Plans**: 2 plans
-
-Plans:
-- [x] 48-01-PLAN.md — Core homepage restructure: remove tabs, add category tiles, compact stats bar, reorder sections
-- [x] 48-02-PLAN.md — Dedicated /my-leverage page for full leverage dashboard
+  1. A ranked skill adoption list orders recommended skills by estimated time savings (highest ROI first), with each entry showing the skill name, matched email category, and projected hours saved per week
+  2. A cumulative FTE Days Saved projection chart (Recharts AreaChart) shows expected savings accumulating over time as each skill is adopted in sequence
+  3. A sequential "start here" adoption order suggests which skill to try first with clear reasoning, guiding users from their biggest time sink to progressively smaller ones
+**Plans**: TBD
 
 #### Dependency Graph
 
 ```
-Phase 40 (Visibility) ──┬──> Phase 44 (Admin Global) ──> Phase 48 (Homepage)
-                         │                                    ^
-                         └──> Phase 45 (Hybrid Search) ──────┤
-                                   ^           │              │
-Phase 43 (Preferences) ───────────┘           v              │
-                                   Phase 46 (Analytics)      │
-                                                              │
-Phase 41 (Loom) ─────── (independent)                        │
-Phase 42 (MCP) ──────── (independent)                        │
-Phase 47 (Homepage Research) ────────────────────────────────┘
+Phase 49 (Tenant Cleanup) ──> Phase 50 (Gmail OAuth) ──> Phase 51 (Email Analysis)
+                                                                    │
+                                                          ┌────────┤
+                                                          v        v
+                                                  Phase 52 (Dashboard)  Phase 53 (Recommendations)
+                                                                                  │
+                                                                                  v
+                                                                        Phase 54 (Deployment Plan)
 ```
 
 **Parallel execution opportunities:**
-- Wave 1: Phases 40, 41, 42, 43 (all independent — zero shared files)
-- Wave 2: Phases 44, 45 (both depend on 40; 45 also depends on 43)
-- Wave 3: Phases 46, 47 (46 depends on 45; 47 is independent research)
-- Wave 4: Phase 48 (integration — depends on 44, 45, 43, 47)
+- Wave 1: Phase 49 (Tenant Cleanup -- must be first)
+- Wave 2: Phase 50 (Gmail OAuth -- depends on 49)
+- Wave 3: Phase 51 (Email Analysis -- depends on 50)
+- Wave 4: Phase 52 + Phase 53 (Dashboard + Recommendations -- both depend on 51, can parallelize if separate files)
+- Wave 5: Phase 54 (Deployment Plan -- depends on 53)
+
+**Note:** This milestone is mostly sequential because each phase builds on the previous one's data layer. The only parallelization opportunity is Wave 4 (dashboard visualization and AI recommendation logic touch different files).
 
 ## Progress
 
 **Execution Order:**
-Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47 -> 48
+Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -314,17 +265,15 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 | 20-24 | v1.4 | 25/25 | Complete | 2026-02-06 |
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
-| 40. Visibility Scoping | v3.0 | 4/4 | Complete | 2026-02-13 |
-| 41. Loom Video | v3.0 | 2/2 | Complete | 2026-02-13 |
-| 42. MCP Unification | v3.0 | 2/2 | Complete | 2026-02-13 |
-| 43. User Preferences | v3.0 | 3/3 | Complete | 2026-02-13 |
-| 44. Admin Global Skills | v3.0 | 2/2 | Complete | 2026-02-13 |
-| 45. Hybrid Search | v3.0 | 3/3 | Complete | 2026-02-13 |
-| 46. Search Analytics | v3.0 | 2/2 | Complete | 2026-02-13 |
-| 47. Homepage Research | v3.0 | 1/1 | Complete | 2026-02-13 |
-| 48. Homepage Redesign | v3.0 | 2/2 | Complete | 2026-02-13 |
+| 40-48 | v3.0 | 21/21 | Complete | 2026-02-13 |
+| 49. Tenant Cleanup | v4.0 | 0/TBD | Not started | - |
+| 50. Gmail OAuth | v4.0 | 0/TBD | Not started | - |
+| 51. Email Analysis | v4.0 | 0/TBD | Not started | - |
+| 52. Dashboard | v4.0 | 0/TBD | Not started | - |
+| 53. Recommendations | v4.0 | 0/TBD | Not started | - |
+| 54. Deployment Plan | v4.0 | 0/TBD | Not started | - |
 
-**Total: 197 plans completed across 48 phases and 8 milestones. v3.0: 21/21 plans done, 9/9 phases complete.**
+**Total: 197 plans completed across 48 phases and 8 milestones. v4.0: 0 plans done, 0/6 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
@@ -336,3 +285,4 @@ Phases execute respecting dependencies: 40/41/42/43 (parallel) -> 44/45 -> 46/47
 *v1.5 completed: 2026-02-08*
 *v2.0 completed: 2026-02-08*
 *v3.0 completed: 2026-02-13*
+*v4.0 roadmap created: 2026-02-14*

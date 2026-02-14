@@ -89,35 +89,35 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GMAIL-01 | — | Pending |
-| GMAIL-02 | — | Pending |
-| GMAIL-03 | — | Pending |
-| GMAIL-04 | — | Pending |
-| GMAIL-05 | — | Pending |
-| GMAIL-06 | — | Pending |
-| ANAL-01 | — | Pending |
-| ANAL-02 | — | Pending |
-| ANAL-03 | — | Pending |
-| ANAL-04 | — | Pending |
-| ANAL-05 | — | Pending |
-| ANAL-06 | — | Pending |
-| DASH-01 | — | Pending |
-| DASH-02 | — | Pending |
-| DASH-03 | — | Pending |
-| DASH-04 | — | Pending |
-| RECO-01 | — | Pending |
-| RECO-02 | — | Pending |
-| RECO-03 | — | Pending |
-| PLAN-01 | — | Pending |
-| PLAN-02 | — | Pending |
-| PLAN-03 | — | Pending |
-| CLEAN-01 | — | Pending |
+| CLEAN-01 | Phase 49 | Pending |
+| GMAIL-01 | Phase 50 | Pending |
+| GMAIL-02 | Phase 50 | Pending |
+| GMAIL-03 | Phase 50 | Pending |
+| GMAIL-04 | Phase 50 | Pending |
+| GMAIL-05 | Phase 50 | Pending |
+| GMAIL-06 | Phase 50 | Pending |
+| ANAL-01 | Phase 51 | Pending |
+| ANAL-02 | Phase 51 | Pending |
+| ANAL-03 | Phase 51 | Pending |
+| ANAL-04 | Phase 51 | Pending |
+| ANAL-05 | Phase 51 | Pending |
+| ANAL-06 | Phase 51 | Pending |
+| DASH-01 | Phase 52 | Pending |
+| DASH-02 | Phase 52 | Pending |
+| DASH-03 | Phase 52 | Pending |
+| DASH-04 | Phase 52 | Pending |
+| RECO-01 | Phase 53 | Pending |
+| RECO-02 | Phase 53 | Pending |
+| RECO-03 | Phase 53 | Pending |
+| PLAN-01 | Phase 54 | Pending |
+| PLAN-02 | Phase 54 | Pending |
+| PLAN-03 | Phase 54 | Pending |
 
 **Coverage:**
 - v4.0 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23
+- Mapped to phases: 23
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-14*
-*Last updated: 2026-02-14 after initial definition*
+*Last updated: 2026-02-14 after roadmap creation*

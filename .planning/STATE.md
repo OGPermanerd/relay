@@ -5,14 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-14)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v4.0 Gmail Workflow Diagnostic
+**Current focus:** Phase 49 - Tenant Resolution Cleanup
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-14 — Milestone v4.0 started
+Phase: 49 of 54 (Tenant Resolution Cleanup)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-02-14 -- v4.0 roadmap created (6 phases, 23 requirements)
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Milestones
 
@@ -24,7 +26,7 @@ Last activity: 2026-02-14 — Milestone v4.0 started
 - v1.5 Production & Multi-Tenancy - 55 plans - shipped 2026-02-08
 - v2.0 Skill Ecosystem - 23 plans - shipped 2026-02-08
 - v3.0 AI Discovery & Workflow Intelligence - 21 plans - shipped 2026-02-13
-- v4.0 Gmail Workflow Diagnostic - in progress
+- v4.0 Gmail Workflow Diagnostic - 6 phases, in progress
 
 ## Performance Metrics
 
@@ -44,57 +46,28 @@ Last activity: 2026-02-14 — Milestone v4.0 started
 
 All decisions archived in PROJECT.md Key Decisions table and milestone archives.
 
-- Applied migrations via psql directly (drizzle-kit migrate replays all migrations, fails on existing tables)
-- Visibility helpers in packages/db/src/lib/ -- new pattern for reusable DB utilities
-- Forked skills always default to personal visibility (never inherit parent) for privacy safety
-- MCP list tool rewrote from in-memory to DB-level WHERE for visibility + performance
-- MCP describe returns generic "not found" for inaccessible personal skills (no info leakage)
-- Org-level aggregations (trending, leaderboard, platform stats) always filter visibility='tenant' inline, not via helper
-- Tags aggregation filtered to tenant-only since tags are an org-level concept
-- JSONB user_preferences with code-defined defaults merged at read time (not DB defaults)
-- UserPreferencesData interface mirrored in packages/db and Zod schema in apps/web to avoid cross-package imports
-- Loom URL accepts /share/, /embed/, /i/ patterns; no index needed (read-only on detail page)
-- LoomEmbed is a server component; oEmbed fetch parallelized in detail page Promise.all
-- Browse/trending pages show play icon indicator only (no oEmbed calls) to avoid N+1
-- Unified everyskill tool uses STRAP action router pattern with exhaustive switch for compile-time safety
-- confirm_install excluded from unified tool (internal follow-up, not user-initiated action)
-- Legacy tool registrations centralized in legacy.ts with DEPRECATED notices; handler files are pure modules
-- routeEveryskillAction() exported for testability; 10 test cases cover routing and param validation
-- CLAUDE.md export uses hoursSaved column (plan-referenced avgHoursSaved does not exist)
-- Blob + createObjectURL for client-side file download without server round-trip
-- Settings layout is server component with client SettingsNav for active tab highlighting via usePathname
-- Notifications page wrapper stripped to fit within shared settings layout
-- Company approval uses per-row form toggle with hidden fields (same pattern as deleteSkillAdminAction)
-- Unapproval clears both approvedAt and approvedBy to null (full audit reset)
-- CompanyApprovedBadge: indigo shield-check, sm=icon only, md=icon+text; displayed on detail, browse, trending
-- Homepage Company Recommended section hidden when no approved skills (renders null from empty array)
-- Embedding backfill uses sequential direct Ollama fetch (10s timeout) to avoid overloading single-threaded model
-- Two embedding generators coexist: embedding-generator.ts (skill create/fork) and generate-skill-embedding.ts (review/approval paths)
-- Hybrid search: RRF k=60 with FULL OUTER JOIN, fetch limit+5 for post-preference-boost reranking
-- visibilitySQL() for raw SQL template queries, buildVisibilityFilter() for Drizzle query builder
-- Discovery UI uses useTransition + skeleton cards for server action loading (not streaming)
-- Category badge colors: prompt=blue, workflow=purple, agent=green, mcp=orange (canonical in my-skills-list.tsx)
-- Search analytics: normalized queries stored alongside raw for O(1) aggregation; browse only logs when query non-empty
-- Admin search dashboard: h2 page title (admin layout provides h1), client-side tab state with useState, per-tab empty states
-- Homepage redesign: MiniLeverageWidget defines interfaces inline to avoid pulling server code into client bundle
-- CategoryTiles is a server component (zero client JS) with /skills?category=X links
-- CompactStatsBar uses FTE_DAYS_PER_YEAR since platform stats store FTE days, not hours
-- /my-leverage dedicated page: same container styling as homepage for visual consistency
+Key v4.0 research decisions:
+- Auth.js v5 does NOT support incremental OAuth scopes -- Gmail needs SEPARATE OAuth flow
+- Use `gmail.readonly` scope + `format: 'metadata'` (not `gmail.metadata` which blocks date filtering)
+- Tokens in dedicated `gmail_tokens` table with AES-256-GCM encryption (not Auth.js accounts table)
+- Two-pass categorization: rule-based first (~70%), AI for ambiguous ~30%
+- Analyze and discard: raw metadata only in memory, persist only aggregate stats
+- ~$0.17-0.20 per scan cost (Claude Sonnet for classification)
 
 ### Pending Todos
 
 - AI-Independence -- platform-agnostic skill translation (future milestone)
-- DEFAULT_TENANT_ID cleanup -- included in v4.0 scope
+- DEFAULT_TENANT_ID cleanup -- Phase 49 of v4.0
 
 ### Blockers/Concerns
 
-- ANTHROPIC_API_KEY must be configured in .env.local before AI review features work
-- DEFAULT_TENANT_ID hardcoded in 18+ files -- v4.0 will address this
-- Embedding model: Ollama nomic-embed-text (768 dims) -- decision resolved in Phase 45
-- Gmail API requires Google Cloud Console configuration (enable Gmail API, update OAuth consent screen scopes)
+- Gmail API requires Google Cloud Console configuration (enable Gmail API, add `gmail.readonly` scope to OAuth consent screen)
+- GMAIL_ENCRYPTION_KEY env var needed for AES-256-GCM token encryption
+- DEFAULT_TENANT_ID hardcoded in 18+ files -- Phase 49 addresses this first
+- Google OAuth verification needed if serving >100 external users (Internal user type bypasses this)
 
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: v4.0 milestone initialization — defining requirements
+Stopped at: v4.0 roadmap created -- 6 phases mapped to 23 requirements
 Resume file: .planning/ROADMAP.md
