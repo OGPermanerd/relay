@@ -37,6 +37,7 @@ export default async function middleware(req: NextRequest) {
   // Also exempt: dev-login, install-callback, MCP, validate-key
   if (
     pathname.startsWith("/api/auth") ||
+    pathname === "/api/gmail/callback" ||
     pathname === "/api/dev-login" ||
     pathname.startsWith("/api/install-callback") ||
     pathname.startsWith("/api/mcp") ||
