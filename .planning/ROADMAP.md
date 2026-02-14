@@ -173,7 +173,11 @@ Total: 21 plans completed. 9 phases, 26 requirements.
   1. No code path references the DEFAULT_TENANT_ID constant for runtime tenant resolution -- every query, insert, and filter derives tenant from the user session
   2. All existing functionality (skills CRUD, search, analytics, MCP, admin) continues working identically after the change -- no regressions in E2E tests
   3. A new user signing in for the first time is correctly assigned to a tenant via the existing domain-to-tenant mapping without any hardcoded fallback
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 49-01-PLAN.md -- Test infrastructure + utility function signature changes
+- [ ] 49-02-PLAN.md -- Server actions + server components + DB service tenant resolution
+- [ ] 49-03-PLAN.md -- MCP tools + API routes tenant resolution
 
 #### Phase 50: Gmail OAuth Infrastructure
 **Goal**: Users can securely connect and disconnect their Gmail account via a dedicated OAuth flow, with encrypted token storage and admin control
@@ -266,7 +270,7 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
 | 40-48 | v3.0 | 21/21 | Complete | 2026-02-13 |
-| 49. Tenant Cleanup | v4.0 | 0/TBD | Not started | - |
+| 49. Tenant Cleanup | v4.0 | 0/3 | Planned | - |
 | 50. Gmail OAuth | v4.0 | 0/TBD | Not started | - |
 | 51. Email Analysis | v4.0 | 0/TBD | Not started | - |
 | 52. Dashboard | v4.0 | 0/TBD | Not started | - |
