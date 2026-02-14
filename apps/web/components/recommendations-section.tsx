@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getRecommendations } from "@/app/actions/recommendations";
 import { RecommendationCard } from "./recommendation-card";
 import type { SkillRecommendation } from "@/lib/skill-recommendations";
@@ -91,6 +92,14 @@ export function RecommendationsSection() {
         {recommendations.map((rec) => (
           <RecommendationCard key={rec.skillId} recommendation={rec} />
         ))}
+      </div>
+      <div className="mt-6 text-center">
+        <Link
+          href="/my-leverage/deployment-plan"
+          className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+        >
+          View Full Deployment Plan &rarr;
+        </Link>
       </div>
     </div>
   );
