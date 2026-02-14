@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { db, userPreferences, DEFAULT_TENANT_ID } from "@everyskill/db";
+import { db, userPreferences } from "@everyskill/db";
 import { eq } from "drizzle-orm";
 
 const GREETING_MODEL = "claude-haiku-4-5-20251001";
@@ -93,6 +93,7 @@ async function generateGreetingPool(context: {
 
 async function loadOrRefreshPool(
   userId: string,
+  tenantId: string,
   context: {
     skillsCreated: number;
     totalUses: number;
@@ -131,7 +132,7 @@ async function loadOrRefreshPool(
       .insert(userPreferences)
       .values({
         userId,
-        tenantId: DEFAULT_TENANT_ID,
+        tenantId,
         preferences: {} as never,
         greetingPool: newPool,
         greetingPoolGeneratedAt: now,
@@ -169,10 +170,11 @@ export async function getGreeting(
     totalUses: number;
     totalHoursSaved: number;
     categories: string[];
-  }
+  },
+  tenantId: string
 ): Promise<string> {
   try {
-    const pool = await loadOrRefreshPool(userId, context);
+    const pool = await loadOrRefreshPool(userId, tenantId, context);
     return pickGreeting(pool, userId, firstName);
   } catch (error) {
     console.error("[greeting-pool] Unexpected error:", error);

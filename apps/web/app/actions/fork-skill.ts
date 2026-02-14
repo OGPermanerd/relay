@@ -60,6 +60,7 @@ export async function forkSkill(
   }
 
   // Create forked skill
+  const tenantId = session.user.tenantId ?? DEFAULT_TENANT_ID;
   const forkName = `${parent.name} (Fork)`;
   const slug = await generateUniqueSlug(forkName, db);
 
@@ -134,7 +135,7 @@ export async function forkSkill(
   }
 
   // Fire-and-forget: generate embedding for semantic similarity
-  generateSkillEmbedding(newSkill.id, forkName, parent.description).catch(() => {});
+  generateSkillEmbedding(newSkill.id, forkName, parent.description, tenantId).catch(() => {});
 
   revalidatePath("/skills");
   revalidatePath(`/skills/${slug}`);

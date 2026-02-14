@@ -144,7 +144,9 @@ async function autoGenerateReview(
     // SKILL-07: Enriched embedding improves future similarity detection.
     // Current upload's check already completed before AI review ran.
     // Re-embed with enriched text (description + review summary) for better matching.
-    generateSkillEmbedding(skillId, name, `${description} ${reviewOutput.summary}`).catch(() => {});
+    generateSkillEmbedding(skillId, name, `${description} ${reviewOutput.summary}`, tenantId).catch(
+      () => {}
+    );
   } catch {
     // Intentionally swallowed -- review is fire-and-forget
   }
@@ -216,6 +218,7 @@ export async function checkAndCreateSkill(
   }
 
   // Step 2: create the skill
+  const tenantId = session.user.tenantId ?? DEFAULT_TENANT_ID;
   const { name, description, category, hoursSaved, visibility } = parsed.data;
   const rawContent = stripEverySkillFrontmatter(parsed.data.content);
   const slug = await generateUniqueSlug(name, db);
@@ -303,7 +306,7 @@ export async function checkAndCreateSkill(
   }
 
   // Fire-and-forget: generate embedding for semantic similarity
-  generateSkillEmbedding(newSkill.id, name, description).catch(() => {});
+  generateSkillEmbedding(newSkill.id, name, description, tenantId).catch(() => {});
 
   // Fire-and-forget: auto-generate AI review
   autoGenerateReview(
@@ -313,7 +316,7 @@ export async function checkAndCreateSkill(
     rawContent,
     category,
     session.user.id,
-    DEFAULT_TENANT_ID
+    tenantId
   ).catch(() => {});
 
   // Fire-and-forget: generate skill summary (inputs/outputs/activities)
@@ -398,6 +401,7 @@ export async function createSkill(
     };
   }
 
+  const tenantId = session.user.tenantId ?? DEFAULT_TENANT_ID;
   const {
     name,
     description,
@@ -511,7 +515,7 @@ export async function createSkill(
   }
 
   // Fire-and-forget: generate embedding for semantic similarity
-  generateSkillEmbedding(newSkill.id, name, description).catch(() => {});
+  generateSkillEmbedding(newSkill.id, name, description, tenantId).catch(() => {});
 
   // Fire-and-forget: auto-generate AI review
   autoGenerateReview(
@@ -521,7 +525,7 @@ export async function createSkill(
     rawContent,
     category,
     session.user.id,
-    DEFAULT_TENANT_ID
+    tenantId
   ).catch(() => {});
 
   // Revalidate relevant paths

@@ -1,9 +1,6 @@
 import { getSiteSettings, upsertSkillEmbedding } from "@everyskill/db";
 import { generateEmbedding } from "./ollama";
 
-// TODO: Replace with dynamic tenant resolution when multi-tenant routing is implemented
-const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
-
 /**
  * Generate and store a skill embedding. Designed for fire-and-forget usage.
  *
@@ -15,7 +12,8 @@ const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
 export async function generateSkillEmbedding(
   skillId: string,
   name: string,
-  description: string
+  description: string,
+  tenantId: string
 ): Promise<void> {
   try {
     const settings = await getSiteSettings();
@@ -37,7 +35,7 @@ export async function generateSkillEmbedding(
     const inputHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 
     await upsertSkillEmbedding({
-      tenantId: DEFAULT_TENANT_ID,
+      tenantId,
       skillId,
       embedding,
       modelName: settings.ollamaModel,
