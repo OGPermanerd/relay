@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 
 ## Current Position
 
-Phase: 50 of 54 (Gmail OAuth Infrastructure)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-14 -- Completed 50-03-PLAN.md (Gmail settings UI)
+Phase: 51 of 54 (Email Analysis Pipeline)
+Plan: 3 of 5 in current phase
+Status: In progress
+Last activity: 2026-02-14 -- Completed 51-03-PLAN.md (Two-pass email classifier)
 
-Progress: [██████████] 100%
+Progress: [███████████░] 60%
 
 ## Milestones
 
@@ -36,8 +36,8 @@ Progress: [██████████] 100%
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 203 plans across 50 phases and 9 milestones
-- ~18,400 LOC TypeScript
+- 204 plans across 51 phases and 9 milestones
+- ~18,650 LOC TypeScript
 - 8 days total development time
 
 ## Accumulated Context
@@ -75,6 +75,13 @@ Phase 50 decisions:
 - GmailConnectionCard uses <a href> for /api/gmail/connect (API redirect, not next/link)
 - Admin form sections preserve all settings via hidden fields to prevent reset on save
 
+Phase 51 decisions (Plan 03):
+- Two-pass email classification: rule-based first (~70% coverage), AI second for ambiguous cases
+- Claude Haiku 4.5 for cost efficiency on high-volume classification (vs Sonnet)
+- Batch size 75 emails per API call balances cost efficiency and rate limits
+- Privacy-first AI input: only domain, subject preview (100 chars), metadata flags (no full addresses or content)
+- Fallback to "direct-message" category if AI response missing email ID
+
 ### Pending Todos
 
 - AI-Independence -- platform-agnostic skill translation (future milestone)
@@ -90,5 +97,5 @@ Phase 50 decisions:
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 50 complete -- Gmail OAuth Infrastructure fully shipped (schema, API routes, UI)
-Resume file: Next phase (51 - Gmail Scan Engine)
+Stopped at: Phase 51 Plan 03 complete -- Two-pass email classifier with Claude Haiku 4.5
+Resume file: .planning/phases/51-email-analysis-pipeline/51-04-PLAN.md (Email insight extraction)
