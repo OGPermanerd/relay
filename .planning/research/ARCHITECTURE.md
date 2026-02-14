@@ -1,1170 +1,797 @@
-# Architecture Patterns
+# Architecture Patterns: Gmail Workflow Diagnostic
 
-**Domain:** v3.0 AI Discovery & Workflow Intelligence -- integrating Google Workspace diagnostics, intent search, visibility scoping, Loom video, preferences, and homepage redesign into existing EverySkill monorepo
-**Researched:** 2026-02-13
-**Confidence:** HIGH for existing system analysis, MEDIUM for new integration patterns
-
-## Existing System Overview
-
-Before defining new components, here is the verified state of what exists (confirmed via direct codebase analysis).
-
-### Current Stack
-- **Monorepo:** `packages/db` (Drizzle ORM 0.42.0, PostgreSQL 15 + pgvector) + `apps/web` (Next.js 16.1.6) + `apps/mcp` (MCP server)
-- **Auth:** Auth.js v5 with JWT strategy, Google SSO, 8h session, domain-scoped cookies, domain-to-tenant mapping
-- **Multi-tenancy:** All tables have `tenant_id` NOT NULL FK, RLS policies via `app.current_tenant_id`, subdomain routing
-- **Search:** Dual-mode -- full-text (`tsvector` + `websearch_to_tsquery`) and semantic (Voyage AI / Ollama embeddings -> pgvector `cosineDistance`)
-- **AI:** Anthropic Claude for skill reviews/improvements, Voyage AI for embeddings, Ollama for local embeddings
-- **Deployment:** PM2 + Caddy, ports 2000/2001/2002
-
-### Current Schema Tables (17 total)
-`tenants`, `users`, `accounts`, `sessions`, `verificationTokens`, `skills`, `skillVersions`, `skillEmbeddings`, `ratings`, `usageEvents`, `apiKeys`, `siteSettings`, `auditLogs`, `skillMessages`, `notifications`, `notificationPreferences`, `reviewDecisions`
-
-### Key Architectural Decisions Already Made
-1. JWT strategy (not database sessions) -- tokens carry `tenantId` and `role`
-2. `accounts` table stores Google OAuth `access_token`, `refresh_token`, `scope`, `expires_at`
-3. `DEFAULT_TENANT_ID` hardcoded in 18+ files (not yet dynamic)
-4. Embedding generation is fire-and-forget (non-blocking, errors swallowed)
-5. RLS is ENABLED but not FORCED -- table owner bypasses RLS during single-tenant phase
-6. Skills have 7-status lifecycle: draft -> pending_review -> ai_reviewed -> approved/rejected/changes_requested -> published
+**Domain:** Gmail-integrated workflow analysis for AI skill recommendation
+**Researched:** 2026-02-14
+**Confidence:** MEDIUM-HIGH (Auth.js integration patterns verified via official docs and codebase; Gmail API patterns verified via Google official docs; some Auth.js incremental scope handling is LOW confidence due to limited v5 documentation)
 
 ---
 
-## Recommended Architecture for v3.0
+## Existing System Overview (Verified via Codebase)
 
-### Component Map
+### Current Architecture Summary
 
-```
-                     +-------------------+
-                     |   Next.js App     |
-                     |  (apps/web)       |
-                     +---------+---------+
-                               |
-          +--------------------+--------------------+
-          |                    |                    |
-  +-------v--------+  +-------v--------+  +-------v---------+
-  | Intent Search   |  | Workspace      |  | Visibility      |
-  | Engine          |  | Integration    |  | Scoping         |
-  | (new)           |  | (new)          |  | (modify skills) |
-  +-------+--------+  +-------+--------+  +-------+---------+
-          |                    |                    |
-  +-------v--------+  +-------v--------+  +-------v---------+
-  | Hybrid Search   |  | Google OAuth   |  | Skills Schema   |
-  | Service (RRF)   |  | Token Store    |  | + Query Filters |
-  | (new)           |  | (new table)    |  | (modify)        |
-  +-------+--------+  +-------+--------+  +-------+---------+
-          |                    |                    |
-  +-------v----------------------------------------------v----+
-  |               packages/db (Drizzle + pgvector)            |
-  |  New tables: workspace_tokens, workspace_profiles,        |
-  |              user_preferences, search_history              |
-  |  Modified: skills (visibility, loom_url columns)           |
-  +-----------------------------------------------------------+
-```
+- **Monorepo:** `packages/db` (Drizzle ORM 0.42.0, PostgreSQL 15 + pgvector) + `apps/web` (Next.js 16.1.6) + `apps/mcp`
+- **Auth:** Auth.js v5 with JWT strategy, Google SSO (`openid email profile` scopes), domain-scoped cookies, 8h session, domain-to-tenant mapping
+- **Multi-tenancy:** All 17+ tables have `tenant_id` NOT NULL FK, RLS policies via `app.current_tenant_id`
+- **AI:** Anthropic Claude for structured output (ai-review.ts pattern), Voyage AI / Ollama for embeddings
+- **Search:** Hybrid search with pgvector + full-text + RRF in `packages/db/src/services/hybrid-search.ts`
+- **Analytics:** Recharts 3.7.0, existing dashboard at `/analytics` with tabs, stat cards, time range selector
+
+### Key Existing Accounts Schema
+
+The `accounts` table (managed by Auth.js DrizzleAdapter) stores `access_token`, `refresh_token`, `scope`, `expires_at` for the Google identity provider. These are IDENTITY tokens used for SSO -- NOT API access tokens.
 
 ---
 
-## 1. Google Workspace OAuth: Incremental Scope Architecture
+## Recommended Architecture
 
-### The Problem
-
-EverySkill already uses Google OAuth for SSO login with default scopes (`openid email profile`). Workspace diagnostics needs additional Google API scopes (`directory.readonly` at minimum) to read organizational data. This must work alongside existing SSO without breaking the current auth flow.
-
-### Critical Finding: Auth.js v5 Does NOT Support Incremental Authorization
-
-Auth.js v5 has no built-in support for incremental scope expansion. GitHub Discussion #10261 confirms that using `include_granted_scopes=true` does not correctly update stored tokens or track newly granted scopes. The stored `access_token` in the `accounts` table becomes invalid for the new scope set, and the `scope` column does not get updated.
-
-**Confidence:** HIGH -- confirmed via official Auth.js GitHub discussions and documentation review.
-
-### Recommended Approach: Separate OAuth Flow for Workspace Scopes
-
-Implement a dedicated Workspace connection flow as a completely separate OAuth dance, independent of Auth.js.
+### High-Level Data Flow
 
 ```
-User clicks "Connect Workspace" in Settings ->
-  Custom API route (/api/workspace/connect) initiates OAuth2 ->
-  Google consent screen (directory.readonly scope) ->
-  Callback stores tokens (/api/workspace/callback) ->
-  workspace_tokens table stores encrypted access/refresh tokens
+User clicks "Analyze My Workflow"
+        |
+        v
+[1] Incremental OAuth Consent
+    (separate OAuth redirect with gmail.metadata scope)
+        |
+        v
+[2] Callback stores access_token + refresh_token
+    in `gmail_tokens` table (encrypted at rest, AES-256-GCM)
+        |
+        v
+[3] Server action: fetchGmailMetadata()
+    - Reads + decrypts access_token from gmail_tokens
+    - Refreshes if expired (using refresh_token)
+    - Calls Gmail API messages.list + messages.get(format: 'metadata')
+    - Extracts: sender domains, frequency, subject patterns, labels
+    - NEVER reads email bodies -- metadata headers only
+        |
+        v
+[4] Server action: analyzeWorkflow()
+    - Aggregates metadata into anonymous patterns (no PII sent to AI)
+    - Passes patterns to Claude via Anthropic API
+    - Returns structured JSON via output_config schema (same pattern as ai-review.ts)
+        |
+        v
+[5] Persist diagnostic snapshot
+    - Store results in `workflow_diagnostics` table (JSONB)
+    - Match recommended skills via existing hybrid search
+    - Store matches in `diagnostic_skill_matches` table
+        |
+        v
+[6] Render dashboard
+    - /workflow-diagnostic page with Recharts visualizations
+    - Time breakdown pie chart, automation opportunity cards
+    - Skill recommendation cards linking to existing /skills/[slug] pages
 ```
 
-### Why Separate Routes Instead of Auth.js Provider
+### Component Boundaries
 
-Auth.js is designed for **authentication** (who you are), not **authorization** (what APIs you can access). Mixing workspace API scopes into the auth provider creates coupling between login flow and feature availability. A user who declines workspace scopes should not be blocked from signing in. Separating these concerns also means:
+| Component | Responsibility | Location | Communicates With |
+|-----------|---------------|----------|-------------------|
+| **Gmail OAuth Flow** | Incremental consent, token storage, refresh | `apps/web/lib/gmail-auth.ts` | Google OAuth, gmail_tokens table |
+| **Gmail Metadata Fetcher** | Fetch email metadata, aggregate patterns | `apps/web/lib/gmail-fetcher.ts` | Gmail API (googleapis), gmail_tokens |
+| **Workflow Analyzer** | AI analysis of email patterns | `apps/web/lib/workflow-analyzer.ts` | Anthropic API |
+| **Skill Matcher** | Match analysis to existing skills | `apps/web/lib/gmail-skill-matcher.ts` | Existing hybrid search |
+| **Diagnostic Storage** | Persist snapshots and matches | `packages/db/src/services/workflow-diagnostics.ts` | PostgreSQL |
+| **Dashboard UI** | Charts, recommendations, history | `apps/web/app/(protected)/workflow-diagnostic/` | Server actions, Recharts |
+| **Server Actions** | Orchestrate pipeline | `apps/web/app/actions/workflow-diagnostic.ts` | All above |
 
-- Workspace tokens can be revoked independently without logging the user out
-- Different team members can connect/disconnect workspace without affecting others' sessions
-- Token refresh for workspace APIs operates on its own schedule (not tied to session refresh)
-- Future integrations (Slack, Jira, etc.) follow the same pattern: separate OAuth + separate token table
+### Why This Boundary Structure
 
-### Data Flow
+1. **Gmail auth is SEPARATE from the main Auth.js flow** because Auth.js v5 does not support incremental authorization. Adding Gmail scopes to the Google provider in `auth.config.ts` would force ALL users through Gmail consent on first login. A separate OAuth flow is triggered only when users explicitly request the diagnostic feature.
 
-```
-1. User already authenticated via Auth.js (Google SSO)
-2. Admin navigates to Settings > Workspace Integration
-3. UI shows "Connect Google Workspace" button (admin-only)
-4. Click initiates OAuth2 Authorization Code flow:
-   - client_id: same Google Cloud project as SSO
-   - redirect_uri: /api/workspace/callback
-   - scope: https://www.googleapis.com/auth/directory.readonly
-   - access_type: offline (to receive refresh_token)
-   - prompt: consent (force consent screen to ensure refresh_token)
-   - login_hint: user's email (skip account chooser)
-   - state: HMAC-signed JSON { userId, tenantId, csrf }
-5. Google redirects to callback with authorization code
-6. Callback verifies state HMAC, exchanges code for tokens
-7. Tokens encrypted and stored in workspace_tokens table
-8. Immediate trigger: first directory sync (fire-and-forget)
-9. UI shows "Connected" status with last sync time
-```
+2. **Fetcher is separate from analyzer** because Gmail API interaction (network, retries, pagination, rate limits) has different failure modes than AI analysis (prompt engineering, token limits, structured output). They test independently.
 
-### New API Routes
+3. **Skill matcher REUSES existing infrastructure** -- the `hybridSearchSkills()` function in `packages/db/src/services/hybrid-search.ts` already combines full-text + semantic search with RRF. The analyzer outputs natural language descriptions of automation opportunities, which feed directly into this search pipeline.
 
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/workspace/connect` | GET | Initiates Google OAuth flow, admin-only |
-| `/api/workspace/callback` | GET | OAuth callback, stores tokens |
-| `/api/workspace/disconnect` | POST | Revokes tokens, deletes workspace data |
-| `/api/workspace/sync` | POST | Manual re-sync trigger, admin-only |
-| `/api/workspace/status` | GET | Connection status + last sync time |
-
-### Token Storage Schema
-
-```typescript
-// packages/db/src/schema/workspace-tokens.ts
-export const workspaceTokens = pgTable("workspace_tokens", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  tenantId: text("tenant_id").notNull().references(() => tenants.id),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  provider: text("provider").notNull().default("google"),  // future-proof for Slack, etc.
-  accessTokenEncrypted: text("access_token_encrypted").notNull(),
-  refreshTokenEncrypted: text("refresh_token_encrypted"),
-  scope: text("scope").notNull(),  // space-separated scopes granted
-  expiresAt: timestamp("expires_at"),
-  connectedAt: timestamp("connected_at").notNull().defaultNow(),
-  lastSyncAt: timestamp("last_sync_at"),
-  syncStatus: text("sync_status").default("pending"),  // pending | syncing | synced | error
-  syncError: text("sync_error"),
-}, (table) => [
-  index("workspace_tokens_tenant_id_idx").on(table.tenantId),
-  uniqueIndex("workspace_tokens_tenant_provider_unique").on(table.tenantId, table.provider),
-  pgPolicy("tenant_isolation", {
-    as: "restrictive",
-    for: "all",
-    using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-    withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-  }),
-]);
-```
-
-**Design decision: One token per tenant per provider, not per user.** Workspace integration is a tenant-level feature. Having one admin connect it serves the whole organization. The `userId` tracks WHO connected it (for audit), not who can use the data.
-
-### Token Encryption
-
-Access and refresh tokens MUST be encrypted at rest using AES-256-GCM. This is a SOC2 requirement and a security best practice.
-
-```typescript
-// apps/web/lib/token-encryption.ts
-import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
-
-const ALGORITHM = "aes-256-gcm";
-const KEY = Buffer.from(process.env.WORKSPACE_TOKEN_ENCRYPTION_KEY!, "hex");
-// WORKSPACE_TOKEN_ENCRYPTION_KEY must be a 64-char hex string (32 bytes)
-
-export function encryptToken(plaintext: string): string {
-  const iv = randomBytes(12);
-  const cipher = createCipheriv(ALGORITHM, KEY, iv);
-  let encrypted = cipher.update(plaintext, "utf8", "hex");
-  encrypted += cipher.final("hex");
-  const tag = cipher.getAuthTag().toString("hex");
-  return `${iv.toString("hex")}:${tag}:${encrypted}`;
-}
-
-export function decryptToken(ciphertext: string): string {
-  const [ivHex, tagHex, encrypted] = ciphertext.split(":");
-  const decipher = createDecipheriv(ALGORITHM, KEY, Buffer.from(ivHex, "hex"));
-  decipher.setAuthTag(Buffer.from(tagHex, "hex"));
-  let decrypted = decipher.update(encrypted, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
-}
-```
-
-### Google API Scopes Strategy
-
-| Feature | Scope Required | Admin Setup Required? |
-|---------|---------------|----------------------|
-| Read org directory (employee list, departments, titles) | `https://www.googleapis.com/auth/directory.readonly` | Yes -- admin must enable "Contact sharing" in Google Admin Console |
-| Read domain contacts | `https://www.googleapis.com/auth/contacts.other.readonly` | No |
-| Read user profiles | Already have via SSO (`openid profile email`) | No |
-
-**Recommendation:** Request `directory.readonly` only. This is the People API "directory" scope, NOT the Admin SDK scope -- it does not require domain-wide delegation. However, the Google Workspace admin must have enabled "Directory: Sharing settings" to allow external apps to read domain profiles.
-
-**The app should detect and handle the case where directory sharing is not enabled** -- the Google API will return a 403 error. Display a clear "Ask your Google Workspace admin to enable directory sharing" message with a link to the relevant Google Admin Console page.
-
-### New Files
-
-| File | Purpose |
-|------|---------|
-| `apps/web/app/api/workspace/connect/route.ts` | Initiate OAuth flow |
-| `apps/web/app/api/workspace/callback/route.ts` | Handle OAuth callback, store tokens |
-| `apps/web/app/api/workspace/disconnect/route.ts` | Revoke + delete |
-| `apps/web/app/api/workspace/sync/route.ts` | Manual sync trigger |
-| `apps/web/app/api/workspace/status/route.ts` | Connection status |
-| `apps/web/lib/token-encryption.ts` | AES-256-GCM encrypt/decrypt |
-| `apps/web/lib/google-workspace-client.ts` | Google API client wrapper |
-| `packages/db/src/schema/workspace-tokens.ts` | Token storage schema |
-| `packages/db/src/services/workspace-tokens.ts` | Token CRUD + refresh |
+4. **Storage follows the established pattern** -- schema in `packages/db/src/schema/`, services in `packages/db/src/services/`, every table has `tenant_id`, RLS policy, and indexes.
 
 ---
 
-## 2. Workspace Diagnostics: Data Model and Sync Architecture
+## Detailed Data Flow
 
-### What is "Workspace Diagnostics"?
+### Phase A: OAuth Consent and Token Acquisition
 
-Cross-reference Google Workspace organizational data (departments, titles, reporting structure) with EverySkill usage patterns. Answers questions like: "Which departments are using AI skills?", "What is the adoption rate per team?", "Who are the power users in Engineering?"
+#### Architecture Decision: gmail.metadata vs gmail.readonly
 
-### Directory Data Storage
+| Scope | Access | Verification Level | Recommendation |
+|-------|--------|-------------------|----------------|
+| `gmail.metadata` | Headers + labels only (no body/attachments) | Restricted | **USE THIS** |
+| `gmail.readonly` | Full message content including body | Restricted | Overkill for this feature |
 
-**Do NOT sync full Google directory into our database.** Cache only the minimal organizational metadata needed for analytics cross-referencing. This reduces privacy surface, storage, and GDPR/SOC2 exposure.
+Use `gmail.metadata` because:
+- We ONLY need headers (From, To, Subject, Date, List-Unsubscribe) and labels
+- Both scopes are "Restricted" and require Google security assessment, BUT `gmail.metadata` explicitly prevents body access, which simplifies the privacy story
+- The `gmail.metadata` scope prevents format: 'full' and format: 'raw', enforcing our privacy design at the API level
+
+**Confidence:** HIGH -- verified via [Google Gmail API Scopes documentation](https://developers.google.com/workspace/gmail/api/auth/scopes).
+
+#### Architecture Decision: Separate gmail_tokens Table (NOT accounts table)
+
+Use a **SEPARATE** `gmail_tokens` table. Do NOT modify the Auth.js `accounts` table.
+
+Reasons:
+- The `accounts` table is managed by `DrizzleAdapter`. Modifying its tokens risks breaking Auth.js session management and the `jwt` callback's lazy-migration logic
+- Gmail tokens have a different lifecycle (user can revoke Gmail access without logging out)
+- Scope is different (`accounts` stores identity scopes; `gmail_tokens` stores API scopes)
+- Allows clean "Disconnect Gmail" without affecting authentication
+- Avoids the Auth.js limitation where re-consent with `prompt: consent` resets ALL scopes
+- Future-proof: if Calendar or Drive scopes are added later, same pattern works
+
+**Confidence:** HIGH -- verified by examining `apps/web/auth.ts` and the `jwt` callback which reads from the `accounts` table.
+
+#### OAuth Flow Implementation
+
+```
+User Action: Clicks "Connect Gmail" on /workflow-diagnostic page
+
+Server Action (connectGmail):
+  1. Verify session: auth() -> session.user.id
+  2. Build Google OAuth URL with:
+     - client_id: process.env.AUTH_GOOGLE_ID (same creds as SSO)
+     - redirect_uri: /api/gmail/callback
+     - scope: "https://www.googleapis.com/auth/gmail.metadata"
+     - access_type: "offline"        (ensures refresh_token is returned)
+     - prompt: "consent"             (forces consent for new scope)
+     - include_granted_scopes: "true" (incremental authorization)
+     - login_hint: session.user.email (skip Google account picker)
+     - state: HMAC-signed JSON { userId, tenantId, returnUrl }
+  3. redirect() to Google consent URL
+
+Google Consent Screen:
+  "EverySkill wants to view your email message metadata
+   (headers, labels) but not the email body"
+  User clicks "Allow"
+
+Callback Route (/api/gmail/callback):
+  1. Verify HMAC on state parameter
+  2. Exchange authorization code for tokens via Google token endpoint
+  3. Encrypt access_token and refresh_token with AES-256-GCM
+  4. Upsert into gmail_tokens table (keyed by tenant_id + user_id)
+  5. Redirect to /workflow-diagnostic?connected=true
+```
+
+#### Why Not Auth.js signIn() with Custom Scopes?
+
+Auth.js v5's `signIn()` function does not support per-request scope overrides. The scope must be configured statically in the Google provider's `authorization.params.scope`. Multiple GitHub discussions (#4557, #11819, #2068) confirm this limitation. The recommended workaround is exactly what we propose: a separate OAuth flow.
+
+**Confidence:** MEDIUM -- based on multiple Auth.js GitHub discussions; official docs are sparse on this topic.
+
+### Phase B: Email Metadata Fetching
+
+```
+Server Action (runDiagnostic):
+  1. auth() -> session.user.id, session.user.tenantId
+  2. getGmailTokens(userId, tenantId) -> { encryptedAccessToken, encryptedRefreshToken, expiresAt }
+  3. decryptToken(encryptedAccessToken) -> accessToken
+  4. If Date.now() > expiresAt:
+       refreshGmailToken(decryptedRefreshToken) -> new { accessToken, expiresAt }
+       Update gmail_tokens row with re-encrypted new tokens
+  5. Initialize Gmail API client:
+       const { google } = require('googleapis');  // or import
+       const oauth2Client = new google.auth.OAuth2(
+         process.env.AUTH_GOOGLE_ID,
+         process.env.AUTH_GOOGLE_SECRET
+       );
+       oauth2Client.setCredentials({ access_token: accessToken });
+       const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+  6. Fetch message IDs (last 30 days, max 500):
+       const listResponse = await gmail.users.messages.list({
+         userId: 'me',
+         maxResults: 500,
+         q: 'newer_than:30d',
+       });
+       // Handle pagination if > 500 messages
+
+  7. Batch fetch metadata (50 concurrent, using Promise.all in chunks):
+       for each chunk of 50 message IDs:
+         const metadataPromises = chunk.map(msg =>
+           gmail.users.messages.get({
+             userId: 'me',
+             id: msg.id,
+             format: 'metadata',
+             metadataHeaders: ['From', 'To', 'Subject', 'Date', 'List-Unsubscribe'],
+           })
+         );
+         const results = await Promise.all(metadataPromises);
+
+  8. Aggregate into WorkflowMetadata (in-memory only):
+       interface WorkflowMetadata {
+         totalMessages: number;
+         dateRange: { start: string; end: string };
+         senderDomainDistribution: { domain: string; count: number }[];
+         topSenderDomains: { domain: string; count: number; isInternal: boolean }[];
+         temporalDistribution: { hour: number; dayOfWeek: number; count: number }[];
+         labelDistribution: { label: string; count: number }[];
+         newsletterCount: number;       // detected via List-Unsubscribe header
+         avgThreadDepth: number;
+         subjectPatternClusters: {      // NOT raw subjects -- clustered patterns
+           pattern: string;             // e.g., "meeting-related", "review-requests"
+           count: number;
+           exampleKeywords: string[];   // generic keywords, not full subjects
+         }[];
+       }
+
+  9. DISCARD raw message data after aggregation
+     Raw subjects, sender emails, etc. are NEVER persisted or sent to AI
+     Only aggregated anonymous patterns proceed to analysis
+```
+
+**Privacy principle:** The aggregation step (8) is the privacy firewall. Raw email metadata enters the function; only anonymous statistical patterns exit. Subject lines are clustered by keyword patterns (e.g., "meeting-related: 45 messages"), not stored or forwarded individually. Sender addresses are reduced to domain distributions (e.g., "internal: 60%, external-vendor: 25%, newsletter: 15%").
+
+**Gmail API quota:** The default per-user quota is 250 quota units/second. `messages.list` costs 5 units, `messages.get` costs 5 units. Fetching 500 messages = 5 + 2500 = 2505 units total, which at 250/sec completes in ~10 seconds. This is acceptable for a user-initiated diagnostic.
+
+### Phase C: AI Analysis
+
+```
+Server Action (analyzeWorkflow) -- follows ai-review.ts pattern exactly:
+
+  1. System prompt: describe the analysis task
+     - Role: workflow efficiency analyst
+     - Task: identify time allocation and automation opportunities
+     - Context: this is for an AI skill marketplace
+     - Constraint: suggest specific types of AI skills that could help
+
+  2. User prompt: WorkflowMetadata as structured input
+     - Emphasis: NO PII in this data, all patterns are aggregated
+     - Request: time breakdown, automation opportunities, skill queries
+
+  3. Anthropic API call with structured output:
+     const response = await client.messages.create({
+       model: REVIEW_MODEL,  // reuse from ai-review.ts
+       max_tokens: 4096,
+       system: WORKFLOW_ANALYSIS_SYSTEM_PROMPT,
+       messages: [{ role: "user", content: buildAnalysisPrompt(metadata) }],
+       output_config: {
+         format: { type: "json_schema", schema: ANALYSIS_JSON_SCHEMA },
+       },
+     });
+
+  4. Structured output schema:
+     interface WorkflowAnalysis {
+       timeBreakdown: {
+         category: string;           // e.g., "Internal Communication"
+         percentageOfTime: number;   // 0-100
+         description: string;        // what this category involves
+       }[];
+       automationOpportunities: {
+         area: string;               // e.g., "Meeting Prep"
+         currentTimePerWeek: number; // estimated hours
+         potentialTimeSaved: number; // estimated hours saveable
+         description: string;        // how AI could help
+         skillSearchQuery: string;   // query to search EverySkill catalog
+       }[];
+       overallAssessment: string;    // 2-3 sentence summary
+       topRecommendation: string;    // single most impactful suggestion
+     }
+
+  5. Validate with Zod (same pattern as ReviewOutputSchema)
+  6. Return structured analysis
+```
+
+**AI cost estimate:** ~2K input tokens (aggregated metadata) + ~1.5K output tokens (analysis). At Sonnet pricing: ~$0.015 per diagnostic. At Opus pricing: ~$0.08 per diagnostic. Use Sonnet by default (sufficient quality for pattern analysis).
+
+### Phase D: Skill Matching
+
+```
+For each automationOpportunity.skillSearchQuery:
+  1. Use existing generateEmbedding() from apps/web/lib/ollama.ts
+     (or Voyage AI if configured) to create query embedding
+  2. Call existing hybridSearchSkills() from packages/db/src/services/hybrid-search.ts
+     with { query: skillSearchQuery, queryEmbedding, userId, limit: 3 }
+  3. Collect top 3 results per opportunity
+  4. Deduplicate across opportunities (same skill may match multiple)
+  5. Return: { skillId, skillName, skillSlug, opportunityArea, rrfScore }[]
+```
+
+**No new search infrastructure needed.** The existing hybrid search with RRF is exactly the right tool for "find skills matching this natural language description." The AI-generated `skillSearchQuery` is already optimized for this use case.
+
+### Phase E: Storage and Rendering
+
+#### Persist
 
 ```typescript
-// packages/db/src/schema/workspace-profiles.ts
-export const workspaceProfiles = pgTable("workspace_profiles", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  tenantId: text("tenant_id").notNull().references(() => tenants.id),
-  userId: text("user_id").references(() => users.id),  // nullable until matched
-  externalId: text("external_id").notNull(),  // Google directory user ID
-  email: text("email").notNull(),
-  name: text("name"),
-  department: text("department"),
-  title: text("title"),
-  orgUnitPath: text("org_unit_path"),  // e.g., "/Engineering/Frontend"
-  managerId: text("manager_id"),  // references externalId (not our user ID)
-  thumbnailUrl: text("thumbnail_url"),
-  syncedAt: timestamp("synced_at").notNull().defaultNow(),
-}, (table) => [
-  uniqueIndex("workspace_profiles_tenant_external_unique").on(table.tenantId, table.externalId),
-  index("workspace_profiles_tenant_id_idx").on(table.tenantId),
-  index("workspace_profiles_tenant_email_idx").on(table.tenantId, table.email),
-  index("workspace_profiles_tenant_department_idx").on(table.tenantId, table.department),
-  pgPolicy("tenant_isolation", {
-    as: "restrictive",
-    for: "all",
-    using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-    withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-  }),
-]);
-```
+// Insert workflow_diagnostics row
+const diagnosticId = await saveDiagnostic({
+  tenantId: session.user.tenantId,
+  userId: session.user.id,
+  timeBreakdown: analysis.timeBreakdown,          // JSONB
+  automationOpportunities: analysis.automationOpportunities, // JSONB
+  overallAssessment: analysis.overallAssessment,
+  topRecommendation: analysis.topRecommendation,
+  emailCount: metadata.totalMessages,
+  dateRangeStart: new Date(metadata.dateRange.start),
+  dateRangeEnd: new Date(metadata.dateRange.end),
+  analysisModel: REVIEW_MODEL,
+});
 
-### Sync Strategy
-
-```
-Admin connects workspace ->
-  workspace_tokens row created ->
-  Immediate: fire-and-forget first sync (server action) ->
-    Fetch People API directory contacts (paginated, max 500/request) ->
-    Upsert workspace_profiles rows ->
-    Match email to existing users table (set userId FK) ->
-    Update workspace_tokens.lastSyncAt = now(), syncStatus = 'synced'
-
-Daily cron: /api/cron/workspace-sync ->
-  For each tenant with active workspace_tokens where syncStatus != 'error':
-    Re-fetch and upsert profiles
-    Remove profiles not in latest sync (employee left org)
-```
-
-**Key constraint:** Only tenant admins can connect Workspace. The `/api/workspace/connect` route must verify `session.user.role === "admin"` before initiating.
-
-### Diagnostic Queries
-
-New service file: `packages/db/src/services/workspace-diagnostics.ts`
-
-```typescript
-export interface DepartmentStats {
-  department: string;
-  totalEmployees: number;
-  activeUsers: number;        // matched to EverySkill users
-  skillsCreated: number;
-  skillsUsed: number;
-  adoptionPercent: number;    // activeUsers / totalEmployees * 100
-}
-
-export async function getDepartmentAdoption(tenantId: string): Promise<DepartmentStats[]>;
-export async function getTopDepartments(tenantId: string, limit?: number): Promise<DepartmentStats[]>;
-export async function getUnmatchedEmployees(tenantId: string): Promise<WorkspaceProfile[]>;
-```
-
-Example SQL for department adoption:
-
-```sql
-SELECT
-  wp.department,
-  COUNT(DISTINCT wp.id) as total_employees,
-  COUNT(DISTINCT u.id) as active_users,
-  COUNT(DISTINCT s.id) as skills_created,
-  COUNT(DISTINCT ue.id) as skills_used,
-  ROUND(
-    COUNT(DISTINCT u.id)::numeric /
-    NULLIF(COUNT(DISTINCT wp.id), 0) * 100, 1
-  ) as adoption_pct
-FROM workspace_profiles wp
-LEFT JOIN users u ON u.email = wp.email AND u.tenant_id = wp.tenant_id
-LEFT JOIN skills s ON s.author_id = u.id AND s.tenant_id = wp.tenant_id
-LEFT JOIN usage_events ue ON ue.user_id = u.id AND ue.tenant_id = wp.tenant_id
-WHERE wp.tenant_id = $1
-GROUP BY wp.department
-ORDER BY adoption_pct DESC;
-```
-
-### New Files
-
-| File | Purpose |
-|------|---------|
-| `packages/db/src/schema/workspace-profiles.ts` | Directory profile cache |
-| `packages/db/src/services/workspace-profiles.ts` | CRUD, sync operations |
-| `packages/db/src/services/workspace-diagnostics.ts` | Analytics queries |
-| `apps/web/lib/workspace-sync.ts` | Google API fetch + sync orchestration |
-| `apps/web/app/actions/workspace.ts` | Server actions for connect/disconnect/sync |
-| `apps/web/app/api/cron/workspace-sync/route.ts` | Daily sync cron endpoint |
-| `apps/web/app/(protected)/admin/workspace/page.tsx` | Admin workspace settings page |
-| `apps/web/components/workspace-connect-button.tsx` | Connect/disconnect UI |
-| `apps/web/components/workspace-diagnostics-dashboard.tsx` | Department stats dashboard |
-
----
-
-## 3. Skill Visibility Scoping
-
-### Adding Visibility to Skills
-
-```typescript
-// Add to skills table in packages/db/src/schema/skills.ts:
-visibility: text("visibility").notNull().default("tenant"),
-// Three levels:
-// 'global'   - visible across all tenants (curated marketplace content)
-// 'tenant'   - visible to everyone in same tenant (current default behavior)
-// 'personal' - visible only to the author
-```
-
-### Migration
-
-```sql
--- 0019_add_skill_visibility.sql
-ALTER TABLE skills ADD COLUMN visibility text NOT NULL DEFAULT 'tenant';
-CREATE INDEX skills_visibility_idx ON skills (visibility);
-```
-
-**Default `'tenant'`** ensures all existing skills retain current behavior. No data backfill needed.
-
-### RLS Complication and Solution
-
-The current RLS policy is: `tenant_id = current_setting('app.current_tenant_id', true)`. This blocks ALL cross-tenant reads, including `visibility = 'global'` skills from other tenants.
-
-**Two options:**
-
-| Option | Approach | Pros | Cons |
-|--------|----------|------|------|
-| A: Materialized view | Separate `global_skills_mv` view outside RLS | Keeps RLS strict; simple read path | Requires refresh on publish; adds view maintenance |
-| B: Modified RLS policy | `OR visibility = 'global'` in RLS USING clause | No extra infrastructure | Weakens RLS guarantee; every query now checks visibility |
-
-**Recommendation: Defer global visibility to a later phase.** For v3.0, implement `tenant` and `personal` only. These do not require RLS changes:
-
-- `tenant` visibility: already handled by RLS (same tenant can see)
-- `personal` visibility: add `AND (visibility != 'personal' OR author_id = $userId)` to queries
-
-`global` visibility is a marketplace feature that requires careful design (content curation, cross-tenant embedding search, etc.) and should be a separate phase.
-
-### Visibility Query Filter
-
-```typescript
-// packages/db/src/services/visibility.ts
-import { sql, eq, or, and } from "drizzle-orm";
-import { skills } from "../schema/skills";
-
-/**
- * Build a WHERE condition that respects visibility rules.
- * Must be combined with existing status='published' filter.
- */
-export function visibilityFilter(userId: string | null) {
-  if (!userId) {
-    // Unauthenticated: only tenant-visible (RLS handles tenant scoping)
-    return eq(skills.visibility, "tenant");
-  }
-
-  // Authenticated: tenant-visible OR (personal AND authored by this user)
-  return or(
-    eq(skills.visibility, "tenant"),
-    and(eq(skills.visibility, "personal"), eq(skills.authorId, userId))
-  );
-}
-```
-
-### Files Modified
-
-| File | Change |
-|------|--------|
-| `packages/db/src/schema/skills.ts` | Add `visibility` column |
-| `packages/db/src/services/search-skills.ts` | Add visibility filter to WHERE clause |
-| `packages/db/src/services/semantic-search.ts` | Add visibility filter to WHERE clause |
-| `apps/web/lib/search-skills.ts` | Pass userId for visibility, add filter |
-| `apps/web/app/actions/search.ts` | Pass session userId to search |
-| `apps/web/app/actions/skills.ts` | Accept visibility on create/edit |
-| `apps/web/app/(protected)/skills/new/page.tsx` | Visibility selector in form |
-
-### New Files
-
-| File | Purpose |
-|------|---------|
-| `packages/db/src/services/visibility.ts` | Visibility condition builder |
-| `apps/web/components/visibility-selector.tsx` | UI dropdown for visibility choice |
-| Migration `0019_add_skill_visibility.sql` | Column addition |
-
----
-
-## 4. Intent Search Architecture
-
-### Current Search Limitations
-
-The existing search has two modes that operate independently:
-1. **Full-text:** `websearch_to_tsquery` + ILIKE fallback -- keyword matching, field-weighted scoring
-2. **Semantic:** pgvector `cosineDistance` on Voyage AI / Ollama embeddings -- meaning matching
-
-Neither mode understands user intent. "I need to summarize meeting notes" should find workflow skills about meeting summarization, not just skills with "meeting" in the title. The full-text search misses conceptual matches; the semantic search misses exact keyword matches.
-
-### Recommended Architecture: Hybrid Search with Optional Intent Classification
-
-**Do NOT build conversational multi-turn search.** Research (arxiv 2602.09552) confirms that for single-domain QA, the complexity of multi-turn RAG yields marginal improvement over well-tuned single-query approaches. For a skill marketplace with <10K skills per tenant, single-query hybrid search is the right tradeoff.
-
-**Architecture:**
-
-```
-User Query: "help me write better emails"
-    |
-    +---> [Parallel, no dependency between branches]
-    |
-    |     +---> Intent Classifier (Claude Haiku, <500ms, optional)
-    |     |     Output: { category: "prompt", semanticQuery: "email writing improvement" }
-    |     |
-    |     +---> Full-Text Search (existing searchSkills, ~50ms)
-    |     |     Uses: websearch_to_tsquery + ILIKE + field-weighted scoring
-    |     |
-    |     +---> Semantic Search (existing semanticSearchSkills, ~100ms)
-    |           Uses: Voyage AI / Ollama embedding -> pgvector cosine distance
-    |
-    v
-Reciprocal Rank Fusion (RRF, k=60)
-    |
-    v
-Optional: Preference Boost (if user_preferences exist)
-    |
-    v
-Visibility Filter (tenant + personal)
-    |
-    v
-Ranked Results (top 10)
-```
-
-### Reciprocal Rank Fusion (RRF)
-
-RRF is the standard method for combining two ranked lists without tuning weights. Each result gets `1 / (k + rank)` from each retrieval method; scores are summed.
-
-```typescript
-// packages/db/src/services/hybrid-search.ts
-
-export interface HybridSearchResult {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  category: string;
-  totalUses: number;
-  averageRating: number | null;
-  ftsRank?: number;    // position in full-text results (1-indexed)
-  semRank?: number;    // position in semantic results (1-indexed)
-  rrfScore: number;    // combined RRF score
-}
-
-export function reciprocalRankFusion(
-  ftsResults: { id: string }[],
-  semanticResults: { id: string }[],
-  k: number = 60
-): Map<string, { ftsRank?: number; semRank?: number; rrfScore: number }> {
-  const scores = new Map<string, { ftsRank?: number; semRank?: number; rrfScore: number }>();
-
-  ftsResults.forEach((r, i) => {
-    const rank = i + 1;
-    const existing = scores.get(r.id) || { rrfScore: 0 };
-    existing.ftsRank = rank;
-    existing.rrfScore += 1 / (k + rank);
-    scores.set(r.id, existing);
+// Insert diagnostic_skill_matches rows
+for (const match of skillMatches) {
+  await saveSkillMatch({
+    tenantId: session.user.tenantId,
+    diagnosticId,
+    skillId: match.skillId,
+    opportunityArea: match.opportunityArea,
+    relevanceScore: match.rrfScore,
   });
-
-  semanticResults.forEach((r, i) => {
-    const rank = i + 1;
-    const existing = scores.get(r.id) || { rrfScore: 0 };
-    existing.semRank = rank;
-    existing.rrfScore += 1 / (k + rank);
-    scores.set(r.id, existing);
-  });
-
-  return scores;
 }
 ```
 
-### Intent Classifier (Optional Enhancement)
-
-Use Claude Haiku for fast, cheap query intent extraction. This runs in PARALLEL with search -- it does not add latency if it finishes before results come back. If it times out (>500ms), fall back to pure RRF.
-
-```typescript
-// apps/web/lib/intent-classifier.ts
-import Anthropic from "@anthropic-ai/sdk";
-
-interface SearchIntent {
-  category?: "prompt" | "workflow" | "agent" | "mcp";
-  taskType?: string;        // "summarize", "generate", "analyze", etc.
-  keywords: string[];       // extracted key terms for FTS boost
-  semanticQuery: string;    // rephrased query for better embedding
-}
-
-export async function classifyIntent(query: string): Promise<SearchIntent | null> {
-  try {
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const response = await Promise.race([
-      client.messages.create({
-        model: "claude-haiku-4-20250414",
-        max_tokens: 256,
-        system: "Extract search intent from user queries for an AI skill marketplace. Return JSON only.",
-        messages: [{ role: "user", content: `Classify this search query: "${query}"` }],
-      }),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 500)),
-    ]);
-
-    if (!response) return null;  // timeout
-    // parse and return
-  } catch {
-    return null;  // graceful degradation
-  }
-}
-```
-
-**Cost analysis:** Claude Haiku at ~$0.25/M input tokens and ~$1.25/M output tokens. A typical search query is ~50 tokens input + ~100 tokens output = ~$0.00014 per search. At 1000 searches/day = $0.14/day. Negligible.
-
-### Preference Boost
-
-Applied AFTER RRF, not during retrieval. Keeps search deterministic and debuggable.
-
-```typescript
-// Small additive boost, not multiplicative (prevents preferences from dominating)
-function applyPreferenceBoost(
-  rrfScores: Map<string, { rrfScore: number; category?: string }>,
-  preferences: { preferredCategories: string[] }
-): Map<string, { rrfScore: number }> {
-  const CATEGORY_BOOST = 0.002;  // ~equivalent to moving up 1 rank in a 60-item list
-
-  for (const [id, score] of rrfScores) {
-    if (score.category && preferences.preferredCategories.includes(score.category)) {
-      score.rrfScore += CATEGORY_BOOST;
-    }
-  }
-
-  return rrfScores;
-}
-```
-
-### Modified Search Flow
-
-The existing `quickSearch` server action in `apps/web/app/actions/search.ts` currently calls `searchSkills()` (FTS only). Modify it to use hybrid search:
-
-```typescript
-// apps/web/app/actions/search.ts (modified)
-export async function quickSearch(query: string): Promise<QuickSearchResult[]> {
-  if (!query?.trim()) return [];
-
-  const session = await auth();
-  const userId = session?.user?.id;
-
-  // Run FTS, semantic, and intent classification in parallel
-  const [ftsResults, semanticResults, intent] = await Promise.all([
-    searchSkills({ query: query.trim() }),
-    trySemanticSearch(query.trim()),  // returns [] if embeddings not configured
-    classifyIntent(query.trim()),     // returns null on timeout/error
-  ]);
-
-  // Merge with RRF
-  const rrfScores = reciprocalRankFusion(ftsResults, semanticResults);
-
-  // Apply preference boost if user has preferences
-  if (userId) {
-    const prefs = await getUserPreferences(userId);
-    if (prefs) applyPreferenceBoost(rrfScores, prefs);
-  }
-
-  // Sort by RRF score, take top 10
-  // ... (merge back full result data from ftsResults + semanticResults)
-}
-```
-
-### New Files
-
-| File | Purpose |
-|------|---------|
-| `packages/db/src/services/hybrid-search.ts` | RRF merge logic |
-| `apps/web/lib/intent-classifier.ts` | Claude Haiku intent extraction |
-
-### Modified Files
-
-| File | Change |
-|------|--------|
-| `apps/web/app/actions/search.ts` | Use hybrid search |
-| `apps/web/lib/search-skills.ts` | Accept visibility filter param |
-| `apps/web/components/search-with-dropdown.tsx` | Show search mode indicator (optional) |
-
----
-
-## 5. Personal Preferences Storage
-
-### Schema
-
-```typescript
-// packages/db/src/schema/user-preferences.ts
-export const userPreferences = pgTable("user_preferences", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  tenantId: text("tenant_id").notNull().references(() => tenants.id),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-
-  // Search preferences
-  preferredCategories: text("preferred_categories").array().default([]),
-  savedSearches: jsonb("saved_searches").$type<SavedSearch[]>().default([]),
-
-  // Display preferences
-  defaultView: text("default_view").default("grid"),   // "grid" | "list"
-  homepageTab: text("homepage_tab").default("browse"),  // "browse" | "leverage"
-
-  // Notification preferences already live in notification_preferences table
-  // DO NOT duplicate them here
-
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-}, (table) => [
-  uniqueIndex("user_preferences_tenant_user_unique").on(table.tenantId, table.userId),
-  index("user_preferences_tenant_id_idx").on(table.tenantId),
-  pgPolicy("tenant_isolation", {
-    as: "restrictive",
-    for: "all",
-    using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-    withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-  }),
-]);
-
-interface SavedSearch {
-  name: string;
-  query: string;
-  filters: Record<string, string>;
-  createdAt: string;  // ISO string
-}
-```
-
-### Sync Mechanism
-
-Preferences are **server-authoritative** (not localStorage). Client reads on page load via server component, writes on change via server action. No real-time sync needed -- preferences change infrequently.
-
-```typescript
-// apps/web/app/actions/preferences.ts
-"use server";
-
-export async function getPreferences(): Promise<UserPreferences | null>;
-export async function updatePreferences(updates: Partial<UpdateablePreferences>): Promise<void>;
-export async function addSavedSearch(search: SavedSearch): Promise<void>;
-export async function removeSavedSearch(name: string): Promise<void>;
-```
-
-**Why NOT localStorage:** Preferences must be available server-side for search ranking (preference boost). localStorage is not accessible in server components/actions. Server-authoritative storage also gives multi-device sync for free.
-
-### Search History (For Preference Learning)
-
-```typescript
-// packages/db/src/schema/search-history.ts
-export const searchHistory = pgTable("search_history", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  tenantId: text("tenant_id").notNull().references(() => tenants.id),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  query: text("query").notNull(),
-  resultCount: integer("result_count"),
-  clickedSkillId: text("clicked_skill_id"),  // which result they clicked (nullable)
-  searchMode: text("search_mode"),  // "fts" | "semantic" | "hybrid"
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (table) => [
-  index("search_history_tenant_id_idx").on(table.tenantId),
-  index("search_history_user_created_idx").on(table.userId, table.createdAt),
-  pgPolicy("tenant_isolation", {
-    as: "restrictive",
-    for: "all",
-    using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-    withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-  }),
-]);
-```
-
-**Retention:** Delete entries older than 90 days via `/api/cron/cleanup` (add to existing cron infrastructure). Search history is fire-and-forget (write errors silently ignored).
-
-### New Files
-
-| File | Purpose |
-|------|---------|
-| `packages/db/src/schema/user-preferences.ts` | Preferences schema |
-| `packages/db/src/schema/search-history.ts` | Search history schema |
-| `packages/db/src/services/user-preferences.ts` | CRUD operations |
-| `packages/db/src/services/search-history.ts` | Write + query operations |
-| `apps/web/app/actions/preferences.ts` | Server actions |
-| `apps/web/components/saved-searches.tsx` | Saved searches UI |
-| `apps/web/app/(protected)/settings/preferences/page.tsx` | Preferences page |
-
----
-
-## 6. Loom Video Integration
-
-### Approach: URL-Only Storage + Client-Side iframe Embed
-
-**Do NOT use the Loom SDK.** Loom does not have an open API. Their SDK (`@loomhq/loom-embed`, ~45KB) is client-side only and primarily useful for recording workflows (which EverySkill does not need). Simple iframe embed provides identical viewing experience with zero bundle cost.
-
-### Schema Change
-
-```typescript
-// Add to skills table in packages/db/src/schema/skills.ts:
-loomUrl: text("loom_url"),  // nullable, e.g. "https://www.loom.com/share/abc123def456"
-```
-
-Single column addition on existing table. No separate table needed.
-
-### Migration
-
-```sql
--- 0020_add_loom_url.sql
-ALTER TABLE skills ADD COLUMN loom_url text;
-```
-
-### URL Validation
-
-```typescript
-// apps/web/lib/loom.ts
-const LOOM_URL_PATTERN = /^https:\/\/(www\.)?loom\.com\/share\/[a-zA-Z0-9]+(\?.*)?$/;
-
-export function isValidLoomUrl(url: string): boolean {
-  return LOOM_URL_PATTERN.test(url);
-}
-
-export function extractLoomId(url: string): string | null {
-  const match = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
-  return match ? match[1] : null;
-}
-
-export function getLoomEmbedUrl(shareUrl: string): string | null {
-  const id = extractLoomId(shareUrl);
-  return id ? `https://www.loom.com/embed/${id}` : null;
-}
-```
-
-### Client-Side Embed Component
-
-```typescript
-// apps/web/components/loom-embed.tsx
-"use client";
-
-import { extractLoomId } from "@/lib/loom";
-
-interface LoomEmbedProps {
-  url: string;
-}
-
-export function LoomEmbed({ url }: LoomEmbedProps) {
-  const loomId = extractLoomId(url);
-  if (!loomId) return null;
-
-  return (
-    <div className="relative w-full overflow-hidden rounded-lg" style={{ paddingBottom: "56.25%" }}>
-      <iframe
-        src={`https://www.loom.com/embed/${loomId}`}
-        className="absolute inset-0 h-full w-full"
-        frameBorder="0"
-        allowFullScreen
-        allow="autoplay; fullscreen"
-      />
-    </div>
-  );
-}
-```
-
-### Integration Points
-
-| File | Change |
-|------|--------|
-| `packages/db/src/schema/skills.ts` | Add `loomUrl` column |
-| `apps/web/app/actions/skills.ts` | Validate + save loomUrl on create/edit |
-| `apps/web/components/skill-detail.tsx` | Render `<LoomEmbed>` when loomUrl present |
-| `apps/web/app/(protected)/skills/new/page.tsx` | Loom URL input field in form |
-
-### New Files
-
-| File | Purpose |
-|------|---------|
-| `apps/web/components/loom-embed.tsx` | Responsive iframe embed |
-| `apps/web/lib/loom.ts` | URL validation + ID extraction |
-| Migration `0020_add_loom_url.sql` | Column addition |
-
----
-
-## 7. Homepage Redesign: New Data Requirements
-
-### Current Homepage Data Flow
-
-The existing homepage (`apps/web/app/(protected)/page.tsx`) fetches 8 parallel queries:
-1. `getPlatformStats()` -- FTE years saved, total uses, total downloads, avg rating
-2. `getPlatformStatTrends()` -- sparkline data for stat cards
-3. `getTrendingSkills(6)` -- top 6 trending skills
-4. `getLeaderboard(5)` -- top 5 contributors
-5-8. My Leverage data (skills used/created + stats for each)
-
-### New Data for v3.0 Homepage
-
-| Data Need | Source | Status |
-|-----------|--------|--------|
-| Personalized skill recommendations | Hybrid search with empty query + user preferences + usage history | New |
-| "Continue where you left off" (recently used) | `usageEvents` for current user, last 5 | New query |
-| Saved searches | `userPreferences.savedSearches` | New (requires preferences) |
-| Department leaderboard | `workspaceProfiles` + `usageEvents` cross-ref | New (requires workspace) |
-| Loom video highlights | Skills with `loomUrl`, sorted by trending | New query filter |
-| Quick actions based on role | `session.user.role` + user preferences | Existing data, new UI |
-
-### Personalized Feed Service
-
-```typescript
-// apps/web/lib/personalized-feed.ts
-
-export interface PersonalizedFeed {
-  recommendations: SkillSummary[];    // based on usage patterns + preferences
-  recentlyUsed: SkillSummary[];       // last 5 skills used by this user
-  savedSearches: SavedSearch[];       // from user_preferences
-  departmentTrending?: SkillSummary[]; // trending in user's department (requires workspace)
-}
-
-export async function getPersonalizedFeed(
-  userId: string,
-  tenantId: string
-): Promise<PersonalizedFeed> {
-  const [prefs, recentUsage, departmentSkills] = await Promise.all([
-    getUserPreferences(userId, tenantId),
-    getRecentlyUsedSkills(userId, 5),
-    getWorkspaceDepartmentSkills(userId, tenantId).catch(() => undefined),
-  ]);
-
-  // Generate recommendations based on:
-  // 1. Categories the user hasn't explored (from preferences)
-  // 2. Skills popular in their department (from workspace)
-  // 3. Skills similar to ones they've used (from usage history + embeddings)
-  const recommendations = await generateRecommendations(userId, tenantId, prefs, recentUsage);
-
-  return {
-    recommendations,
-    recentlyUsed: recentUsage,
-    savedSearches: prefs?.savedSearches ?? [],
-    departmentTrending: departmentSkills,
-  };
-}
-```
-
-### Homepage Component Architecture
+#### Render
 
 ```
-HomePage (server component)
+/workflow-diagnostic page (server component)
   |
-  +-- WelcomeSection (personalized greeting + quick actions)
-  |     - First name from session
-  |     - "Create a Skill" + "Browse Skills" CTAs (existing)
-  |     - Quick access to saved searches (new)
+  +-- GmailConnectButton (client)
+  |     - Shows "Connect Gmail" if no gmail_tokens for user
+  |     - Shows "Connected (last analyzed: [date])" if tokens exist
+  |     - Shows "Disconnect" option
   |
-  +-- SearchBar (enhanced intent search)
-  |     - SearchWithDropdown with hybrid backend (modified)
+  +-- [If connected and has diagnostic results]:
   |
-  +-- HomeTabs (existing component, new tab added)
+  +-- DiagnosticDashboard (server, fetches latest diagnostic)
        |
-       +-- BrowseTab
-       |    +-- PersonalizedRecommendations (new, replaces plain trending for logged-in users)
-       |    +-- TrendingSection (existing, kept as fallback / anonymous view)
-       |    +-- LeaderboardTable (existing)
-       |    +-- DepartmentHighlights (new, only if workspace connected)
+       +-- OverallAssessment (static text card)
+       |     - overallAssessment text
+       |     - topRecommendation highlighted
        |
-       +-- LeverageTab (existing MyLeverageView, unchanged)
+       +-- WorkflowTimeChart (client, Recharts PieChart)
+       |     - Donut chart of timeBreakdown categories
+       |     - Click segment to see description
        |
-       +-- SavedTab (new, saved searches with one-click re-run)
-```
-
-### Graceful Degradation
-
-The homepage MUST work without any v3.0 features enabled:
-- No workspace connected? Skip department highlights, show trending instead
-- No preferences saved? Show default trending skills
-- No embeddings? Recommendations based on usage history only (no semantic similarity)
-- No search history? Show popular skills across tenant
-
-This is achieved by having each data function return sensible empty defaults and using conditional rendering.
-
----
-
-## Complete New Tables Summary
-
-| Table | Purpose | Columns (key) | Tenant-scoped | RLS |
-|-------|---------|---------------|--------------|-----|
-| `workspace_tokens` | Encrypted Google API tokens | tenantId, userId, accessTokenEncrypted, refreshTokenEncrypted, scope, syncStatus | Yes | Yes |
-| `workspace_profiles` | Cached directory data | tenantId, userId (FK, nullable), externalId, email, department, title, orgUnitPath | Yes | Yes |
-| `user_preferences` | Search/display prefs | tenantId, userId, preferredCategories, savedSearches, defaultView, homepageTab | Yes | Yes |
-| `search_history` | Query analytics | tenantId, userId, query, resultCount, clickedSkillId, searchMode | Yes | Yes |
-
-### Modified Tables
-
-| Table | Column Added | Type | Default | Migration |
-|-------|-------------|------|---------|-----------|
-| `skills` | `visibility` | `text NOT NULL` | `'tenant'` | 0019 |
-| `skills` | `loom_url` | `text` (nullable) | `NULL` | 0020 |
-
-### Migration Sequence
-
-```
-0019_add_skill_visibility.sql       -- skills.visibility column
-0020_add_loom_url.sql               -- skills.loom_url column
-0021_create_workspace_tokens.sql    -- new table
-0022_create_workspace_profiles.sql  -- new table
-0023_create_user_preferences.sql    -- new table
-0024_create_search_history.sql      -- new table
+       +-- AutomationOpportunities (client)
+       |     - Bar chart: current time vs potential savings per area
+       |     - Each bar links to matched skills below
+       |
+       +-- SkillRecommendations (server)
+       |     - Cards for each matched skill (name, description, category)
+       |     - Link to /skills/[slug] for full detail
+       |     - Grouped by opportunity area
+       |
+       +-- DiagnosticHistory (server)
+             - List of previous diagnostics with dates
+             - Compare current vs previous (if available)
+             - "Re-run Diagnostic" button
 ```
 
 ---
 
-## Complete New File Inventory
+## New vs Modified Components
 
-### Schema Files (`packages/db/src/schema/`)
-| File | Status | Purpose |
-|------|--------|---------|
-| `workspace-tokens.ts` | NEW | Token storage schema |
-| `workspace-profiles.ts` | NEW | Directory profile cache |
-| `user-preferences.ts` | NEW | User preferences schema |
-| `search-history.ts` | NEW | Search analytics schema |
-| `skills.ts` | MODIFIED | Add visibility, loomUrl columns |
-| `index.ts` | MODIFIED | Export new schemas |
+### New Files to Create
 
-### Service Files (`packages/db/src/services/`)
-| File | Status | Purpose |
-|------|--------|---------|
-| `workspace-tokens.ts` | NEW | Token CRUD + refresh |
-| `workspace-profiles.ts` | NEW | Profile CRUD + sync |
-| `workspace-diagnostics.ts` | NEW | Analytics queries |
-| `hybrid-search.ts` | NEW | RRF merge logic |
-| `visibility.ts` | NEW | Visibility condition builder |
-| `user-preferences.ts` | NEW | Preferences CRUD |
-| `search-history.ts` | NEW | History write + query |
-| `semantic-search.ts` | MODIFIED | Add visibility filter |
-| `search-skills.ts` | MODIFIED | Add visibility filter |
+| File | Type | Purpose |
+|------|------|---------|
+| `apps/web/lib/gmail-auth.ts` | Library | OAuth URL builder, token encrypt/decrypt, token refresh |
+| `apps/web/lib/gmail-fetcher.ts` | Library | Gmail API client, metadata fetch, aggregation |
+| `apps/web/lib/workflow-analyzer.ts` | Library | Anthropic API analysis (follows ai-review.ts) |
+| `apps/web/lib/gmail-skill-matcher.ts` | Library | Maps analysis to skills via hybrid search |
+| `apps/web/app/actions/workflow-diagnostic.ts` | Server Action | Orchestrates connect, analyze, persist, disconnect |
+| `apps/web/app/api/gmail/callback/route.ts` | API Route | OAuth callback for Gmail consent |
+| `apps/web/app/(protected)/workflow-diagnostic/page.tsx` | Page | Dashboard for diagnostic results |
+| `apps/web/components/gmail-connect-button.tsx` | Component | Connection status, connect/disconnect |
+| `apps/web/components/workflow-time-chart.tsx` | Component | Recharts PieChart for time breakdown |
+| `apps/web/components/automation-opportunities.tsx` | Component | Bar chart + skill cards per opportunity |
+| `apps/web/components/diagnostic-history.tsx` | Component | Previous diagnostics list |
+| `packages/db/src/schema/gmail-tokens.ts` | Schema | Encrypted Gmail OAuth token storage |
+| `packages/db/src/schema/workflow-diagnostics.ts` | Schema | Diagnostic snapshots + skill matches |
+| `packages/db/src/services/gmail-tokens.ts` | Service | Token CRUD with encryption |
+| `packages/db/src/services/workflow-diagnostics.ts` | Service | Diagnostic CRUD + history queries |
+| `packages/db/src/migrations/0026_add_gmail_tokens.sql` | Migration | gmail_tokens DDL |
+| `packages/db/src/migrations/0027_add_workflow_diagnostics.sql` | Migration | workflow_diagnostics + diagnostic_skill_matches DDL |
 
-### Relations (`packages/db/src/relations/`)
-| File | Status | Change |
+### Existing Files to Modify
+
+| File | Change | Reason |
 |------|--------|--------|
-| `index.ts` | MODIFIED | Add relations for 4 new tables |
+| `packages/db/src/schema/index.ts` | Add exports for `gmail-tokens.ts` and `workflow-diagnostics.ts` | Schema registration |
+| `packages/db/src/relations/index.ts` | Add relations for 3 new tables | Drizzle relation definitions |
+| `apps/web/middleware.ts` | Add `/api/gmail/callback` to exempt paths | OAuth callback must bypass auth check |
+| `apps/web/app/(protected)/layout.tsx` | Add nav link for "Workflow Diagnostic" | Navigation entry |
+| `apps/web/package.json` | Add `googleapis` dependency | Gmail API client |
 
-### API Routes (`apps/web/app/api/`)
-| File | Status | Purpose |
-|------|--------|---------|
-| `workspace/connect/route.ts` | NEW | Initiate OAuth |
-| `workspace/callback/route.ts` | NEW | OAuth callback |
-| `workspace/disconnect/route.ts` | NEW | Revoke tokens |
-| `workspace/sync/route.ts` | NEW | Manual sync trigger |
-| `workspace/status/route.ts` | NEW | Connection status |
-| `cron/workspace-sync/route.ts` | NEW | Daily sync cron |
+### Existing Infrastructure Reused WITHOUT Modification
 
-### Server Actions (`apps/web/app/actions/`)
-| File | Status | Purpose |
-|------|--------|---------|
-| `workspace.ts` | NEW | Workspace management |
-| `preferences.ts` | NEW | User preferences |
-| `search.ts` | MODIFIED | Hybrid search integration |
+| File | What's Reused |
+|------|--------------|
+| `apps/web/lib/ai-review.ts` | Pattern template: `getClient()`, `REVIEW_MODEL`, `output_config` JSON schema, Zod validation |
+| `packages/db/src/services/hybrid-search.ts` | `hybridSearchSkills()` called directly for skill matching |
+| `apps/web/lib/embedding-generator.ts` | `generateSkillEmbedding()` pattern, `generateEmbedding()` from ollama.ts |
+| `apps/web/lib/analytics-queries.ts` | Pattern template for query functions with tenantId scoping |
+| `apps/web/auth.ts` + `auth.config.ts` | NOT modified -- Gmail uses entirely separate OAuth flow |
+| `apps/web/components/overview-tab.tsx` | Pattern template for Recharts dashboard components |
+| `apps/web/lib/api-key-crypto.ts` | Pattern reference for crypto operations (new encryption is AES-256-GCM, more robust) |
 
-### Lib Files (`apps/web/lib/`)
-| File | Status | Purpose |
-|------|--------|---------|
-| `token-encryption.ts` | NEW | AES-256-GCM token encrypt/decrypt |
-| `google-workspace-client.ts` | NEW | Google API wrapper |
-| `workspace-sync.ts` | NEW | Sync orchestration |
-| `intent-classifier.ts` | NEW | Claude Haiku intent extraction |
-| `loom.ts` | NEW | URL validation + ID extraction |
-| `personalized-feed.ts` | NEW | Homepage data aggregation |
-| `search-skills.ts` | MODIFIED | Visibility + hybrid support |
+---
 
-### Components (`apps/web/components/`)
-| File | Status | Purpose |
-|------|--------|---------|
-| `loom-embed.tsx` | NEW | Responsive iframe embed |
-| `workspace-connect-button.tsx` | NEW | Connect/disconnect UI |
-| `workspace-diagnostics-dashboard.tsx` | NEW | Department stats |
-| `visibility-selector.tsx` | NEW | Visibility dropdown |
-| `saved-searches.tsx` | NEW | Saved search list + re-run |
-| `personalized-feed.tsx` | NEW | Recommendation cards |
-| `search-with-dropdown.tsx` | MODIFIED | Enhanced with hybrid backend |
-| `skill-detail.tsx` | MODIFIED | Loom embed rendering |
+## Database Schema Design
 
-### Pages (`apps/web/app/(protected)/`)
-| File | Status | Purpose |
-|------|--------|---------|
-| `admin/workspace/page.tsx` | NEW | Workspace settings |
-| `settings/preferences/page.tsx` | NEW | User preferences |
-| `page.tsx` | MODIFIED | Homepage redesign |
+### gmail_tokens Table
+
+```sql
+CREATE TABLE gmail_tokens (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL REFERENCES tenants(id),
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  encrypted_access_token TEXT NOT NULL,
+  encrypted_refresh_token TEXT NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  scope TEXT NOT NULL,  -- actual granted scope string
+  created_at TIMESTAMP NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP NOT NULL DEFAULT now(),
+  UNIQUE(tenant_id, user_id)
+);
+
+CREATE INDEX gmail_tokens_tenant_id_idx ON gmail_tokens(tenant_id);
+-- RLS policy added via pgPolicy in Drizzle schema
+```
+
+**Design decision: One token per user per tenant.** Unlike workspace tokens (one per tenant for admin-initiated org integration), Gmail tokens are per-user because each user connects their own Gmail for personal workflow analysis.
+
+### workflow_diagnostics Table
+
+```sql
+CREATE TABLE workflow_diagnostics (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL REFERENCES tenants(id),
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+  -- Analysis results (structured JSONB)
+  time_breakdown JSONB NOT NULL,
+  automation_opportunities JSONB NOT NULL,
+  overall_assessment TEXT NOT NULL,
+  top_recommendation TEXT NOT NULL,
+
+  -- Metadata about the analysis run
+  email_count INTEGER NOT NULL,
+  date_range_start TIMESTAMP NOT NULL,
+  date_range_end TIMESTAMP NOT NULL,
+  analysis_model TEXT NOT NULL,  -- e.g., "claude-sonnet-4-5-20250929"
+
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX workflow_diagnostics_tenant_id_idx ON workflow_diagnostics(tenant_id);
+CREATE INDEX workflow_diagnostics_user_created_idx ON workflow_diagnostics(user_id, created_at DESC);
+-- RLS policy via pgPolicy
+```
+
+### diagnostic_skill_matches Table
+
+```sql
+CREATE TABLE diagnostic_skill_matches (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL REFERENCES tenants(id),
+  diagnostic_id TEXT NOT NULL REFERENCES workflow_diagnostics(id) ON DELETE CASCADE,
+  skill_id TEXT NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+  opportunity_area TEXT NOT NULL,  -- which automation_opportunities entry this matches
+  relevance_score DOUBLE PRECISION NOT NULL,  -- RRF score from hybrid search
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE INDEX diagnostic_skill_matches_tenant_id_idx ON diagnostic_skill_matches(tenant_id);
+CREATE INDEX diagnostic_skill_matches_diagnostic_idx ON diagnostic_skill_matches(diagnostic_id);
+-- RLS policy via pgPolicy
+```
 
 ---
 
 ## Patterns to Follow
 
-### Pattern 1: Fire-and-Forget for Non-Critical Side Effects
-**What:** Embedding generation, search history logging, workspace sync triggers use `.catch(() => {})`.
-**When:** Side effects that should not block the primary operation.
-**Already used:** `generateSkillEmbedding` in `apps/web/lib/embedding-generator.ts` swallows all errors.
-**Apply to:** `logSearchQuery()`, `triggerWorkspaceSync()`, `classifyIntent()` timeout fallback.
+### Pattern 1: Structured AI Output (from ai-review.ts)
 
-### Pattern 2: Parallel Data Fetching with Promise.all
-**What:** Independent queries run in parallel.
-**When:** Homepage data (currently 8 queries), search (FTS + semantic + intent).
-**Already used:** Homepage and skill detail page.
-**Apply to:** `getPersonalizedFeed()`, hybrid search pipeline.
+**What:** Use Anthropic's `output_config` with JSON schema for deterministic AI responses, validated by Zod.
+**When:** All Anthropic API calls for data extraction.
+**Why:** The existing `ai-review.ts` demonstrates this pattern. It prevents hallucinated fields, ensures type safety, and makes AI responses parseable.
 
-### Pattern 3: Graceful Degradation
-**What:** Features work without optional integrations.
-**When:** Workspace not connected, embeddings not configured, intent classifier down.
-**Implementation:** Every new service returns sensible defaults when its dependency is unavailable. Never throw from an optional feature -- return empty/default and let the UI handle it.
-
-### Pattern 4: Schema Conventions (Mandatory for All New Tables)
-Every new table MUST have:
 ```typescript
-id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-tenantId: text("tenant_id").notNull().references(() => tenants.id),
-// In table config:
-index("TABLE_NAME_tenant_id_idx").on(table.tenantId),
-pgPolicy("tenant_isolation", {
-  as: "restrictive",
-  for: "all",
-  using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-  withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-}),
+// workflow-analyzer.ts -- follows exact pattern from ai-review.ts
+const ANALYSIS_JSON_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    timeBreakdown: {
+      type: "array" as const,
+      items: {
+        type: "object" as const,
+        properties: {
+          category: { type: "string" as const },
+          percentageOfTime: { type: "number" as const },
+          description: { type: "string" as const },
+        },
+        required: ["category", "percentageOfTime", "description"],
+        additionalProperties: false,
+      },
+    },
+    automationOpportunities: {
+      type: "array" as const,
+      items: {
+        type: "object" as const,
+        properties: {
+          area: { type: "string" as const },
+          currentTimePerWeek: { type: "number" as const },
+          potentialTimeSaved: { type: "number" as const },
+          description: { type: "string" as const },
+          skillSearchQuery: { type: "string" as const },
+        },
+        required: ["area", "currentTimePerWeek", "potentialTimeSaved", "description", "skillSearchQuery"],
+        additionalProperties: false,
+      },
+    },
+    overallAssessment: { type: "string" as const },
+    topRecommendation: { type: "string" as const },
+  },
+  required: ["timeBreakdown", "automationOpportunities", "overallAssessment", "topRecommendation"],
+  additionalProperties: false,
+};
 ```
-Plus type exports and relation definitions.
 
-### Pattern 5: Admin Guards
-**What:** Admin-only features check `session.user.role === "admin"` at both page and action level.
-**When:** Workspace connection, diagnostic dashboard, any tenant-level settings.
-**Already used:** Admin review pages, admin skills management.
+### Pattern 2: Server Action Orchestration
+
+**What:** Server actions validate session, call library functions, return serializable results. No direct DB imports in actions -- delegate to services.
+**When:** All user-triggered operations.
+
+```typescript
+// app/actions/workflow-diagnostic.ts
+"use server";
+
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { fetchGmailMetadata } from "@/lib/gmail-fetcher";
+import { analyzeWorkflow } from "@/lib/workflow-analyzer";
+import { matchSkills } from "@/lib/gmail-skill-matcher";
+import { saveDiagnostic, getLatestDiagnostic } from "@everyskill/db/services/workflow-diagnostics";
+import { getGmailTokens } from "@everyskill/db/services/gmail-tokens";
+
+export async function runDiagnostic() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+  const tenantId = session.user.tenantId;
+  if (!tenantId) redirect("/login");
+
+  // Verify Gmail is connected
+  const tokens = await getGmailTokens(session.user.id, tenantId);
+  if (!tokens) return { error: "Gmail not connected" };
+
+  // 1. Fetch metadata (10-30 seconds)
+  const metadata = await fetchGmailMetadata(session.user.id, tenantId);
+
+  // 2. AI analysis (5-15 seconds)
+  const analysis = await analyzeWorkflow(metadata);
+
+  // 3. Match skills (1-3 seconds)
+  const skillMatches = await matchSkills(analysis.automationOpportunities, session.user.id);
+
+  // 4. Persist
+  const diagnosticId = await saveDiagnostic({
+    userId: session.user.id,
+    tenantId,
+    ...analysis,
+    emailCount: metadata.totalMessages,
+    dateRangeStart: new Date(metadata.dateRange.start),
+    dateRangeEnd: new Date(metadata.dateRange.end),
+    skillMatches,
+  });
+
+  return { diagnosticId };
+}
+```
+
+### Pattern 3: Tenant-Scoped Schema (Mandatory for All New Tables)
+
+**What:** Every new table follows the established multi-tenancy pattern.
+**Source:** All 17+ existing tables use this pattern.
+
+```typescript
+export const gmailTokens = pgTable(
+  "gmail_tokens",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    tenantId: text("tenant_id").notNull().references(() => tenants.id),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    // ... fields
+  },
+  (table) => [
+    index("gmail_tokens_tenant_id_idx").on(table.tenantId),
+    uniqueIndex("gmail_tokens_tenant_user_unique").on(table.tenantId, table.userId),
+    pgPolicy("tenant_isolation", {
+      as: "restrictive",
+      for: "all",
+      using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+      withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+    }),
+  ]
+);
+```
+
+### Pattern 4: Token Encryption at Rest (AES-256-GCM)
+
+**What:** Encrypt OAuth tokens before database storage. Decrypt only when making API calls.
+**Why:** SOC2 requirement. The existing `accounts` table stores tokens in plaintext (Auth.js default), but for Gmail API tokens with data access scope, encrypt at rest.
+
+```typescript
+// apps/web/lib/gmail-auth.ts
+import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+
+const ENCRYPTION_KEY = process.env.GMAIL_TOKEN_ENCRYPTION_KEY!; // 32 bytes hex (64 chars)
+
+export function encryptToken(token: string): string {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", Buffer.from(ENCRYPTION_KEY, "hex"), iv);
+  const encrypted = Buffer.concat([cipher.update(token, "utf8"), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  return `${iv.toString("base64")}:${authTag.toString("base64")}:${encrypted.toString("base64")}`;
+}
+
+export function decryptToken(encryptedToken: string): string {
+  const [ivB64, tagB64, dataB64] = encryptedToken.split(":");
+  const decipher = createDecipheriv(
+    "aes-256-gcm",
+    Buffer.from(ENCRYPTION_KEY, "hex"),
+    Buffer.from(ivB64, "base64")
+  );
+  decipher.setAuthTag(Buffer.from(tagB64, "base64"));
+  return decipher.update(Buffer.from(dataB64, "base64"), undefined, "utf8") + decipher.final("utf8");
+}
+```
+
+### Pattern 5: Fire-and-Forget for Non-Critical Operations
+
+**What:** Operations that should not block the primary flow use `.catch(() => {})`.
+**Already used:** `generateSkillEmbedding()` in `apps/web/lib/embedding-generator.ts`.
+**Apply to:** Search query logging during skill matching, audit log writes.
 
 ---
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Auth.js Scope Expansion
-**What:** Adding workspace scopes to the existing Google SSO provider in `auth.config.ts`.
-**Why bad:** Auth.js v5 does not support incremental authorization. The stored token becomes invalid, scope tracking breaks, and users who decline extra scopes may get locked out of regular SSO.
-**Instead:** Separate OAuth flow via custom API routes.
+### Anti-Pattern 1: Modifying Auth.js Provider Scopes
 
-### Anti-Pattern 2: Full Directory Sync
-**What:** Syncing all Google Workspace user data (photos, phone numbers, addresses, group memberships, etc.).
-**Why bad:** Privacy concerns, storage bloat, GDPR/SOC2 implications, stale data problems. Directory data can be hundreds of MB for large organizations.
-**Instead:** Cache only 7 fields needed for analytics (email, name, department, title, orgUnitPath, managerId, thumbnailUrl). Delete all data on workspace disconnect.
+**What:** Adding `gmail.metadata` to the Google provider's default scopes in `auth.config.ts`.
+**Why bad:** Forces ALL users to consent to Gmail access on first login, even if they never use diagnostics. Users who decline Gmail scope cannot sign in. Also triggers Google's restricted scope verification for the entire app consent flow.
+**Instead:** Separate OAuth flow triggered only when user requests the diagnostic feature.
 
-### Anti-Pattern 3: Multi-Turn Conversational Search
-**What:** Building a chatbot-style search with session memory and follow-up questions.
-**Why bad:** For a skill marketplace with <10K items per tenant, conversational search adds enormous complexity (session management, context window, per-request cost, conversation cleanup) with marginal improvement over intent-enhanced single query. Research confirms this (arxiv 2602.09552: "effective conversational RAG depends less on method complexity than on alignment between the retrieval strategy and the dataset structure").
-**Instead:** Single-query hybrid search with RRF. If multi-turn is later needed, it layers on top without rearchitecting.
+### Anti-Pattern 2: Storing Raw Email Content
 
-### Anti-Pattern 4: Loom SDK Server-Side Usage
-**What:** Importing `@loomhq/loom-embed` in server components or using undocumented Loom API endpoints.
-**Why bad:** Loom has no open API. The SDK is client-only (45KB bundle). Server-side usage will fail.
-**Instead:** Store URL string, validate format client-side, render via responsive iframe.
+**What:** Persisting raw email subjects, sender addresses, or body content.
+**Why bad:** Email content is PII. Storage requires encryption, retention policies, right-to-deletion compliance, and triggers Google's most stringent security assessment. Massive liability for minimal value.
+**Instead:** Aggregate metadata into anonymous patterns in-memory. Only persist AI-generated analysis (categories, percentages, recommendations). Raw data is discarded after aggregation.
 
-### Anti-Pattern 5: Storing Preferences in localStorage
-**What:** Using browser storage for user preferences.
-**Why bad:** Not accessible server-side (can't use for search ranking), lost on device switch, no multi-device sync, not auditable.
-**Instead:** Server-authoritative `user_preferences` table, read via server component on page load.
+### Anti-Pattern 3: Using Auth.js Accounts Table for Gmail Tokens
 
-### Anti-Pattern 6: Modifying RLS for Global Visibility
-**What:** Adding `OR visibility = 'global'` to the RLS policy to allow cross-tenant reads.
-**Why bad:** Weakens the tenant isolation guarantee. Every query now implicitly can read other tenants' data if visibility is misconfigured. One bug = data leak.
-**Instead:** For v3.0, implement only `tenant` and `personal` visibility (both work within existing RLS). Defer `global` to a later phase with a dedicated solution (materialized view or separate API).
+**What:** Updating the `accounts` table row with Gmail-specific tokens.
+**Why bad:** Auth.js `DrizzleAdapter` manages this table. The `jwt` callback in `auth.ts` reads from it for session management. Modifying tokens could break authentication. The account row stores identity tokens (for sign-in), while Gmail tokens serve a different purpose (API data access).
+**Instead:** Separate `gmail_tokens` table with its own lifecycle, encryption, and revocation.
+
+### Anti-Pattern 4: Synchronous Full Pipeline Without Progress
+
+**What:** Running Gmail fetch + AI analysis + skill matching in one request with no UI feedback.
+**Why bad:** Combined time is 15-45 seconds. Exceeds typical request timeouts. No progress indicator = user thinks it's broken.
+**Instead:** Show a loading state with phase indicators:
+- "Fetching email metadata..." (10-30s)
+- "Analyzing workflow patterns..." (5-15s)
+- "Matching skills..." (1-3s)
+Use React's loading states. The server action runs to completion; the page shows a spinner with status text. On completion, results are persisted and the page re-renders with data.
+
+### Anti-Pattern 5: Sending PII to the AI
+
+**What:** Passing raw email subjects, sender addresses, or thread content to Claude.
+**Why bad:** Privacy violation. AI providers may log inputs. Even with Anthropic's data policies, sending user email content to a third-party API without explicit consent creates compliance risk.
+**Instead:** The aggregation layer (Phase B, step 8) is the privacy firewall. Only anonymous patterns (domain distributions, temporal patterns, keyword clusters) reach the AI.
+
+---
+
+## Integration with Google Cloud Project
+
+The existing Google Cloud project already has:
+- OAuth 2.0 credentials (used by Auth.js for SSO)
+- Consent screen configured
+
+To enable Gmail diagnostics:
+1. Enable the Gmail API in the Google Cloud Console
+2. Add `https://www.googleapis.com/auth/gmail.metadata` to the OAuth consent screen's scopes
+3. The restricted scope will trigger Google's verification process:
+   - Brand verification (2-3 business days)
+   - Restricted scope verification (several weeks)
+   - Security assessment by Google-approved assessor (if storing/transmitting restricted data)
+4. During development, the app works in "Testing" mode (100 test users max)
+5. For production, verification must be completed before the 100-user limit is lifted
+
+**This is a significant timeline dependency.** The verification process should be initiated early (Phase 1), even before the code is complete. Development and testing can proceed in "Testing" mode.
+
+---
+
+## Environment Variables
+
+New variables needed:
+
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `GMAIL_TOKEN_ENCRYPTION_KEY` | 64-character hex string (32 bytes) | AES-256-GCM encryption key for Gmail tokens |
+
+Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+
+Existing variables reused:
+- `AUTH_GOOGLE_ID` -- Same Google OAuth client ID
+- `AUTH_GOOGLE_SECRET` -- Same Google OAuth client secret
+- `ANTHROPIC_API_KEY` -- For workflow analysis
 
 ---
 
 ## Scalability Considerations
 
 | Concern | At 100 users | At 10K users | At 1M users |
-|---------|-------------|-------------|-------------|
-| Hybrid search latency | <300ms (FTS + semantic + intent parallel) | <500ms (HNSW index tuning) | Dedicated search service needed |
-| Workspace sync | Inline in request (~2s for 100 employees) | Background job, paginated | Queue-based with Google API rate limiting |
-| Preference reads | Direct DB query (~5ms) | Cache in JWT claims (add preferredCategories) | Redis cache layer |
-| Search history writes | Fire-and-forget INSERT (~2ms) | Partition by month | TimescaleDB or archive to cold storage |
-| Intent classification | Per-query Claude Haiku (~$0.0002) | Cache common queries (LRU, 1h TTL) | Pre-computed intent categories per skill |
-| Loom embeds | Direct iframe load from Loom CDN | Same (Loom handles CDN) | Same |
+|---------|--------------|--------------|-------------|
+| Gmail API quota | 250 units/user/sec. 500 messages = ~10s. Fine. | Same per-user quota. No issue (user-initiated). | Same. Google quotas are per-user. |
+| Token storage | 100 rows, trivial | 10K rows with UNIQUE index. Fast lookup. | Partition by tenant. Encryption adds ~50% storage. |
+| Diagnostic storage | Small JSONB rows | Add composite index (user_id, created_at) | Archive diagnostics older than 1 year |
+| AI analysis cost | ~$0.015/diagnostic (Sonnet) | $150 for full cohort | Rate limit (max 1 per user per day) |
+| Gmail fetch time | 10-30s per user, acceptable | N/A (user-initiated, not batch) | N/A |
+| Skill matching | 5-15 hybrid searches per diagnostic (~1s each) | Same per-user | Cache frequently matched queries |
 
 ---
 
 ## Build Order (Dependency-Driven)
 
 ```
-Phase 1: Foundation (no dependencies)
-  +-- Visibility scoping (schema + service + query mods)
-  +-- Loom URL integration (schema + component)
-  +-- User preferences table + service
+Phase 1: Foundation (no inter-dependencies)
+  |-- gmail_tokens schema + migration
+  |-- gmail-auth.ts (encryption, OAuth URL builder, token refresh)
+  |-- workflow_diagnostics + diagnostic_skill_matches schema + migration
+  |-- googleapis dependency added to package.json
+  |-- Initiate Google restricted scope verification (timeline dependency!)
 
-Phase 2: Search Enhancement (depends on Phase 1 visibility + preferences)
-  +-- Hybrid search service (RRF merge)
-  +-- Intent classifier (optional, graceful degradation)
-  +-- Search history tracking
-  +-- Modified search components
+Phase 2: OAuth Flow (depends on Phase 1 schema)
+  |-- /api/gmail/callback route
+  |-- middleware.ts exemption for /api/gmail/callback
+  |-- gmail-connect-button.tsx component
+  |-- connectGmail + disconnectGmail server actions
 
-Phase 3: Workspace Integration (independent of Phase 2)
-  +-- Token encryption library
-  +-- Workspace OAuth routes
-  +-- workspace_tokens + workspace_profiles tables
-  +-- Google API client + sync service
-  +-- Diagnostic queries
-  +-- Admin workspace settings page
+Phase 3: Data Pipeline (depends on Phase 1 schema, parallel with Phase 2)
+  |-- gmail-fetcher.ts (Gmail API metadata fetch + aggregation)
+  |-- workflow-analyzer.ts (Anthropic analysis with structured output)
+  |-- gmail-skill-matcher.ts (thin wrapper around existing hybrid search)
+  |-- workflow-diagnostics.ts service (CRUD)
+  |-- gmail-tokens.ts service (CRUD with encryption)
 
-Phase 4: Homepage Redesign (depends on Phases 1-3)
-  +-- Personalized feed service
-  +-- New homepage components
-  +-- Saved searches UI
-  +-- Department highlights (requires Phase 3)
-  +-- Integration of all v3.0 features into unified experience
+Phase 4: Dashboard (depends on Phase 2 + Phase 3)
+  |-- /workflow-diagnostic page
+  |-- workflow-time-chart.tsx (Recharts PieChart)
+  |-- automation-opportunities.tsx (BarChart + skill cards)
+  |-- diagnostic-history.tsx (previous runs list)
+  |-- runDiagnostic server action (orchestrates full pipeline)
+  |-- Navigation link in layout
+
+Phase 5: Polish (depends on Phase 4)
+  |-- Historical comparison between diagnostics
+  |-- Re-run with configurable time range (7d, 30d, 90d)
+  |-- Disconnect Gmail flow with token revocation
+  |-- Loading states with phase indicators
+  |-- E2E tests (mock Gmail API)
 ```
 
-**Phase ordering rationale:**
-- Phase 1 has zero dependencies and modifies the skills table that everything else reads. Do it first.
-- Phase 2 depends on visibility (search must respect it) and preferences (boost uses them). Both from Phase 1.
-- Phase 3 is independent of search -- workspace integration is a self-contained feature. Can parallel with Phase 2.
-- Phase 4 ties everything together. It needs personalized data (Phase 2), workspace data (Phase 3), and visibility (Phase 1).
+**Parallelism:** Phase 2 and Phase 3 can run in parallel after Phase 1 (no shared files). Phase 4 depends on both completing. Phase 5 depends on Phase 4.
 
 ---
 
 ## Sources
 
-- [Auth.js Incremental Authorization Discussion #10261](https://github.com/nextauthjs/next-auth/discussions/10261) -- HIGH confidence: confirms Auth.js v5 does not support incremental scope expansion
-- [Auth.js Configuring OAuth Providers](https://authjs.dev/guides/configuring-oauth-providers) -- MEDIUM confidence: shows scope override pattern
-- [Google Incremental Authorization](https://developers.google.com/identity/sign-in/web/incremental-auth) -- HIGH confidence: official docs on how incremental auth works at the OAuth2 level
-- [Google Admin SDK Directory API Overview](https://developers.google.com/workspace/admin/directory/v1/guides) -- HIGH confidence: official docs
-- [Google People API Directory Contacts](https://developers.google.com/people/v1/directory) -- HIGH confidence: scope requirements for directory access
-- [Domain-Wide Delegation Best Practices](https://support.google.com/a/answer/14437356) -- HIGH confidence: why to avoid DWD when possible
-- [Loom Embed SDK API](https://dev.loom.com/docs/embed-sdk/api) -- MEDIUM confidence: confirms client-only SDK, oEmbed metadata fields
-- [Loom Embed Documentation](https://support.atlassian.com/loom/docs/embed-your-video-into-a-webpage/) -- MEDIUM confidence: iframe embed pattern
-- [Hybrid Search in PostgreSQL (ParadeDB)](https://www.paradedb.com/blog/hybrid-search-in-postgresql-the-missing-manual) -- MEDIUM confidence: RRF and hybrid search patterns
-- [Hybrid Search with pgvector (Jonathan Katz)](https://jkatz05.com/post/postgres/hybrid-search-postgres-pgvector/) -- MEDIUM confidence: PostgreSQL-specific hybrid search
-- [RAG Methods Comparison (arxiv 2602.09552)](https://arxiv.org/abs/2602.09552) -- MEDIUM confidence: single-query vs multi-turn RAG effectiveness
-- Direct codebase analysis of all referenced files (HIGH confidence):
-  - `packages/db/src/schema/*.ts` (all 17 schema files)
-  - `packages/db/src/services/*.ts` (all 21 service files)
-  - `packages/db/src/client.ts`, `packages/db/src/tenant-context.ts`
-  - `packages/db/src/relations/index.ts`
-  - `apps/web/auth.ts`, `apps/web/auth.config.ts`, `apps/web/middleware.ts`
-  - `apps/web/app/actions/search.ts`, `apps/web/lib/search-skills.ts`
-  - `apps/web/lib/ai-review.ts`, `apps/web/lib/embedding-generator.ts`
-  - `apps/web/components/search-with-dropdown.tsx`
-  - `apps/web/app/(protected)/page.tsx` (homepage)
-  - `apps/web/app/(protected)/skills/[slug]/page.tsx` (skill detail)
+### HIGH Confidence (Official Documentation + Codebase)
+- [Google Gmail API Scopes](https://developers.google.com/workspace/gmail/api/auth/scopes) -- scope classification, verification requirements
+- [Google OAuth2 Web Server Flow](https://developers.google.com/identity/protocols/oauth2/web-server) -- incremental authorization, token exchange
+- [Google Restricted Scope Verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification) -- verification timeline, security assessment
+- [Google Incremental Authorization](https://developers.google.com/identity/sign-in/web/incremental-auth) -- include_granted_scopes pattern
+- [Google Granular Permissions](https://developers.google.com/identity/protocols/oauth2/resources/granular-permissions) -- handling partial scope grants
+- [Node.js Gmail API Quickstart](https://developers.google.com/gmail/api/quickstart/nodejs) -- googleapis client setup
+- [googleapis NPM Package](https://www.npmjs.com/package/googleapis) -- Gmail API client
+- [Auth.js OAuth Provider Configuration](https://authjs.dev/guides/configuring-oauth-providers) -- scope override pattern
+- [Auth.js Refresh Token Rotation](https://authjs.dev/guides/refresh-token-rotation) -- token refresh pattern
+- Direct codebase analysis (all files listed in Component Boundaries section)
+
+### MEDIUM Confidence (GitHub Discussions, Community)
+- [Auth.js Discussion #11819: Persist Gmail Permissions](https://github.com/nextauthjs/next-auth/discussions/11819) -- confirms limitations
+- [Auth.js Discussion #4557: Set Scopes on signIn](https://github.com/nextauthjs/next-auth/discussions/4557) -- per-request scope not supported
+- [Auth.js Discussion #2068: Override Scopes](https://github.com/nextauthjs/next-auth/discussions/2068) -- workarounds
+- [Google Provider Refresh Token Issue #8205](https://github.com/nextauthjs/next-auth/issues/8205) -- refresh token edge cases
+- [Node.js AES-256-GCM Examples](https://gist.github.com/rjz/15baffeab434b8125ca4d783f4116d81) -- encryption implementation

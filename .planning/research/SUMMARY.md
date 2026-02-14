@@ -1,203 +1,249 @@
-# Project Research Summary
+# Gmail Workflow Diagnostic Research Summary
 
-**Project:** EverySkill v3.0 — AI Discovery & Workflow Intelligence
-**Domain:** Multi-tenant AI skill marketplace with Google Workspace integration, visibility scoping, intent search, video integration
-**Researched:** 2026-02-13
-**Confidence:** HIGH (core patterns), MEDIUM (Google Workspace integration complexity)
+**Project:** EverySkill Gmail Workflow Diagnostic
+**Domain:** Email metadata analysis with AI-powered automation recommendations
+**Researched:** 2026-02-14
+**Confidence:** HIGH (Gmail API, OAuth patterns), MEDIUM (AI classification accuracy, time estimation model)
 
 ## Executive Summary
 
-EverySkill v3.0 extends the existing multi-tenant skill marketplace with eight capabilities that transform it from a catalog into an intelligent discovery and adoption platform. The research reveals a clear foundation-first architecture: visibility scoping is the bedrock that must be built before AI-powered features can safely operate. Google Workspace integration represents the highest-risk, highest-value feature, requiring separate OAuth flows and careful privacy handling. The recommended approach prioritizes quick wins (Loom video integration, MCP tool unification) in parallel with foundational work (visibility scoping, user preferences), followed by the intelligence layer (AI intent search, workspace diagnostics), and culminating in the homepage redesign that ties everything together.
+The Gmail Workflow Diagnostic is a "screentime for email" feature that analyzes users' Gmail patterns over 90 days and recommends EverySkill skills to automate repetitive email work. The technical approach is straightforward: fetch email metadata via Gmail API, classify patterns with Claude (same structured output pattern as existing `ai-review.ts`), match opportunities to skills via existing hybrid search, and visualize results with existing Recharts components. The raw email data is analyzed in-memory and discarded — only aggregate statistics are persisted.
 
-The core technical insight is that v3.0 adds capabilities without requiring stack replacement. Five new npm packages (3 Google API clients, 2 Vercel AI SDK packages) extend the existing Next.js + pgvector + Anthropic infrastructure. The existing Drizzle ORM patterns, RLS policies, and multi-tenancy architecture remain intact. The main architectural risk is the hardcoded `DEFAULT_TENANT_ID` in 30+ files — new code must never continue this pattern.
+The architecture reuses 90% of existing infrastructure: Auth.js Google OAuth credentials (but with a **separate incremental authorization flow**), Anthropic SDK for classification, hybrid search for skill matching, and Recharts for visualization. The only new dependency is `@googleapis/gmail` (~1.1MB). Privacy is enforced by the analyze-and-discard pattern: email metadata enters as input, only anonymous aggregates exit for storage. Headers-only access (via `gmail.metadata` or `gmail.readonly` scope) prevents body/attachment exposure.
 
-Critical risks center on data isolation: visibility scoping without comprehensive query filtering causes cross-scope leakage (11+ query paths identified); Google Workspace integration without proper OAuth separation breaks existing auth flows; AI intent search without grounding in actual results hallucinates recommendations. The mitigation strategy is defense-in-depth: RLS for tenant isolation, application-layer visibility filters in every query path, structured output with Zod validation for LLM responses, and separate OAuth flows for Workspace scopes.
+**CRITICAL DECISION REQUIRED:** Stack/Architecture/Features researchers recommend `gmail.metadata` scope (privacy-friendly, no body access), but Pitfalls researcher found that **`gmail.metadata` CANNOT use the `q` search parameter** for date filtering. Without date filters, analyzing 90 days requires fetching ALL message IDs in the entire mailbox (impractical for 100K+ message mailboxes). **Recommendation: Use `gmail.readonly` scope but commit to ONLY requesting `format: 'metadata'` on all API calls.** This provides date filtering capability while maintaining the same privacy posture as `gmail.metadata`. Document this scope choice transparently in the privacy notice.
 
 ## Key Findings
 
 ### Recommended Stack
 
-**Stack additions: 5 new npm packages, 0 existing changes.** The research validates the existing Next.js 16.1.6 + PostgreSQL + pgvector foundation and identifies minimal, high-value extensions. Google Workspace integration uses individual `@googleapis/*` packages (drive, calendar, gmail — 4.3MB total) rather than the monolithic 200MB `googleapis` package. AI intent search adds Vercel AI SDK (`ai` + `@ai-sdk/anthropic`) for streaming conversational UX, while keeping the existing `@anthropic-ai/sdk` for batch operations. Loom integration requires zero dependencies — oEmbed endpoint via HTTP fetch is simpler and more maintainable than the stale `@loomhq/loom-embed` SDK.
+**No new stack beyond 1 npm package.** The Gmail diagnostic reuses existing EverySkill infrastructure with surgical additions:
 
 **Core technologies:**
-- **@googleapis/drive, calendar, gmail (^20.1.0, ^14.2.0, ^16.1.1):** Directory metadata for visibility scoping — individual packages share transitive deps, 98% smaller than monolith
-- **Vercel AI SDK (ai@^6.0.86, @ai-sdk/anthropic@^3.0.43):** Streaming search chat with tool calls — coexists with existing Anthropic SDK, eliminates ~80% of streaming boilerplate
-- **Loom oEmbed (no package):** Server-side metadata fetch + responsive iframe embed — avoids 45KB client-side SDK for functionality achievable in 20 lines
+- **`@googleapis/gmail` ^15.0.0** (new dependency, ~1.1MB): Official Google Gmail API client with OAuth token refresh, pagination, TypeScript types, and retry logic
+- **Anthropic SDK 0.72.1** (existing): Claude classifies email patterns using structured JSON output (same pattern as `ai-review.ts`)
+- **Recharts 3.7.0** (existing): BarChart, AreaChart, PieChart for diagnostic dashboard (already used in 3+ components)
+- **Auth.js v5 Google provider** (existing): Same OAuth client credentials, but with a **separate incremental authorization flow** for Gmail scope (NOT added to main provider config)
+- **Drizzle ORM 0.42.0** (existing): Stores diagnostic snapshots (aggregates only) with RLS, following established multi-tenant patterns
+
+**No NLP libraries** (Claude handles classification), **no job queues** (server action with progress is sufficient for 60-90 second scans), **no new charting libraries** (Recharts covers all needs).
+
+**Critical version requirements:**
+- Node.js 22+ (for native `crypto` module with AES-256-GCM)
+- `@googleapis/gmail` v15+ (post-2025 API with reduced quota costs)
 
 ### Expected Features
 
 **Must have (table stakes):**
-- **Visibility scoping (3 levels):** `tenant` (default, current behavior), `personal` (author-only), defer `global` (cross-tenant) to later phase — RLS handles tenant isolation, application-layer filters handle visibility within tenant
-- **AI intent search (semantic + keyword hybrid):** Natural language query "What are you trying to solve?" returns top-3 skills via Reciprocal Rank Fusion (RRF k=60) merging pgvector cosine + full-text search — NO conversational multi-turn (research confirms marginal benefit for single-domain QA)
-- **Loom video integration:** Optional `loomUrl` field on skills, oEmbed for metadata, responsive iframe embed on detail page — video thumbnails in browse cards
-- **MCP tool unification:** Single `everyskill` tool with search/install/describe sub-commands wrapping existing 16 MCP handlers — clean external discovery surface
+- **One-click Gmail connect** — OAuth redirect with explicit privacy messaging ("headers only, never bodies")
+- **Email volume summary** — "You receive ~85 emails/day" (users expect this first)
+- **Time-spent estimation** — "~8.5 hours/week on email" (transparent methodology: category-weighted model with thread depth factors)
+- **Email categorization breakdown** — Newsletters (35%), notifications (25%), internal threads (20%), action items (15%), etc.
+- **Visual dashboard** — KPI cards (total emails, estimated hours), category donut chart, volume trends
+- **Skill recommendations** — Map email categories to existing skills via hybrid search, show top 3-5 with install CTAs
+- **Explicit "Run Diagnostic" action** — User-triggered, not automatic (respects agency, avoids surveillance feeling)
+- **Disconnect/revoke access** — Revoke refresh token with Google API + delete stored tokens
 
-**Should have (competitive):**
-- **Admin-stamped global skills:** Department head + admin two-level approval workflow, "Company Approved" badge — separate from existing 7-status content review lifecycle
-- **Personal preference extraction:** JSONB preferences storage with Zod schema for defaults, CLAUDE.md generation from user's skill portfolio — NO programmatic Claude.ai Projects API (doesn't exist)
-- **Homepage redesign:** Search-first hero replacing metrics-first layout, personalized recommendations, company-approved section — additive changes preserving existing stat cards and leaderboard positions
+**Should have (differentiators):**
+- **Deployment plan with sequenced skill rollout** — Order recommendations by ROI, show cumulative savings graph
+- **FTE Days Saved projection** — Tie to existing My Leverage page metric (convert skill `hoursSaved` to FTE days)
+- **Ephemeral analysis (analyze-and-discard)** — Unlike competitors (EmailMeter, timetoreply), EverySkill stores NO raw email data (genuine privacy differentiator)
+- **Re-run comparison (before/after)** — "Newsletter time down 40% since you deployed Email Digest skill"
+- **One-click skill install from recommendations** — Reduce friction from insight to action
+- **"Biggest opportunity" highlight** — Single hero card: "35% of your time goes to newsletters — Email Digest Skill could save 3.5 hrs/wk"
 
-**Defer (v2+ or validate-first):**
-- **Google Workspace diagnostic:** Highest risk — requires separate OAuth flow (NOT via Auth.js), Directory API with admin setup, privacy/GDPR compliance, rate limit handling — build manual "time allocation survey" first to validate value prop before OAuth integration
-- **Personalized "For You" section:** Requires usage history analysis and preference learning — defer until visibility + preferences ship and generate data
-- **Department approval workflow:** Start with admin-only global stamping — add department chain if org structure demands it
-- **Multi-format preference export:** Start with CLAUDE.md only — add .cursorrules and AGENTS.md based on user demand
+**Defer (v2+):**
+- **Team-level aggregate view** — Requires privacy design, opt-in flow, anonymization (separate milestone)
+- **Calendar + Drive connectors** — Same OAuth pattern, different data sources (separate milestones)
+- **Email pattern insights** — Behavioral analytics like "busiest hour: 9-10am" (nice-to-have, secondary to recommendations)
+- **Exportable report** — PDF/summary download (low priority, add when users request it)
 
 ### Architecture Approach
 
-The recommended architecture is **foundation, intelligence, experience** layered. Visibility scoping modifies the existing skills schema and adds application-layer filters to all 11+ query paths — this is prerequisite infrastructure. Google Workspace integration uses a separate OAuth flow (custom API routes, not Auth.js) storing encrypted tokens in a new `workspace_tokens` table, with a `workspace_profiles` cache for directory metadata. AI intent search layers hybrid retrieval (RRF fusion) with optional Claude Haiku intent classification (parallel, sub-500ms timeout) on top of existing pgvector and full-text indexes. The homepage redesign is the integration point that surfaces all capabilities.
+**Component boundaries** follow single-responsibility: Gmail auth (separate from Auth.js), metadata fetcher (Gmail API interaction), workflow analyzer (AI classification), skill matcher (wrapper around existing hybrid search), diagnostic storage (new tables following established patterns), and dashboard UI (Recharts components).
 
 **Major components:**
-1. **Visibility scoping service** — reusable `buildVisibilityFilter(userId, department?)` applied in every search/browse query path including MCP tools — status takes precedence (only published skills respect visibility)
-2. **Workspace OAuth integration** — custom `/api/workspace/connect` and `/callback` routes, AES-256-GCM token encryption, per-tenant service account credentials — completely independent of user auth flow
-3. **Hybrid search with RRF** — parallel full-text + semantic retrieval, Reciprocal Rank Fusion merge, optional preference boost — grounded recommendations via structured Zod-validated LLM output
-4. **User preferences infrastructure** — single `user_preferences` table with JSONB data + Zod schema, code-defined defaults, server-authoritative (not localStorage) for search ranking
-5. **Homepage personalization service** — aggregates recommendations, recent usage, saved searches, department highlights with graceful degradation when optional integrations unavailable
+1. **Separate Gmail OAuth Flow** — Custom `/api/gmail/connect` + `/api/gmail/callback` routes, completely outside Auth.js (because Auth.js v5 doesn't support incremental authorization). Gmail tokens stored in `gmail_tokens` table (encrypted at rest with AES-256-GCM), NOT in Auth.js `accounts` table.
+2. **Privacy Firewall (Analyze-and-Discard Pipeline)** — Fetch email metadata → classify in-memory (batched to Claude, 75 emails per call) → aggregate to anonymous patterns → store ONLY aggregates → discard raw data. Headers like From/Subject/Date never persist beyond the server action.
+3. **Skill Matching via Existing Hybrid Search** — AI analysis outputs `skillSearchQuery` strings (e.g., "automate newsletter summarization"). These feed directly into existing `hybridSearchSkills()` with RRF scoring. No new matching infrastructure.
+4. **Dashboard with Existing Recharts** — PieChart for category distribution, BarChart for time breakdown, skill recommendation cards. Follows same layout pattern as existing `/analytics` page.
+
+**Data flow:** Gmail API (threads.list + threads.get) → in-memory aggregation → Claude classification (structured JSON) → skill matching → persist to `workflow_diagnostics` + `diagnostic_skill_matches` tables → render dashboard. Raw metadata lives only in server action scope, never in database.
 
 ### Critical Pitfalls
 
-1. **Google Workspace OAuth scope escalation breaks existing auth** — Adding Directory API scopes to the Google SSO provider in `auth.config.ts` forces re-consent for all users, and Directory API requires admin-level access that regular users don't have. Auth.js v5 does NOT support incremental authorization. **Prevention:** Use separate OAuth flow via custom API routes with service account + Domain-Wide Delegation for Directory access, stored per-tenant. User login and Workspace sync use different OAuth grants.
+1. **Scope Escalation Breaks Existing Auth (CRITICAL)** — Adding Gmail scope to the Auth.js Google provider forces ALL existing users through re-consent on next login. Users who decline Gmail are locked out of the entire app. **Prevention:** Build a SEPARATE OAuth flow outside Auth.js (`/api/gmail/connect` route), triggered only when users click "Connect Gmail." Store tokens in `gmail_tokens` table, NOT `accounts` table. Mark OAuth consent screen as "Internal" user type in Google Cloud Console to bypass verification.
 
-2. **Visibility scoping without comprehensive query filtering causes cross-scope data leakage** — The existing RLS policies check only `tenant_id`. Adding visibility as application-layer WHERE clauses works, but 11+ query paths exist (search, semantic search, trending, leaderboard, MCP tools, similar skills, direct URL access). Missing visibility filter in ANY path leaks private skills. **Prevention:** Create reusable `buildVisibilityFilter(userId, userDept?)` function imported in ALL query paths. Status takes precedence — only published skills respect visibility. MCP tools need userId parameter for filtering.
+2. **`gmail.metadata` Scope Blocks Date Filtering (CRITICAL)** — The `gmail.metadata` scope prevents using the `q` parameter on `messages.list`. Without date filtering, analyzing 90 days requires fetching ALL message IDs in the mailbox (impractical for 100K+ messages, causes timeout/memory issues). **Prevention:** Use `gmail.readonly` scope BUT commit to ONLY requesting `format: 'metadata'` on all `messages.get` calls. This provides date filtering (`q=after:2025/11/16`) while accessing the same header-only data. Document transparently: "We use readonly scope for date filtering but never access message bodies."
 
-3. **AI intent search hallucinating skill recommendations** — LLM synthesizing search results can fabricate capabilities or non-existent skills if results are poor matches. The existing pgvector semantic search returns similarity scores but no LLM interpretation layer exists. **Prevention:** Ground ALL recommendations in actual search results. Use similarity threshold (min 0.3). Template prompt with structured output (Zod schema: `{recommendations: [{skillSlug, reason, confidence}]}`). Show raw results alongside AI summary. Link every recommendation to actual `/skills/[slug]`.
+3. **Access Token Expiry Causes Silent Failures (CRITICAL)** — Google access tokens expire after 1 hour. Auth.js v5 does NOT implement automatic refresh (confirmed across GitHub issues #3016, #8205). If a user returns after 1 hour, Gmail API calls fail with 401. **Prevention:** Proactive token refresh (check `expiresAt < Date.now() + 300000`, refresh 5 min before expiry). Use database-level mutex (`refreshingAt` timestamp column) to prevent race conditions. Handle `invalid_grant` gracefully (user revoked in Google settings) by marking connection as disconnected.
 
-4. **DEFAULT_TENANT_ID hardcoded in 30+ files collides with multi-tenant Workspace sync** — Grep reveals hardcoded `"default-tenant-000-0000-000000000000"` in server actions, MCP tools, lib files, E2E tests. Workspace integration is inherently multi-tenant (each tenant connects their own Google Workspace). If Workspace sync uses DEFAULT_TENANT_ID, it merges all tenants' directory data into one namespace. **Prevention:** New v3.0 code must ALWAYS resolve tenant from `session.user.tenantId`. Create `resolveTenantId(session)` helper that throws if missing. Workspace credentials and directory cache keyed by `tenantId` parameter (required, not optional with DEFAULT fallback).
+4. **Email Data Retained After Analysis (COMPLIANCE)** — Raw email headers accidentally persisted via temporary storage, LLM prompt logs, error stack traces, or browser DevTools network responses. **Prevention:** Process entirely in-memory (no database temp tables). Sanitize LLM prompts to send ONLY aggregated patterns, never raw subjects/senders. Disable request logging for `/api/gmail/*` routes. Add data deletion endpoint triggered on disconnect.
 
-5. **Workspace directory sync rate limits and partial failures** — Google Directory API: 2,400 queries/min/user/project. Full sync for 5,000 users = 10 API calls (no problem), but 50,000 users = 100 calls. Simultaneous tenant onboarding hits quota. Partial sync failures leave stale data. **Prevention:** Incremental sync (not full), database-backed job queue per tenant with `lastPageToken` resume point, cache directory in `workspace_profiles` table (never query Google API at request time), store sync metadata (`lastFullSyncAt`, `syncStatus`, `totalUsersSynced`).
+5. **Large Mailbox Analysis Causes Timeout/Exhaustion (SCALABILITY)** — Active users with 50K+ emails. Fetching metadata for each requires 50K API calls at 5 quota units each (250K units total). Per-user rate limit is 15K units/min = ~17 minutes. Server action times out. **Prevention:** Use batch requests (100 messages per batch, reduces HTTP overhead 99%). Limit analysis scope to last 90 days with date filtering (`q=after:...`). Implement sampling (2,000 message sample for 50K+ mailboxes). Set hard cap at 5,000 messages per analysis. Show progress indicator during scan.
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure follows dependency ordering and risk isolation:
+Based on research, Gmail diagnostic is a **2-3 phase milestone**. The core functionality (OAuth, fetch, analyze, display) is tightly coupled and should be built as a cohesive unit. Polish features (re-run comparison, deployment plan sequencing) can follow.
 
-### Phase 1: Foundation Layer (Parallel Execution)
-**Rationale:** These three features have zero dependencies on each other and establish prerequisites for later phases. Visibility scoping is the most critical — every feature built after it depends on proper access control. Loom and MCP are quick wins that deliver value immediately.
-
-**Delivers:**
-- Visibility scoping schema (`visibility` column: tenant/personal/global, defer global implementation) + reusable filter service
-- Loom video integration (`loomUrl` field, oEmbed metadata, responsive iframe embed component)
-- MCP tool unification (single `everyskill` tool wrapping existing 16 handlers with sub-commands)
-
-**Addresses:** Table stakes features — visibility control, video demos, external discovery
-**Avoids:** Pitfall 2 (cross-scope leakage via comprehensive filtering), Pitfall 13 (CSP for Loom embeds)
-**Research needed:** SKIP (established patterns, direct schema changes)
-
-### Phase 2: User Preferences & Search Enhancement
-**Rationale:** Preferences infrastructure is needed for AI intent search's preference-boosted ranking. Both can build after visibility scoping ships (search must filter by visibility). Hybrid search extends existing full-text + semantic indexes without replacing them.
+### Phase 1: Core Diagnostic (MVP)
+**Rationale:** All table stakes features must work together. Users need the full flow (connect → analyze → see results → recommendations) to get value. Partial implementation delivers zero value.
 
 **Delivers:**
-- User preferences table (JSONB storage with Zod schema, code-defined defaults)
-- Hybrid search service (RRF k=60 fusion of full-text + pgvector semantic results)
-- Optional intent classification (Claude Haiku, <500ms timeout, graceful degradation)
-- Search history tracking (fire-and-forget, 90-day retention)
+- Separate Gmail OAuth flow with privacy-first consent UI
+- `gmail_tokens` table (encrypted at rest, tenant-scoped, RLS)
+- Email metadata fetch (90-day lookback, batched Gmail API calls, in-memory only)
+- AI classification (Claude with structured output, batched 75 emails/call)
+- Aggregate statistics (category distribution, time estimates, automation opportunities)
+- `workflow_diagnostics` + `diagnostic_skill_matches` tables
+- Skill matching via existing hybrid search
+- Dashboard page with KPI cards, category donut chart, skill recommendation cards
+- Disconnect/revoke functionality
 
-**Uses:** Vercel AI SDK for structured LLM output, existing pgvector + Voyage AI embeddings
-**Implements:** Preference boost layer (applied after RRF), visibility filtering in hybrid search path
-**Avoids:** Pitfall 3 (hallucination via grounding + similarity thresholds), Pitfall 14 (latency via parallel fetch + caching)
-**Research needed:** SKIP for hybrid search (RRF is standard), LIGHT for intent classifier (prompt engineering validation during implementation)
+**Addresses:**
+- All "must have" features from FEATURES.md
+- Privacy architecture (analyze-and-discard) from ARCHITECTURE.md
+- Token encryption from STACK.md
 
-### Phase 3: Workspace Integration (High-Risk, Validate-First)
-**Rationale:** Independent of search features but required for department-based visibility (deferred). Highest complexity due to OAuth, privacy, and rate limits. Build in isolation with feature flag.
+**Avoids:**
+- Pitfall 1 (scope escalation) via separate OAuth flow
+- Pitfall 2 (scope limitation) by using `gmail.readonly` with `format: 'metadata'`
+- Pitfall 3 (token expiry) via proactive refresh with mutex
+- Pitfall 4 (data retention) via in-memory processing and sanitized prompts
+- Pitfall 5 (large mailbox timeout) via batching, date filtering, and sampling
 
-**Delivers:**
-- Separate Workspace OAuth flow (custom `/api/workspace/connect` + `/callback` routes)
-- Token encryption (AES-256-GCM) and secure storage (`workspace_tokens` table per tenant)
-- Directory sync service (incremental, paginated, resume-from-last-page)
-- Cached directory profiles (`workspace_profiles` table with email, name, department, title, orgUnitPath)
-- Admin Workspace settings page (connect/disconnect, sync status, data minimization consent)
+**Research needed:** None (all patterns established in research)
 
-**Uses:** Individual `@googleapis/*` packages (drive, calendar, gmail)
-**Avoids:** Pitfall 1 (separate OAuth, not Auth.js scope expansion), Pitfall 5 (incremental sync + job queue), Pitfall 12 (privacy via data minimization + admin consent screen)
-**Research needed:** MEDIUM — OAuth verification process (2-4 weeks Google review), Directory API behavior (updatedMin parameter), GDPR compliance specifics depend on jurisdiction
-
-### Phase 4: Admin-Stamped Global Skills
-**Rationale:** Requires visibility scoping (Phase 1) to distinguish global from tenant scopes. Can build before or in parallel with Workspace sync — does NOT require department approval workflow initially.
-
-**Delivers:**
-- "Stamp as global" admin action on published skills
-- Global approval status field (separate from existing 7-status content lifecycle)
-- "Company Approved" badge component
-- "Company Recommended" homepage section
-
-**Addresses:** Competitive feature — governance and curation for enterprise adoption
-**Avoids:** Pitfall 15 (status + visibility interaction — status takes precedence)
-**Research needed:** SKIP (enterprise approval patterns well-documented)
-
-### Phase 5: Homepage Redesign (Integration Phase)
-**Rationale:** Requires visibility scoping (Phase 1), hybrid search (Phase 2), admin-stamped global skills (Phase 4). Optional: Workspace profiles (Phase 3) for department highlights. This phase surfaces all capabilities.
+### Phase 2: Deployment Intelligence
+**Rationale:** Phase 1 shows "what's wrong." Phase 2 answers "what to do about it" with actionable deployment sequencing. This is the differentiator vs generic email analytics tools.
 
 **Delivers:**
-- Search-first hero layout (large search bar, category pills)
-- Personalized recommendations (hybrid search with empty query + user preferences)
-- Company Recommended section (admin-stamped global skills)
-- Redesigned trending/leaderboard as cards (not tables)
-- Condensed platform metrics banner
+- Deployment plan with sequenced skill rollout (ordered by ROI)
+- Cumulative savings graph (stacked bar showing total saved after each step)
+- FTE Days Saved projection integrated with My Leverage page
+- One-click skill install from recommendation cards (existing flow, just link to it)
+- Re-run comparison (before/after delta view)
+- "Biggest opportunity" highlight card
 
-**Implements:** Personalized feed service with graceful degradation (works without Workspace integration)
-**Avoids:** Pitfall 7 (performance via caching slow queries + Suspense boundaries + async AI), Pitfall 11 (breaking workflows via additive changes + feature flags)
-**Research needed:** SKIP (marketplace homepage patterns well-established)
+**Uses:**
+- Existing skill `hoursSaved` and `activitiesSaved` fields for ROI scoring
+- Existing My Leverage FTE tracking logic
+- Existing skill install flow
+
+**Research needed:** None (pure UX/logic, no new integrations)
+
+### Phase 3: Polish & Testing (Optional — prioritize based on v2 feedback)
+**Rationale:** These features improve UX but aren't essential for launch. Add based on user feedback after Phase 1+2 deployment.
+
+**Delivers:**
+- Historical trend graph (requires 3+ scans over time, enable naturally after months)
+- Email pattern insights (busiest hour, response time percentile)
+- Configurable time range (7d, 30d, 90d — currently hardcoded to 90d)
+- Exportable report (PDF/summary download)
+
+**Research needed:** None
 
 ### Phase Ordering Rationale
 
-- **Phase 1 parallelism:** Visibility, Loom, MCP have no shared files — safe parallel execution
-- **Phase 2 dependencies:** Preferences before hybrid search (search uses prefs for boost), both after visibility (search filters by visibility)
-- **Phase 3 isolation:** Workspace integration is highest risk — feature flag allows rollback without affecting other phases
-- **Phases 4-5 convergence:** Admin stamping and homepage redesign compose features from earlier phases, minimal new infrastructure
+- **Phase 1 must be atomic** because OAuth + fetch + analyze + display are tightly coupled. Users can't connect Gmail without seeing results. They can't get recommendations without classification. Breaking Phase 1 into sub-phases creates no intermediate value.
+- **Phase 2 builds on Phase 1 results** by adding deployment sequencing logic. It touches NO new external APIs (Gmail, Anthropic), only internal logic and UI.
+- **Phase 3 is truly optional** — every feature here is a "nice to have" that Phase 1+2 users can live without.
 
 ### Research Flags
 
-**Phases needing deeper research during planning:**
-- **Phase 3 (Workspace):** OAuth verification timeline, Directory API `updatedMin` parameter behavior, GDPR compliance specifics for jurisdiction — allocate 2 weeks for verification process
-- **Phase 2 (Intent classifier):** Prompt engineering for intent extraction quality — validate with sample queries during implementation, not blocking
+**Phase 1: Core Diagnostic**
+- **Skip research-phase** — All patterns verified in this research. Gmail API quota/rate limits confirmed. OAuth incremental authorization pattern confirmed (with caveats). AI structured output pattern proven in existing `ai-review.ts`. Skill matching reuses existing infrastructure. This is "implementation-ready."
 
-**Phases with standard patterns (skip research-phase):**
-- **Phase 1 (all):** Schema migrations, oEmbed patterns, MCP tool composition are well-documented
-- **Phase 2 (hybrid search):** RRF algorithm is standard, pgvector + full-text patterns already proven in codebase
-- **Phase 4:** Enterprise approval workflows are well-established (SharePoint, Confluence)
-- **Phase 5:** Marketplace homepage patterns are well-documented (Atlassian, Notion, Slack)
+**Phase 2: Deployment Intelligence**
+- **Skip research-phase** — Pure logic and UI. No new integrations. ROI scoring algorithm is straightforward (skill `hoursSaved` × relevance score). FTE Days Saved calculation already exists in My Leverage page.
+
+**Phase 3: Polish & Testing**
+- **Skip research-phase** — Standard UX patterns. If exportable report needs specific format (PDF generation), research at that time.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Verified npm versions, compatibility matrix, existing codebase analysis (17K LOC audited). Vercel AI SDK peer deps match installed React 19.2.4 + Zod 3.25.76 exactly. Google API individual packages confirmed 98% smaller than monolith. |
-| Features | HIGH | Visibility scoping, Loom, homepage redesign based on established marketplace patterns (Atlassian, Notion, Linear). MEDIUM for AI intent search (prompt quality needs validation) and Workspace diagnostic (value prop unvalidated — survey-first recommended). |
-| Architecture | HIGH | Direct codebase analysis of schema (17 tables), services (21 files), auth flow (Auth.js v5 + JWT + RLS). Separate OAuth pattern verified against Auth.js limitations (GitHub #10261). RRF hybrid search is standard approach. |
-| Pitfalls | HIGH | Critical pitfalls verified via codebase grep (DEFAULT_TENANT_ID in 30+ files, 11+ query paths for visibility), Auth.js GitHub discussions (incremental auth not supported), Google API docs (rate limits, Directory API scopes). |
+| **Stack** | **HIGH** | `@googleapis/gmail` is official Google client, actively maintained. Anthropic SDK pattern proven in `ai-review.ts`. Recharts usage verified in 3+ existing components. All dependencies compatible with Next.js 16.1.6 + React 19. |
+| **Features** | **MEDIUM-HIGH** | Table stakes features verified via competitive analysis (EmailMeter, EmailAnalytics, timetoreply). Time estimation model is heuristic (not measurement) — transparent methodology is key to maintain trust. Skill matching logic is novel but leverages proven hybrid search. |
+| **Architecture** | **HIGH** | Separate OAuth flow pattern verified via Auth.js GitHub discussions (#4557, #11819). Analyze-and-discard privacy model verified via GDPR data minimization principles. Token encryption pattern standard (AES-256-GCM). Multi-tenant schema pattern established across 17+ existing tables. |
+| **Pitfalls** | **HIGH** | All critical pitfalls verified via official Google docs (OAuth scope behavior, Gmail API quota limits, token lifecycle). Auth.js limitations confirmed via GitHub issues. Privacy risks verified via Google Workspace API User Data Policy and GDPR guides. |
 
-**Overall confidence:** HIGH for core patterns and infrastructure. MEDIUM for Google Workspace integration complexity (OAuth verification, privacy compliance, rate limits require careful handling but are manageable with research findings).
+**Overall confidence:** **HIGH** for implementation-readiness. The critical OAuth scope decision (use `gmail.readonly` for date filtering) is the only outstanding architectural choice.
 
 ### Gaps to Address
 
-- **Embedding model decision:** Current Ollama local (`nomic-embed-text` 768-dim) vs cloud provider (Voyage AI, OpenAI) affects AI intent search. Switching models invalidates all existing embeddings. **Resolution:** Decide before Phase 2 starts. If switching, plan re-embedding migration (batch process, exponential backoff on rate limits, use existing `inputHash` to skip unchanged skills).
+1. **OAuth Scope Decision (MUST RESOLVE BEFORE IMPLEMENTATION):**
+   - **Issue:** `gmail.metadata` scope recommended by Stack/Features/Architecture researchers, BUT Pitfalls researcher found it blocks date filtering via `q` parameter.
+   - **Impact:** Without date filtering, analyzing 90 days requires fetching ALL mailbox IDs (impractical for 50K+ message mailboxes).
+   - **Resolution:** Use `gmail.readonly` scope but ONLY request `format: 'metadata'` on all `messages.get` calls. This provides identical privacy (headers only, no body/attachments) while enabling date filtering. Document transparently in privacy notice: "We use the readonly scope to filter emails by date, but we never access message bodies or attachments."
+   - **Verification:** Test with `gmail.metadata` scope — confirm `messages.list({ q: 'after:2025/11/16' })` returns 0 results. Test with `gmail.readonly` scope — confirm date filtering works AND `format: 'metadata'` prevents body access.
 
-- **Department/team data dependency:** Visibility scoping Phase 1 should implement only `tenant` and `personal`. Defer `team` and `department` scopes to Phase 1b AFTER Workspace sync (Phase 3) populates organizational data. Alternative: manual team assignment in admin settings for non-Google orgs. **Resolution:** Phase 1 delivers two visibility levels, Phase 3 enables the other two.
+2. **Time Estimation Model Validation (VALIDATE DURING ALPHA):**
+   - **Issue:** Time-per-email estimates are heuristic (category-weighted model with thread depth factors), not measured. Model needs calibration against real-world benchmarks.
+   - **Resolution:** During alpha testing, compare estimates against industry benchmarks (McKinsey: 28% of workweek = ~11 hrs, Workplace Email Statistics: 5-15.5 hrs/wk). Adjust category weights if estimates consistently over/under-shoot. Display transparent methodology: "Estimated based on email volume, thread depth, and response patterns."
+   - **Risk:** If estimates are wildly inaccurate, users lose trust. Transparent methodology + ranges (not point estimates) mitigate this.
 
-- **Google Workspace value validation:** Workspace diagnostic is highest risk, unvalidated feature. NO competitor does "workspace activity analysis → skill recommendation" in this exact pattern. **Resolution:** Build manual "time allocation survey" in Phase 3a before OAuth integration in Phase 3b. If survey engagement is low, skip OAuth entirely and archive the feature.
+3. **Google OAuth Verification Timeline (INITIATE EARLY):**
+   - **Issue:** `gmail.readonly` and `gmail.metadata` are both "Restricted" scopes. For external user type, verification takes 2-6 months + $500-$4,500 for CASA security assessment.
+   - **Resolution:** If EverySkill is internal-only (single Google Workspace domain), set OAuth consent screen to "Internal" user type — bypasses verification entirely. If external, initiate verification during Phase 1 implementation (development can proceed in "Testing" mode with 100 test users).
+   - **Blocker:** Cannot serve >100 users until verification completes (for external apps).
 
-- **Homepage performance budget:** Current homepage fetches 8 parallel queries. v3.0 adds 4-5 more (recommendations, activity feed, department highlights). Database connection pool default size (likely 10) insufficient. **Resolution:** Set performance budget in Phase 5 planning (TTFB < 400ms p95). Cache slow queries (platform stats, trending — 5min TTL), async-load AI recommendations via Suspense, monitor connection pool usage.
+4. **AI Classification Accuracy (VALIDATE DURING ALPHA):**
+   - **Issue:** Claude classifies emails from headers only (From, Subject, Date, List-Unsubscribe). Accuracy for ambiguous cases (newsletters vs human emails with marketing subject lines) is unverified.
+   - **Resolution:** Two-pass approach: rule-based pass (List-Unsubscribe header = newsletter, noreply@ sender = notification, domain matching = internal/external) catches ~70% with HIGH confidence. AI classification pass handles remaining ~30% ambiguous cases. During alpha, manually review a sample of classifications to calibrate.
+   - **Risk:** If classification is poor, recommendations are irrelevant. Structured output with Zod validation prevents hallucinated categories, but accuracy within valid categories needs validation.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- **Direct codebase analysis (17,000+ LOC):** 17 schema files, 21 service files, auth flow (auth.ts, auth.config.ts, middleware.ts), 11+ search query paths, homepage (8 parallel queries), 30+ files with DEFAULT_TENANT_ID hardcoded
-- **npm registry (verified 2026-02-13):** @googleapis/drive@20.1.0 (2.3MB), calendar@14.2.0 (809KB), gmail@16.1.1 (1.1MB) vs googleapis@171.4.0 (200MB), ai@6.0.86 + @ai-sdk/anthropic@3.0.43, @loomhq/loom-embed@1.7.0 (last published 2 years ago)
-- **Auth.js GitHub Discussions:** #10261 (incremental auth not supported), #3016 (refresh token issues)
-- **Google official docs:** Directory API rate limits (2,400 queries/min/user/project), OAuth scopes (directory.readonly requires admin or DWD), Domain-Wide Delegation setup
-- **Loom official docs:** oEmbed endpoint (https://www.loom.com/v1/oembed), Embed SDK API (client-side only)
+
+**Gmail API & OAuth (official Google docs):**
+- [Gmail API Scopes](https://developers.google.com/workspace/gmail/api/auth/scopes) — `gmail.metadata` vs `gmail.readonly` scope definitions, restriction levels, `q` parameter limitation on `gmail.metadata`
+- [Gmail API Usage Limits](https://developers.google.com/workspace/gmail/api/reference/quota) — Per-method quota costs (5 units for messages.list/get, 10 for threads.list/get), rate limits (15K units/user/min)
+- [Gmail API Batch Requests](https://developers.google.com/workspace/gmail/api/guides/batch) — Max 100 requests per batch
+- [Gmail API Performance Tips](https://developers.google.com/workspace/gmail/api/guides/performance) — gzip, partial responses, metadata format
+- [Google OAuth Incremental Authorization](https://developers.google.com/identity/sign-in/web/incremental-auth) — `include_granted_scopes=true` pattern
+- [Google OAuth Restricted Scope Verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification) — Verification timeline, CASA security assessment
+- [Google Granular OAuth Consent](https://workspaceupdates.googleblog.com/2025/11/granular-oauth-consent-in-webapps.html) — Per-scope checkboxes since Nov 2025
+- [Google Workspace API User Data Policy](https://developers.google.com/workspace/workspace-api-user-data-developer-policy) — Data minimization, limited use requirements
+
+**Auth.js Integration:**
+- [Auth.js Google Provider](https://authjs.dev/getting-started/providers/google) — Scope configuration, offline access, refresh tokens
+- [Auth.js Refresh Token Rotation](https://authjs.dev/guides/refresh-token-rotation) — JWT callback token persistence pattern, race condition warning
+
+**Codebase Verification (2026-02-14):**
+- `apps/web/auth.config.ts` — Current Google provider config with default scopes, scope extension point
+- `apps/web/auth.ts` — JWT callback with tenantId injection, no token refresh implemented
+- `packages/db/src/schema/auth.ts` — `accounts` table with `access_token`, `refresh_token`, `expires_at`, `scope` columns
+- `apps/web/lib/ai-review.ts` — Existing Anthropic SDK structured output pattern with `output_config: json_schema`
+- `packages/db/src/services/hybrid-search.ts` — Existing `hybridSearchSkills()` with RRF scoring
+- `apps/web/components/overview-tab.tsx` — Existing Recharts usage (BarChart, AreaChart)
 
 ### Secondary (MEDIUM confidence)
-- **Hybrid search patterns:** ParadeDB hybrid search guide (RRF k=60 standard), pgvector Jonathan Katz hybrid search blog
-- **RAG research:** arxiv 2602.09552 (single-query vs multi-turn RAG effectiveness for single-domain QA), arxiv 2510.24476v1 (hallucination mitigation via grounding)
-- **Enterprise search UX:** Kore.ai enterprise search patterns (intent understanding), Algolia marketplace search UX (sub-200ms expectation)
-- **Marketplace design:** Atlassian Marketplace (hero search + category pills), Notion Template Gallery (visual cards), Slack App Directory (featured apps)
-- **Privacy compliance:** Google Workspace GDPR compliance guides (data minimization), Google Workspace API User Data Policy
 
-### Tertiary (validation needed)
-- **Voyage AI rate limits:** Project memory notes "tight rate limits" but specific QPM not documented — validate during Phase 2 if switching from Ollama
-- **Loom roadmap under Atlassian:** Loom acquired 2023, SDK v1.7.0 published 2 years ago, no public embed API roadmap — oEmbed approach mitigates SDK deprecation risk but long-term embed stability is LOW confidence
+**Email Analytics Competitors:**
+- [EmailMeter](https://www.emailmeter.com) — Enterprise email analytics dashboard patterns
+- [EmailAnalytics](https://emailanalytics.com/) — Team email metrics and response time tracking
+- [Email Industry Report 2025-2026](https://clean.email/blog/insights/email-industry-report-2026) — Volume benchmarks (~117-121 emails/day for office workers)
+- [Workplace Email Statistics 2025](https://blog.cloudhq.net/workplace-email-statistics/) — Time spent on email (5-15.5 hrs/wk)
+
+**Auth.js Community (confirms incremental auth limitations):**
+- [NextAuth Discussion #4557: Set Scopes on signIn](https://github.com/nextauthjs/next-auth/discussions/4557) — Per-request scope not supported
+- [NextAuth Discussion #11819: Persist Gmail Permissions](https://github.com/nextauthjs/next-auth/discussions/11819) — Workaround: separate OAuth flow
+- [NextAuth Issue #8205: Google Refresh Token Not Provided](https://github.com/nextauthjs/next-auth/issues/8205) — Edge cases in token refresh
+
+**Privacy & Compliance:**
+- [GDPR and Email](https://gdpr.eu/email-encryption/) — Data minimization principles for email processing
+- [Google Workspace GDPR Guides](https://measuredcollective.com/gdpr-google-workspace-how-to-stay-compliant-with-gdpr/) — DPA requirements
+
+### Tertiary (LOW confidence — informational only)
+
+**Community Analysis (confirms pain points, but anecdotal):**
+- [GMass: OAuth Incremental Authorization Is Useless](https://www.gmass.co/blog/oauth-incremental-authorization-is-useless/) — Consent screen re-displays all scopes (not just new ones), developer must handle scope merging
+- [Google CASA Security Assessment 2025](https://deepstrike.io/blog/google-casa-security-assessment-2025) — $500-$4,500 approved lab cost, 2-6 month timeline (for external apps)
 
 ---
-*Research completed: 2026-02-13*
-*Ready for roadmap: yes*
-*Next step: Roadmapper agent consumes this summary to structure v3.0 phases*
+*Research completed: 2026-02-14*
+*Ready for roadmap: YES*
+*Critical decision: Resolve OAuth scope choice (recommend `gmail.readonly` + `format: 'metadata'`) before Phase 1 implementation*
