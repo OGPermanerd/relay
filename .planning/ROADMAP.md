@@ -158,7 +158,7 @@ Total: 21 plans completed. 9 phases, 26 requirements.
 - Integer phases (49, 50, ...): Planned milestone work
 - Decimal phases (49.1, 49.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 49: Tenant Resolution Cleanup** - Eliminate DEFAULT_TENANT_ID hardcoding across codebase
+- [x] **Phase 49: Tenant Resolution Cleanup** - Eliminate DEFAULT_TENANT_ID hardcoding across codebase
 - [ ] **Phase 50: Gmail OAuth Infrastructure** - Separate OAuth flow for Gmail with encrypted token storage
 - [ ] **Phase 51: Email Analysis Pipeline** - Fetch, classify, and aggregate 90 days of email metadata
 - [ ] **Phase 52: Diagnostic Dashboard** - Visual email time breakdown with charts and KPIs
@@ -175,9 +175,9 @@ Total: 21 plans completed. 9 phases, 26 requirements.
   3. A new user signing in for the first time is correctly assigned to a tenant via the existing domain-to-tenant mapping without any hardcoded fallback
 **Plans:** 3 plans
 Plans:
-- [ ] 49-01-PLAN.md -- Test infrastructure + utility function signature changes
-- [ ] 49-02-PLAN.md -- Server actions + server components + DB service tenant resolution
-- [ ] 49-03-PLAN.md -- MCP tools + API routes tenant resolution
+- [x] 49-01-PLAN.md -- Test infrastructure + utility function signature changes
+- [x] 49-02-PLAN.md -- Server actions + server components + DB service tenant resolution
+- [x] 49-03-PLAN.md -- MCP tools + API routes tenant resolution
 
 #### Phase 50: Gmail OAuth Infrastructure
 **Goal**: Users can securely connect and disconnect their Gmail account via a dedicated OAuth flow, with encrypted token storage and admin control
@@ -270,14 +270,14 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
 | 40-48 | v3.0 | 21/21 | Complete | 2026-02-13 |
-| 49. Tenant Cleanup | v4.0 | 0/3 | Planned | - |
+| 49. Tenant Cleanup | v4.0 | 3/3 | Complete | 2026-02-14 |
 | 50. Gmail OAuth | v4.0 | 0/TBD | Not started | - |
 | 51. Email Analysis | v4.0 | 0/TBD | Not started | - |
 | 52. Dashboard | v4.0 | 0/TBD | Not started | - |
 | 53. Recommendations | v4.0 | 0/TBD | Not started | - |
 | 54. Deployment Plan | v4.0 | 0/TBD | Not started | - |
 
-**Total: 197 plans completed across 48 phases and 8 milestones. v4.0: 0 plans done, 0/6 phases complete.**
+**Total: 200 plans completed across 49 phases and 9 milestones. v4.0: 3 plans done, 1/6 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
