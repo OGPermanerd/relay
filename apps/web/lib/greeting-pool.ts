@@ -24,17 +24,8 @@ const FALLBACK_GREETINGS = [
   "Flex time",
 ];
 
-function simpleHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash * 31 + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash);
-}
-
-function pickGreeting(pool: string[], userId: string, firstName: string): string {
-  const dayIndex = Math.floor(Date.now() / 86400000);
-  const index = (dayIndex + simpleHash(userId)) % pool.length;
+function pickGreeting(pool: string[], _userId: string, firstName: string): string {
+  const index = Math.floor(Math.random() * pool.length);
   return `${pool[index]}, ${firstName}!`;
 }
 
