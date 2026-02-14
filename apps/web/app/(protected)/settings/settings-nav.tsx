@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const tabs = [
   { label: "Preferences", href: "/settings/preferences" },
+  { label: "Connections", href: "/settings/connections" },
   { label: "Notifications", href: "/settings/notifications" },
   { label: "Export", href: "/settings/export" },
 ];
