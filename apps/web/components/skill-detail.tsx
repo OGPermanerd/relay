@@ -11,8 +11,10 @@ import { QualityBreakdown } from "./quality-breakdown";
 import { ForkAttribution } from "./fork-attribution";
 import { DriftIndicator } from "./drift-indicator";
 import { LoomEmbed } from "./loom-embed";
+import { SkillSummaryCards } from "./skill-summary-cards";
 import { RelativeTime } from "@/components/relative-time";
 import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
+import { CATEGORY_LABELS, type Category } from "@/lib/categories";
 
 interface SkillWithAuthor {
   id: string;
@@ -25,6 +27,9 @@ interface SkillWithAuthor {
   totalUses: number;
   averageRating: number | null;
   companyApproved?: boolean;
+  inputs?: string[] | null;
+  outputs?: string[] | null;
+  activitiesSaved?: string[] | null;
   createdAt: Date;
   author: {
     id: string;
@@ -50,6 +55,7 @@ interface SkillDetailProps {
   compareSlug?: string;
   loomVideoId?: string | null;
   loomEmbed?: LoomOEmbedResponse | null;
+  currentUserId?: string;
 }
 
 export function SkillDetail({
@@ -62,7 +68,9 @@ export function SkillDetail({
   compareSlug,
   loomVideoId,
   loomEmbed,
+  currentUserId,
 }: SkillDetailProps) {
+  const isAuthor = currentUserId != null && skill.author?.id === currentUserId;
   // Calculate quality score for badge and breakdown
   const { score, tier, breakdown } = calculateQualityScore({
     totalUses: skill.totalUses,
@@ -78,7 +86,7 @@ export function SkillDetail({
       <div className="mb-6">
         <div className="mb-3">
           <span className="rounded-full bg-blue-100 px-3 py-1 text-sm uppercase text-blue-800">
-            {skill.category || "Uncategorized"}
+            {CATEGORY_LABELS[skill.category as Category] || skill.category || "Uncategorized"}
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -179,12 +187,16 @@ export function SkillDetail({
         </p>
       </div>
 
-      {/* Content section */}
+      {/* Skill Summary section */}
       <div className="mt-8">
-        <h2 className="mb-2 text-xl font-semibold">Skill Content</h2>
-        <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-gray-900 p-4 text-gray-100">
-          <code>{skill.content}</code>
-        </pre>
+        <h2 className="mb-4 text-xl font-semibold">What This Skill Does</h2>
+        <SkillSummaryCards
+          skillId={skill.id}
+          inputs={skill.inputs ?? []}
+          outputs={skill.outputs ?? []}
+          activitiesSaved={skill.activitiesSaved ?? []}
+          isAuthor={isAuthor}
+        />
       </div>
 
       {/* Visual separator for page-level additions (rating form, reviews) */}

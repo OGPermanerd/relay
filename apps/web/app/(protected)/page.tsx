@@ -7,13 +7,14 @@ import { getCompanyApprovedSkills } from "@/lib/company-approved";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { getSkillsUsedStats, getSkillsCreatedStats } from "@/lib/my-leverage";
 import { getCategoryCounts } from "@/lib/category-counts";
+import { getGreeting } from "@/lib/greeting-pool";
+import { FTE_HOURS_PER_YEAR } from "@/lib/constants";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { TrendingSection } from "@/components/trending-section";
 import { CompanyApprovedSection } from "@/components/company-approved-section";
 import { DiscoverySearch } from "@/components/discovery-results";
 import { CategoryTiles } from "@/components/category-tiles";
 import { CompactStatsBar } from "@/components/compact-stats-bar";
-import { MiniLeverageWidget } from "@/components/mini-leverage-widget";
 
 export default async function HomePage() {
   const session = await auth();
@@ -44,14 +45,66 @@ export default async function HomePage() {
     getCategoryCounts(),
   ]);
 
+  // Generate personalized greeting (uses cached pool, regenerates daily)
+  const greeting = await getGreeting(user.id!, firstName, {
+    skillsCreated: skillsCreatedStats.skillsPublished,
+    totalUses: skillsUsedStats.totalActions,
+    totalHoursSaved: skillsUsedStats.totalHoursSaved + skillsCreatedStats.hoursSavedByOthers,
+    categories: [],
+  });
+
+  // Calculate combined FTE years for the "Your Impact" row in leaderboard
+  const totalHoursSaved = skillsUsedStats.totalHoursSaved + skillsCreatedStats.hoursSavedByOthers;
+  const fteYearsSaved = totalHoursSaved / FTE_HOURS_PER_YEAR;
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Welcome Section */}
+      {/* Greeting */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Welcome back, {firstName}!</h1>
-        <p className="mt-2 text-gray-600">
-          Connect with colleagues who have the skills you need, and share your own expertise.
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900">{greeting}</h1>
+      </div>
+
+      {/* CTAs — compact inline row */}
+      <div className="mb-6 flex gap-3">
+        <Link
+          href="/skills/new"
+          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-5 py-2.5 text-sm font-semibold text-blue-700 transition hover:border-blue-400 hover:bg-blue-100"
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Share a Skill
+        </Link>
+        <Link
+          href="/skills"
+          className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-2.5 text-sm font-semibold text-emerald-700 transition hover:border-emerald-400 hover:bg-emerald-100"
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+            />
+          </svg>
+          Find a Skill
+        </Link>
+      </div>
+
+      {/* Compact Stats Bar — moved above search */}
+      <div className="mb-6">
+        <CompactStatsBar stats={stats} />
       </div>
 
       {/* Discovery Search */}
@@ -77,51 +130,16 @@ export default async function HomePage() {
         <TrendingSection skills={trending} />
       </div>
 
-      {/* Compact Stats Bar */}
-      <div className="mb-8">
-        <CompactStatsBar stats={stats} />
-      </div>
-
-      {/* Top Contributors */}
+      {/* Top Contributors + Your Impact */}
       <div className="mb-8">
         <h2 className="mb-4 text-lg font-semibold text-gray-900">Top Contributors</h2>
-        <LeaderboardTable contributors={leaderboard} />
-      </div>
-
-      {/* Mini Leverage Widget */}
-      <div className="mb-8">
-        <MiniLeverageWidget
-          skillsUsedStats={skillsUsedStats}
-          skillsCreatedStats={skillsCreatedStats}
+        <LeaderboardTable
+          contributors={leaderboard}
+          currentUserImpact={{
+            name: firstName,
+            fteYearsSaved,
+          }}
         />
-      </div>
-
-      {/* CTAs */}
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Link
-          href="/skills/new"
-          className="group relative overflow-hidden rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-100 p-8 text-center shadow-sm transition hover:border-blue-400 hover:shadow-md"
-        >
-          <p className="text-xs font-bold uppercase tracking-widest text-blue-600">
-            Create Leverage
-          </p>
-          <p className="mt-2 text-xl font-semibold text-gray-900 group-hover:text-blue-700">
-            Share a Skill
-          </p>
-          <p className="mt-1 text-sm text-gray-600">Upload prompts and workflows for your team</p>
-        </Link>
-        <Link
-          href="/skills"
-          className="group relative overflow-hidden rounded-xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-100 p-8 text-center shadow-sm transition hover:border-emerald-400 hover:shadow-md"
-        >
-          <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">
-            Get Leverage
-          </p>
-          <p className="mt-2 text-xl font-semibold text-gray-900 group-hover:text-emerald-700">
-            Browse All Skills
-          </p>
-          <p className="mt-1 text-sm text-gray-600">Discover skills from colleagues</p>
-        </Link>
       </div>
     </div>
   );

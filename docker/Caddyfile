@@ -23,6 +23,12 @@ staging.everyskill.ai {
     }
 }
 
+# www → bare domain redirect
+www.everyskill.ai {
+    bind 178.156.181.178
+    redir https://everyskill.ai{uri} permanent
+}
+
 # Bare domain
 everyskill.ai {
     bind 178.156.181.178

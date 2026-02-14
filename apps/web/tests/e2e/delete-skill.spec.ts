@@ -32,7 +32,7 @@ test.describe("Delete Skill", () => {
         name: "Skill To Delete",
         slug,
         description: "A skill for delete E2E testing",
-        category: "prompt",
+        category: "productivity",
         content: "Delete test content",
         hoursSaved: 1,
         tags: ["testing"],

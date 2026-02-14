@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { db, skills } from "@everyskill/db";
+import { db, skills, getSiteSettings } from "@everyskill/db";
 import { ratings } from "@everyskill/db/schema";
 import { getSkillReview, getForkCount, getTopForks, getParentSkill } from "@everyskill/db/services";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -73,7 +73,7 @@ export default async function SkillPage(props: SkillPageProps) {
     notFound();
   }
 
-  // Get usage statistics, trends, similar skills, review, content hash, fork data, and Loom oEmbed in parallel
+  // Get usage statistics, trends, similar skills, review, content hash, fork data, Loom oEmbed, and site settings in parallel
   const [
     stats,
     trends,
@@ -84,6 +84,7 @@ export default async function SkillPage(props: SkillPageProps) {
     topForks,
     parentSkill,
     loomEmbed,
+    siteSettings,
   ] = await Promise.all([
     getSkillStats(skill.id),
     getSkillDetailTrends(skill.id),
@@ -94,7 +95,10 @@ export default async function SkillPage(props: SkillPageProps) {
     getTopForks(skill.id, 5),
     skill.forkedFromId ? getParentSkill(skill.forkedFromId) : Promise.resolve(null),
     skill.loomUrl ? fetchLoomOEmbed(skill.loomUrl) : Promise.resolve(null),
+    getSiteSettings(),
   ]);
+
+  const allowDownload = siteSettings?.allowSkillDownload ?? true;
 
   // Extract Loom video ID for embed component
   const loomVideoId = skill.loomUrl ? extractLoomVideoId(skill.loomUrl) : null;
@@ -223,6 +227,7 @@ export default async function SkillPage(props: SkillPageProps) {
             compareSlug={skill.forkedFromId ? skill.slug : undefined}
             loomVideoId={loomVideoId}
             loomEmbed={loomEmbed}
+            currentUserId={session?.user?.id}
           />
 
           {/* Install, Fork, and Delete buttons */}
@@ -230,6 +235,7 @@ export default async function SkillPage(props: SkillPageProps) {
             <InstallButton
               variant="full"
               skill={{ id: skill.id, name: skill.name, slug: skill.slug, category: skill.category }}
+              allowDownload={allowDownload}
             />
             {session?.user && (
               <ForkButton

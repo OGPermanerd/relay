@@ -33,7 +33,7 @@ test.describe("Install Modal Flow", () => {
         name: "Install Test Skill",
         slug,
         description: "A skill for testing the install modal flow",
-        category: "prompt",
+        category: "productivity",
         content: "Test skill content for install modal",
         hoursSaved: 2,
         tags: ["testing", "install"],

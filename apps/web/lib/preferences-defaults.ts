@@ -3,7 +3,13 @@ import { z } from "zod";
 /**
  * Skill category constants for user preference filtering
  */
-export const SKILL_CATEGORIES = ["prompt", "workflow", "agent", "mcp"] as const;
+export const SKILL_CATEGORIES = [
+  "productivity",
+  "wiring",
+  "doc-production",
+  "data-viz",
+  "code",
+] as const;
 
 /**
  * Sort option constants for skill listing preferences

@@ -53,7 +53,7 @@ export interface SkillsTableProps {
 // Human-readable column names for screen reader announcements
 const COLUMN_LABELS: Record<string, string> = {
   name: "Skill Name",
-  days_saved: "Years Saved",
+  days_saved: "Days Saved",
   installs: "Installs",
   date: "Date Added",
   author: "Author",
@@ -164,37 +164,6 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
               onSort={toggleSort}
               align="left"
             />
-            <th
-              scope="col"
-              className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500"
-              title="Years saved over last 14 days"
-            >
-              Trend
-            </th>
-            <SortableColumnHeader
-              column="days_saved"
-              label="Years Saved"
-              currentSort={sortBy}
-              direction={sortDir}
-              onSort={toggleSort}
-              align="center"
-            />
-            <SortableColumnHeader
-              column="installs"
-              label="Installs"
-              currentSort={sortBy}
-              direction={sortDir}
-              onSort={toggleSort}
-              align="center"
-            />
-            <SortableColumnHeader
-              column="date"
-              label="Date Added"
-              currentSort={sortBy}
-              direction={sortDir}
-              onSort={toggleSort}
-              align="center"
-            />
             <SortableColumnHeader
               column="author"
               label="Author"
@@ -206,6 +175,37 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
             <SortableColumnHeader
               column="rating"
               label="Rating"
+              currentSort={sortBy}
+              direction={sortDir}
+              onSort={toggleSort}
+              align="center"
+            />
+            <SortableColumnHeader
+              column="days_saved"
+              label="Days Saved"
+              currentSort={sortBy}
+              direction={sortDir}
+              onSort={toggleSort}
+              align="center"
+            />
+            <th
+              scope="col"
+              className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500"
+              title="Usage trend over last 14 days"
+            >
+              Trend
+            </th>
+            <SortableColumnHeader
+              column="installs"
+              label="Installs"
+              currentSort={sortBy}
+              direction={sortDir}
+              onSort={toggleSort}
+              align="center"
+            />
+            <SortableColumnHeader
+              column="date"
+              label="Date Added"
               currentSort={sortBy}
               direction={sortDir}
               onSort={toggleSort}

@@ -39,7 +39,7 @@ server.registerTool(
       "List all available skills in the EverySkill marketplace. Returns skill ID, name, description, category, and estimated hours saved.",
     inputSchema: {
       category: z
-        .enum(["prompt", "workflow", "agent", "mcp"])
+        .enum(["productivity", "wiring", "doc-production", "data-viz", "code"])
         .optional()
         .describe("Filter by skill category"),
       limit: z.number().min(1).max(50).default(20).describe("Maximum number of results"),
@@ -62,7 +62,7 @@ server.registerTool(
     inputSchema: {
       query: z.string().min(1).describe("Search query (matches name, description, author, tags)"),
       category: z
-        .enum(["prompt", "workflow", "agent", "mcp"])
+        .enum(["productivity", "wiring", "doc-production", "data-viz", "code"])
         .optional()
         .describe("Filter by skill category"),
       limit: z.number().min(1).max(50).default(10).describe("Maximum number of results"),
@@ -90,7 +90,7 @@ server.registerTool(
           "Natural language description of what you need (e.g., 'help me write better code reviews')"
         ),
       category: z
-        .enum(["prompt", "workflow", "agent", "mcp"])
+        .enum(["productivity", "wiring", "doc-production", "data-viz", "code"])
         .optional()
         .describe("Filter by skill category"),
       limit: z.number().min(1).max(20).default(5).describe("Maximum number of recommendations"),
@@ -170,8 +170,8 @@ server.registerTool(
       name: z.string().min(1).max(100).describe("Skill name (e.g. 'Git PR Review Automation')"),
       description: z.string().min(1).max(2000).describe("What this skill does and when to use it"),
       category: z
-        .enum(["prompt", "workflow", "agent", "mcp"])
-        .describe("Skill type: prompt, workflow, agent, or mcp"),
+        .enum(["productivity", "wiring", "doc-production", "data-viz", "code"])
+        .describe("Skill type: productivity, wiring, doc-production, data-viz, or code"),
       content: z.string().min(1).describe("The full skill content (markdown)"),
       tags: z.array(z.string()).max(10).optional().describe("Optional tags for discovery (max 10)"),
       hoursSaved: z

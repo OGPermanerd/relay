@@ -11,7 +11,7 @@ import { z } from "zod";
 import { generateUniqueSlug } from "@/lib/slug";
 import { hashContent } from "@/lib/content-hash";
 import { generateSkillEmbedding } from "@/lib/embedding-generator";
-import { generateSkillReview, REVIEW_MODEL } from "@/lib/ai-review";
+import { generateSkillReview, generateSkillSummary, REVIEW_MODEL } from "@/lib/ai-review";
 import { upsertSkillReview } from "@everyskill/db/services/skill-reviews";
 
 // ---------------------------------------------------------------------------
@@ -73,7 +73,7 @@ const createSkillSchema = z.object({
     .string()
     .min(1, "Description is required")
     .max(2000, "Description must be 2000 characters or less"),
-  category: z.enum(["prompt", "workflow", "agent", "mcp"], {
+  category: z.enum(["productivity", "wiring", "doc-production", "data-viz", "code"], {
     errorMap: () => ({ message: "Please select a valid category" }),
   }),
   tags: z
@@ -316,6 +316,9 @@ export async function checkAndCreateSkill(
     DEFAULT_TENANT_ID
   ).catch(() => {});
 
+  // Fire-and-forget: generate skill summary (inputs/outputs/activities)
+  autoGenerateSummary(newSkill.id, name, description || "", rawContent, category).catch(() => {});
+
   revalidatePath("/skills");
   revalidatePath("/");
   redirect(`/skills/${newSkill.slug}`);
@@ -528,4 +531,83 @@ export async function createSkill(
   // Redirect to the new skill page
   // NOTE: redirect() throws a special Next.js error - do not wrap in try/catch
   redirect(`/skills/${newSkill.slug}`);
+}
+
+// ---------------------------------------------------------------------------
+// Fire-and-forget AI summary generation
+// ---------------------------------------------------------------------------
+
+async function autoGenerateSummary(
+  skillId: string,
+  name: string,
+  description: string,
+  content: string,
+  category: string
+): Promise<void> {
+  try {
+    const summary = await generateSkillSummary(name, description, content, category);
+    if (db) {
+      await db
+        .update(skills)
+        .set({
+          inputs: summary.inputs,
+          outputs: summary.outputs,
+          activitiesSaved: summary.activitiesSaved,
+        })
+        .where(eq(skills.id, skillId));
+    }
+  } catch {
+    // Intentionally swallowed — summary is fire-and-forget
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Update skill summary (author inline editing)
+// ---------------------------------------------------------------------------
+
+const updateSummarySchema = z.object({
+  skillId: z.string().min(1),
+  inputs: z.array(z.string()).max(10),
+  outputs: z.array(z.string()).max(10),
+  activitiesSaved: z.array(z.string()).max(10),
+});
+
+export async function updateSkillSummary(
+  data: z.infer<typeof updateSummarySchema>
+): Promise<{ success: boolean; error?: string }> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  const parsed = updateSummarySchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: "Invalid input" };
+  }
+
+  if (!db) {
+    return { success: false, error: "Database not configured" };
+  }
+
+  // Verify the user is the author
+  const skill = await db.query.skills.findFirst({
+    where: eq(skills.id, parsed.data.skillId),
+    columns: { authorId: true },
+  });
+
+  if (!skill || skill.authorId !== session.user.id) {
+    return { success: false, error: "Only the author can edit the summary" };
+  }
+
+  await db
+    .update(skills)
+    .set({
+      inputs: parsed.data.inputs,
+      outputs: parsed.data.outputs,
+      activitiesSaved: parsed.data.activitiesSaved,
+    })
+    .where(eq(skills.id, parsed.data.skillId));
+
+  revalidatePath(`/skills`);
+  return { success: true };
 }

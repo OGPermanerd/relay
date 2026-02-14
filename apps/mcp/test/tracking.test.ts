@@ -19,7 +19,7 @@ describe("trackUsage", () => {
   it("inserts usage event into database", async () => {
     const event = {
       toolName: "list_skills",
-      metadata: { category: "prompt", limit: 20, resultCount: 3 },
+      metadata: { category: "productivity", limit: 20, resultCount: 3 },
     };
 
     await trackUsage(event);

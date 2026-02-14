@@ -123,7 +123,7 @@ const handler = createMcpHandler(
           "List all available skills in the EverySkill marketplace. Returns skill ID, name, description, category, and estimated hours saved.",
         inputSchema: {
           category: z
-            .enum(["prompt", "workflow", "agent", "mcp"])
+            .enum(["productivity", "wiring", "doc-production", "data-viz", "code"])
             .optional()
             .describe("Filter by skill category"),
           limit: z.number().min(1).max(50).default(20).describe("Maximum number of results"),
@@ -192,7 +192,7 @@ const handler = createMcpHandler(
             .min(1)
             .describe("Search query (matches name, description, author, tags)"),
           category: z
-            .enum(["prompt", "workflow", "agent", "mcp"])
+            .enum(["productivity", "wiring", "doc-production", "data-viz", "code"])
             .optional()
             .describe("Filter by skill category"),
           limit: z.number().min(1).max(50).default(10).describe("Maximum number of results"),
@@ -406,7 +406,7 @@ const handler = createMcpHandler(
                   name: "EverySkill Skills",
                   version: "1.0.0",
                   mode: REMOTE_READONLY ? "readonly" : "full",
-                  categories: ["prompt", "workflow", "agent", "mcp"],
+                  categories: ["productivity", "wiring", "doc-production", "data-viz", "code"],
                   user: { id: userId },
                 },
                 null,

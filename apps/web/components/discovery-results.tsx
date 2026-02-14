@@ -4,12 +4,9 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { discoverSkills, type DiscoveryResult } from "@/app/actions/discover";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  prompt: "bg-blue-100 text-blue-700",
-  workflow: "bg-purple-100 text-purple-700",
-  agent: "bg-green-100 text-green-700",
-  mcp: "bg-orange-100 text-orange-700",
-};
+import { CATEGORY_BADGE_COLORS, CATEGORY_LABELS, type Category } from "@/lib/categories";
+
+const CATEGORY_COLORS = CATEGORY_BADGE_COLORS as Record<string, string>;
 
 const MATCH_DOT_COLORS: Record<string, string> = {
   keyword: "bg-blue-500",
@@ -65,7 +62,7 @@ function ResultCard({ result }: { result: DiscoveryResult }) {
       <p className="mt-1 text-sm leading-relaxed text-gray-600">{truncatedDesc}</p>
       <div className="mt-3 flex items-center gap-2">
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${badgeColor}`}>
-          {result.category}
+          {CATEGORY_LABELS[result.category as Category] || result.category}
         </span>
         {result.isBoosted && (
           <span className="flex items-center gap-0.5 text-xs font-medium text-amber-600">

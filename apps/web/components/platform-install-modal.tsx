@@ -16,6 +16,7 @@ import type { SkillInfo } from "./install-button";
 interface PlatformInstallModalProps {
   onClose: () => void;
   skill?: SkillInfo;
+  allowDownload?: boolean;
 }
 
 export const MCP_SETUP_KEY = "everyskill-mcp-setup-done";
@@ -129,7 +130,11 @@ const osLabels: Record<DetectedOS, string> = {
   linux: "Linux",
 };
 
-export function PlatformInstallModal({ onClose, skill }: PlatformInstallModalProps) {
+export function PlatformInstallModal({
+  onClose,
+  skill,
+  allowDownload = true,
+}: PlatformInstallModalProps) {
   const [mcpExpanded, setMcpExpanded] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
   const [detectedOS, setDetectedOS] = useState<DetectedOS>("macos");
@@ -287,32 +292,59 @@ export function PlatformInstallModal({ onClose, skill }: PlatformInstallModalPro
             <p className="mt-2 text-xs text-gray-500">
               This will save the skill to your local environment with automatic usage tracking.
             </p>
+
+            {/* Open in Claude deep link */}
+            <div className="mt-3 flex items-center gap-3">
+              <a
+                href={`claude://new?prompt=${encodeURIComponent(promptText)}`}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                  />
+                </svg>
+                Open in Claude
+              </a>
+              <p className="text-xs text-gray-400">Requires Claude Desktop app</p>
+            </div>
           </div>
 
           {/* Download fallback */}
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={handleDownloadSkill}
-              disabled={downloading}
-              className="inline-flex items-center gap-1.5 text-sm text-gray-600 underline decoration-gray-300 hover:text-blue-600 hover:decoration-blue-300 disabled:opacity-50"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
+          {allowDownload && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={handleDownloadSkill}
+                disabled={downloading}
+                className="inline-flex items-center gap-1.5 text-sm text-gray-600 underline decoration-gray-300 hover:text-blue-600 hover:decoration-blue-300 disabled:opacity-50"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-                />
-              </svg>
-              {downloading ? "Downloading..." : `Or download ${skill.slug}.md directly`}
-            </button>
-          </div>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                  />
+                </svg>
+                {downloading ? "Downloading..." : `Or download ${skill.slug}.md directly`}
+              </button>
+            </div>
+          )}
 
           {/* Collapsible MCP setup section */}
           <div className="mt-5 border-t border-gray-200 pt-4">

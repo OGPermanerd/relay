@@ -116,7 +116,7 @@ test.describe("MCP Usage Tracking", () => {
         name: "MCP Usage Test Skill",
         slug: "mcp-usage-test-skill",
         description: "A test skill for verifying MCP deploy usage tracking",
-        category: "prompt",
+        category: "productivity",
         content: "You are a helpful test assistant. Respond concisely.",
         hoursSaved: 2,
         totalUses: 0,
@@ -161,7 +161,7 @@ test.describe("MCP Usage Tracking", () => {
     const info = JSON.parse(inner.content[0].text);
     expect(info.name).toBe("EverySkill Skills");
     expect(info.version).toBe("1.0.0");
-    expect(info.categories).toContain("prompt");
+    expect(info.categories).toContain("productivity");
   });
 
   test("should log usage event when calling list_skills", async ({ request }) => {
@@ -304,7 +304,7 @@ test.describe("MCP Usage Tracking", () => {
     expect(deployOutput.success).toBe(true);
     expect(deployOutput.skill.id).toBe(TEST_SKILL_ID);
     expect(deployOutput.skill.name).toBe("MCP Usage Test Skill");
-    expect(deployOutput.skill.category).toBe("prompt");
+    expect(deployOutput.skill.category).toBe("productivity");
     expect(deployOutput.skill.content).toContain("helpful test assistant");
     expect(deployOutput.skill.hoursSaved).toBe(2);
 
@@ -331,7 +331,7 @@ test.describe("MCP Usage Tracking", () => {
     const metadata = events[0].metadata as Record<string, unknown>;
     expect(metadata).toBeTruthy();
     expect(metadata.skillName).toBe("MCP Usage Test Skill");
-    expect(metadata.skillCategory).toBe("prompt");
+    expect(metadata.skillCategory).toBe("productivity");
 
     // Step 6: Verify the skill's totalUses was incremented
     const skillAfter = await db.query.skills.findFirst({
@@ -436,7 +436,13 @@ test.describe("MCP Usage Tracking", () => {
     const serverInfo = JSON.parse(inner.content[0].text);
     expect(serverInfo.name).toBe("EverySkill Skills");
     expect(serverInfo.version).toBe("1.0.0");
-    expect(serverInfo.categories).toEqual(["prompt", "workflow", "agent", "mcp"]);
+    expect(serverInfo.categories).toEqual([
+      "productivity",
+      "wiring",
+      "doc-production",
+      "data-viz",
+      "code",
+    ]);
     expect(serverInfo.user.id).toBe(TEST_USER_ID);
   });
 

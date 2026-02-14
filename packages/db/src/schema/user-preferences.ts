@@ -8,7 +8,7 @@ import { users } from "./users";
  * Defined here to avoid cross-package imports (packages/db cannot import from apps/web).
  */
 export interface UserPreferencesData {
-  preferredCategories: ("prompt" | "workflow" | "agent" | "mcp")[];
+  preferredCategories: ("productivity" | "wiring" | "doc-production" | "data-viz" | "code")[];
   defaultSort: "uses" | "quality" | "rating" | "days_saved";
   claudeMdWorkflowNotes: string;
 }
@@ -34,6 +34,8 @@ export const userPreferences = pgTable(
       .references(() => users.id),
     preferences: jsonb("preferences").notNull().default("{}").$type<UserPreferencesData>(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    greetingPool: jsonb("greeting_pool").$type<string[]>(),
+    greetingPoolGeneratedAt: timestamp("greeting_pool_generated_at", { withTimezone: true }),
   },
   (table) => [
     index("user_preferences_tenant_id_idx").on(table.tenantId),

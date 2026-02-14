@@ -3,16 +3,7 @@
 import { useQueryState, parseAsStringEnum } from "nuqs";
 import { useTransition } from "react";
 
-// Category values matching the skills schema
-const CATEGORIES = ["prompt", "workflow", "agent", "mcp"] as const;
-type Category = (typeof CATEGORIES)[number];
-
-const CATEGORY_LABELS: Record<Category, string> = {
-  prompt: "Prompt",
-  workflow: "Workflow",
-  agent: "Agent",
-  mcp: "MCP",
-};
+import { CATEGORIES, CATEGORY_LABELS, type Category } from "@/lib/categories";
 
 /**
  * Category filter tabs with URL synchronization

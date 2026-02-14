@@ -9,7 +9,6 @@ import { InstallButton } from "./install-button";
 import { RelativeTime } from "@/components/relative-time";
 import type { SkillTableRow } from "./skills-table";
 import { CompanyApprovedBadge } from "./company-approved-badge";
-import { FTE_HOURS_PER_YEAR } from "@/lib/constants";
 
 interface SkillsTableRowProps {
   skill: SkillTableRow & {
@@ -90,8 +89,8 @@ export function SkillsTableRow({
     (rowRef as React.MutableRefObject<HTMLTableRowElement | null>).current = el;
     registerRef(el);
   };
-  // Calculate FTE Years Saved: (totalUses * hoursSaved) / FTE_HOURS_PER_YEAR
-  const yearsSaved = ((skill.totalUses * (skill.hoursSaved ?? 1)) / FTE_HOURS_PER_YEAR).toFixed(2);
+  // Calculate Days Saved: (totalUses * hoursSaved) / 8 hours per day
+  const daysSaved = Math.round((skill.totalUses * (skill.hoursSaved ?? 1)) / 8);
 
   // Row background: alternating + expanded state
   const rowBg = rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50";
@@ -137,20 +136,6 @@ export function SkillsTableRow({
             </span>
           )}
         </td>
-        <td className="whitespace-nowrap px-4 py-3 text-center">
-          <div className="inline-block">
-            <Sparkline data={trend} />
-          </div>
-        </td>
-        <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
-          {yearsSaved}
-        </td>
-        <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
-          {String(skill.totalUses)}
-        </td>
-        <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
-          <RelativeTime date={skill.createdAt} />
-        </td>
         <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
           {skill.author ? (
             <Link
@@ -180,6 +165,20 @@ export function SkillsTableRow({
           ) : (
             <span className="text-sm text-gray-400">-</span>
           )}
+        </td>
+        <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
+          {daysSaved}
+        </td>
+        <td className="whitespace-nowrap px-4 py-3 text-center">
+          <div className="inline-block">
+            <Sparkline data={trend} />
+          </div>
+        </td>
+        <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
+          {String(skill.totalUses)}
+        </td>
+        <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
+          <RelativeTime date={skill.createdAt} />
         </td>
         <td className="whitespace-nowrap px-4 py-3 text-center">
           <InstallButton

@@ -13,6 +13,7 @@ export interface SkillInfo {
 interface InstallButtonProps {
   variant?: "full" | "icon";
   skill?: SkillInfo;
+  allowDownload?: boolean;
 }
 
 /**
@@ -25,7 +26,7 @@ interface InstallButtonProps {
  * Self-contained: manages its own modal state internally.
  * Uses stopPropagation on all variants to prevent row navigation and event bubbling.
  */
-export function InstallButton({ variant = "full", skill }: InstallButtonProps) {
+export function InstallButton({ variant = "full", skill, allowDownload }: InstallButtonProps) {
   const [showModal, setShowModal] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -66,7 +67,13 @@ export function InstallButton({ variant = "full", skill }: InstallButtonProps) {
         </button>
       )}
 
-      {showModal && <PlatformInstallModal onClose={() => setShowModal(false)} skill={skill} />}
+      {showModal && (
+        <PlatformInstallModal
+          onClose={() => setShowModal(false)}
+          skill={skill}
+          allowDownload={allowDownload}
+        />
+      )}
     </>
   );
 }

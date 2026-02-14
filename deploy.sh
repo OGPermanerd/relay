@@ -69,6 +69,14 @@ deploy_staging() {
     err "Staging health check failed — investigate logs: pm2 logs everyskill-staging"
   fi
 
+  # Run staging smoke test (E2E) to verify pages load without client-side crashes
+  log "Running staging smoke test..."
+  if (cd apps/web && STAGING_URL="https://staging.everyskill.ai" npx playwright test tests/e2e/staging-smoke.spec.ts --reporter=line 2>&1); then
+    log "Staging smoke test passed"
+  else
+    log "WARN: Staging smoke test failed — pages may have client-side errors. Check: npx playwright test tests/e2e/staging-smoke.spec.ts"
+  fi
+
   log "Staging deploy complete"
 }
 

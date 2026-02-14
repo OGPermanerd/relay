@@ -3,7 +3,13 @@ import { z } from "zod";
 /**
  * Skill format types matching the category field in skills table
  */
-export const skillFormats = ["prompt", "workflow", "agent", "mcp"] as const;
+export const skillFormats = [
+  "productivity",
+  "wiring",
+  "doc-production",
+  "data-viz",
+  "code",
+] as const;
 export type SkillFormat = (typeof skillFormats)[number];
 
 /**
@@ -17,11 +23,11 @@ const baseMetadataSchema = z.object({
 });
 
 /**
- * Prompt-specific metadata
- * Prompts are simple text templates with optional variables
+ * Productivity-specific metadata
+ * Skills that save time on everyday tasks
  */
-const promptMetadataSchema = baseMetadataSchema.extend({
-  format: z.literal("prompt"),
+const productivityMetadataSchema = baseMetadataSchema.extend({
+  format: z.literal("productivity"),
   variables: z
     .array(
       z.object({
@@ -34,11 +40,11 @@ const promptMetadataSchema = baseMetadataSchema.extend({
 });
 
 /**
- * Workflow-specific metadata
- * Workflows are multi-step processes with defined stages
+ * Wiring-specific metadata
+ * Skills that connect tools and automate flows
  */
-const workflowMetadataSchema = baseMetadataSchema.extend({
-  format: z.literal("workflow"),
+const wiringMetadataSchema = baseMetadataSchema.extend({
+  format: z.literal("wiring"),
   steps: z
     .array(
       z.object({
@@ -47,26 +53,7 @@ const workflowMetadataSchema = baseMetadataSchema.extend({
       })
     )
     .optional(),
-  estimatedDuration: z.string().optional(), // e.g., "5-10 minutes"
-});
-
-/**
- * Agent-specific metadata
- * Agents are Claude configurations with specific behaviors
- */
-const agentMetadataSchema = baseMetadataSchema.extend({
-  format: z.literal("agent"),
-  systemPromptSummary: z.string().max(500).optional(),
-  capabilities: z.array(z.string()).optional(),
-  limitations: z.array(z.string()).optional(),
-});
-
-/**
- * MCP-specific metadata
- * MCP skills are server configurations for Claude Code
- */
-const mcpMetadataSchema = baseMetadataSchema.extend({
-  format: z.literal("mcp"),
+  estimatedDuration: z.string().optional(),
   tools: z
     .array(
       z.object({
@@ -80,21 +67,52 @@ const mcpMetadataSchema = baseMetadataSchema.extend({
 });
 
 /**
+ * Doc Production-specific metadata
+ * Skills that generate docs and reports
+ */
+const docProductionMetadataSchema = baseMetadataSchema.extend({
+  format: z.literal("doc-production"),
+  outputFormats: z.array(z.string()).optional(),
+});
+
+/**
+ * Data & Viz-specific metadata
+ * Skills that analyze data and create visuals
+ */
+const dataVizMetadataSchema = baseMetadataSchema.extend({
+  format: z.literal("data-viz"),
+  dataSources: z.array(z.string()).optional(),
+});
+
+/**
+ * Code-specific metadata
+ * Skills for writing, reviewing, and shipping code
+ */
+const codeMetadataSchema = baseMetadataSchema.extend({
+  format: z.literal("code"),
+  systemPromptSummary: z.string().max(500).optional(),
+  capabilities: z.array(z.string()).optional(),
+  limitations: z.array(z.string()).optional(),
+});
+
+/**
  * Discriminated union of all skill format schemas
  * Use skillMetadataSchema.parse(data) to validate and get typed result
  */
 export const skillMetadataSchema = z.discriminatedUnion("format", [
-  promptMetadataSchema,
-  workflowMetadataSchema,
-  agentMetadataSchema,
-  mcpMetadataSchema,
+  productivityMetadataSchema,
+  wiringMetadataSchema,
+  docProductionMetadataSchema,
+  dataVizMetadataSchema,
+  codeMetadataSchema,
 ]);
 
 export type SkillMetadata = z.infer<typeof skillMetadataSchema>;
-export type PromptMetadata = z.infer<typeof promptMetadataSchema>;
-export type WorkflowMetadata = z.infer<typeof workflowMetadataSchema>;
-export type AgentMetadata = z.infer<typeof agentMetadataSchema>;
-export type McpMetadata = z.infer<typeof mcpMetadataSchema>;
+export type ProductivityMetadata = z.infer<typeof productivityMetadataSchema>;
+export type WiringMetadata = z.infer<typeof wiringMetadataSchema>;
+export type DocProductionMetadata = z.infer<typeof docProductionMetadataSchema>;
+export type DataVizMetadata = z.infer<typeof dataVizMetadataSchema>;
+export type CodeMetadata = z.infer<typeof codeMetadataSchema>;
 
 /**
  * Validate skill metadata with detailed error reporting

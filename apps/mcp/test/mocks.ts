@@ -3,7 +3,7 @@ export interface MockSkill {
   name: string;
   slug: string;
   description: string;
-  category: "prompt" | "workflow" | "agent" | "mcp";
+  category: "productivity" | "wiring" | "doc-production" | "data-viz" | "code";
   content: string;
   hoursSaved: number;
   authorId: string | null;
@@ -17,7 +17,7 @@ export const mockSkills: MockSkill[] = [
     name: "Code Review Assistant",
     slug: "code-review",
     description: "Automated code review with best practices",
-    category: "prompt",
+    category: "code",
     content: "# Code Review\n\nReview this code...",
     hoursSaved: 2,
     authorId: null,
@@ -29,7 +29,7 @@ export const mockSkills: MockSkill[] = [
     name: "API Documentation Generator",
     slug: "api-docs",
     description: "Generate OpenAPI docs from code",
-    category: "workflow",
+    category: "doc-production",
     content: "# API Docs\n\nGenerate docs...",
     hoursSaved: 4,
     authorId: null,
@@ -41,7 +41,7 @@ export const mockSkills: MockSkill[] = [
     name: "Test Writer",
     slug: "test-writer",
     description: "Generate comprehensive test cases",
-    category: "prompt",
+    category: "code",
     content: "# Test Writer\n\nWrite tests...",
     hoursSaved: 3,
     authorId: null,

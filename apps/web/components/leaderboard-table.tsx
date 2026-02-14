@@ -6,11 +6,23 @@ import Link from "next/link";
 import { LeaderboardEntry } from "@/lib/leaderboard";
 import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
 
-interface LeaderboardTableProps {
-  contributors: LeaderboardEntry[];
+const RANK_COLORS: Record<number, string> = {
+  1: "bg-yellow-400",
+  2: "bg-gray-300",
+  3: "bg-amber-600",
+};
+
+interface CurrentUserImpact {
+  name: string;
+  fteYearsSaved: number;
 }
 
-export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
+interface LeaderboardTableProps {
+  contributors: LeaderboardEntry[];
+  currentUserImpact?: CurrentUserImpact;
+}
+
+export function LeaderboardTable({ contributors, currentUserImpact }: LeaderboardTableProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   if (contributors.length === 0) {
@@ -18,7 +30,7 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200">
+    <div className="flex h-full flex-col rounded-lg border border-gray-200">
       {/* Collapsible header */}
       <button
         type="button"
@@ -54,9 +66,9 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
                 </th>
                 <th
                   scope="col"
-                  className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
+                  className="min-w-[6rem] px-3 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500"
                 >
-                  Years
+                  Years Saved
                 </th>
               </tr>
             </thead>
@@ -71,6 +83,18 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
                       href={`/users/${contributor.userId}`}
                       className="flex items-center gap-2 hover:text-blue-600 transition-colors"
                     >
+                      {/* Rank badge */}
+                      {contributor.rank <= 3 ? (
+                        <span
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${RANK_COLORS[contributor.rank]}`}
+                        >
+                          {contributor.rank}
+                        </span>
+                      ) : (
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center text-xs text-gray-400">
+                          {contributor.rank}
+                        </span>
+                      )}
                       {contributor.image ? (
                         <Image
                           src={contributor.image}
@@ -80,7 +104,7 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
                           className="rounded-full"
                         />
                       ) : (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-gray-600">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-medium text-gray-600">
                           {contributor.name.charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -94,6 +118,32 @@ export function LeaderboardTable({ contributors }: LeaderboardTableProps) {
                   </td>
                 </tr>
               ))}
+
+              {/* Your Impact row */}
+              {currentUserImpact && (
+                <tr className="bg-gradient-to-r from-blue-50 to-indigo-50">
+                  <td className="px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-900">
+                        {currentUserImpact.name} — Your Impact
+                      </span>
+                    </div>
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="text-sm font-bold text-emerald-600">
+                        {currentUserImpact.fteYearsSaved.toFixed(2)}
+                      </span>
+                      <Link
+                        href="/my-leverage"
+                        className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                      >
+                        Details
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

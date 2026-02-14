@@ -25,7 +25,8 @@ test.describe("Hydration", () => {
     await expect(table).toBeVisible({ timeout: 5000 });
 
     // Verify dates are formatted as relative time (e.g., "60d 2h ago", "1y 5d ago", "just now")
-    const dateCells = table.locator("td:nth-child(5)");
+    // Date Added is column 7 after reorder: Name, Author, Rating, Days Saved, Trend, Installs, Date, Install
+    const dateCells = table.locator("td:nth-child(7)");
     const firstDate = await dateCells.first().textContent();
     expect(firstDate).toMatch(/(\d+[ydhm]\s*)+ago|just now/);
 

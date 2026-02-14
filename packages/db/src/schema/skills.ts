@@ -42,7 +42,7 @@ export const skills = pgTable(
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     description: text("description").notNull(),
-    category: text("category").notNull(), // prompt, workflow, agent, mcp
+    category: text("category").notNull(), // productivity, wiring, doc-production, data-viz, code
     tags: text("tags").array().default([]),
     status: text("status").notNull().default("published"),
     statusMessage: text("status_message"),
@@ -76,6 +76,11 @@ export const skills = pgTable(
     // Fork tracking (self-referential, nullable)
     forkedFromId: text("forked_from_id"),
     forkedAtContentHash: text("forked_at_content_hash"),
+
+    // AI-generated skill summary fields
+    inputs: text("inputs").array().default([]),
+    outputs: text("outputs").array().default([]),
+    activitiesSaved: text("activities_saved").array().default([]),
 
     authorId: text("author_id").references(() => users.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),

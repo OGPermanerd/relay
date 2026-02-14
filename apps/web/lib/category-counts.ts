@@ -10,7 +10,7 @@ import { sql, eq, isNotNull, and } from "drizzle-orm";
  */
 export async function getCategoryCounts(): Promise<Record<string, number>> {
   if (!db) {
-    return { prompt: 0, workflow: 0, agent: 0, mcp: 0 };
+    return { productivity: 0, wiring: 0, "doc-production": 0, "data-viz": 0, code: 0 };
   }
 
   const result = await db
@@ -29,10 +29,11 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
     .groupBy(skills.category);
 
   const counts: Record<string, number> = {
-    prompt: 0,
-    workflow: 0,
-    agent: 0,
-    mcp: 0,
+    productivity: 0,
+    wiring: 0,
+    "doc-production": 0,
+    "data-viz": 0,
+    code: 0,
   };
 
   for (const row of result) {

@@ -185,10 +185,11 @@ export function SkillUploadForm() {
               className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
             >
               <option value="">Select a category</option>
-              <option value="prompt">Prompt</option>
-              <option value="workflow">Workflow</option>
-              <option value="agent">Agent</option>
-              <option value="mcp">MCP Server</option>
+              <option value="productivity">Productivity</option>
+              <option value="wiring">Wiring</option>
+              <option value="doc-production">Doc Production</option>
+              <option value="data-viz">Data & Viz</option>
+              <option value="code">Code</option>
             </select>
             {errors?.category && <p className="mt-1 text-sm text-red-600">{errors.category[0]}</p>}
           </div>

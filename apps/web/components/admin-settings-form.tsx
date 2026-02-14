@@ -21,6 +21,7 @@ interface AdminSettingsFormProps {
     ollamaModel: string;
     embeddingDimensions: number;
     lastSuccessfulConnection: string | null;
+    allowSkillDownload: boolean;
   } | null;
 }
 
@@ -46,6 +47,7 @@ export function AdminSettingsForm({ initialSettings }: AdminSettingsFormProps) {
     ollamaModel: "nomic-embed-text",
     embeddingDimensions: 768,
     lastSuccessfulConnection: null,
+    allowSkillDownload: true,
   };
 
   return (
@@ -206,6 +208,52 @@ export function AdminSettingsForm({ initialSettings }: AdminSettingsFormProps) {
             </div>
           </form>
         </div>
+      </div>
+
+      {/* Skill Downloads Section */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <h2 className="text-lg font-semibold text-gray-900">Skill Downloads</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Control whether users can download skill files directly. When disabled, users can still
+          install skills via MCP or the Claude deep link.
+        </p>
+
+        <form action={saveAction} className="mt-6">
+          {/* Preserve other settings as hidden fields */}
+          <input
+            type="hidden"
+            name="semanticSimilarityEnabled"
+            value={defaults.semanticSimilarityEnabled ? "on" : ""}
+          />
+          <input type="hidden" name="ollamaUrl" value={defaults.ollamaUrl} />
+          <input type="hidden" name="ollamaModel" value={defaults.ollamaModel} />
+          <input type="hidden" name="embeddingDimensions" value={defaults.embeddingDimensions} />
+
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="allowSkillDownload"
+              name="allowSkillDownload"
+              defaultChecked={defaults.allowSkillDownload}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="allowSkillDownload" className="text-sm font-medium text-gray-700">
+              Allow skill file downloads
+            </label>
+          </div>
+
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={savePending}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+            >
+              {savePending ? "Saving..." : "Save"}
+            </button>
+            {saveState.success && <span className="text-sm text-green-600">Settings saved</span>}
+            {saveState.error && <span className="text-sm text-red-600">{saveState.error}</span>}
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -78,7 +78,7 @@ interface SkillDef {
   name: string;
   slug: string;
   description: string;
-  category: "prompt" | "workflow" | "agent" | "mcp";
+  category: "productivity" | "wiring" | "doc-production" | "data-viz" | "code";
   tags: string[];
   hoursSaved: number;
   authorId: string;
@@ -334,7 +334,7 @@ const USERS: UserDef[] = [
 // ============================================================================
 // Tiers: winner(10), solid(15), average(15), new(10)
 // Usage: hockey-stick(10), steady-growth(10), tail-off(5), flat(15), new-arrival(10)
-// Categories: prompt(30), workflow(12), agent(6), mcp(2)
+// Categories: productivity(30), wiring(14), code(6)
 
 const SKILLS: SkillDef[] = [
   // ===== WINNER TIER (10) — hockey-stick usage =====
@@ -344,7 +344,7 @@ const SKILLS: SkillDef[] = [
     slug: "code-review-assistant",
     description:
       "AI-powered code review that analyzes pull requests for bugs, security issues, performance problems, and best practice violations with actionable fix suggestions.",
-    category: "prompt",
+    category: "productivity",
     tags: ["code-review", "security", "best-practices", "engineering"],
     hoursSaved: 3,
     authorId: "avo-u-001",
@@ -395,7 +395,7 @@ For each finding:
     slug: "email-drafter",
     description:
       "Drafts professional emails for any business context — client communications, internal updates, follow-ups, and executive summaries — with appropriate tone and structure.",
-    category: "prompt",
+    category: "productivity",
     tags: ["email", "communication", "writing", "cross-functional"],
     hoursSaved: 1,
     authorId: "avo-u-005",
@@ -441,7 +441,7 @@ Subject: [subject line]
     slug: "meeting-agenda-generator",
     description:
       "Creates structured meeting agendas with time allocations, discussion points, pre-read materials, and clear outcomes for any meeting type.",
-    category: "prompt",
+    category: "productivity",
     tags: ["meetings", "productivity", "planning", "cross-functional"],
     hoursSaved: 1,
     authorId: "avo-u-005",
@@ -493,7 +493,7 @@ For each item:
     slug: "campaign-brief-generator",
     description:
       "Generates comprehensive marketing campaign briefs with target audience, messaging, channel strategy, KPIs, and timeline for any campaign type.",
-    category: "prompt",
+    category: "productivity",
     tags: ["marketing", "campaigns", "strategy", "briefs"],
     hoursSaved: 4,
     authorId: "avo-u-036",
@@ -554,7 +554,7 @@ By channel and by phase (pre-launch, launch, sustain).`,
     slug: "sales-discovery-call-prep",
     description:
       "Prepares comprehensive briefings for sales discovery calls including prospect research, tailored questions, objection prep, and talking points.",
-    category: "prompt",
+    category: "productivity",
     tags: ["sales", "discovery", "preparation", "research"],
     hoursSaved: 2,
     authorId: "avo-u-021",
@@ -620,7 +620,7 @@ Top 3 likely objections with response frameworks.
     slug: "process-documentation-writer",
     description:
       "Creates clear, step-by-step process documentation with roles, decision points, exceptions, and quality checkpoints for any business process.",
-    category: "workflow",
+    category: "wiring",
     tags: ["documentation", "processes", "operations", "sop"],
     hoursSaved: 3,
     authorId: "avo-u-048",
@@ -682,7 +682,7 @@ For each step:
     slug: "job-description-writer",
     description:
       "Writes compelling, inclusive job descriptions with clear requirements, growth opportunities, and team context that attract diverse qualified candidates.",
-    category: "prompt",
+    category: "productivity",
     tags: ["hiring", "recruiting", "hr", "job-descriptions"],
     hoursSaved: 2,
     authorId: "avo-u-068",
@@ -741,7 +741,7 @@ What makes this role exciting and impactful — not a company boilerplate.
     slug: "financial-report-summarizer",
     description:
       "Transforms complex financial reports into executive summaries with key metrics, trend analysis, variance explanations, and actionable recommendations.",
-    category: "prompt",
+    category: "productivity",
     tags: ["finance", "reporting", "analysis", "executive-summary"],
     hoursSaved: 3,
     authorId: "avo-u-076",
@@ -807,7 +807,7 @@ For each material variance (>5%):
     slug: "customer-health-score-calculator",
     description:
       "Calculates and explains customer health scores using product usage, engagement, support, and financial signals with risk mitigation recommendations.",
-    category: "agent",
+    category: "code",
     tags: ["customer-success", "health-score", "churn-prevention", "analytics"],
     hoursSaved: 2,
     authorId: "avo-u-058",
@@ -865,7 +865,7 @@ Likely outcome (renew / renew with expansion / renew with contraction / at risk 
     slug: "contract-clause-analyzer",
     description:
       "Reviews contract clauses for risk, compliance, and business impact — flags concerning language and suggests protective amendments.",
-    category: "prompt",
+    category: "productivity",
     tags: ["legal", "contracts", "risk-analysis", "compliance"],
     hoursSaved: 4,
     authorId: "avo-u-084",
@@ -926,7 +926,7 @@ This analysis is for review assistance only and does not constitute legal advice
     slug: "api-documentation-generator",
     description:
       "Generates comprehensive API documentation from code, endpoints, or OpenAPI specs — including examples, error codes, and authentication details.",
-    category: "workflow",
+    category: "wiring",
     tags: ["documentation", "api", "engineering", "developer-experience"],
     hoursSaved: 4,
     authorId: "avo-u-001",
@@ -960,7 +960,7 @@ Use standard API doc markdown with code blocks for examples. Group endpoints by 
     slug: "social-media-content-calendar",
     description:
       "Creates a structured content calendar for social media with post ideas, copy drafts, hashtags, and optimal posting times across platforms.",
-    category: "workflow",
+    category: "wiring",
     tags: ["social-media", "content", "marketing", "planning"],
     hoursSaved: 3,
     authorId: "avo-u-036",
@@ -1000,7 +1000,7 @@ Create a structured content calendar with ready-to-post content.
     slug: "seo-content-optimizer",
     description:
       "Analyzes and optimizes content for search engine visibility — keyword placement, meta descriptions, heading structure, and readability improvements.",
-    category: "prompt",
+    category: "productivity",
     tags: ["seo", "content", "marketing", "optimization"],
     hoursSaved: 2,
     authorId: "avo-u-036",
@@ -1047,7 +1047,7 @@ Analyze content for SEO effectiveness and provide specific optimization recommen
     slug: "proposal-generator",
     description:
       "Creates persuasive business proposals with executive summary, solution design, pricing, timeline, and social proof tailored to the prospect.",
-    category: "workflow",
+    category: "wiring",
     tags: ["sales", "proposals", "business-development", "writing"],
     hoursSaved: 5,
     authorId: "avo-u-021",
@@ -1101,7 +1101,7 @@ Clear call to action with proposed timeline for decision.`,
     slug: "performance-review-assistant",
     description:
       "Helps managers write balanced, specific performance reviews with concrete examples, growth areas, and development goals.",
-    category: "prompt",
+    category: "productivity",
     tags: ["hr", "performance", "management", "feedback"],
     hoursSaved: 2,
     authorId: "avo-u-068",
@@ -1159,7 +1159,7 @@ Review each prior goal — met / partially met / not met — with context.
     slug: "budget-variance-analyzer",
     description:
       "Compares actual spending against budget across departments, identifies material variances, and generates explanations with recommended corrective actions.",
-    category: "workflow",
+    category: "wiring",
     tags: ["finance", "budgeting", "variance-analysis", "reporting"],
     hoursSaved: 3,
     authorId: "avo-u-076",
@@ -1203,7 +1203,7 @@ How these variances affect full-year projections.`,
     slug: "privacy-policy-reviewer",
     description:
       "Reviews privacy policies and data processing agreements for GDPR, CCPA, and SOC2 compliance — flags gaps and suggests required language.",
-    category: "workflow",
+    category: "wiring",
     tags: ["legal", "privacy", "compliance", "gdpr"],
     hoursSaved: 3,
     authorId: "avo-u-085",
@@ -1250,7 +1250,7 @@ For each requirement: COMPLIANT / NON-COMPLIANT / PARTIALLY COMPLIANT with speci
     slug: "qbr-presentation-builder",
     description:
       "Builds quarterly business review presentations with value delivered, usage metrics, roadmap alignment, and strategic recommendations for customer meetings.",
-    category: "workflow",
+    category: "wiring",
     tags: ["customer-success", "qbr", "presentations", "account-management"],
     hoursSaved: 4,
     authorId: "avo-u-058",
@@ -1307,7 +1307,7 @@ Features coming that align with their needs.
     slug: "knowledge-base-article-writer",
     description:
       "Creates clear, searchable knowledge base articles with proper structure, troubleshooting steps, and related article links for internal or customer-facing use.",
-    category: "prompt",
+    category: "productivity",
     tags: ["documentation", "knowledge-base", "support", "cross-functional"],
     hoursSaved: 2,
     authorId: "avo-u-059",
@@ -1359,7 +1359,7 @@ Links to related topics.
     slug: "presentation-outline-creator",
     description:
       "Creates structured presentation outlines with slide-by-slide content, speaker notes, visual suggestions, and timing for any presentation type.",
-    category: "prompt",
+    category: "productivity",
     tags: ["presentations", "communication", "planning", "cross-functional"],
     hoursSaved: 2,
     authorId: "avo-u-091",
@@ -1403,7 +1403,7 @@ For each slide:
     slug: "incident-response-runbook",
     description:
       "Generates structured incident response runbooks with severity classification, escalation procedures, communication templates, and post-mortem triggers.",
-    category: "workflow",
+    category: "wiring",
     tags: ["engineering", "incidents", "devops", "runbooks"],
     hoursSaved: 3,
     authorId: "avo-u-003",
@@ -1456,7 +1456,7 @@ Step-by-step diagnostic procedures specific to this incident type.
     slug: "objection-handler",
     description:
       "Provides structured responses to common sales objections using the feel-felt-found framework with evidence, case studies, and pivot strategies.",
-    category: "prompt",
+    category: "productivity",
     tags: ["sales", "objections", "negotiation", "training"],
     hoursSaved: 1,
     authorId: "avo-u-021",
@@ -1503,7 +1503,7 @@ Redirect to a key value proposition that outweighs the concern.
     slug: "sop-template-generator",
     description:
       "Generates standard operating procedure templates with role assignments, approval workflows, revision tracking, and compliance requirements.",
-    category: "workflow",
+    category: "wiring",
     tags: ["operations", "sop", "procedures", "compliance"],
     hoursSaved: 2,
     authorId: "avo-u-048",
@@ -1551,7 +1551,7 @@ What records to keep, where to store them, retention period.
     slug: "onboarding-checklist-creator",
     description:
       "Creates comprehensive onboarding checklists for new hires with day-by-day activities, tool access setup, training schedule, and buddy assignments.",
-    category: "workflow",
+    category: "wiring",
     tags: ["hr", "onboarding", "new-hire", "checklist"],
     hoursSaved: 2,
     authorId: "avo-u-068",
@@ -1610,7 +1610,7 @@ Create a comprehensive onboarding plan for a new hire.
     slug: "account-research-brief",
     description:
       "Compiles comprehensive account research briefs with company overview, tech stack analysis, key stakeholders, and engagement recommendations.",
-    category: "prompt",
+    category: "productivity",
     tags: ["sales", "research", "account-management", "preparation"],
     hoursSaved: 2,
     authorId: "avo-u-021",
@@ -1661,7 +1661,7 @@ Compile a comprehensive research brief for a target account.
     slug: "database-query-optimizer",
     description:
       "Analyzes SQL queries for performance issues and suggests optimizations including indexing strategies, query rewrites, and execution plan improvements.",
-    category: "prompt",
+    category: "productivity",
     tags: ["database", "sql", "performance", "engineering"],
     hoursSaved: 2,
     authorId: "avo-u-001",
@@ -1697,7 +1697,7 @@ Analyze SQL queries and suggest performance optimizations.
     slug: "competitive-analysis-framework",
     description:
       "Creates structured competitive analysis comparing features, pricing, positioning, and market perception across competitors.",
-    category: "prompt",
+    category: "productivity",
     tags: ["marketing", "competitive-intelligence", "strategy", "analysis"],
     hoursSaved: 3,
     authorId: "avo-u-038",
@@ -1739,7 +1739,7 @@ Rate: Strong / Adequate / Weak / Missing
     slug: "win-loss-analysis-template",
     description:
       "Structures win/loss analysis interviews and reports to identify patterns in why deals are won or lost.",
-    category: "prompt",
+    category: "productivity",
     tags: ["sales", "analysis", "strategy", "pipeline"],
     hoursSaved: 2,
     authorId: "avo-u-022",
@@ -1781,7 +1781,7 @@ How this informs future deals of similar profile.`,
     slug: "regulatory-change-monitor",
     description:
       "Summarizes regulatory changes and assesses their impact on business operations, compliance requirements, and necessary policy updates.",
-    category: "prompt",
+    category: "productivity",
     tags: ["legal", "compliance", "regulatory", "risk"],
     hoursSaved: 2,
     authorId: "avo-u-086",
@@ -1819,7 +1819,7 @@ Rough estimate of compliance costs (legal, technical, process changes).`,
     slug: "vendor-evaluation-matrix",
     description:
       "Creates weighted evaluation matrices for vendor selection with scoring criteria, cost analysis, and risk assessment across candidates.",
-    category: "prompt",
+    category: "productivity",
     tags: ["operations", "procurement", "vendor-management", "evaluation"],
     hoursSaved: 2,
     authorId: "avo-u-048",
@@ -1866,7 +1866,7 @@ Top choice with justification and negotiation strategy.`,
     slug: "interview-question-generator",
     description:
       "Generates role-specific interview questions with evaluation criteria, follow-up probes, and scoring rubrics for consistent hiring.",
-    category: "prompt",
+    category: "productivity",
     tags: ["hr", "hiring", "interviews", "assessment"],
     hoursSaved: 1,
     authorId: "avo-u-068",
@@ -1900,7 +1900,7 @@ Generate structured interview questions for a specific role.
     slug: "compensation-benchmarking-tool",
     description:
       "Analyzes compensation data against market benchmarks, identifies pay equity gaps, and recommends adjustments with budget impact analysis.",
-    category: "prompt",
+    category: "productivity",
     tags: ["finance", "compensation", "benchmarking", "hr"],
     hoursSaved: 2,
     authorId: "avo-u-076",
@@ -1931,7 +1931,7 @@ Analyze compensation against market data and identify adjustments needed.
     slug: "churn-risk-analyzer",
     description:
       "Analyzes customer behavior signals to predict churn risk and recommends proactive retention strategies.",
-    category: "prompt",
+    category: "productivity",
     tags: ["customer-success", "churn", "retention", "analytics"],
     hoursSaved: 2,
     authorId: "avo-u-058",
@@ -1966,7 +1966,7 @@ Analyze customer signals and predict churn risk.
     slug: "architecture-decision-record-writer",
     description:
       "Creates structured Architecture Decision Records (ADRs) documenting technical decisions with context, options considered, and trade-offs.",
-    category: "prompt",
+    category: "productivity",
     tags: ["engineering", "architecture", "documentation", "decisions"],
     hoursSaved: 2,
     authorId: "avo-u-001",
@@ -2001,7 +2001,7 @@ What needs to happen to implement this decision?`,
     slug: "brand-voice-style-guide",
     description:
       "Defines brand voice characteristics, tone variations, do's and don'ts, and provides before/after examples for consistent brand communication.",
-    category: "prompt",
+    category: "productivity",
     tags: ["marketing", "branding", "content", "style-guide"],
     hoursSaved: 2,
     authorId: "avo-u-036",
@@ -2041,7 +2041,7 @@ Specific examples of what to write and what to avoid.
     slug: "email-campaign-ab-tester",
     description:
       "Designs A/B test variants for email campaigns with hypothesis, test variables, sample size requirements, and analysis framework.",
-    category: "prompt",
+    category: "productivity",
     tags: ["marketing", "email", "ab-testing", "optimization"],
     hoursSaved: 1,
     authorId: "avo-u-038",
@@ -2076,7 +2076,7 @@ Design an A/B test for an email campaign.
     slug: "nda-generator",
     description:
       "Generates customized non-disclosure agreements with appropriate scope, duration, exclusions, and remedies based on the business context.",
-    category: "prompt",
+    category: "productivity",
     tags: ["legal", "nda", "contracts", "confidentiality"],
     hoursSaved: 1,
     authorId: "avo-u-087",
@@ -2111,7 +2111,7 @@ Complete NDA draft ready for legal review, with bracketed notes where customizat
     slug: "capacity-planning-calculator",
     description:
       "Calculates team capacity for sprint or project planning based on team size, availability, velocity, and planned time off.",
-    category: "prompt",
+    category: "productivity",
     tags: ["operations", "planning", "capacity", "resource-management"],
     hoursSaved: 1,
     authorId: "avo-u-049",
@@ -2146,7 +2146,7 @@ Calculate team capacity for upcoming work period.
     slug: "employee-survey-analyzer",
     description:
       "Analyzes employee engagement survey results, identifies themes in open-ended responses, and recommends action items.",
-    category: "prompt",
+    category: "productivity",
     tags: ["hr", "engagement", "surveys", "analysis"],
     hoursSaved: 2,
     authorId: "avo-u-069",
@@ -2181,7 +2181,7 @@ Analyze survey results and extract actionable insights.
     slug: "invoice-processing-assistant",
     description:
       "Extracts key information from invoices, validates against PO data, flags discrepancies, and prepares approval routing.",
-    category: "prompt",
+    category: "productivity",
     tags: ["finance", "invoices", "accounts-payable", "automation"],
     hoursSaved: 1,
     authorId: "avo-u-077",
@@ -2217,7 +2217,7 @@ Extract and validate invoice information for processing.
     slug: "cicd-pipeline-debugger",
     description:
       "Analyzes CI/CD pipeline failures from logs and configuration, identifies root causes, and suggests fixes for common build and deployment issues.",
-    category: "agent",
+    category: "code",
     tags: ["engineering", "ci-cd", "devops", "debugging"],
     hoursSaved: 2,
     authorId: "avo-u-001",
@@ -2245,7 +2245,7 @@ Analyze pipeline failure logs and suggest fixes.
     slug: "security-vulnerability-scanner",
     description:
       "Reviews code for OWASP Top 10 vulnerabilities, identifies insecure patterns, and provides remediation guidance with severity ratings.",
-    category: "agent",
+    category: "code",
     tags: ["engineering", "security", "owasp", "code-review"],
     hoursSaved: 3,
     authorId: "avo-u-001",
@@ -2282,7 +2282,7 @@ For each finding: severity (CRITICAL/HIGH/MEDIUM/LOW), vulnerable code, fix, and
     slug: "test-coverage-analyzer",
     description:
       "Analyzes test suites for coverage gaps, identifies untested code paths, and generates test case suggestions for critical business logic.",
-    category: "agent",
+    category: "code",
     tags: ["engineering", "testing", "coverage", "quality"],
     hoursSaved: 2,
     authorId: "avo-u-003",
@@ -2315,7 +2315,7 @@ Analyze test coverage and suggest missing test cases.
     slug: "migration-script-generator",
     description:
       "Generates database migration scripts with rollback procedures, data transformation logic, and safety checks for schema changes.",
-    category: "agent",
+    category: "code",
     tags: ["engineering", "database", "migrations", "devops"],
     hoursSaved: 3,
     authorId: "avo-u-003",
@@ -2353,7 +2353,7 @@ Generate safe database migration scripts.
     slug: "performance-budget-monitor",
     description:
       "Monitors web performance budgets by analyzing bundle sizes, load times, and Core Web Vitals against defined thresholds.",
-    category: "mcp",
+    category: "wiring",
     tags: ["engineering", "performance", "web-vitals", "monitoring"],
     hoursSaved: 1,
     authorId: "avo-u-003",
@@ -2388,7 +2388,7 @@ PASS / WARN / FAIL for each metric with specific optimization suggestions.`,
     slug: "market-research-synthesizer",
     description:
       "Synthesizes market research data from multiple sources into a cohesive report with key findings, trends, and strategic implications.",
-    category: "workflow",
+    category: "wiring",
     tags: ["marketing", "research", "analysis", "strategy"],
     hoursSaved: 3,
     authorId: "avo-u-038",
@@ -2423,7 +2423,7 @@ Synthesize research from multiple sources into a cohesive report.
     slug: "pipeline-forecast-assistant",
     description:
       "Analyzes sales pipeline data to generate weighted forecasts, identify deal risks, and recommend pipeline health improvements.",
-    category: "mcp",
+    category: "wiring",
     tags: ["sales", "forecasting", "pipeline", "analytics"],
     hoursSaved: 2,
     authorId: "avo-u-023",
@@ -2457,7 +2457,7 @@ Analyze pipeline and generate a weighted forecast.
     slug: "compliance-checklist-builder",
     description:
       "Generates compliance checklists for specific regulatory frameworks with control descriptions, evidence requirements, and audit preparation guidance.",
-    category: "workflow",
+    category: "wiring",
     tags: ["legal", "compliance", "audit", "checklist"],
     hoursSaved: 2,
     authorId: "avo-u-088",
@@ -2490,7 +2490,7 @@ Prioritized checklist sorted by risk level, with estimated effort for missing co
     slug: "incident-post-mortem-writer",
     description:
       "Creates blameless post-mortem documents from incident details with timeline reconstruction, root cause analysis, and preventive action items.",
-    category: "agent",
+    category: "code",
     tags: ["engineering", "incidents", "post-mortem", "reliability"],
     hoursSaved: 2,
     authorId: "avo-u-005",
@@ -2528,7 +2528,7 @@ Create a blameless post-mortem document.
     slug: "customer-feedback-synthesizer",
     description:
       "Aggregates and synthesizes customer feedback from multiple channels into themed insights with sentiment analysis and priority recommendations.",
-    category: "prompt",
+    category: "productivity",
     tags: ["customer-success", "feedback", "analysis", "product"],
     hoursSaved: 2,
     authorId: "avo-u-061",

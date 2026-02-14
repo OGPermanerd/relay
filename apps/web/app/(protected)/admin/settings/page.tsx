@@ -46,6 +46,7 @@ export default async function AdminSettingsPage() {
                   embeddingDimensions: settings.embeddingDimensions,
                   lastSuccessfulConnection:
                     settings.lastSuccessfulConnection?.toISOString() ?? null,
+                  allowSkillDownload: settings.allowSkillDownload,
                 }
               : null
           }

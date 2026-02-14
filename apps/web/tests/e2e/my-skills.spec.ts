@@ -31,7 +31,7 @@ test.describe("My Skills Page", () => {
         name: "My Skills Test Skill",
         slug: testSlug,
         description: "A skill for my-skills page E2E testing",
-        category: "prompt",
+        category: "productivity",
         content: "Test content",
         hoursSaved: 2,
         tags: ["testing"],

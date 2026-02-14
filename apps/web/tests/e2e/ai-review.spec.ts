@@ -40,7 +40,7 @@ test.describe("AI Review Display", () => {
         name: "AI Review Test Skill",
         slug,
         description: "A skill for testing the AI review display",
-        category: "prompt",
+        category: "productivity",
         content,
         hoursSaved: 1,
         authorId: TEST_USER_ID,

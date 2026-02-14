@@ -3,12 +3,16 @@
  */
 export function getCategoriesToFilter(type: string | undefined): string[] | undefined {
   switch (type) {
-    case "claude-skill":
-      return ["agent"];
-    case "ai-prompt":
-      return ["prompt"];
-    case "other":
-      return ["workflow", "mcp"];
+    case "productivity":
+      return ["productivity"];
+    case "wiring":
+      return ["wiring"];
+    case "doc-production":
+      return ["doc-production"];
+    case "data-viz":
+      return ["data-viz"];
+    case "code":
+      return ["code"];
     default:
       return undefined; // No filter (show all)
   }

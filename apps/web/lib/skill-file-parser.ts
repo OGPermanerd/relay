@@ -1,7 +1,7 @@
 export interface ParsedSkillData {
   name?: string;
   description?: string;
-  category?: "prompt" | "workflow" | "agent" | "mcp";
+  category?: "productivity" | "wiring" | "doc-production" | "data-viz" | "code";
   tags?: string;
   usageInstructions?: string;
   content?: string;
@@ -53,10 +53,10 @@ function parseMarkdownFile(filename: string, text: string): ParsedSkillData {
   return {
     name,
     description,
-    category: isClaude ? "agent" : "prompt",
+    category: isClaude ? "code" : "productivity",
     content: cleanedText,
     everyskillSkillId,
-    parseMessage: `Imported "${filename}" as ${isClaude ? "agent" : "prompt"} skill.`,
+    parseMessage: `Imported "${filename}" as ${isClaude ? "code" : "productivity"} skill.`,
   };
 }
 
@@ -84,7 +84,7 @@ function parseMcpJson(text: string): ParsedSkillData {
   return {
     name,
     description: `MCP server configuration with ${serverNames.length || "unknown"} server(s).`,
-    category: "mcp",
+    category: "wiring",
     content: text,
     parseMessage: `Imported MCP config with server(s): ${serverNames.join(", ") || "none detected"}.`,
   };
@@ -114,9 +114,9 @@ function parseJsonFile(filename: string, text: string): ParsedSkillData {
   // Heuristic category detection
   let category: ParsedSkillData["category"];
   if ("steps" in parsed || "nodes" in parsed) {
-    category = "workflow";
+    category = "wiring";
   } else if ("tools" in parsed || "system_prompt" in parsed || "systemPrompt" in parsed) {
-    category = "agent";
+    category = "code";
   }
 
   return {

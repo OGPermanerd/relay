@@ -11,8 +11,9 @@ export {
 export type {
   SkillFormat,
   SkillMetadata,
-  PromptMetadata,
-  WorkflowMetadata,
-  AgentMetadata,
-  McpMetadata,
+  ProductivityMetadata,
+  WiringMetadata,
+  DocProductionMetadata,
+  DataVizMetadata,
+  CodeMetadata,
 } from "./skill-formats";

@@ -76,7 +76,7 @@ describe("MCP Tools", () => {
       const promptOnly = mockListResults.filter((s) => s.category === "prompt");
       mockSelectChain(promptOnly);
 
-      const result = await handleListSkills({ category: "prompt", limit: 20 });
+      const result = await handleListSkills({ category: "productivity", limit: 20 });
       const data = JSON.parse(result.content[0].text);
 
       expect(data.count).toBe(2);
@@ -87,7 +87,7 @@ describe("MCP Tools", () => {
       // Mock returns 1 result (DB LIMIT is mocked at the chain level)
       mockSelectChain([mockListResults[0]]);
 
-      const result = await handleListSkills({ category: "prompt", limit: 1 });
+      const result = await handleListSkills({ category: "productivity", limit: 1 });
       const data = JSON.parse(result.content[0].text);
 
       expect(data.count).toBe(1);
@@ -121,7 +121,7 @@ describe("MCP Tools", () => {
           id: "skill-1",
           name: "Code Review Assistant",
           description: "Automated code review with best practices",
-          category: "prompt",
+          category: "productivity",
           hoursSaved: 2,
         },
       ]);
@@ -145,7 +145,7 @@ describe("MCP Tools", () => {
           id: "skill-1",
           name: "Code Review Assistant",
           description: "Automated code review with best practices",
-          category: "prompt",
+          category: "productivity",
           hoursSaved: 2,
         },
       ]);
@@ -177,12 +177,16 @@ describe("MCP Tools", () => {
           id: "skill-3",
           name: "Test Writer",
           description: "Generate comprehensive test cases",
-          category: "prompt",
+          category: "productivity",
           hoursSaved: 3,
         },
       ]);
 
-      const result = await handleSearchSkills({ query: "test", category: "prompt", limit: 10 });
+      const result = await handleSearchSkills({
+        query: "test",
+        category: "productivity",
+        limit: 10,
+      });
       const data = JSON.parse(result.content[0].text);
 
       expect(data.count).toBe(1);
@@ -190,7 +194,7 @@ describe("MCP Tools", () => {
       expect(data.skills[0].category).toBe("prompt");
       expect(mockSearchSkills).toHaveBeenCalledWith({
         query: "test",
-        category: "prompt",
+        category: "productivity",
         limit: 10,
       });
     });
@@ -201,7 +205,7 @@ describe("MCP Tools", () => {
           id: "skill-1",
           name: "Code Review Assistant",
           description: "Automated code review with best practices",
-          category: "prompt",
+          category: "productivity",
           hoursSaved: 2,
         },
       ]);
@@ -283,7 +287,7 @@ describe("MCP Tools", () => {
           id: "skill-1",
           name: "Code Review Assistant",
           description: "Automated code review with best practices",
-          category: "prompt",
+          category: "productivity",
           hoursSaved: 2,
         },
       ]);
@@ -310,7 +314,7 @@ describe("MCP Tools", () => {
       const promptOnly = mockListResults.filter((s) => s.category === "prompt");
       mockSelectChain(promptOnly);
 
-      const result = await routeEveryskillAction({ action: "list", category: "prompt" });
+      const result = await routeEveryskillAction({ action: "list", category: "productivity" });
       const data = JSON.parse(result.content[0].text);
 
       expect(data.count).toBe(2);

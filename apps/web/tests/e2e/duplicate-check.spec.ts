@@ -14,7 +14,7 @@ test.describe("Skill Duplicate Check", () => {
     await page
       .getByLabel(/^description/i)
       .fill("A test skill for duplicate detection verification");
-    await page.getByLabel(/^category/i).selectOption("prompt");
+    await page.getByLabel(/^category/i).selectOption("productivity");
     await page.getByLabel(/skill content/i).fill("Test prompt content for duplicate detection");
 
     await page.getByRole("button", { name: /create skill/i }).click();
@@ -46,7 +46,7 @@ test.describe("Skill Duplicate Check", () => {
     await page
       .getByLabel(/^description/i)
       .fill("A test skill for duplicate detection verification");
-    await page.getByLabel(/^category/i).selectOption("prompt");
+    await page.getByLabel(/^category/i).selectOption("productivity");
     await page.getByLabel(/skill content/i).fill("Test prompt content for duplicate detection");
 
     await page.getByRole("button", { name: /create skill/i }).click();
@@ -96,7 +96,7 @@ test.describe("Skill Duplicate Check", () => {
     await page
       .getByLabel(/^description/i)
       .fill("Special hover popup test description for verification");
-    await page.getByLabel(/^category/i).selectOption("workflow");
+    await page.getByLabel(/^category/i).selectOption("wiring");
     await page.getByLabel(/skill content/i).fill("Test content for hover popup test");
 
     await page.getByRole("button", { name: /create skill/i }).click();
@@ -123,7 +123,7 @@ test.describe("Skill Duplicate Check", () => {
     await page
       .getByLabel(/^description/i)
       .fill("Special hover popup test description for verification");
-    await page.getByLabel(/^category/i).selectOption("workflow");
+    await page.getByLabel(/^category/i).selectOption("wiring");
     await page.getByLabel(/skill content/i).fill("Test content for hover popup test");
 
     await page.getByRole("button", { name: /create skill/i }).click();

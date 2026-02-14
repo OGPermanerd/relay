@@ -77,7 +77,7 @@ const EverySkillInputSchema = {
     ),
   query: z.string().optional().describe("Search query (required for: search, recommend)"),
   category: z
-    .enum(["prompt", "workflow", "agent", "mcp"])
+    .enum(["productivity", "wiring", "doc-production", "data-viz", "code"])
     .optional()
     .describe("Skill category filter (used by: search, list, recommend, create)"),
   limit: z
@@ -116,7 +116,7 @@ const EverySkillInputSchema = {
 export type EverySkillArgs = {
   action: Action;
   query?: string;
-  category?: "prompt" | "workflow" | "agent" | "mcp";
+  category?: "productivity" | "wiring" | "doc-production" | "data-viz" | "code";
   limit?: number;
   skillId?: string;
   name?: string;

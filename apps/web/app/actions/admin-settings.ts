@@ -26,6 +26,7 @@ export async function saveSettingsAction(
   const ollamaUrl = (formData.get("ollamaUrl") as string)?.trim() || "http://localhost:11434";
   const ollamaModel = (formData.get("ollamaModel") as string)?.trim() || "nomic-embed-text";
   const embeddingDimensions = parseInt(formData.get("embeddingDimensions") as string, 10) || 768;
+  const allowSkillDownload = formData.get("allowSkillDownload") === "on";
 
   if (embeddingDimensions < 1 || embeddingDimensions > 4096) {
     return { error: "Embedding dimensions must be between 1 and 4096" };
@@ -54,6 +55,7 @@ export async function saveSettingsAction(
       ollamaUrl,
       ollamaModel,
       embeddingDimensions,
+      allowSkillDownload,
     });
     revalidatePath("/admin/settings");
     return { success: true };

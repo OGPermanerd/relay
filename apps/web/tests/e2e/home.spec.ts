@@ -41,8 +41,8 @@ test.describe("Home Page", () => {
   test("should show search-first hero with discovery search", async ({ page }) => {
     await page.goto("/");
 
-    // Welcome heading should be visible
-    await expect(page.getByRole("heading", { name: /Welcome back/i })).toBeVisible();
+    // Dynamic greeting heading should be visible (e.g., "Level up, Trevor!" or fallback)
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
     // Discovery search input should be visible
     await expect(page.getByPlaceholder(/Describe what you need/i)).toBeVisible();
@@ -81,14 +81,14 @@ test.describe("Home Page", () => {
     await expect(page.getByRole("heading", { name: "Top Contributors" })).toBeVisible();
   });
 
-  test("should show mini leverage widget with Your Impact", async ({ page }) => {
+  test("should show Your Impact row in leaderboard", async ({ page }) => {
     await page.goto("/");
 
-    // Your Impact heading should be visible
+    // Your Impact row should be visible in leaderboard table
     await expect(page.getByText("Your Impact")).toBeVisible();
 
-    // Link to full leverage page
-    await expect(page.getByRole("link", { name: /View full details/i })).toBeVisible();
+    // Details link to /my-leverage should be visible
+    await expect(page.getByRole("link", { name: "Details", exact: true })).toBeVisible();
   });
 
   test("should show CTA buttons for sharing and finding skills", async ({ page }) => {

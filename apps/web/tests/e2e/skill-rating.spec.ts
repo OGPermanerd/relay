@@ -44,7 +44,7 @@ test.describe("Skill Rating Flow", () => {
           name: "Skill To Rate",
           slug: `skill-to-rate-${Date.now()}`,
           description: "A skill from another author for rating E2E tests",
-          category: "prompt",
+          category: "productivity",
           content: "Test content for rating",
           hoursSaved: 1,
           authorId: OTHER_AUTHOR_ID,

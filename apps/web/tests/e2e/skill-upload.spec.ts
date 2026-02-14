@@ -23,7 +23,7 @@ test.describe("Skill Upload Flow", () => {
     // Verify form fields were auto-filled from the file
     await expect(page.getByLabel(/^name/i)).toHaveValue("Hello World");
     await expect(page.getByLabel(/^description/i)).toHaveValue(/Hello, World/);
-    await expect(page.getByLabel(/^category/i)).toHaveValue("prompt");
+    await expect(page.getByLabel(/^category/i)).toHaveValue("productivity");
     await expect(page.getByLabel(/skill content/i)).toHaveValue(/# Hello World/);
 
     // Make name unique to avoid slug conflicts
@@ -72,7 +72,7 @@ test.describe("Skill Upload Flow", () => {
     // Fill in required fields
     await page.getByLabel(/^name/i).fill(skillName);
     await page.getByLabel(/^description/i).fill("This is a test skill created by E2E tests");
-    await page.getByLabel(/^category/i).selectOption("prompt");
+    await page.getByLabel(/^category/i).selectOption("productivity");
     await page.getByLabel(/skill content/i).fill("Test prompt content for automation");
 
     // Fill in optional fields
