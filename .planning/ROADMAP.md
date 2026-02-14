@@ -205,7 +205,13 @@ Plans:
   3. Time estimates are calculated per category using a transparent heuristic model (category-weighted base time multiplied by thread depth and reply factors), producing a total weekly email hours estimate
   4. After analysis completes, only aggregate statistics (counts, percentages, time estimates per category) are persisted in the database -- raw email metadata is discarded and never written to any persistent storage
   5. The scan handles large mailboxes gracefully with batched API calls, date-range filtering, sampling for 5000+ message mailboxes, and a progress indicator during the 60-90 second analysis
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 51-01-PLAN.md -- Schema and service for email_diagnostics table (aggregate-only storage)
+- [ ] 51-02-PLAN.md -- Gmail client: fetch email metadata with batching and pagination
+- [ ] 51-03-PLAN.md -- Two-pass email classifier (rule-based + AI)
+- [ ] 51-04-PLAN.md -- Time estimator + aggregator + server action orchestrator
+- [ ] 51-05-PLAN.md -- Diagnostic card UI with progress indicator
 
 #### Phase 52: Diagnostic Dashboard
 **Goal**: Users see a visual breakdown of where their email time goes, with clear charts and the ability to re-run the analysis
@@ -276,7 +282,7 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 | 40-48 | v3.0 | 21/21 | Complete | 2026-02-13 |
 | 49. Tenant Cleanup | v4.0 | 3/3 | Complete | 2026-02-14 |
 | 50. Gmail OAuth | v4.0 | 3/3 | Complete | 2026-02-14 |
-| 51. Email Analysis | v4.0 | 0/TBD | Not started | - |
+| 51. Email Analysis | v4.0 | 0/5 | Not started | - |
 | 52. Dashboard | v4.0 | 0/TBD | Not started | - |
 | 53. Recommendations | v4.0 | 0/TBD | Not started | - |
 | 54. Deployment Plan | v4.0 | 0/TBD | Not started | - |
@@ -291,6 +297,6 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 *v1.3 completed: 2026-02-04*
 *v1.4 completed: 2026-02-06*
 *v1.5 completed: 2026-02-08*
-*v2.0 completed: 2026-02-08*
+*v2.0 completed: 2026-08*
 *v3.0 completed: 2026-02-13*
 *v4.0 roadmap created: 2026-02-14*
