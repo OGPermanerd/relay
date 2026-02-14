@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-14)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Phase 53 - Skill Recommendations
+**Current focus:** Phase 54 - Deployment Plan
 
 ## Current Position
 
-Phase: 53 of 54 (Skill Recommendations)
-Plan: 2 of 2 (complete)
+Phase: 54 of 54 (Deployment Plan)
+Plan: 1 of 1 (complete)
 Status: Phase complete
-Last activity: 2026-02-14 -- Completed 53-02-PLAN.md (Recommendation UI + my-leverage integration)
+Last activity: 2026-02-14 -- Completed 54-01-PLAN.md (Deployment plan page with ranked adoption roadmap)
 
-Progress: [██████████████░] 93%
+Progress: [███████████████] 100%
 
 ## Milestones
 
@@ -31,12 +31,12 @@ Progress: [██████████████░] 93%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 215
+- Total plans completed: 216
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10.6 hours
 
 **Cumulative:**
-- 215 plans across 53 phases and 9 milestones
+- 216 plans across 54 phases and 9 milestones
 - ~19,500 LOC TypeScript
 - 8 days total development time
 
@@ -88,6 +88,11 @@ Phase 53-02 key decisions:
 - TypeScript discriminated union narrowing requires truthiness checks with `error?: never` patterns
 - Recommendations placed between EmailDiagnosticCard and MyLeverageView in page hierarchy
 
+Phase 54-01 key decisions:
+- Green (#10b981) AreaChart to differentiate from blue usage charts
+- Staggered adoption: 1 new skill every 2 weeks (Math.ceil(week/2))
+- FTE day = 8 hours; cumulative projection shows compound value of sequential adoption
+
 ### Pending Todos
 
 - AI-Independence -- platform-agnostic skill translation (future milestone)
@@ -103,5 +108,5 @@ Phase 53-02 key decisions:
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 53 complete (Skill Recommendations) -- recommendation UI integrated into my-leverage
-Resume file: .planning/ROADMAP.md -- Phase 54 (Diagnostic Cron) remaining
+Stopped at: Phase 54 complete (Deployment Plan) -- deployment plan page with ranked adoption roadmap
+Resume file: .planning/ROADMAP.md -- v4.0 milestone complete
