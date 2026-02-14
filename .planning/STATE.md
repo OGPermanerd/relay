@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-14)
 ## Current Position
 
 Phase: 50 of 54 (Gmail OAuth Infrastructure)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-14 -- Completed 50-01-PLAN.md (schema, crypto, service)
+Last activity: 2026-02-14 -- Completed 50-02-PLAN.md (OAuth API routes)
 
-Progress: [███░░░░░░░] 33%
+Progress: [██████░░░░] 67%
 
 ## Milestones
 
@@ -31,12 +31,12 @@ Progress: [███░░░░░░░] 33%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 201
+- Total plans completed: 202
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10 hours
 
 **Cumulative:**
-- 201 plans across 50 phases and 9 milestones
+- 202 plans across 50 phases and 9 milestones
 - ~18,200 LOC TypeScript
 - 8 days total development time
 
@@ -68,6 +68,10 @@ Phase 50 decisions:
 - iv:authTag:ciphertext hex format for AES-256-GCM encrypted token storage
 - 5-minute refresh buffer, 30-second stale lock timeout, 3 retry max for race-safe token refresh
 - GMAIL_ENCRYPTION_KEY env var (64-char hex) required for token encryption
+- Reuse AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET for Gmail OAuth (same Google Cloud project)
+- Only /api/gmail/callback exempted in middleware; connect/disconnect/status need auth
+- State cookie (gmail_oauth_state) with base64url-encoded JSON for CSRF, 10-min TTL
+- Best-effort Google token revocation on disconnect (non-fatal)
 
 ### Pending Todos
 
@@ -84,5 +88,5 @@ Phase 50 decisions:
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Phase 50 Plan 01 complete -- ready for Plan 02 (OAuth flow API routes)
-Resume file: .planning/phases/50-gmail-oauth-infrastructure/50-02-PLAN.md
+Stopped at: Phase 50 Plan 02 complete -- ready for Plan 03 (Gmail settings UI)
+Resume file: .planning/phases/50-gmail-oauth-infrastructure/50-03-PLAN.md
