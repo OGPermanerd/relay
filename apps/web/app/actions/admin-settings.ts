@@ -27,6 +27,7 @@ export async function saveSettingsAction(
   const ollamaModel = (formData.get("ollamaModel") as string)?.trim() || "nomic-embed-text";
   const embeddingDimensions = parseInt(formData.get("embeddingDimensions") as string, 10) || 768;
   const allowSkillDownload = formData.get("allowSkillDownload") === "on";
+  const gmailDiagnosticEnabled = formData.get("gmailDiagnosticEnabled") === "on";
 
   if (embeddingDimensions < 1 || embeddingDimensions > 4096) {
     return { error: "Embedding dimensions must be between 1 and 4096" };
@@ -56,8 +57,10 @@ export async function saveSettingsAction(
       ollamaModel,
       embeddingDimensions,
       allowSkillDownload,
+      gmailDiagnosticEnabled,
     });
     revalidatePath("/admin/settings");
+    revalidatePath("/settings/connections");
     return { success: true };
   } catch {
     return { error: "Failed to save settings" };
