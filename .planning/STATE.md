@@ -81,6 +81,8 @@ Phase 53-01 key decisions:
 ### Pending Todos
 
 - AI-Independence -- platform-agnostic skill translation (future milestone)
+- Fix staging discover search without keywords (search area, 3 pending todos)
+- Create aveone tenant and subdomain for staging branding/whitelabeling test
 
 ### Blockers/Concerns
 
