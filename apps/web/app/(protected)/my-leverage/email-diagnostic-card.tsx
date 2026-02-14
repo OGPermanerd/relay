@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { runEmailDiagnostic } from "@/app/actions/email-diagnostic";
 import type { AggregateResults } from "@/lib/diagnostic-aggregator";
 
@@ -143,6 +144,12 @@ export function EmailDiagnosticCard() {
             >
               Run New Diagnostic
             </button>
+            <Link
+              href="/my-leverage/email-diagnostic"
+              className="mt-2 block w-full rounded-md border border-blue-600 bg-white px-4 py-2 text-center text-sm font-medium text-blue-600 shadow-sm hover:bg-blue-50"
+            >
+              View Full Dashboard
+            </Link>
           </div>
         ) : (
           <div className="space-y-3">
