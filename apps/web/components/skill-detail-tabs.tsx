@@ -5,16 +5,28 @@ import { useState, type ReactNode } from "react";
 interface SkillDetailTabsProps {
   children: ReactNode;
   aiReviewContent: ReactNode;
+  suggestionsContent?: ReactNode;
+  suggestionCount?: number;
 }
 
-type TabKey = "details" | "ai-review";
+type TabKey = "details" | "ai-review" | "suggestions";
 
-export function SkillDetailTabs({ children, aiReviewContent }: SkillDetailTabsProps) {
+export function SkillDetailTabs({
+  children,
+  aiReviewContent,
+  suggestionsContent = null,
+  suggestionCount,
+}: SkillDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("details");
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: "details", label: "Details" },
     { key: "ai-review", label: "AI Review" },
+    {
+      key: "suggestions",
+      label:
+        suggestionCount && suggestionCount > 0 ? `Suggestions (${suggestionCount})` : "Suggestions",
+    },
   ];
 
   return (
@@ -56,6 +68,14 @@ export function SkillDetailTabs({ children, aiReviewContent }: SkillDetailTabsPr
         hidden={activeTab !== "ai-review"}
       >
         {aiReviewContent}
+      </div>
+      <div
+        role="tabpanel"
+        id="tabpanel-suggestions"
+        aria-labelledby="tab-suggestions"
+        hidden={activeTab !== "suggestions"}
+      >
+        {suggestionsContent}
       </div>
     </div>
   );
