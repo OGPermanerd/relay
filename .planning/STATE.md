@@ -32,12 +32,12 @@ Progress: [#####################.........] 83% (223/~270 est. plans across all m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 225
+- Total plans completed: 226
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~11.4 hours
+- Total execution time: ~11.5 hours
 
 **Cumulative:**
-- 225 plans across 61 phases and 9 milestones
+- 226 plans across 61 phases and 9 milestones
 - ~19,700 LOC TypeScript
 - 8 days total development time
 
@@ -95,6 +95,9 @@ v5.0 milestone decisions:
 - acceptAndForkSuggestion uses direct async handler pattern (not useActionState) matching suggestion-card.tsx button pattern
 - applyInlineSuggestion marks suggestion as "implemented" directly (skipping "accepted") since content is applied immediately
 - autoImplementLinkedSuggestions designed as fire-and-forget for publish hook integration (Plan 59-02)
+- Accept & Fork replaces old Accept button on pending suggestions -- forking is the primary acceptance action
+- Redirect-safe error handling: re-throw Next.js redirect digest errors in client handlers, catch only real errors
+- autoImplementLinkedSuggestions placed before embedding generation in both publish paths (submitForReview + approveSkillAction)
 
 ### Pending Todos
 
