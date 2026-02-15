@@ -17,6 +17,10 @@ import {
   searchQueries,
   gmailTokens,
   emailDiagnostics,
+  skillFeedback,
+  tokenMeasurements,
+  benchmarkRuns,
+  benchmarkResults,
 } from "../schema";
 
 /**
@@ -64,6 +68,9 @@ export const skillsRelations = relations(skills, ({ one, many }) => ({
     references: [users.id],
     relationName: "approvedSkills",
   }),
+  feedback: many(skillFeedback),
+  tokenMeasurements: many(tokenMeasurements),
+  benchmarkRuns: many(benchmarkRuns),
 }));
 
 /**
@@ -123,6 +130,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   searchQueries: many(searchQueries),
   gmailToken: one(gmailTokens),
   emailDiagnostics: many(emailDiagnostics),
+  skillFeedback: many(skillFeedback),
+  reviewedFeedback: many(skillFeedback, { relationName: "reviewedFeedback" }),
+  tokenMeasurements: many(tokenMeasurements),
+  benchmarkRuns: many(benchmarkRuns),
 }));
 
 /**
@@ -180,6 +191,10 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   searchQueries: many(searchQueries),
   gmailTokens: many(gmailTokens),
   emailDiagnostics: many(emailDiagnostics),
+  skillFeedback: many(skillFeedback),
+  tokenMeasurements: many(tokenMeasurements),
+  benchmarkRuns: many(benchmarkRuns),
+  benchmarkResults: many(benchmarkResults),
 }));
 
 /**
@@ -331,6 +346,69 @@ export const emailDiagnosticsRelations = relations(emailDiagnostics, ({ one }) =
   tenant: one(tenants, {
     fields: [emailDiagnostics.tenantId],
     references: [tenants.id],
+  }),
+}));
+
+/**
+ * SkillFeedback relations
+ * - skill: many-to-one with skills
+ * - user: many-to-one with users (nullable, for anonymous MCP feedback)
+ * - reviewer: many-to-one with users (nullable, for reviewed feedback)
+ * - skillVersion: many-to-one with skillVersions (nullable)
+ */
+export const skillFeedbackRelations = relations(skillFeedback, ({ one }) => ({
+  tenant: one(tenants, { fields: [skillFeedback.tenantId], references: [tenants.id] }),
+  skill: one(skills, { fields: [skillFeedback.skillId], references: [skills.id] }),
+  user: one(users, { fields: [skillFeedback.userId], references: [users.id] }),
+  skillVersion: one(skillVersions, {
+    fields: [skillFeedback.skillVersionId],
+    references: [skillVersions.id],
+  }),
+  reviewer: one(users, {
+    fields: [skillFeedback.reviewedBy],
+    references: [users.id],
+    relationName: "reviewedFeedback",
+  }),
+}));
+
+/**
+ * TokenMeasurements relations
+ * - skill: many-to-one with skills
+ * - user: many-to-one with users (nullable)
+ */
+export const tokenMeasurementsRelations = relations(tokenMeasurements, ({ one }) => ({
+  tenant: one(tenants, { fields: [tokenMeasurements.tenantId], references: [tenants.id] }),
+  skill: one(skills, { fields: [tokenMeasurements.skillId], references: [skills.id] }),
+  user: one(users, { fields: [tokenMeasurements.userId], references: [users.id] }),
+}));
+
+/**
+ * BenchmarkRuns relations
+ * - skill: many-to-one with skills
+ * - skillVersion: many-to-one with skillVersions (nullable)
+ * - triggeredByUser: many-to-one with users
+ * - results: one-to-many with benchmarkResults
+ */
+export const benchmarkRunsRelations = relations(benchmarkRuns, ({ one, many }) => ({
+  tenant: one(tenants, { fields: [benchmarkRuns.tenantId], references: [tenants.id] }),
+  skill: one(skills, { fields: [benchmarkRuns.skillId], references: [skills.id] }),
+  skillVersion: one(skillVersions, {
+    fields: [benchmarkRuns.skillVersionId],
+    references: [skillVersions.id],
+  }),
+  triggeredByUser: one(users, { fields: [benchmarkRuns.triggeredBy], references: [users.id] }),
+  results: many(benchmarkResults),
+}));
+
+/**
+ * BenchmarkResults relations
+ * - benchmarkRun: many-to-one with benchmarkRuns
+ */
+export const benchmarkResultsRelations = relations(benchmarkResults, ({ one }) => ({
+  tenant: one(tenants, { fields: [benchmarkResults.tenantId], references: [tenants.id] }),
+  benchmarkRun: one(benchmarkRuns, {
+    fields: [benchmarkResults.benchmarkRunId],
+    references: [benchmarkRuns.id],
   }),
 }));
 
