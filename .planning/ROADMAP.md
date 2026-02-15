@@ -285,7 +285,11 @@ Plans:
   4. Admin can trigger a benchmark run that executes the skill's golden examples across models (Anthropic SDK required, OpenAI and Google AI SDKs optional), with async execution and polling for results
   5. Benchmark staleness is detected (90-day warning) with a "Re-benchmark" button that triggers a fresh run
 
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 61-01-PLAN.md -- Benchmark DB service + execution engine (CRUD, cross-model runner, AI judge)
+- [ ] 61-02-PLAN.md -- Server action + BenchmarkTab UI + CostTrendChart component
+- [ ] 61-03-PLAN.md -- Tab extension + skill detail page wiring
 
 #### Dependency Graph
 
@@ -332,7 +336,7 @@ Phases execute respecting dependencies: 55 -> 56/57/60 (parallel) -> 58/59 (para
 | 58. Training Data | v5.0 | 0/3 | Planned | - |
 | 59. Suggestion-to-Fork | v5.0 | 0/2 | Planned | - |
 | 60. Token/Cost Measurement | v5.0 | 3/3 | Complete | 2026-02-15 |
-| 61. Benchmarking Dashboard | v5.0 | 0/TBD | Not started | - |
+| 61. Benchmarking Dashboard | v5.0 | 0/3 | Planned | - |
 
 **Total: 220 plans completed across 57 phases and 9 milestones. v5.0: 10 plans, 4/7 phases complete.**
 
