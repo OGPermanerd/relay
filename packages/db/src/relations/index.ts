@@ -369,6 +369,11 @@ export const skillFeedbackRelations = relations(skillFeedback, ({ one }) => ({
     references: [users.id],
     relationName: "reviewedFeedback",
   }),
+  implementedBySkill: one(skills, {
+    fields: [skillFeedback.implementedBySkillId],
+    references: [skills.id],
+    relationName: "implementedBySuggestion",
+  }),
 }));
 
 /**

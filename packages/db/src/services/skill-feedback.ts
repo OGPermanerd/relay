@@ -1,4 +1,4 @@
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "../client";
 import { skillFeedback } from "../schema/skill-feedback";
@@ -113,6 +113,7 @@ export interface SuggestionWithUser {
   category: string | null;
   severity: string | null;
   status: string;
+  implementedBySkillId: string | null;
   reviewNotes: string | null;
   reviewedBy: string | null;
   reviewedAt: Date | null;
@@ -170,6 +171,7 @@ export async function getSuggestionsForSkill(skillId: string): Promise<Suggestio
       suggestedContent: skillFeedback.suggestedContent,
       suggestedDiff: skillFeedback.suggestedDiff,
       status: skillFeedback.status,
+      implementedBySkillId: skillFeedback.implementedBySkillId,
       reviewNotes: skillFeedback.reviewNotes,
       reviewedBy: skillFeedback.reviewedBy,
       reviewedAt: skillFeedback.reviewedAt,
@@ -207,6 +209,7 @@ export async function getSuggestionsForSkill(skillId: string): Promise<Suggestio
       category,
       severity,
       status: row.status,
+      implementedBySkillId: row.implementedBySkillId,
       reviewNotes: row.reviewNotes,
       reviewedBy: row.reviewedBy,
       reviewedAt: row.reviewedAt,
@@ -295,4 +298,193 @@ export async function replySuggestion(params: {
     .where(eq(skillFeedback.id, params.id));
 
   return { success: true };
+}
+
+// ---------------------------------------------------------------------------
+// Suggestion-to-Fork linking
+// ---------------------------------------------------------------------------
+
+/**
+ * Link a suggestion to a skill (fork or the original skill after inline apply).
+ * Sets implementedBySkillId, marks status as "accepted", records reviewer.
+ */
+export async function linkSuggestionToSkill(params: {
+  feedbackId: string;
+  skillId: string;
+  reviewerId: string;
+}): Promise<{ success: boolean }> {
+  if (!db) {
+    return { success: false };
+  }
+
+  await db
+    .update(skillFeedback)
+    .set({
+      implementedBySkillId: params.skillId,
+      status: "accepted",
+      reviewedBy: params.reviewerId,
+      reviewedAt: new Date(),
+    })
+    .where(eq(skillFeedback.id, params.feedbackId));
+
+  return { success: true };
+}
+
+/**
+ * Transition all accepted suggestions linked to a skill from "accepted" to "implemented".
+ * Designed to be called fire-and-forget after a skill is published.
+ * Returns count of updated rows (for logging).
+ */
+export async function autoImplementLinkedSuggestions(skillId: string): Promise<number> {
+  if (!db) {
+    return 0;
+  }
+
+  const result = await db
+    .update(skillFeedback)
+    .set({
+      status: "implemented",
+      reviewedAt: new Date(),
+    })
+    .where(
+      and(eq(skillFeedback.implementedBySkillId, skillId), eq(skillFeedback.status, "accepted"))
+    )
+    .returning({ id: skillFeedback.id });
+
+  return result.length;
+}
+
+// ---------------------------------------------------------------------------
+// Training Example CRUD
+// ---------------------------------------------------------------------------
+
+/**
+ * Parameters for creating a training example
+ */
+export interface CreateTrainingExampleParams {
+  tenantId: string;
+  skillId: string;
+  userId: string;
+  exampleInput: string;
+  exampleOutput: string;
+  expectedOutput?: string | null;
+  qualityScore?: number | null;
+  source?: string; // default "web"
+  status?: string; // default "approved"
+  usageEventId?: string | null;
+}
+
+/**
+ * A training example row enriched with user info.
+ */
+export interface TrainingExampleWithUser {
+  id: string;
+  userId: string | null;
+  exampleInput: string | null;
+  exampleOutput: string | null;
+  expectedOutput: string | null;
+  qualityScore: number | null;
+  source: string;
+  status: string;
+  usageEventId: string | null;
+  createdAt: Date;
+  user: { name: string | null; image: string | null } | null;
+}
+
+/**
+ * Insert a training_example row into skill_feedback.
+ * Does NOT call updateSkillFeedbackAggregates (training examples don't affect feedback sentiment).
+ * Returns the inserted feedback id or null.
+ */
+export async function createTrainingExample(
+  params: CreateTrainingExampleParams
+): Promise<string | null> {
+  if (!db) {
+    console.warn("Database not configured, skipping createTrainingExample");
+    return null;
+  }
+
+  const [inserted] = await db
+    .insert(skillFeedback)
+    .values({
+      tenantId: params.tenantId,
+      skillId: params.skillId,
+      userId: params.userId,
+      feedbackType: "training_example",
+      exampleInput: params.exampleInput,
+      exampleOutput: params.exampleOutput,
+      expectedOutput: params.expectedOutput ?? null,
+      qualityScore: params.qualityScore ?? null,
+      source: params.source ?? "web",
+      status: params.status ?? "approved",
+      usageEventId: params.usageEventId ?? null,
+    })
+    .returning({ id: skillFeedback.id });
+
+  return inserted?.id ?? null;
+}
+
+/**
+ * Get all training examples for a skill, with submitter info.
+ * Ordered by createdAt descending (newest first).
+ */
+export async function getTrainingExamplesForSkill(
+  skillId: string
+): Promise<TrainingExampleWithUser[]> {
+  if (!db) return [];
+
+  const rows = await db
+    .select({
+      id: skillFeedback.id,
+      userId: skillFeedback.userId,
+      exampleInput: skillFeedback.exampleInput,
+      exampleOutput: skillFeedback.exampleOutput,
+      expectedOutput: skillFeedback.expectedOutput,
+      qualityScore: skillFeedback.qualityScore,
+      source: skillFeedback.source,
+      status: skillFeedback.status,
+      usageEventId: skillFeedback.usageEventId,
+      createdAt: skillFeedback.createdAt,
+      userName: users.name,
+      userImage: users.image,
+    })
+    .from(skillFeedback)
+    .leftJoin(users, eq(skillFeedback.userId, users.id))
+    .where(
+      sql`${skillFeedback.skillId} = ${skillId} AND ${skillFeedback.feedbackType} = 'training_example'`
+    )
+    .orderBy(desc(skillFeedback.createdAt));
+
+  return rows.map((row) => ({
+    id: row.id,
+    userId: row.userId,
+    exampleInput: row.exampleInput,
+    exampleOutput: row.exampleOutput,
+    expectedOutput: row.expectedOutput,
+    qualityScore: row.qualityScore,
+    source: row.source,
+    status: row.status,
+    usageEventId: row.usageEventId,
+    createdAt: row.createdAt,
+    user: row.userName || row.userImage ? { name: row.userName, image: row.userImage } : null,
+  }));
+}
+
+/**
+ * Count training examples for a skill.
+ * Returns integer count.
+ */
+export async function getTrainingExampleCount(skillId: string): Promise<number> {
+  if (!db) return 0;
+
+  const [result] = await db
+    .select({
+      count: sql<number>`count(*)::int`,
+    })
+    .from(skillFeedback)
+    .where(
+      sql`${skillFeedback.skillId} = ${skillId} AND ${skillFeedback.feedbackType} = 'training_example'`
+    );
+
+  return result?.count ?? 0;
 }

@@ -38,6 +38,7 @@ export const skillFeedback = pgTable(
     reviewedBy: text("reviewed_by").references(() => users.id),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
     reviewNotes: text("review_notes"),
+    implementedBySkillId: text("implemented_by_skill_id").references(() => skills.id),
     source: text("source").notNull().default("web"),
     createdAt: timestamp("created_at", { withTimezone: true, precision: 3 }).notNull().defaultNow(),
   },
@@ -47,6 +48,7 @@ export const skillFeedback = pgTable(
     index("skill_feedback_tenant_id_idx").on(table.tenantId),
     index("skill_feedback_feedback_type_idx").on(table.feedbackType),
     index("skill_feedback_status_idx").on(table.status),
+    index("skill_feedback_implemented_by_idx").on(table.implementedBySkillId),
     pgPolicy("tenant_isolation", {
       as: "restrictive",
       for: "all",
