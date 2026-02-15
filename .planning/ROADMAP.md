@@ -212,7 +212,10 @@ Total: 18 plans completed. 7 phases, 12 requirements.
   2. Admin sees an org-wide quality trends chart showing average quality scores, feedback sentiment, and benchmark results over time (monthly granularity, Recharts)
   3. Quality trend data is derived from existing skill_feedback, ratings, and benchmark_results tables without new schema
   4. The page is admin-only (RBAC-gated) and tenant-scoped, following the existing /leverage layout pattern
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 62-01-PLAN.md — Query module (hero stats + quality trends SQL) and nav tab
+- [ ] 62-02-PLAN.md — IP dashboard page, stat cards view, and quality trend chart
 
 #### Phase 63: IP Risk Analysis
 **Goal**: Admins can identify IP concentration risks -- which critical skills depend on a single author and would be lost if that person left
