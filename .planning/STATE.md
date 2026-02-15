@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 56 of 61 -- In-Claude Feedback Collection (Wave 1, parallel with 57/60)
-Plan: 01 of 01 in Phase 56 complete
-Status: In progress -- Phase 56 complete, Phases 57 and 60 in parallel
-Last activity: 2026-02-15 -- Completed 56-01: Feedback data service, API endpoint, and MCP action
+Phase: 60 of 61 -- Token/Cost Measurement (Wave 1, parallel with 56/57)
+Plan: 01 of TBD in Phase 60 complete
+Status: In progress -- Phase 60 Plan 01 complete, Phases 56/57/60 in parallel
+Last activity: 2026-02-15 -- Completed 60-01: Pricing table, token measurement service, /api/track extension
 
-Progress: [#####################.........] 80% (217/~270 est. plans across all milestones)
+Progress: [#####################.........] 81% (218/~270 est. plans across all milestones)
 
 ## Milestones
 
@@ -32,13 +32,13 @@ Progress: [#####################.........] 80% (217/~270 est. plans across all m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 217
+- Total plans completed: 218
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~10.9 hours
+- Total execution time: ~11.0 hours
 
 **Cumulative:**
-- 217 plans across 56 phases and 9 milestones
-- ~19,500 LOC TypeScript
+- 218 plans across 56 phases and 9 milestones
+- ~19,700 LOC TypeScript
 - 8 days total development time
 
 ## Accumulated Context
@@ -63,6 +63,9 @@ v5.0 milestone decisions:
 - MCP feedback handler uses inline aggregate recalculation (same SQL as DB service) for direct DB access
 - MCP comment sanitization: simple trim+truncate (cannot import web app's sanitizePayload); API uses full sanitizePayload
 - trackUsage with skipIncrement:true for feedback (don't inflate skill totalUses)
+- Pricing table in packages/db/src/services/pricing.ts (pure TS) with re-export from apps/web/lib/pricing-table.ts
+- insertTokenMeasurement is fire-and-forget (void promise) to avoid blocking /api/track response
+- estimateCostMicrocents returns null for unknown models (graceful degradation)
 
 ### Pending Todos
 
@@ -89,5 +92,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 56 COMPLETE (Plan 56-01) -- Phases 57 and 60 in parallel
-Resume file: .planning/phases/56-in-claude-feedback-collection/56-01-SUMMARY.md
+Stopped at: Phase 60 Plan 01 COMPLETE -- Phases 56/57/60 in parallel
+Resume file: .planning/phases/60-token-cost-measurement/60-01-SUMMARY.md
