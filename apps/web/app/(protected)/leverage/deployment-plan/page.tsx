@@ -13,14 +13,14 @@ export default async function DeploymentPlanPage() {
   const result = await getRecommendations();
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div>
       {/* Back link */}
       <div className="mb-4">
         <Link
-          href="/my-leverage"
+          href="/leverage"
           className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
         >
-          &larr; Back to My Leverage
+          &larr; Back to Leverage
         </Link>
       </div>
 
@@ -42,10 +42,10 @@ export default async function DeploymentPlanPage() {
             suggestions.
           </p>
           <Link
-            href="/my-leverage"
+            href="/leverage"
             className="mt-4 inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
           >
-            Go to My Leverage
+            Go to Leverage
           </Link>
         </div>
       )}

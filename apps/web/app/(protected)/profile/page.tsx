@@ -6,6 +6,7 @@ import { getUserStats } from "@/lib/user-stats";
 import { listApiKeysAction } from "@/app/actions/api-keys";
 import { SetupWizard } from "@/components/setup-wizard";
 import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
+import { getLatestDiagnostic } from "@everyskill/db/services/email-diagnostics";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -16,11 +17,12 @@ export default async function ProfilePage() {
 
   const { user } = session;
 
-  // Fetch real user statistics from database
-  const userStats = await getUserStats(session.user.id);
-
-  // Fetch API keys for the current user
-  const keysResult = await listApiKeysAction();
+  // Fetch real user statistics and diagnostic data in parallel
+  const [userStats, keysResult, diagnostic] = await Promise.all([
+    getUserStats(session.user.id),
+    listApiKeysAction(),
+    getLatestDiagnostic(session.user.id),
+  ]);
   const keys = keysResult.keys || [];
 
   const stats = [
@@ -84,6 +86,31 @@ export default async function ProfilePage() {
           ))}
         </div>
       </div>
+
+      {/* Email Insights — show if diagnostic exists */}
+      {diagnostic && (
+        <div className="mt-8">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Email Insights</h2>
+          <div className="rounded-lg bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {(diagnostic.estimatedHoursPerWeek / 10).toFixed(1)} hrs/week
+                </p>
+                <p className="text-sm text-gray-500">
+                  on email ({diagnostic.totalMessages} messages analyzed)
+                </p>
+              </div>
+              <Link
+                href="/leverage/email-diagnostic"
+                className="text-sm font-medium text-blue-600 hover:underline"
+              >
+                View details &rarr;
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* My Skills */}
       <div className="mt-8">

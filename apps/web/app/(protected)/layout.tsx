@@ -63,8 +63,8 @@ export default async function ProtectedLayout({ children }: { children: React.Re
               <NavLink href="/skills" theme={HEADER_THEME}>
                 Skills
               </NavLink>
-              <NavLink href="/analytics" theme={HEADER_THEME}>
-                Analytics
+              <NavLink href="/leverage" theme={HEADER_THEME}>
+                Leverage
               </NavLink>
               <NavLink href="/profile" theme={HEADER_THEME}>
                 Profile

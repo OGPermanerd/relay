@@ -135,7 +135,7 @@ export function LeaderboardTable({ contributors, currentUserImpact }: Leaderboar
                         {currentUserImpact.fteYearsSaved.toFixed(2)}
                       </span>
                       <Link
-                        href="/my-leverage"
+                        href="/leverage"
                         className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
                       >
                         Details

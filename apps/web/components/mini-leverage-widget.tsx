@@ -36,7 +36,7 @@ export function MiniLeverageWidget({
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold text-gray-900">Your Impact</h3>
         <Link
-          href="/my-leverage"
+          href="/leverage"
           className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
         >
           View full details

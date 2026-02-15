@@ -95,7 +95,7 @@ export function RecommendationsSection() {
       </div>
       <div className="mt-6 text-center">
         <Link
-          href="/my-leverage/deployment-plan"
+          href="/leverage/deployment-plan"
           className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
         >
           View Full Deployment Plan &rarr;

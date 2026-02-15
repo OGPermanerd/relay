@@ -15,6 +15,10 @@ import { CompanyApprovedSection } from "@/components/company-approved-section";
 import { DiscoverySearch } from "@/components/discovery-results";
 import { CategoryTiles } from "@/components/category-tiles";
 import { CompactStatsBar } from "@/components/compact-stats-bar";
+import { EmailDiagnosticCard } from "@/components/email-diagnostic-card";
+import { getSiteSettings } from "@everyskill/db/services/site-settings";
+import { getLatestDiagnostic } from "@everyskill/db/services/email-diagnostics";
+import { hasActiveGmailConnection } from "@everyskill/db/services/gmail-tokens";
 
 export default async function HomePage() {
   const session = await auth();
@@ -39,6 +43,9 @@ export default async function HomePage() {
     skillsCreatedStats,
     companyApproved,
     categoryCounts,
+    siteSettings,
+    latestDiagnostic,
+    gmailConnected,
   ] = await Promise.all([
     getPlatformStats(),
     getTrendingSkills(6),
@@ -47,7 +54,13 @@ export default async function HomePage() {
     getSkillsCreatedStats(user.id!),
     getCompanyApprovedSkills(6),
     getCategoryCounts(),
+    getSiteSettings(tenantId),
+    getLatestDiagnostic(user.id!),
+    hasActiveGmailConnection(user.id!),
   ]);
+
+  const diagnosticEnabled = siteSettings?.gmailDiagnosticEnabled ?? false;
+  const hasDiagnostic = latestDiagnostic !== null;
 
   // Generate personalized greeting (uses cached pool, regenerates daily)
   const greeting = await getGreeting(
@@ -120,6 +133,13 @@ export default async function HomePage() {
       <div className="mb-8">
         <DiscoverySearch />
       </div>
+
+      {/* Email Diagnostic CTA — show if feature enabled and no diagnostic run yet */}
+      {diagnosticEnabled && !hasDiagnostic && (
+        <div className="mb-8">
+          <EmailDiagnosticCard gmailConnected={gmailConnected} />
+        </div>
+      )}
 
       {/* Category Tiles */}
       <div className="mb-8">

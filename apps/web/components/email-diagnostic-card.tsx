@@ -2,10 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { runEmailDiagnostic } from "@/app/actions/email-diagnostic";
 import type { AggregateResults } from "@/lib/diagnostic-aggregator";
 
-export function EmailDiagnosticCard() {
+interface EmailDiagnosticCardProps {
+  gmailConnected: boolean;
+}
+
+export function EmailDiagnosticCard({ gmailConnected }: EmailDiagnosticCardProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<AggregateResults | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +25,8 @@ export function EmailDiagnosticCard() {
 
       if (response.success && response.data) {
         setResults(response.data);
+        // Refresh page so the card disappears from home (diagnostic now exists)
+        router.refresh();
       } else {
         setError(response.error || "Failed to analyze emails. Please try again.");
       }
@@ -52,7 +60,23 @@ export function EmailDiagnosticCard() {
 
       {/* Content */}
       <div className="mt-4">
-        {loading ? (
+        {!gmailConnected ? (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">
+              Connect your Gmail account to analyze your email patterns and get personalized skill
+              recommendations.
+            </p>
+            <a
+              href="/api/gmail/connect"
+              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 18h-2V9.25L12 13 6 9.25V18H4V6h1.2l6.8 4.25L18.8 6H20m0-2H4c-1.11 0-2 .89-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2z" />
+              </svg>
+              Connect Gmail
+            </a>
+          </div>
+        ) : loading ? (
           <div className="rounded-md bg-blue-50 p-4">
             <div className="flex items-center gap-3">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
@@ -69,18 +93,6 @@ export function EmailDiagnosticCard() {
             <div className="rounded-md bg-red-50 p-3">
               <p className="text-sm text-red-700">{error}</p>
             </div>
-            {error.includes("not connected") && (
-              <p className="text-xs text-gray-500">
-                Connect your Gmail account in the{" "}
-                <a
-                  href="/settings/connections"
-                  className="font-medium text-blue-600 hover:underline"
-                >
-                  Connections settings
-                </a>{" "}
-                to run diagnostics.
-              </p>
-            )}
             <button
               onClick={handleRunDiagnostic}
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
@@ -145,7 +157,7 @@ export function EmailDiagnosticCard() {
               Run New Diagnostic
             </button>
             <Link
-              href="/my-leverage/email-diagnostic"
+              href="/leverage/email-diagnostic"
               className="mt-2 block w-full rounded-md border border-blue-600 bg-white px-4 py-2 text-center text-sm font-medium text-blue-600 shadow-sm hover:bg-blue-50"
             >
               View Full Dashboard

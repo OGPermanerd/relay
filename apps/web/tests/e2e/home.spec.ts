@@ -87,7 +87,7 @@ test.describe("Home Page", () => {
     // Your Impact row should be visible in leaderboard table
     await expect(page.getByText("Your Impact")).toBeVisible();
 
-    // Details link to /my-leverage should be visible
+    // Details link to /leverage should be visible
     await expect(page.getByRole("link", { name: "Details", exact: true })).toBeVisible();
   });
 
