@@ -11,7 +11,7 @@
 - ✅ **v2.0 Skill Ecosystem** - Phases 34-39 (shipped 2026-02-08)
 - ✅ **v3.0 AI Discovery & Workflow Intelligence** - Phases 40-48 (shipped 2026-02-13)
 - ✅ **v4.0 Gmail Workflow Diagnostic** - Phases 49-54 (shipped 2026-02-14)
-- 🚧 **v5.0 Feedback, Training & Benchmarking** - Phases 55-61 (in progress)
+- ✅ **v5.0 Feedback, Training & Benchmarking** - Phases 55-61 (shipped 2026-02-15)
 
 ## Phases
 
@@ -179,10 +179,10 @@ Total: 17 plans completed. 6 phases, 22 requirements.
 - [x] **Phase 55: Schema Foundation & Data Sanitization** - New tables, denormalized columns, and secret-stripping utilities ✅
 - [x] **Phase 56: In-Claude Feedback Collection** - Thumbs up/down via MCP with smart frequency gating ✅
 - [x] **Phase 57: Web Feedback & Suggestions** - Structured suggestion form with author review workflow ✅
-- [ ] **Phase 58: Training Data & Golden Dataset** - Author-seeded examples and usage capture with consent
-- [ ] **Phase 59: Suggestion-to-Fork Pipeline** - Accepted suggestions become forks or inline versions
+- [x] **Phase 58: Training Data & Golden Dataset** - Author-seeded examples and usage capture with consent ✅
+- [x] **Phase 59: Suggestion-to-Fork Pipeline** - Accepted suggestions become forks or inline versions ✅
 - [x] **Phase 60: Token/Cost Measurement** - Capture tokens, cost, latency, and model per skill execution ✅
-- [ ] **Phase 61: Benchmarking Dashboard** - Per-skill benchmark tab with charts, model comparison, and staleness detection
+- [x] **Phase 61: Benchmarking Dashboard** - Per-skill benchmark tab with charts, model comparison, and staleness detection ✅
 
 #### Phase 55: Schema Foundation & Data Sanitization
 **Goal**: All new database tables exist with proper multi-tenancy, and a sanitization utility prevents secrets from entering feedback and tracking data
@@ -240,9 +240,9 @@ Plans:
   4. The skill detail page displays a training example count, and a tenant-level admin setting controls whether usage-based capture is available for that organization
 **Plans:** 3 plans
 Plans:
-- [ ] 58-01-PLAN.md -- Migration, schema updates, DB service functions, and server action (backend foundation)
-- [ ] 58-02-PLAN.md -- Training example form, list, tab extension, page wiring, and admin settings toggle (UI)
-- [ ] 58-03-PLAN.md -- Usage capture in /api/track with dual consent gating and sanitization (usage capture)
+- [x] 58-01-PLAN.md -- Migration, schema updates, DB service functions, and server action (backend foundation) ✅
+- [x] 58-02-PLAN.md -- Training example form, list, tab extension, page wiring, and admin settings toggle (UI) ✅
+- [x] 58-03-PLAN.md -- Usage capture in /api/track with dual consent gating and sanitization (usage capture) ✅
 
 #### Phase 59: Suggestion-to-Fork Pipeline
 **Goal**: Accepted suggestions flow into concrete skill improvements via forks or inline version updates
@@ -255,8 +255,8 @@ Plans:
   4. Suggestion status automatically updates to "implemented" when the linked fork or version is published
 **Plans:** 2 plans
 Plans:
-- [ ] 59-01-PLAN.md -- Schema migration (implementedBySkillId), DB services, Accept & Fork + Apply Inline server actions
-- [ ] 59-02-PLAN.md -- Suggestion card UI buttons + auto-implement hooks in publish flows
+- [x] 59-01-PLAN.md -- Schema migration (implementedBySkillId), DB services, Accept & Fork + Apply Inline server actions ✅
+- [x] 59-02-PLAN.md -- Suggestion card UI buttons + auto-implement hooks in publish flows ✅
 
 #### Phase 60: Token/Cost Measurement
 **Goal**: Every skill execution captures token usage, cost estimate, latency, and model name, with per-skill cost aggregation visible on detail pages
@@ -287,9 +287,9 @@ Plans:
 
 **Plans:** 3 plans
 Plans:
-- [ ] 61-01-PLAN.md -- Benchmark DB service + execution engine (CRUD, cross-model runner, AI judge)
-- [ ] 61-02-PLAN.md -- Server action + BenchmarkTab UI + CostTrendChart component
-- [ ] 61-03-PLAN.md -- Tab extension + skill detail page wiring
+- [x] 61-01-PLAN.md -- Benchmark DB service + execution engine (CRUD, cross-model runner, AI judge) ✅
+- [x] 61-02-PLAN.md -- Server action + BenchmarkTab UI + CostTrendChart component ✅
+- [x] 61-03-PLAN.md -- Tab extension + skill detail page wiring ✅
 
 #### Dependency Graph
 

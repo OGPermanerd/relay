@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
 import {
   getOrCreateUserPreferences,
   updateUserPreferences,
@@ -72,6 +73,7 @@ export async function saveMyUserPreferences(
     }
 
     await updateUserPreferences(session.user.id, parsed.data);
+    revalidatePath("/settings/preferences");
     return { success: true };
   } catch (error) {
     if (process.env.NODE_ENV === "development") {

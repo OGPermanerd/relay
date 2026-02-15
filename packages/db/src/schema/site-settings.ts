@@ -22,14 +22,14 @@ export const siteSettings = pgTable(
     tenantId: text("tenant_id")
       .notNull()
       .references(() => tenants.id),
-    semanticSimilarityEnabled: boolean("semantic_similarity_enabled").notNull().default(false),
+    semanticSimilarityEnabled: boolean("semantic_similarity_enabled").notNull().default(true),
     ollamaUrl: text("ollama_url").notNull().default("http://localhost:11434"),
     ollamaModel: text("ollama_model").notNull().default("nomic-embed-text"),
     embeddingDimensions: integer("embedding_dimensions").notNull().default(768),
     allowSkillDownload: boolean("allow_skill_download").notNull().default(true),
     keyExpiryDays: integer("key_expiry_days").notNull().default(90),
-    gmailDiagnosticEnabled: boolean("gmail_diagnostic_enabled").notNull().default(false),
-    trainingDataCaptureEnabled: boolean("training_data_capture_enabled").notNull().default(false),
+    gmailDiagnosticEnabled: boolean("gmail_diagnostic_enabled").notNull().default(true),
+    trainingDataCaptureEnabled: boolean("training_data_capture_enabled").notNull().default(true),
     lastSuccessfulConnection: timestamp("last_successful_connection"),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
