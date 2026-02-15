@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 58 of TBD (Training Data & Golden Dataset)
-Plan: 3 of 3 in Phase 58
-Status: Phase 58 Plan 03 complete — usage capture with consent gating
-Last activity: 2026-02-15 — Completed 58-03 (consent-gated usage capture in /api/track)
+Phase: 61 of TBD (Benchmarking Dashboard)
+Plan: 2 of 3 in Phase 61
+Status: Phase 61 Plan 02 complete — benchmark dashboard UI components
+Last activity: 2026-02-15 — Completed 61-02 (server action, BenchmarkTab, CostTrendChart)
 
 Progress: [#####################.........] 83% (223/~270 est. plans across all milestones)
 
@@ -32,12 +32,12 @@ Progress: [#####################.........] 83% (223/~270 est. plans across all m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 224
+- Total plans completed: 225
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~11.3 hours
+- Total execution time: ~11.4 hours
 
 **Cumulative:**
-- 224 plans across 59 phases and 9 milestones
+- 225 plans across 61 phases and 9 milestones
 - ~19,700 LOC TypeScript
 - 8 days total development time
 
@@ -81,6 +81,10 @@ v5.0 milestone decisions:
 - Two default benchmark models (Sonnet 4.5 + Haiku 4.5) for fast execution under 60s
 - Blinded AI judge: Claude Sonnet evaluates outputs without knowing which model produced them (BENCH-07)
 - Individual model failures stored as error results via Promise.allSettled, don't fail entire run
+- Ad-hoc inputs textarea as fallback when no training examples exist (newline-separated, JSON-serialized in hidden form field)
+- useElapsedTimer hook copied locally into benchmark-tab.tsx (not imported from ai-review-tab where it's private)
+- Both admin and author can trigger benchmarks (broader than author-only AI review)
+- Staleness threshold: 90 days or never benchmarked triggers amber warning banner
 - Training examples use feedbackType='training_example' discriminator (same pattern as suggestions, not separate table)
 - createTrainingExample skips updateSkillFeedbackAggregates (training examples don't affect feedback sentiment)
 - Author-only guard on submitTrainingExample (only skill author can add golden examples)
@@ -117,5 +121,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 58 Plan 03 COMPLETE — usage capture with consent gating wired into /api/track
-Resume file: .planning/phases/58-training-data-golden-dataset/58-03-SUMMARY.md
+Stopped at: Phase 61 Plan 02 COMPLETE — benchmark dashboard UI (server action + BenchmarkTab + CostTrendChart)
+Resume file: .planning/phases/61-benchmarking-dashboard/61-02-SUMMARY.md
