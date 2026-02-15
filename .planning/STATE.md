@@ -12,9 +12,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 Phase: 55 of 61 (Schema Foundation & Data Sanitization)
 Plan: 2 of TBD in current phase
 Status: In progress
-Last activity: 2026-02-15 -- Completed 55-02-PLAN.md (Payload Sanitization Utility)
+Last activity: 2026-02-15 -- Completed 55-01-PLAN.md (Schema Foundation) + 55-02-PLAN.md (Payload Sanitization)
 
-Progress: [####################..........] 78% (212/~270 est. plans across all milestones)
+Progress: [####################..........] 78% (213/~270 est. plans across all milestones)
 
 ## Milestones
 
@@ -32,12 +32,12 @@ Progress: [####################..........] 78% (212/~270 est. plans across all m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 212
+- Total plans completed: 213
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~10.7 hours
+- Total execution time: ~10.8 hours
 
 **Cumulative:**
-- 212 plans across 55 phases and 9 milestones
+- 213 plans across 55 phases and 9 milestones
 - ~19,500 LOC TypeScript
 - 8 days total development time
 
@@ -56,6 +56,8 @@ v5.0 milestone decisions:
 - Training data requires explicit per-user opt-in consent
 - Secret detection uses assignment-context gating (key=value syntax) to prevent false positives on prose
 - Pattern order matters: Anthropic (sk-ant-) before OpenAI (sk-) to prevent double-matching
+- usageEventId stored as plain text (no FK) due to uuid/text type mismatch with usage_events
+- Multi-FK disambiguation with relationName for skill_feedback reviewer vs user relations
 
 ### Pending Todos
 
@@ -82,5 +84,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed 55-02 (Payload Sanitization Utility) -- continue Phase 55
-Resume file: .planning/phases/55-schema-foundation-data-sanitization/55-02-SUMMARY.md
+Stopped at: Completed 55-01 (Schema Foundation) + 55-02 (Payload Sanitization) -- continue Phase 55
+Resume file: .planning/phases/55-schema-foundation-data-sanitization/55-01-SUMMARY.md
