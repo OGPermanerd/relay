@@ -189,8 +189,8 @@ export async function getValidGmailToken(
   try {
     const { OAuth2Client } = await import("google-auth-library");
     const oauth2Client = new OAuth2Client(
-      process.env.GMAIL_CLIENT_ID,
-      process.env.GMAIL_CLIENT_SECRET
+      process.env.AUTH_GOOGLE_ID,
+      process.env.AUTH_GOOGLE_SECRET
     );
     oauth2Client.setCredentials({ refresh_token: token.refreshToken });
 
