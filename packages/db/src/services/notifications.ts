@@ -17,7 +17,9 @@ export interface CreateNotificationParams {
     | "review_rejected"
     | "review_changes_requested"
     | "review_published"
-    | "skill_rated";
+    | "skill_rated"
+    | "suggestion_received"
+    | "suggestion_status_changed";
   title: string;
   message: string;
   actionUrl?: string;

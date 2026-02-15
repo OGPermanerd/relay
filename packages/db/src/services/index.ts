@@ -100,7 +100,12 @@ export {
 export {
   insertFeedback,
   updateSkillFeedbackAggregates,
+  createSuggestion,
+  getSuggestionsForSkill,
+  updateSuggestionStatus,
+  replySuggestion,
   type InsertFeedbackParams,
+  type SuggestionWithUser,
 } from "./skill-feedback";
 export { ANTHROPIC_PRICING, estimateCostMicrocents, type ModelPricing } from "./pricing";
 export {
