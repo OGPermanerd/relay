@@ -14,7 +14,7 @@ Plan: 2 of 2 in current phase
 Status: Phase complete
 Last activity: 2026-02-15 -- Completed 62-02-PLAN.md (IP Dashboard page & quality trend chart)
 
-Progress: [##########################....] 86% (231 plans across 62 phases, 10 milestones)
+Progress: [##########################....] 86% (230 plans across 62 phases, 10 milestones)
 
 ## Milestones
 
@@ -28,17 +28,17 @@ Progress: [##########################....] 86% (231 plans across 62 phases, 10 m
 - v3.0 AI Discovery & Workflow Intelligence - 21 plans - shipped 2026-02-13
 - v4.0 Gmail Workflow Diagnostic - 17 plans - shipped 2026-02-14
 - v5.0 Feedback, Training & Benchmarking - 18 plans - shipped 2026-02-15
-- v6.0 IP Dashboard & Skills Portfolio - 7 phases, 3/TBD plans - in progress
+- v6.0 IP Dashboard & Skills Portfolio - 7 phases, 2/TBD plans - in progress
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 231
+- Total plans completed: 230
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~11.8 hours
 
 **Cumulative:**
-- 231 plans across 62 phases and 10 milestones
+- 230 plans across 62 phases and 10 milestones
 - ~50,000 LOC TypeScript across 386 files
 - 16 days total development time
 

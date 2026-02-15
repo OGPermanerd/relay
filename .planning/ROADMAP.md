@@ -195,7 +195,7 @@ Total: 18 plans completed. 7 phases, 12 requirements.
 - Integer phases (62, 63, ...): Planned milestone work
 - Decimal phases (62.1, 62.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 62: Company IP Dashboard Core** - Hero KPIs and org-wide quality trend charts on a new IP dashboard page
+- [x] **Phase 62: Company IP Dashboard Core** - Hero KPIs and org-wide quality trend charts on a new IP dashboard page (completed 2026-02-15)
 - [ ] **Phase 63: IP Risk Analysis** - Key person dependency detection and IP concentration risk visualization
 - [ ] **Phase 64: IP Valuation & Export** - Replacement cost estimation and PDF/CSV IP report for board presentations
 - [ ] **Phase 65: Individual Skills Portfolio** - Personal portfolio page with contribution stats and portable vs company IP breakdown
@@ -214,8 +214,8 @@ Total: 18 plans completed. 7 phases, 12 requirements.
   4. The page is admin-only (RBAC-gated) and tenant-scoped, following the existing /leverage layout pattern
 **Plans:** 2 plans
 Plans:
-- [ ] 62-01-PLAN.md — Query module (hero stats + quality trends SQL) and nav tab
-- [ ] 62-02-PLAN.md — IP dashboard page, stat cards view, and quality trend chart
+- [x] 62-01-PLAN.md — Query module (hero stats + quality trends SQL) and nav tab
+- [x] 62-02-PLAN.md — IP dashboard page, stat cards view, and quality trend chart
 
 #### Phase 63: IP Risk Analysis
 **Goal**: Admins can identify IP concentration risks -- which critical skills depend on a single author and would be lost if that person left
@@ -317,7 +317,7 @@ Phases execute respecting dependencies: 62+65 (parallel) -> 63+66+68 (parallel) 
 | 40-48 | v3.0 | 21/21 | Complete | 2026-02-13 |
 | 49-54 | v4.0 | 17/17 | Complete | 2026-02-14 |
 | 55-61 | v5.0 | 18/18 | Complete | 2026-02-15 |
-| 62. IP Dashboard Core | v6.0 | 0/TBD | Not started | - |
+| 62. IP Dashboard Core | v6.0 | 2/2 | Complete | 2026-02-15 |
 | 63. IP Risk Analysis | v6.0 | 0/TBD | Not started | - |
 | 64. IP Valuation & Export | v6.0 | 0/TBD | Not started | - |
 | 65. Individual Portfolio | v6.0 | 0/TBD | Not started | - |
@@ -325,7 +325,7 @@ Phases execute respecting dependencies: 62+65 (parallel) -> 63+66+68 (parallel) 
 | 67. Skills Resume | v6.0 | 0/TBD | Not started | - |
 | 68. Pre-LLM History | v6.0 | 0/TBD | Not started | - |
 
-**Total: 228 plans completed across 61 phases and 10 milestones. v6.0: 0 plans, 0/7 phases complete.**
+**Total: 230 plans completed across 62 phases and 10 milestones. v6.0: 2 plans, 1/7 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
