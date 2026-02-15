@@ -143,9 +143,15 @@ function buildSkillCatalog(skills: SkillCatalogEntry[]): string {
 function buildWorkProfile(workContext: WorkContext): string {
   const sections: string[] = [];
 
+  // Guard against older diagnostics missing newer fields
+  const uniqueSent = workContext.uniqueSentSubjects ?? [];
+  const uniqueAttach = workContext.uniqueAttachmentSubjects ?? [];
+  const activeThreads = workContext.activeThreads ?? [];
+  const toolDomains = workContext.toolDomains ?? [];
+
   // Sent email activity
-  const sentHeader = `Sent Email Activity (${workContext.sentPerWeek}/week, ${workContext.attachmentsPerWeek} with attachments):`;
-  const sentSubjects = workContext.uniqueSentSubjects
+  const sentHeader = `Sent Email Activity (${workContext.sentPerWeek ?? 0}/week, ${workContext.attachmentsPerWeek ?? 0} with attachments):`;
+  const sentSubjects = uniqueSent
     .slice(0, 40)
     .map((s) => `- "${s}"`)
     .join("\n");
@@ -154,9 +160,9 @@ function buildWorkProfile(workContext: WorkContext): string {
   }
 
   // Deliverables (attachment emails)
-  if (workContext.uniqueAttachmentSubjects.length > 0) {
+  if (uniqueAttach.length > 0) {
     const attachHeader = "Deliverables Created (emails with attachments):";
-    const attachSubjects = workContext.uniqueAttachmentSubjects
+    const attachSubjects = uniqueAttach
       .slice(0, 15)
       .map((s) => `- "${s}"`)
       .join("\n");
@@ -164,16 +170,16 @@ function buildWorkProfile(workContext: WorkContext): string {
   }
 
   // Active discussion threads
-  if (workContext.activeThreads.length > 0) {
+  if (activeThreads.length > 0) {
     const threadHeader = "Active Discussion Threads:";
-    const threads = workContext.activeThreads
+    const threads = activeThreads
       .map((t) => `- "${t.subject}" (${t.userReplies} replies from user)`)
       .join("\n");
     sections.push(`${threadHeader}\n${threads}`);
   }
 
   // Tools & services
-  const knownTools = workContext.toolDomains.filter((t) => t.tool !== t.domain);
+  const knownTools = toolDomains.filter((t) => t.tool !== t.domain);
   if (knownTools.length > 0) {
     const toolHeader = "Tools & Services Used:";
     const tools = knownTools.map((t) => `- ${t.tool} (${t.count} emails)`).join("\n");
@@ -243,17 +249,17 @@ function fallbackKeywordMatch(
   // Collect keywords from work signals
   const keywords = new Set<string>();
 
-  for (const subject of workContext.uniqueSentSubjects.slice(0, 20)) {
+  for (const subject of (workContext.uniqueSentSubjects ?? []).slice(0, 20)) {
     for (const word of subject.toLowerCase().split(/[\s/\-_,;:!?()[\]{}"']+/)) {
       if (word.length >= 4) keywords.add(word);
     }
   }
-  for (const thread of workContext.activeThreads) {
+  for (const thread of workContext.activeThreads ?? []) {
     for (const word of thread.subject.toLowerCase().split(/[\s/\-_,;:!?()[\]{}"']+/)) {
       if (word.length >= 4) keywords.add(word);
     }
   }
-  for (const tool of workContext.toolDomains) {
+  for (const tool of workContext.toolDomains ?? []) {
     keywords.add(tool.tool.toLowerCase());
   }
 
@@ -325,10 +331,11 @@ export async function generateSkillRecommendations(
   }
 
   // 2. Check if we have meaningful work signals
-  const hasWorkSignals =
-    workContext.uniqueSentSubjects.length > 0 ||
-    workContext.activeThreads.length > 0 ||
-    workContext.toolDomains.length > 0;
+  // Guard against older diagnostics that may not have newer fields
+  const subjects = workContext.uniqueSentSubjects ?? [];
+  const threads = workContext.activeThreads ?? [];
+  const tools = workContext.toolDomains ?? [];
+  const hasWorkSignals = subjects.length > 0 || threads.length > 0 || tools.length > 0;
 
   if (!hasWorkSignals) {
     return [];
