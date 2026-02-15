@@ -16,6 +16,11 @@ export interface PatternInsights {
   busiestDayOfWeek: string; // "Monday", "Tuesday", etc.
   averageResponseTimeHours: number | null;
   threadDepthAverage: number;
+  sentMessageCount?: number;
+  sentWithAttachmentCount?: number;
+  estimatedSentHoursPerWeek?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  workContext?: any; // WorkContext stored in JSONB
 }
 
 export interface SaveEmailDiagnosticParams {

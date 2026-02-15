@@ -6,8 +6,8 @@ import { DEFAULT_TIME_WEIGHTS } from "./email-time-estimator";
  *
  * Computes aggregate statistics from classified emails:
  * - Category breakdown (counts, percentages, time estimates)
- * - Pattern insights (busiest hour, busiest day)
- * - Estimated hours per week
+ * - Pattern insights (busiest hour, busiest day, sent email analysis)
+ * - Estimated hours per week (reading + composing)
  */
 
 // ---------------------------------------------------------------------------
@@ -26,6 +26,9 @@ export interface PatternInsights {
   busiestDayOfWeek: string; // "Monday", "Tuesday", etc.
   averageResponseTimeHours: number | null;
   threadDepthAverage: number;
+  sentMessageCount: number;
+  sentWithAttachmentCount: number;
+  estimatedSentHoursPerWeek: number;
 }
 
 export interface AggregateResults {
@@ -39,6 +42,11 @@ export interface AggregateResults {
 // ---------------------------------------------------------------------------
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+// Sent email time estimates (minutes)
+const SENT_REPLY_MINUTES = 3; // replying to existing thread
+const SENT_NEW_MINUTES = 5; // composing new message
+const SENT_ATTACHMENT_MINUTES = 15; // creating/gathering attachment content
 
 // ---------------------------------------------------------------------------
 // Aggregation function
@@ -118,18 +126,39 @@ export function computeAggregates(
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // 3. Sent email analysis
+  // ---------------------------------------------------------------------------
+
+  const sentEmails = classified.filter((e) => e.isSent);
+  const sentWithAttachment = sentEmails.filter((e) => e.hasAttachment);
+  const sentReplies = sentEmails.filter((e) => e.inReplyTo && !e.hasAttachment);
+  const sentNew = sentEmails.filter((e) => !e.inReplyTo && !e.hasAttachment);
+
+  const sentMinutes =
+    sentWithAttachment.length * SENT_ATTACHMENT_MINUTES +
+    sentReplies.length * SENT_REPLY_MINUTES +
+    sentNew.length * SENT_NEW_MINUTES;
+
+  const estimatedSentHoursPerWeek =
+    Math.round((((sentMinutes / scanPeriodDays) * 7) / 60) * 10) / 10;
+
   const patternInsights: PatternInsights = {
     busiestHour,
     busiestDayOfWeek,
-    averageResponseTimeHours: null, // TODO: implement in future
-    threadDepthAverage: 0, // TODO: implement in future
+    averageResponseTimeHours: null,
+    threadDepthAverage: 0,
+    sentMessageCount: sentEmails.length,
+    sentWithAttachmentCount: sentWithAttachment.length,
+    estimatedSentHoursPerWeek,
   };
 
   // ---------------------------------------------------------------------------
-  // 3. Estimated hours per week
+  // 4. Estimated hours per week (reading + composing)
   // ---------------------------------------------------------------------------
 
-  const totalMinutes = categoryBreakdown.reduce((sum, cat) => sum + cat.estimatedMinutes, 0);
+  const inboxMinutes = categoryBreakdown.reduce((sum, cat) => sum + cat.estimatedMinutes, 0);
+  const totalMinutes = inboxMinutes + sentMinutes;
   const minutesPerDay = totalMinutes / scanPeriodDays;
   const hoursPerWeek = (minutesPerDay * 7) / 60;
   const estimatedHoursPerWeek = Math.round(hoursPerWeek * 10) / 10;

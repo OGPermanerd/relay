@@ -82,9 +82,9 @@ export function EmailDiagnosticCard({ gmailConnected }: EmailDiagnosticCardProps
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
               <div>
                 <p className="text-sm font-medium text-blue-900">
-                  Analyzing your last 90 days of emails...
+                  Fetching and analyzing your last 90 days of emails...
                 </p>
-                <p className="text-xs text-blue-700">This takes about 60-90 seconds.</p>
+                <p className="text-xs text-blue-700">This usually takes 15-30 seconds.</p>
               </div>
             </div>
           </div>

@@ -2,17 +2,16 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { searchSkills, type SearchSkillResult } from "@/lib/search-skills";
 import type { CategoryBreakdownItem } from "@everyskill/db/services/email-diagnostics";
+import type { WorkContext } from "./email-work-context";
 
 /**
  * AI-powered skill recommendation engine
  *
- * Analyzes email diagnostic category breakdowns, generates targeted search queries
- * using Claude Haiku, executes hybrid search for each query, and ranks results
- * by projected weekly time savings.
+ * Analyzes email diagnostic data + work context to generate targeted search
+ * queries using Claude Haiku, executes hybrid search, and ranks by projected
+ * weekly time savings.
  *
- * Two-phase approach:
- * 1. AI generates search queries mapping email categories to automation tasks
- * 2. Hybrid search + deduplication + ranking by projected time savings
+ * Includes retry on rate-limit (429) and static fallback if AI is unavailable.
  */
 
 // ---------------------------------------------------------------------------
@@ -85,9 +84,8 @@ const QUERY_GENERATION_SCHEMA = {
 // System prompt for query generation
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `You are an automation advisor analyzing email patterns to recommend workflow improvements.
-
-Given a user's email category breakdown (counts, percentages, time spent per category), generate search queries to find relevant automation skills in our skill library.
+const SYSTEM_PROMPT = `You are recommending automation skills from a library of 100s-1000s of skills.
+Given the user's email patterns AND work context (what topics they work on, what deliverables they create, what tools they use), generate specific search queries that will find the most relevant automation skills.
 
 Categories you'll see:
 - newsletter: Marketing emails, bulk newsletters (automation: digest/summarize, filter, auto-archive)
@@ -98,16 +96,75 @@ Categories you'll see:
 - vendor-external: External vendors/clients/partners (automation: CRM sync, template replies, invoice processing)
 - support-ticket: Customer support, helpdesk (automation: ticket categorization, response templates, escalation rules)
 
+Be specific: not "email automation" but "financial report template generation" or "Jira ticket triage automation" based on their actual work patterns.
+
 For each high-time category (>10% of total time or >30 minutes/week), generate 1-2 search queries.
-
-Search queries should:
-- Be 2-5 words describing the automation need (e.g., "email digest summarization", "calendar conflict detection")
-- Focus on the TASK being automated, not the email type
-- Target skills in our categories: productivity, wiring, doc-production, data-viz, code
-
-Estimate time savings as a percentage (0-100) of time spent in that category that could be automated.
+Estimate time savings as a percentage (0-100) of time in that category that could be automated.
 
 Return JSON only.`;
+
+// ---------------------------------------------------------------------------
+// Static fallback queries (used when AI is unavailable)
+// ---------------------------------------------------------------------------
+
+const FALLBACK_QUERIES: Record<string, GeneratedQuery[]> = {
+  newsletter: [
+    {
+      emailCategory: "newsletter",
+      searchQuery: "email digest summarization",
+      reasoning: "Summarize newsletters",
+      estimatedTimeSavings: 60,
+    },
+  ],
+  "automated-notification": [
+    {
+      emailCategory: "automated-notification",
+      searchQuery: "notification filtering aggregation",
+      reasoning: "Filter and aggregate alerts",
+      estimatedTimeSavings: 50,
+    },
+  ],
+  "meeting-invite": [
+    {
+      emailCategory: "meeting-invite",
+      searchQuery: "calendar scheduling automation",
+      reasoning: "Automate meeting prep",
+      estimatedTimeSavings: 30,
+    },
+  ],
+  "direct-message": [
+    {
+      emailCategory: "direct-message",
+      searchQuery: "email draft reply automation",
+      reasoning: "Draft email responses",
+      estimatedTimeSavings: 25,
+    },
+  ],
+  "internal-thread": [
+    {
+      emailCategory: "internal-thread",
+      searchQuery: "thread summarization action items",
+      reasoning: "Extract action items from threads",
+      estimatedTimeSavings: 40,
+    },
+  ],
+  "vendor-external": [
+    {
+      emailCategory: "vendor-external",
+      searchQuery: "CRM sync invoice processing",
+      reasoning: "Automate vendor communication",
+      estimatedTimeSavings: 35,
+    },
+  ],
+  "support-ticket": [
+    {
+      emailCategory: "support-ticket",
+      searchQuery: "ticket categorization response templates",
+      reasoning: "Automate ticket responses",
+      estimatedTimeSavings: 45,
+    },
+  ],
+};
 
 // ---------------------------------------------------------------------------
 // Anthropic client
@@ -130,30 +187,44 @@ function getClient(): Anthropic {
 // ---------------------------------------------------------------------------
 
 /**
- * Generate targeted search queries from email category breakdown.
- * Uses Claude Haiku to map email categories to automation tasks.
- *
- * @param categoryBreakdown - Email category statistics from diagnostic
- * @param estimatedHoursPerWeek - Total email time per week (in hours)
- * @returns Array of search queries with reasoning and time savings estimates
+ * Generate targeted search queries from email category breakdown + work context.
+ * Uses Claude Haiku with 1 retry on rate-limit, falls back to static queries.
  */
 async function generateSearchQueries(
   categoryBreakdown: CategoryBreakdownItem[],
-  estimatedHoursPerWeek: number
+  estimatedHoursPerWeek: number,
+  workContext?: WorkContext
 ): Promise<GeneratedQuery[]> {
-  const client = getClient();
-
   // Filter to high-time categories: >10% of total OR >30 minutes/week
   const highTimeCategories = categoryBreakdown.filter(
     (cat) => cat.percentage > 10 || cat.estimatedMinutes > 30
   );
 
-  // If no high-time categories, return empty (not worth generating recommendations)
   if (highTimeCategories.length === 0) {
     return [];
   }
 
-  // Format category breakdown for AI
+  // Try AI generation with retry, fall back to static queries
+  try {
+    return await generateSearchQueriesWithAI(
+      highTimeCategories,
+      estimatedHoursPerWeek,
+      workContext
+    );
+  } catch (error) {
+    console.warn("AI query generation failed, using fallback queries:", error);
+    return generateFallbackQueries(highTimeCategories);
+  }
+}
+
+async function generateSearchQueriesWithAI(
+  highTimeCategories: CategoryBreakdownItem[],
+  estimatedHoursPerWeek: number,
+  workContext?: WorkContext
+): Promise<GeneratedQuery[]> {
+  const client = getClient();
+
+  // Format category breakdown
   const categoryList = highTimeCategories
     .map(
       (cat) =>
@@ -161,39 +232,94 @@ async function generateSearchQueries(
     )
     .join("\n");
 
-  const userPrompt = `Analyze this email pattern and generate search queries for automation skills:
+  // Build user prompt with optional work context
+  let userPrompt = `Analyze this email pattern and generate search queries for automation skills:
 
 Email category breakdown (past 90 days):
 ${categoryList}
 
-Total email time: ${estimatedHoursPerWeek.toFixed(1)} hours/week
+Total email time: ${estimatedHoursPerWeek.toFixed(1)} hours/week`;
 
-Generate search queries for categories consuming significant time that could be automated.`;
+  if (workContext) {
+    const sentSection =
+      workContext.sentCount > 0
+        ? `\nSent email analysis:
+- ${workContext.sentCount} sent emails, ${workContext.sentWithAttachmentCount} with attachments${workContext.sentTopics.length > 0 ? `\n- Active topics: ${workContext.sentTopics.slice(0, 10).join(", ")}` : ""}${workContext.attachmentTopics.length > 0 ? `\n- Attachment topics: ${workContext.attachmentTopics.join(", ")}` : ""}`
+        : "";
 
-  const response = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 2048,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userPrompt }],
-    output_config: {
-      format: { type: "json_schema", schema: QUERY_GENERATION_SCHEMA },
-    },
-  });
+    const toolsSection =
+      workContext.topSenderDomains.length > 0
+        ? `\n- Tools/services: ${workContext.topSenderDomains
+            .slice(0, 8)
+            .map((d) => `${d.domain} (${d.count})`)
+            .join(", ")}`
+        : "";
 
-  if (response.stop_reason !== "end_turn") {
-    throw new Error(
-      `Query generation incomplete: stop_reason was "${response.stop_reason}" (expected "end_turn"). ` +
-        "The response may have been truncated."
-    );
+    const threadsSection =
+      workContext.topThreadSubjects.length > 0
+        ? `\n- Top discussion threads: ${workContext.topThreadSubjects
+            .slice(0, 5)
+            .map((s) => `"${s}"`)
+            .join(", ")}`
+        : "";
+
+    userPrompt += sentSection + toolsSection + threadsSection;
   }
 
-  const textBlock = response.content.find((block) => block.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("No text content in query generation response");
+  userPrompt +=
+    "\n\nGenerate 5-8 highly specific search queries targeting skills that would save this user the most time.";
+
+  // Attempt with 1 retry on 429
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await client.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 2048,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: userPrompt }],
+        output_config: {
+          format: { type: "json_schema", schema: QUERY_GENERATION_SCHEMA },
+        },
+      });
+
+      if (response.stop_reason !== "end_turn") {
+        throw new Error(`Query generation incomplete: stop_reason was "${response.stop_reason}"`);
+      }
+
+      const textBlock = response.content.find((block) => block.type === "text");
+      if (!textBlock || textBlock.type !== "text") {
+        throw new Error("No text content in query generation response");
+      }
+
+      const parsed = QueryGenerationSchema.parse(JSON.parse(textBlock.text));
+      return parsed.queries;
+    } catch (error) {
+      const isRateLimit =
+        error instanceof Anthropic.RateLimitError ||
+        (error instanceof Error && error.message.includes("429"));
+      if (isRateLimit && attempt === 0) {
+        // Wait 2s and retry once
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        continue;
+      }
+      throw error;
+    }
   }
 
-  const parsed = QueryGenerationSchema.parse(JSON.parse(textBlock.text));
-  return parsed.queries;
+  // Should not reach here, but TypeScript needs it
+  throw new Error("Query generation exhausted retries");
+}
+
+function generateFallbackQueries(highTimeCategories: CategoryBreakdownItem[]): GeneratedQuery[] {
+  const queries: GeneratedQuery[] = [];
+  for (const cat of highTimeCategories) {
+    const fallback = FALLBACK_QUERIES[cat.category];
+    if (fallback) {
+      queries.push(...fallback);
+    }
+  }
+  // Add attachment-focused query if data suggests high attachment work
+  return queries;
 }
 
 // ---------------------------------------------------------------------------
@@ -203,18 +329,12 @@ Generate search queries for categories consuming significant time that could be 
 /**
  * Execute hybrid search for each query, deduplicate results, and rank by
  * projected weekly time savings.
- *
- * @param queries - Generated search queries from AI
- * @param userId - Current user ID for visibility filtering
- * @param categoryBreakdown - Email category breakdown for time calculations
- * @returns Top 5 skill recommendations ranked by projected savings
  */
 async function searchAndRankSkills(
   queries: GeneratedQuery[],
   userId: string,
   categoryBreakdown: CategoryBreakdownItem[]
 ): Promise<SkillRecommendation[]> {
-  // Map to track deduplicated skills and which queries matched them
   const skillMap = new Map<
     string,
     {
@@ -223,14 +343,12 @@ async function searchAndRankSkills(
     }
   >();
 
-  // Execute search for each query
   for (const query of queries) {
     const results = await searchSkills({
       query: query.searchQuery,
       userId,
     });
 
-    // Take top 10 results per query
     for (const skill of results.slice(0, 10)) {
       if (!skillMap.has(skill.id)) {
         skillMap.set(skill.id, {
@@ -242,11 +360,9 @@ async function searchAndRankSkills(
     }
   }
 
-  // Build recommendations with projected savings calculations
   const recommendations: SkillRecommendation[] = [];
 
   for (const [_skillId, { skill, matchedQueries }] of skillMap.entries()) {
-    // Calculate total time spent on matched categories
     const matchedCategories = Array.from(new Set(matchedQueries.map((q) => q.emailCategory)));
 
     const categoryTimeHours = matchedCategories.reduce((sum, categoryName) => {
@@ -254,16 +370,13 @@ async function searchAndRankSkills(
       return sum + (cat ? cat.estimatedMinutes / 60 : 0);
     }, 0);
 
-    // Calculate average estimated time savings percentage
     const avgSavingsPercent =
       matchedQueries.reduce((sum, q) => sum + q.estimatedTimeSavings, 0) /
       matchedQueries.length /
       100;
 
-    // Projected weekly savings = category time × average savings percentage
     const projectedWeeklySavings = categoryTimeHours * avgSavingsPercent;
 
-    // Generate personalized reason
     const categoriesText =
       matchedCategories.length === 1
         ? matchedCategories[0]
@@ -288,7 +401,6 @@ async function searchAndRankSkills(
     });
   }
 
-  // Sort by projected savings descending, return top 5
   return recommendations
     .sort((a, b) => b.projectedWeeklySavings - a.projectedWeeklySavings)
     .slice(0, 5);
@@ -301,29 +413,27 @@ async function searchAndRankSkills(
 /**
  * Generate personalized skill recommendations based on email diagnostic data.
  *
- * Process:
- * 1. AI analyzes email category breakdown to generate targeted search queries
- * 2. Execute hybrid search for each query
- * 3. Deduplicate results by skill ID
- * 4. Rank by projected weekly time savings
- * 5. Return top 5 recommendations with personalized reasoning
- *
  * @param categoryBreakdown - Email category statistics from diagnostic scan
  * @param estimatedHoursPerWeek - Total email time per week (in hours, not tenths)
  * @param userId - Current user ID for search visibility
- * @param tenantId - Current tenant ID (for future multi-tenant support)
+ * @param _tenantId - Current tenant ID (for future multi-tenant support)
+ * @param workContext - Optional work context extracted from email metadata
  * @returns Top 5 skill recommendations ranked by projected time savings
  */
 export async function generateSkillRecommendations(
   categoryBreakdown: CategoryBreakdownItem[],
   estimatedHoursPerWeek: number,
   userId: string,
-  _tenantId: string
+  _tenantId: string,
+  workContext?: WorkContext
 ): Promise<SkillRecommendation[]> {
-  // Phase 1: Generate search queries using AI
-  const queries = await generateSearchQueries(categoryBreakdown, estimatedHoursPerWeek);
+  // Phase 1: Generate search queries using AI (with retry + fallback)
+  const queries = await generateSearchQueries(
+    categoryBreakdown,
+    estimatedHoursPerWeek,
+    workContext
+  );
 
-  // If no queries generated (all categories low-time), return empty
   if (queries.length === 0) {
     return [];
   }

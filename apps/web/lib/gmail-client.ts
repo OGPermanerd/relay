@@ -21,6 +21,9 @@ export interface EmailMetadata {
   listUnsubscribe: string | null;
   inReplyTo: string | null;
   labels: string[];
+  isSent: boolean;
+  hasAttachment: boolean;
+  sizeEstimate: number;
 }
 
 export interface FetchEmailMetadataOptions {
@@ -118,7 +121,14 @@ export async function fetchEmailMetadata(
               userId: "me",
               id,
               format: "metadata",
-              metadataHeaders: ["From", "Subject", "Date", "List-Unsubscribe", "In-Reply-To"],
+              metadataHeaders: [
+                "From",
+                "Subject",
+                "Date",
+                "List-Unsubscribe",
+                "In-Reply-To",
+                "Content-Type",
+              ],
             })
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .then((res: any) => res.data)
@@ -143,6 +153,8 @@ export async function fetchEmailMetadata(
 
         const dateStr = getHeader("Date");
         const date = dateStr ? new Date(dateStr) : new Date();
+        const contentType = getHeader("Content-Type") || "";
+        const mimeType = message.payload?.mimeType || "";
 
         metadata.push({
           id: message.id,
@@ -153,6 +165,10 @@ export async function fetchEmailMetadata(
           listUnsubscribe: getHeader("List-Unsubscribe"),
           inReplyTo: getHeader("In-Reply-To"),
           labels: message.labelIds || [],
+          isSent: (message.labelIds || []).includes("SENT"),
+          hasAttachment:
+            mimeType.includes("multipart/mixed") || contentType.includes("multipart/mixed"),
+          sizeEstimate: message.sizeEstimate || 0,
         });
       }
     }

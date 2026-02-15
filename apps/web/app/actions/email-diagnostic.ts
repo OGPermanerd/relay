@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { fetchEmailMetadata } from "@/lib/gmail-client";
 import { classifyEmails } from "@/lib/email-classifier";
 import { computeAggregates, type AggregateResults } from "@/lib/diagnostic-aggregator";
+import { extractWorkContext } from "@/lib/email-work-context";
 import { saveEmailDiagnostic } from "@everyskill/db/services/email-diagnostics";
 import {
   GmailNotConnectedError,
@@ -51,13 +52,22 @@ export async function runEmailDiagnostic(): Promise<EmailDiagnosticResult> {
       maxMessages: 5000,
     });
 
-    // 3. Classify emails into categories
-    const classified = await classifyEmails(messages);
+    // 3. Classify emails into categories (synchronous, pure rules)
+    const userDomain = session.user.email?.split("@")[1] ?? "";
+    const classified = classifyEmails(messages, userDomain);
 
     // 4. Compute aggregate statistics
     const aggregates = computeAggregates(classified, 90);
 
-    // 5. Save ONLY aggregates to database (not raw metadata)
+    // 5. Extract work context (topics, tools, deliverables) from in-memory data
+    const workContext = extractWorkContext(
+      classified,
+      userDomain,
+      aggregates.categoryBreakdown,
+      aggregates.estimatedHoursPerWeek
+    );
+
+    // 6. Save aggregates + work context to database (not raw metadata)
     await saveEmailDiagnostic({
       userId: session.user.id,
       tenantId: session.user.tenantId,
@@ -66,10 +76,10 @@ export async function runEmailDiagnostic(): Promise<EmailDiagnosticResult> {
       totalMessages: messages.length,
       categoryBreakdown: aggregates.categoryBreakdown,
       estimatedHoursPerWeek: Math.round(aggregates.estimatedHoursPerWeek * 10), // stored as tenths
-      patternInsights: aggregates.patternInsights,
+      patternInsights: { ...aggregates.patternInsights, workContext },
     });
 
-    // 6. Return aggregates (raw metadata is now garbage-collected)
+    // 7. Return aggregates (raw metadata is now garbage-collected)
     return {
       success: true,
       data: aggregates,

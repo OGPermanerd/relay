@@ -1,30 +1,11 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { z } from "zod";
+import type { EmailMetadata } from "./gmail-client";
 
 /**
  * Email classification library
  *
- * Two-pass strategy:
- * 1. Rule-based classification (fast, free, handles ~70%)
- * 2. AI classification for ambiguous cases (batched, cost-efficient)
+ * Pure rule-based classification covering all 7 categories.
+ * No AI calls — eliminates rate-limit risk and runs in <50ms.
  */
-
-// ---------------------------------------------------------------------------
-// EmailMetadata type (compatible with gmail-client.ts)
-// ---------------------------------------------------------------------------
-
-/**
- * Email metadata structure.
- * TODO: Replace with import from "./gmail-client" once available.
- */
-export interface EmailMetadata {
-  id: string;
-  date: Date;
-  from: string;
-  subject: string;
-  listUnsubscribe: string | null;
-  inReplyTo: string | null;
-}
 
 // ---------------------------------------------------------------------------
 // Classification types
@@ -41,165 +22,366 @@ export type EmailCategory =
 
 export interface ClassifiedEmail extends EmailMetadata {
   category: EmailCategory;
-  classificationMethod: "rule" | "ai";
+  classificationMethod: "rule";
+}
+
+// Re-export EmailMetadata so consumers that imported from here still work
+export type { EmailMetadata } from "./gmail-client";
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Extract domain from "Name <email@domain.com>" or "email@domain.com" */
+function extractDomain(from: string): string {
+  const match = from.match(/@([^>\s]+)/);
+  return match ? match[1].toLowerCase() : "";
+}
+
+/** Extract local part (before @) from From header */
+function extractLocalPart(from: string): string {
+  const match = from.match(/<?\s*([^@<]+)@/);
+  return match ? match[1].toLowerCase().trim() : "";
 }
 
 // ---------------------------------------------------------------------------
-// Rule-based classification (PASS 1)
+// Known domain/prefix sets
+// ---------------------------------------------------------------------------
+
+const NEWSLETTER_DOMAINS = new Set([
+  "substack.com",
+  "mailchimp.com",
+  "constantcontact.com",
+  "sendgrid.net",
+  "hubspot.com",
+  "convertkit.com",
+  "beehiiv.com",
+  "buttondown.email",
+  "campaignmonitor.com",
+  "mailerlite.com",
+  "getrevue.co",
+  "sendinblue.com",
+  "brevo.com",
+]);
+
+const NEWSLETTER_PREFIXES = new Set([
+  "newsletter",
+  "digest",
+  "news",
+  "updates",
+  "marketing",
+  "promotions",
+  "info",
+  "weekly",
+  "daily",
+]);
+
+const AUTOMATED_PREFIXES = new Set([
+  "noreply",
+  "no-reply",
+  "donotreply",
+  "do-not-reply",
+  "mailer-daemon",
+  "postmaster",
+  "auto-reply",
+  "autoreply",
+  "bounce",
+  "daemon",
+  "system",
+  "alerts",
+  "alert",
+  "monitor",
+  "monitoring",
+  "builds",
+  "ci",
+  "deploy",
+  "jenkins",
+  "github-noreply",
+  "gitlab",
+  "bitbucket",
+  "notifications",
+]);
+
+const NOTIFICATION_DOMAINS = new Set([
+  "github.com",
+  "gitlab.com",
+  "bitbucket.org",
+  "atlassian.net",
+  "statuspage.io",
+  "pagerduty.com",
+  "datadog.com",
+  "sentry.io",
+  "opsgenie.com",
+  "newrelic.com",
+  "circleci.com",
+  "travis-ci.com",
+  "vercel.com",
+  "netlify.com",
+  "linear.app",
+  "asana.com",
+  "monday.com",
+  "trello.com",
+  "notion.so",
+  "slack.com",
+  "figma.com",
+  "loom.com",
+]);
+
+const SCHEDULING_DOMAINS = new Set([
+  "calendly.com",
+  "zoom.us",
+  "cal.com",
+  "doodle.com",
+  "acuityscheduling.com",
+  "meetingbird.com",
+  "reclaim.ai",
+  "clockwise.com",
+]);
+
+const SUPPORT_PREFIXES = new Set([
+  "support",
+  "help",
+  "helpdesk",
+  "service",
+  "customerservice",
+  "customer-service",
+  "feedback",
+  "tickets",
+  "desk",
+  "care",
+]);
+
+const HELPDESK_DOMAINS = new Set([
+  "zendesk.com",
+  "freshdesk.com",
+  "intercom.io",
+  "helpscout.com",
+  "helpscout.net",
+  "servicenow.com",
+  "kayako.com",
+  "happyfox.com",
+]);
+
+const VENDOR_PREFIXES = new Set([
+  "invoices",
+  "billing",
+  "accounts",
+  "procurement",
+  "sales",
+  "partnerships",
+  "legal",
+  "accounting",
+  "finance",
+  "payroll",
+  "receivables",
+  "payables",
+]);
+
+// ---------------------------------------------------------------------------
+// Subject pattern helpers
+// ---------------------------------------------------------------------------
+
+const NEWSLETTER_SUBJECT_PATTERNS = [
+  /\bunsubscribe\b/i,
+  /\bweekly digest\b/i,
+  /\bmonthly roundup\b/i,
+  /\bdaily briefing\b/i,
+  /\bweekly update\b/i,
+  /\bmonthly newsletter\b/i,
+  /\bweekly newsletter\b/i,
+  /\bedition\s*#?\d/i,
+  /\bissue\s*#?\d/i,
+];
+
+const MEETING_SUBJECT_PATTERNS = [
+  /\bmeeting request\b/i,
+  /\bcalendar invit/i,
+  /^accepted:/i,
+  /^declined:/i,
+  /^tentative:/i,
+  /\binvitation:/i,
+  /\bhas invited you\b/i,
+];
+
+const SUPPORT_SUBJECT_PATTERNS = [
+  /\bticket\s*#/i,
+  /\bcase\s*#/i,
+  /\bincident\s*#/i,
+  /\brequest\s*#/i,
+  /\b\[ticket\b/i,
+  /\b\[case\b/i,
+];
+
+const VENDOR_SUBJECT_PATTERNS = [
+  /\binvoice\b/i,
+  /\bpurchase order\b/i,
+  /\bproposal\b/i,
+  /\bcontract\b/i,
+  /\bstatement\b/i,
+  /\bquotation\b/i,
+  /\bestimate\b/i,
+];
+
+/** Bracketed prefix like [JIRA], [GitHub], [Alert], [Jenkins] */
+const BRACKETED_PREFIX = /^\s*\[[A-Za-z][A-Za-z0-9\s-]*\]/;
+
+// ---------------------------------------------------------------------------
+// Rule-based classification
 // ---------------------------------------------------------------------------
 
 /**
- * Apply deterministic rules to classify obvious email patterns.
- * Returns category if matched, null if ambiguous (needs AI).
+ * Apply deterministic rules to classify an email.
+ * Rules are evaluated in priority order — first match wins.
+ * Every email gets a category (no null return).
  */
-function applyRules(email: EmailMetadata): EmailCategory | null {
+function applyRules(email: EmailMetadata, userDomain: string): EmailCategory {
   const fromLower = email.from.toLowerCase();
   const subjectLower = email.subject.toLowerCase();
+  const senderDomain = extractDomain(email.from);
+  const senderPrefix = extractLocalPart(email.from);
+  const labels = email.labels;
 
-  // Rule 1: List-Unsubscribe header = newsletter
+  // -------------------------------------------------------------------
+  // 1. NEWSLETTER
+  // -------------------------------------------------------------------
+
+  // List-Unsubscribe header is the strongest signal
   if (email.listUnsubscribe) {
     return "newsletter";
   }
 
-  // Rule 2: Common automated sender patterns
-  if (
-    fromLower.includes("noreply@") ||
-    fromLower.includes("no-reply@") ||
-    fromLower.includes("notifications@") ||
-    fromLower.includes("donotreply@")
-  ) {
+  // Gmail's own promotion classification
+  if (labels.includes("CATEGORY_PROMOTIONS")) {
+    return "newsletter";
+  }
+
+  // Known newsletter platforms
+  if (NEWSLETTER_DOMAINS.has(senderDomain)) {
+    return "newsletter";
+  }
+
+  // Newsletter sender prefixes
+  if (NEWSLETTER_PREFIXES.has(senderPrefix)) {
+    return "newsletter";
+  }
+
+  // Newsletter subject patterns
+  if (NEWSLETTER_SUBJECT_PATTERNS.some((p) => p.test(email.subject))) {
+    return "newsletter";
+  }
+
+  // -------------------------------------------------------------------
+  // 2. AUTOMATED NOTIFICATION
+  // -------------------------------------------------------------------
+
+  // Common automated sender prefixes
+  if (AUTOMATED_PREFIXES.has(senderPrefix)) {
     return "automated-notification";
   }
 
-  // Rule 3: Calendar invites
+  // Known notification platform domains
+  if (NOTIFICATION_DOMAINS.has(senderDomain)) {
+    return "automated-notification";
+  }
+
+  // Gmail CATEGORY_UPDATES with no reply chain and from outside user's domain
+  if (labels.includes("CATEGORY_UPDATES") && !email.inReplyTo && senderDomain !== userDomain) {
+    return "automated-notification";
+  }
+
+  // Bracketed prefix like [JIRA], [GitHub] with no reply chain
+  if (BRACKETED_PREFIX.test(email.subject) && !email.inReplyTo) {
+    return "automated-notification";
+  }
+
+  // "via" pattern (e.g., "John via LinkedIn")
+  if (fromLower.includes(" via ")) {
+    return "automated-notification";
+  }
+
+  // -------------------------------------------------------------------
+  // 3. MEETING INVITE
+  // -------------------------------------------------------------------
+
+  // Calendar platforms with invite-related subjects
   if (
-    (fromLower.includes("calendar.google.com") || fromLower.includes("outlook.com")) &&
-    subjectLower.includes("invite")
+    (senderDomain.includes("calendar.google.com") ||
+      senderDomain.includes("outlook.com") ||
+      senderDomain.includes("office365.com") ||
+      senderDomain.includes("microsoft.com")) &&
+    (subjectLower.includes("invit") ||
+      subjectLower.includes("accepted") ||
+      subjectLower.includes("declined"))
   ) {
     return "meeting-invite";
   }
 
-  // No rule matched — ambiguous, needs AI
-  return null;
-}
-
-// ---------------------------------------------------------------------------
-// AI classification (PASS 2)
-// ---------------------------------------------------------------------------
-
-// Zod schema for AI output validation
-const ClassificationOutputSchema = z.object({
-  classifications: z.array(
-    z.object({
-      id: z.string(),
-      category: z.enum([
-        "newsletter",
-        "automated-notification",
-        "meeting-invite",
-        "direct-message",
-        "internal-thread",
-        "vendor-external",
-        "support-ticket",
-      ]),
-    })
-  ),
-});
-
-// JSON schema for Anthropic output_config
-const CLASSIFICATION_SCHEMA = {
-  type: "object" as const,
-  properties: {
-    classifications: {
-      type: "array" as const,
-      items: {
-        type: "object" as const,
-        properties: {
-          id: { type: "string" as const },
-          category: {
-            type: "string" as const,
-            enum: [
-              "newsletter",
-              "automated-notification",
-              "meeting-invite",
-              "direct-message",
-              "internal-thread",
-              "vendor-external",
-              "support-ticket",
-            ],
-          },
-        },
-        required: ["id", "category"],
-        additionalProperties: false,
-      },
-    },
-  },
-  required: ["classifications"],
-  additionalProperties: false,
-};
-
-const SYSTEM_PROMPT = `You are an email categorization system. Given email metadata (sender domain, subject preview, reply status), classify each into one of these categories:
-
-- newsletter: Marketing emails, promotional content, bulk newsletters
-- automated-notification: System notifications, alerts, CI/CD reports, monitoring
-- meeting-invite: Calendar invites, meeting requests, scheduling
-- direct-message: Personal 1:1 communication requiring response
-- internal-thread: Multi-person discussion threads within same organization
-- vendor-external: Communication with external vendors, clients, partners
-- support-ticket: Customer support, helpdesk, issue tracking
-
-Return a JSON array with id and category for each email.`;
-
-/**
- * Classify a batch of ambiguous emails using Claude Haiku.
- * Returns a Map of email ID -> category.
- */
-async function classifyBatchWithAI(emails: EmailMetadata[]): Promise<Map<string, EmailCategory>> {
-  // Prepare minimal metadata for Claude (privacy: domain only, truncated subject)
-  const emailSummaries = emails.map((e) => ({
-    id: e.id,
-    senderDomain: e.from.split("@")[1] ?? "unknown",
-    subjectPreview: e.subject.slice(0, 100),
-    hasListUnsubscribe: !!e.listUnsubscribe,
-    isReply: !!e.inReplyTo,
-  }));
-
-  // Create Anthropic client
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      "ANTHROPIC_API_KEY environment variable is not set. " +
-        "Get an API key from https://console.anthropic.com/settings/keys " +
-        "and add it to .env.local."
-    );
-  }
-  const client = new Anthropic({ apiKey });
-
-  // Call Claude Haiku with structured output
-  const response = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 2048,
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: `Classify these emails:\n\n${JSON.stringify(emailSummaries, null, 2)}`,
-      },
-    ],
-    output_config: {
-      format: { type: "json_schema", schema: CLASSIFICATION_SCHEMA },
-    },
-  });
-
-  // Parse response
-  const textBlock = response.content.find((block) => block.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("No text content in classification response");
+  // Known scheduling platforms
+  if (SCHEDULING_DOMAINS.has(senderDomain)) {
+    return "meeting-invite";
   }
 
-  const parsed = ClassificationOutputSchema.parse(JSON.parse(textBlock.text));
+  // Meeting subject patterns
+  if (MEETING_SUBJECT_PATTERNS.some((p) => p.test(email.subject))) {
+    return "meeting-invite";
+  }
 
-  // Return as Map for fast lookup
-  return new Map(parsed.classifications.map((c) => [c.id, c.category]));
+  // Gmail CATEGORY_FORUMS with scheduling keywords
+  if (
+    labels.includes("CATEGORY_FORUMS") &&
+    (subjectLower.includes("rsvp") || subjectLower.includes("attend"))
+  ) {
+    return "meeting-invite";
+  }
+
+  // -------------------------------------------------------------------
+  // 4. SUPPORT TICKET
+  // -------------------------------------------------------------------
+
+  // Support sender prefixes
+  if (SUPPORT_PREFIXES.has(senderPrefix)) {
+    return "support-ticket";
+  }
+
+  // Known helpdesk domains
+  if (HELPDESK_DOMAINS.has(senderDomain)) {
+    return "support-ticket";
+  }
+
+  // Support subject patterns
+  if (SUPPORT_SUBJECT_PATTERNS.some((p) => p.test(email.subject))) {
+    return "support-ticket";
+  }
+
+  // -------------------------------------------------------------------
+  // 5. INTERNAL THREAD (same domain + reply)
+  // -------------------------------------------------------------------
+
+  if (senderDomain === userDomain && email.inReplyTo) {
+    return "internal-thread";
+  }
+
+  // -------------------------------------------------------------------
+  // 6. VENDOR/EXTERNAL (different domain + reply, or vendor prefixes/subjects)
+  // -------------------------------------------------------------------
+
+  if (senderDomain !== userDomain && email.inReplyTo) {
+    return "vendor-external";
+  }
+
+  if (VENDOR_PREFIXES.has(senderPrefix)) {
+    return "vendor-external";
+  }
+
+  if (VENDOR_SUBJECT_PATTERNS.some((p) => p.test(email.subject))) {
+    return "vendor-external";
+  }
+
+  // -------------------------------------------------------------------
+  // 7. DIRECT MESSAGE (catch-all)
+  // -------------------------------------------------------------------
+
+  return "direct-message";
 }
 
 // ---------------------------------------------------------------------------
@@ -207,47 +389,17 @@ async function classifyBatchWithAI(emails: EmailMetadata[]): Promise<Map<string,
 // ---------------------------------------------------------------------------
 
 /**
- * Classify emails using two-pass strategy:
- * 1. Rule-based (fast, free, handles ~70%)
- * 2. AI-based for ambiguous cases (batched, cost-efficient)
+ * Classify emails using comprehensive rule-based matching.
+ * Pure synchronous — no API calls, no batching, no rate limits.
+ *
+ * @param emails - Array of email metadata from Gmail
+ * @param userDomain - User's email domain (e.g., "acme.com")
+ * @returns Array of classified emails
  */
-export async function classifyEmails(emails: EmailMetadata[]): Promise<ClassifiedEmail[]> {
-  const classified: ClassifiedEmail[] = [];
-  const ambiguous: EmailMetadata[] = [];
-
-  // PASS 1: Apply rules
-  for (const email of emails) {
-    const category = applyRules(email);
-    if (category) {
-      classified.push({
-        ...email,
-        category,
-        classificationMethod: "rule",
-      });
-    } else {
-      ambiguous.push(email);
-    }
-  }
-
-  // PASS 2: AI classification (if any ambiguous emails)
-  if (ambiguous.length > 0) {
-    // Process in batches of 75
-    const BATCH_SIZE = 75;
-    for (let i = 0; i < ambiguous.length; i += BATCH_SIZE) {
-      const batch = ambiguous.slice(i, i + BATCH_SIZE);
-      const categoryMap = await classifyBatchWithAI(batch);
-
-      // Map results back to classified array
-      for (const email of batch) {
-        const category = categoryMap.get(email.id) ?? "direct-message"; // fallback
-        classified.push({
-          ...email,
-          category,
-          classificationMethod: "ai",
-        });
-      }
-    }
-  }
-
-  return classified;
+export function classifyEmails(emails: EmailMetadata[], userDomain: string): ClassifiedEmail[] {
+  return emails.map((email) => ({
+    ...email,
+    category: applyRules(email, userDomain),
+    classificationMethod: "rule" as const,
+  }));
 }
