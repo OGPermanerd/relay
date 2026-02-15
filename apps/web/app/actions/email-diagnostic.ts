@@ -64,7 +64,8 @@ export async function runEmailDiagnostic(): Promise<EmailDiagnosticResult> {
       classified,
       userDomain,
       aggregates.categoryBreakdown,
-      aggregates.estimatedHoursPerWeek
+      aggregates.estimatedHoursPerWeek,
+      90 // scanPeriodDays
     );
 
     // 6. Save aggregates + work context to database (not raw metadata)

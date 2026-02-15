@@ -1,17 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { searchSkills, type SearchSkillResult } from "@/lib/search-skills";
-import type { CategoryBreakdownItem } from "@everyskill/db/services/email-diagnostics";
+import { db, skills } from "@everyskill/db";
+import { eq } from "drizzle-orm";
 import type { WorkContext } from "./email-work-context";
 
 /**
  * AI-powered skill recommendation engine
  *
- * Analyzes email diagnostic data + work context to generate targeted search
- * queries using Claude Haiku, executes hybrid search, and ranks by projected
- * weekly time savings.
+ * Directly matches a user's work activities (from sent emails, attachments,
+ * active threads, and tool usage) to the full skill catalog via a single
+ * Claude Haiku call.
  *
- * Includes retry on rate-limit (429) and static fallback if AI is unavailable.
+ * No intermediary search step — the AI sees the full catalog (~51 skills)
+ * and the user's work profile, and returns the best matches with reasons.
+ *
+ * Fallback: keyword matching when Anthropic is unavailable.
  */
 
 // ---------------------------------------------------------------------------
@@ -27,144 +30,91 @@ export interface SkillRecommendation {
   hoursSaved: number | null;
   totalUses: number;
   averageRating: number | null;
-  matchedCategories: string[]; // email categories matched
-  projectedWeeklySavings: number; // hours/week
+  matchedCategories: string[];
+  projectedWeeklySavings: number;
   personalizedReason: string;
 }
 
-interface GeneratedQuery {
-  emailCategory: string;
-  searchQuery: string;
-  reasoning: string;
-  estimatedTimeSavings: number; // percentage (0-100)
+interface SkillCatalogEntry {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  category: string;
+  tags: string[] | null;
+  totalUses: number;
+  averageRating: number | null;
+  hoursSaved: number | null;
+}
+
+interface AIMatchResult {
+  skillId: string;
+  matchReason: string;
+  relevanceScore: number;
+  estimatedWeeklySavings: number;
 }
 
 // ---------------------------------------------------------------------------
-// Zod schemas for AI output validation
+// Zod schema for AI output validation
 // ---------------------------------------------------------------------------
 
-const QueryGenerationSchema = z.object({
-  queries: z.array(
+const MatchingResultSchema = z.object({
+  matches: z.array(
     z.object({
-      emailCategory: z.string(),
-      searchQuery: z.string(),
-      reasoning: z.string(),
-      estimatedTimeSavings: z.number(),
+      skillId: z.string(),
+      matchReason: z.string(),
+      relevanceScore: z.number(),
+      estimatedWeeklySavings: z.number(),
     })
   ),
 });
 
 // ---------------------------------------------------------------------------
-// JSON schema for Anthropic output_config
+// JSON schema for Anthropic structured output
 // ---------------------------------------------------------------------------
 
-const QUERY_GENERATION_SCHEMA = {
+const MATCHING_SCHEMA = {
   type: "object" as const,
   properties: {
-    queries: {
+    matches: {
       type: "array" as const,
       items: {
         type: "object" as const,
         properties: {
-          emailCategory: { type: "string" as const },
-          searchQuery: { type: "string" as const },
-          reasoning: { type: "string" as const },
-          estimatedTimeSavings: { type: "number" as const },
+          skillId: { type: "string" as const },
+          matchReason: { type: "string" as const },
+          relevanceScore: { type: "number" as const },
+          estimatedWeeklySavings: { type: "number" as const },
         },
-        required: ["emailCategory", "searchQuery", "reasoning", "estimatedTimeSavings"],
+        required: ["skillId", "matchReason", "relevanceScore", "estimatedWeeklySavings"],
         additionalProperties: false,
       },
     },
   },
-  required: ["queries"],
+  required: ["matches"],
   additionalProperties: false,
 };
 
 // ---------------------------------------------------------------------------
-// System prompt for query generation
+// System prompt
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `You are recommending automation skills from a library of 100s-1000s of skills.
-Given the user's email patterns AND work context (what topics they work on, what deliverables they create, what tools they use), generate specific search queries that will find the most relevant automation skills.
+const SYSTEM_PROMPT = `You are matching a user's actual work activities to specific automation skills.
 
-Categories you'll see:
-- newsletter: Marketing emails, bulk newsletters (automation: digest/summarize, filter, auto-archive)
-- automated-notification: CI/CD, monitoring, system alerts (automation: aggregate, threshold filtering, smart routing)
-- meeting-invite: Calendar invites, scheduling (automation: auto-accept based on rules, conflict detection, prep automation)
-- direct-message: 1:1 communication (automation: draft replies, prioritize by sender, follow-up reminders)
-- internal-thread: Multi-person discussions (automation: thread summarization, action item extraction, decision logging)
-- vendor-external: External vendors/clients/partners (automation: CRM sync, template replies, invoice processing)
-- support-ticket: Customer support, helpdesk (automation: ticket categorization, response templates, escalation rules)
+You will receive:
+1. A catalog of available skills (id | name | description)
+2. The user's work profile extracted from their sent emails and tool usage
 
-Be specific: not "email automation" but "financial report template generation" or "Jira ticket triage automation" based on their actual work patterns.
-
-For each high-time category (>10% of total time or >30 minutes/week), generate 1-2 search queries.
-Estimate time savings as a percentage (0-100) of time in that category that could be automated.
+RULES:
+- Match based on what the user CREATES and DOES, not what they receive
+- Sent emails and attachments reveal deliverables they produce
+- Active discussion threads reveal decisions/collaboration they lead
+- Tool usage reveals their workflow
+- Be specific in matchReason — reference their actual subjects/activities
+- estimatedWeeklySavings: realistic hours (0.5-4 typical, max 8 exceptional)
+- Return 5-8 best matches, ranked by time-savings potential
 
 Return JSON only.`;
-
-// ---------------------------------------------------------------------------
-// Static fallback queries (used when AI is unavailable)
-// ---------------------------------------------------------------------------
-
-const FALLBACK_QUERIES: Record<string, GeneratedQuery[]> = {
-  newsletter: [
-    {
-      emailCategory: "newsletter",
-      searchQuery: "email digest summarization",
-      reasoning: "Summarize newsletters",
-      estimatedTimeSavings: 60,
-    },
-  ],
-  "automated-notification": [
-    {
-      emailCategory: "automated-notification",
-      searchQuery: "notification filtering aggregation",
-      reasoning: "Filter and aggregate alerts",
-      estimatedTimeSavings: 50,
-    },
-  ],
-  "meeting-invite": [
-    {
-      emailCategory: "meeting-invite",
-      searchQuery: "calendar scheduling automation",
-      reasoning: "Automate meeting prep",
-      estimatedTimeSavings: 30,
-    },
-  ],
-  "direct-message": [
-    {
-      emailCategory: "direct-message",
-      searchQuery: "email draft reply automation",
-      reasoning: "Draft email responses",
-      estimatedTimeSavings: 25,
-    },
-  ],
-  "internal-thread": [
-    {
-      emailCategory: "internal-thread",
-      searchQuery: "thread summarization action items",
-      reasoning: "Extract action items from threads",
-      estimatedTimeSavings: 40,
-    },
-  ],
-  "vendor-external": [
-    {
-      emailCategory: "vendor-external",
-      searchQuery: "CRM sync invoice processing",
-      reasoning: "Automate vendor communication",
-      estimatedTimeSavings: 35,
-    },
-  ],
-  "support-ticket": [
-    {
-      emailCategory: "support-ticket",
-      searchQuery: "ticket categorization response templates",
-      reasoning: "Automate ticket responses",
-      estimatedTimeSavings: 45,
-    },
-  ],
-};
 
 // ---------------------------------------------------------------------------
 // Anthropic client
@@ -183,122 +133,95 @@ function getClient(): Anthropic {
 }
 
 // ---------------------------------------------------------------------------
-// Query generation (Phase 1)
+// Prompt builders
 // ---------------------------------------------------------------------------
 
-/**
- * Generate targeted search queries from email category breakdown + work context.
- * Uses Claude Haiku with 1 retry on rate-limit, falls back to static queries.
- */
-async function generateSearchQueries(
-  categoryBreakdown: CategoryBreakdownItem[],
-  estimatedHoursPerWeek: number,
-  workContext?: WorkContext
-): Promise<GeneratedQuery[]> {
-  // Filter to high-time categories: >10% of total OR >30 minutes/week
-  const highTimeCategories = categoryBreakdown.filter(
-    (cat) => cat.percentage > 10 || cat.estimatedMinutes > 30
-  );
-
-  if (highTimeCategories.length === 0) {
-    return [];
-  }
-
-  // Try AI generation with retry, fall back to static queries
-  try {
-    return await generateSearchQueriesWithAI(
-      highTimeCategories,
-      estimatedHoursPerWeek,
-      workContext
-    );
-  } catch (error) {
-    console.warn("AI query generation failed, using fallback queries:", error);
-    return generateFallbackQueries(highTimeCategories);
-  }
+function buildSkillCatalog(skills: SkillCatalogEntry[]): string {
+  return skills.map((s) => `${s.id} | ${s.name} | ${s.description.slice(0, 150)}`).join("\n");
 }
 
-async function generateSearchQueriesWithAI(
-  highTimeCategories: CategoryBreakdownItem[],
-  estimatedHoursPerWeek: number,
-  workContext?: WorkContext
-): Promise<GeneratedQuery[]> {
-  const client = getClient();
+function buildWorkProfile(workContext: WorkContext): string {
+  const sections: string[] = [];
 
-  // Format category breakdown
-  const categoryList = highTimeCategories
-    .map(
-      (cat) =>
-        `- ${cat.category}: ${cat.count} emails (${cat.percentage.toFixed(1)}%), ${cat.estimatedMinutes.toFixed(0)} min/week`
-    )
+  // Sent email activity
+  const sentHeader = `Sent Email Activity (${workContext.sentPerWeek}/week, ${workContext.attachmentsPerWeek} with attachments):`;
+  const sentSubjects = workContext.uniqueSentSubjects
+    .slice(0, 40)
+    .map((s) => `- "${s}"`)
     .join("\n");
-
-  // Build user prompt with optional work context
-  let userPrompt = `Analyze this email pattern and generate search queries for automation skills:
-
-Email category breakdown (past 90 days):
-${categoryList}
-
-Total email time: ${estimatedHoursPerWeek.toFixed(1)} hours/week`;
-
-  if (workContext) {
-    const sentSection =
-      workContext.sentCount > 0
-        ? `\nSent email analysis:
-- ${workContext.sentCount} sent emails, ${workContext.sentWithAttachmentCount} with attachments${workContext.sentTopics.length > 0 ? `\n- Active topics: ${workContext.sentTopics.slice(0, 10).join(", ")}` : ""}${workContext.attachmentTopics.length > 0 ? `\n- Attachment topics: ${workContext.attachmentTopics.join(", ")}` : ""}`
-        : "";
-
-    const toolsSection =
-      workContext.topSenderDomains.length > 0
-        ? `\n- Tools/services: ${workContext.topSenderDomains
-            .slice(0, 8)
-            .map((d) => `${d.domain} (${d.count})`)
-            .join(", ")}`
-        : "";
-
-    const threadsSection =
-      workContext.topThreadSubjects.length > 0
-        ? `\n- Top discussion threads: ${workContext.topThreadSubjects
-            .slice(0, 5)
-            .map((s) => `"${s}"`)
-            .join(", ")}`
-        : "";
-
-    userPrompt += sentSection + toolsSection + threadsSection;
+  if (sentSubjects) {
+    sections.push(`${sentHeader}\n${sentSubjects}`);
   }
 
-  userPrompt +=
-    "\n\nGenerate 5-8 highly specific search queries targeting skills that would save this user the most time.";
+  // Deliverables (attachment emails)
+  if (workContext.uniqueAttachmentSubjects.length > 0) {
+    const attachHeader = "Deliverables Created (emails with attachments):";
+    const attachSubjects = workContext.uniqueAttachmentSubjects
+      .slice(0, 15)
+      .map((s) => `- "${s}"`)
+      .join("\n");
+    sections.push(`${attachHeader}\n${attachSubjects}`);
+  }
 
-  // Attempt with 1 retry on 429
+  // Active discussion threads
+  if (workContext.activeThreads.length > 0) {
+    const threadHeader = "Active Discussion Threads:";
+    const threads = workContext.activeThreads
+      .map((t) => `- "${t.subject}" (${t.userReplies} replies from user)`)
+      .join("\n");
+    sections.push(`${threadHeader}\n${threads}`);
+  }
+
+  // Tools & services
+  const knownTools = workContext.toolDomains.filter((t) => t.tool !== t.domain);
+  if (knownTools.length > 0) {
+    const toolHeader = "Tools & Services Used:";
+    const tools = knownTools.map((t) => `- ${t.tool} (${t.count} emails)`).join("\n");
+    sections.push(`${toolHeader}\n${tools}`);
+  }
+
+  return sections.join("\n\n");
+}
+
+// ---------------------------------------------------------------------------
+// AI matching
+// ---------------------------------------------------------------------------
+
+async function matchSkillsWithAI(
+  skillCatalog: SkillCatalogEntry[],
+  workContext: WorkContext
+): Promise<AIMatchResult[]> {
+  const client = getClient();
+  const userPrompt = `Skill Catalog:\n${buildSkillCatalog(skillCatalog)}\n\n${buildWorkProfile(workContext)}`;
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const response = await client.messages.create({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 2048,
+        max_tokens: 3072,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userPrompt }],
         output_config: {
-          format: { type: "json_schema", schema: QUERY_GENERATION_SCHEMA },
+          format: { type: "json_schema", schema: MATCHING_SCHEMA },
         },
       });
 
       if (response.stop_reason !== "end_turn") {
-        throw new Error(`Query generation incomplete: stop_reason was "${response.stop_reason}"`);
+        throw new Error(`Matching incomplete: stop_reason was "${response.stop_reason}"`);
       }
 
       const textBlock = response.content.find((block) => block.type === "text");
       if (!textBlock || textBlock.type !== "text") {
-        throw new Error("No text content in query generation response");
+        throw new Error("No text content in matching response");
       }
 
-      const parsed = QueryGenerationSchema.parse(JSON.parse(textBlock.text));
-      return parsed.queries;
+      const parsed = MatchingResultSchema.parse(JSON.parse(textBlock.text));
+      return parsed.matches;
     } catch (error) {
       const isRateLimit =
         error instanceof Anthropic.RateLimitError ||
         (error instanceof Error && error.message.includes("429"));
       if (isRateLimit && attempt === 0) {
-        // Wait 2s and retry once
         await new Promise((resolve) => setTimeout(resolve, 2000));
         continue;
       }
@@ -306,85 +229,127 @@ Total email time: ${estimatedHoursPerWeek.toFixed(1)} hours/week`;
     }
   }
 
-  // Should not reach here, but TypeScript needs it
-  throw new Error("Query generation exhausted retries");
-}
-
-function generateFallbackQueries(highTimeCategories: CategoryBreakdownItem[]): GeneratedQuery[] {
-  const queries: GeneratedQuery[] = [];
-  for (const cat of highTimeCategories) {
-    const fallback = FALLBACK_QUERIES[cat.category];
-    if (fallback) {
-      queries.push(...fallback);
-    }
-  }
-  // Add attachment-focused query if data suggests high attachment work
-  return queries;
+  throw new Error("Skill matching exhausted retries");
 }
 
 // ---------------------------------------------------------------------------
-// Search and ranking (Phase 2)
+// Keyword fallback (no AI)
+// ---------------------------------------------------------------------------
+
+function fallbackKeywordMatch(
+  skillCatalog: SkillCatalogEntry[],
+  workContext: WorkContext
+): SkillRecommendation[] {
+  // Collect keywords from work signals
+  const keywords = new Set<string>();
+
+  for (const subject of workContext.uniqueSentSubjects.slice(0, 20)) {
+    for (const word of subject.toLowerCase().split(/[\s/\-_,;:!?()[\]{}"']+/)) {
+      if (word.length >= 4) keywords.add(word);
+    }
+  }
+  for (const thread of workContext.activeThreads) {
+    for (const word of thread.subject.toLowerCase().split(/[\s/\-_,;:!?()[\]{}"']+/)) {
+      if (word.length >= 4) keywords.add(word);
+    }
+  }
+  for (const tool of workContext.toolDomains) {
+    keywords.add(tool.tool.toLowerCase());
+  }
+
+  // Score each skill by keyword overlap
+  const scored = skillCatalog.map((skill) => {
+    const searchText =
+      `${skill.name} ${skill.description} ${(skill.tags || []).join(" ")}`.toLowerCase();
+    let score = 0;
+    for (const keyword of keywords) {
+      if (searchText.includes(keyword)) score++;
+    }
+    return { skill, score };
+  });
+
+  return scored
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map(({ skill, score }) => ({
+      skillId: skill.id,
+      name: skill.name,
+      slug: skill.slug,
+      description: skill.description,
+      category: skill.category,
+      hoursSaved: skill.hoursSaved,
+      totalUses: skill.totalUses,
+      averageRating: skill.averageRating,
+      matchedCategories: [],
+      projectedWeeklySavings: Math.min(score * 0.5, 4),
+      personalizedReason: "Keyword match based on your work topics",
+    }));
+}
+
+// ---------------------------------------------------------------------------
+// Main export
 // ---------------------------------------------------------------------------
 
 /**
- * Execute hybrid search for each query, deduplicate results, and rank by
- * projected weekly time savings.
+ * Generate personalized skill recommendations based on work activity.
+ *
+ * @param userId - Current user ID
+ * @param tenantId - Current tenant ID
+ * @param workContext - Work context extracted from email metadata
+ * @returns Top 5-8 skill recommendations ranked by projected time savings
  */
-async function searchAndRankSkills(
-  queries: GeneratedQuery[],
+export async function generateSkillRecommendations(
   userId: string,
-  categoryBreakdown: CategoryBreakdownItem[]
+  _tenantId: string,
+  workContext: WorkContext
 ): Promise<SkillRecommendation[]> {
-  const skillMap = new Map<
-    string,
-    {
-      skill: SearchSkillResult;
-      matchedQueries: GeneratedQuery[];
-    }
-  >();
+  // 1. Fetch all published skills from DB
+  const publishedSkills = await db!
+    .select({
+      id: skills.id,
+      name: skills.name,
+      slug: skills.slug,
+      description: skills.description,
+      category: skills.category,
+      tags: skills.tags,
+      totalUses: skills.totalUses,
+      averageRating: skills.averageRating,
+      hoursSaved: skills.hoursSaved,
+    })
+    .from(skills)
+    .where(eq(skills.status, "published"));
 
-  for (const query of queries) {
-    const results = await searchSkills({
-      query: query.searchQuery,
-      userId,
-    });
-
-    for (const skill of results.slice(0, 10)) {
-      if (!skillMap.has(skill.id)) {
-        skillMap.set(skill.id, {
-          skill,
-          matchedQueries: [],
-        });
-      }
-      skillMap.get(skill.id)!.matchedQueries.push(query);
-    }
+  if (publishedSkills.length === 0) {
+    return [];
   }
 
+  // 2. Check if we have meaningful work signals
+  const hasWorkSignals =
+    workContext.uniqueSentSubjects.length > 0 ||
+    workContext.activeThreads.length > 0 ||
+    workContext.toolDomains.length > 0;
+
+  if (!hasWorkSignals) {
+    return [];
+  }
+
+  // 3. Try AI matching, fall back to keyword matching
+  let aiMatches: AIMatchResult[] | null = null;
+  try {
+    aiMatches = await matchSkillsWithAI(publishedSkills, workContext);
+  } catch (error) {
+    console.warn("AI skill matching failed, using keyword fallback:", error);
+    return fallbackKeywordMatch(publishedSkills, workContext);
+  }
+
+  // 4. Hydrate AI matches with full skill data
+  const skillMap = new Map(publishedSkills.map((s) => [s.id, s]));
   const recommendations: SkillRecommendation[] = [];
 
-  for (const [_skillId, { skill, matchedQueries }] of skillMap.entries()) {
-    const matchedCategories = Array.from(new Set(matchedQueries.map((q) => q.emailCategory)));
-
-    const categoryTimeHours = matchedCategories.reduce((sum, categoryName) => {
-      const cat = categoryBreakdown.find((c) => c.category === categoryName);
-      return sum + (cat ? cat.estimatedMinutes / 60 : 0);
-    }, 0);
-
-    const avgSavingsPercent =
-      matchedQueries.reduce((sum, q) => sum + q.estimatedTimeSavings, 0) /
-      matchedQueries.length /
-      100;
-
-    const projectedWeeklySavings = categoryTimeHours * avgSavingsPercent;
-
-    const categoriesText =
-      matchedCategories.length === 1
-        ? matchedCategories[0]
-        : matchedCategories.length === 2
-          ? `${matchedCategories[0]} and ${matchedCategories[1]}`
-          : `${matchedCategories.slice(0, -1).join(", ")}, and ${matchedCategories[matchedCategories.length - 1]}`;
-
-    const personalizedReason = `You spend time on ${categoriesText} — this skill could automate that and save ~${projectedWeeklySavings.toFixed(1)} hrs/week`;
+  for (const match of aiMatches) {
+    const skill = skillMap.get(match.skillId);
+    if (!skill) continue;
 
     recommendations.push({
       skillId: skill.id,
@@ -395,51 +360,13 @@ async function searchAndRankSkills(
       hoursSaved: skill.hoursSaved,
       totalUses: skill.totalUses,
       averageRating: skill.averageRating,
-      matchedCategories,
-      projectedWeeklySavings,
-      personalizedReason,
+      matchedCategories: [],
+      projectedWeeklySavings: match.estimatedWeeklySavings,
+      personalizedReason: match.matchReason,
     });
   }
 
   return recommendations
     .sort((a, b) => b.projectedWeeklySavings - a.projectedWeeklySavings)
-    .slice(0, 5);
-}
-
-// ---------------------------------------------------------------------------
-// Main export
-// ---------------------------------------------------------------------------
-
-/**
- * Generate personalized skill recommendations based on email diagnostic data.
- *
- * @param categoryBreakdown - Email category statistics from diagnostic scan
- * @param estimatedHoursPerWeek - Total email time per week (in hours, not tenths)
- * @param userId - Current user ID for search visibility
- * @param _tenantId - Current tenant ID (for future multi-tenant support)
- * @param workContext - Optional work context extracted from email metadata
- * @returns Top 5 skill recommendations ranked by projected time savings
- */
-export async function generateSkillRecommendations(
-  categoryBreakdown: CategoryBreakdownItem[],
-  estimatedHoursPerWeek: number,
-  userId: string,
-  _tenantId: string,
-  workContext?: WorkContext
-): Promise<SkillRecommendation[]> {
-  // Phase 1: Generate search queries using AI (with retry + fallback)
-  const queries = await generateSearchQueries(
-    categoryBreakdown,
-    estimatedHoursPerWeek,
-    workContext
-  );
-
-  if (queries.length === 0) {
-    return [];
-  }
-
-  // Phase 2: Search and rank skills
-  const recommendations = await searchAndRankSkills(queries, userId, categoryBreakdown);
-
-  return recommendations;
+    .slice(0, 8);
 }

@@ -85,7 +85,7 @@ export function RecommendationsSection() {
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-gray-900">Recommended Skills</h2>
         <p className="mt-1 text-sm text-gray-600">
-          Based on your email patterns, these skills could save you time
+          Based on your work activity, these skills could save you time
         </p>
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
