@@ -176,7 +176,7 @@ Total: 17 plans completed. 6 phases, 22 requirements.
 - Integer phases (55, 56, ...): Planned milestone work
 - Decimal phases (55.1, 55.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 55: Schema Foundation & Data Sanitization** - New tables, denormalized columns, and secret-stripping utilities
+- [x] **Phase 55: Schema Foundation & Data Sanitization** - New tables, denormalized columns, and secret-stripping utilities ✅
 - [ ] **Phase 56: In-Claude Feedback Collection** - Thumbs up/down via MCP with smart frequency gating
 - [ ] **Phase 57: Web Feedback & Suggestions** - Structured suggestion form with author review workflow
 - [ ] **Phase 58: Training Data & Golden Dataset** - Author-seeded examples and usage capture with consent
@@ -195,8 +195,8 @@ Total: 17 plans completed. 6 phases, 22 requirements.
   4. A payload sanitization utility detects and strips known secret patterns (API keys, passwords, bearer tokens, connection strings) from arbitrary text input, with unit tests proving it catches common formats
 **Plans:** 2 plans
 Plans:
-- [ ] 55-01-PLAN.md -- Schema files, migrations, relations for all 4 new tables + skills aggregate columns
-- [ ] 55-02-PLAN.md -- Sanitization utility with TDD (secret detection and stripping)
+- [x] 55-01-PLAN.md -- Schema files, migrations, relations for all 4 new tables + skills aggregate columns ✅
+- [x] 55-02-PLAN.md -- Sanitization utility with TDD (secret detection and stripping) ✅
 
 #### Phase 56: In-Claude Feedback Collection
 **Goal**: Users can give thumbs up/down feedback on skills directly in Claude, and feedback sentiment is visible on skill detail pages
@@ -208,7 +208,10 @@ Plans:
   3. The `/api/feedback` endpoint validates incoming feedback with Zod, requires Bearer auth, and enforces rate limiting to prevent abuse
   4. Skill detail pages display feedback sentiment (e.g., "85% positive over last 30 days") derived from aggregated thumbs up/down votes
   5. Feedback trend data (positive/negative ratio over time) is visible in the skill's metrics section
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 56-01-PLAN.md -- DB service, API endpoint, middleware exemption, MCP feedback action handler
+- [ ] 56-02-PLAN.md -- PostToolUse feedback prompt hook + skill detail page sentiment display
 
 #### Phase 57: Web Feedback & Suggestions
 **Goal**: Users can submit structured improvement suggestions on skill pages, and authors can review and act on them
@@ -308,15 +311,15 @@ Phases execute respecting dependencies: 55 -> 56/57/60 (parallel) -> 58/59 (para
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
 | 40-48 | v3.0 | 21/21 | Complete | 2026-02-13 |
 | 49-54 | v4.0 | 17/17 | Complete | 2026-02-14 |
-| 55. Schema Foundation | v5.0 | 0/TBD | Not started | - |
-| 56. In-Claude Feedback | v5.0 | 0/TBD | Not started | - |
+| 55. Schema Foundation | v5.0 | 2/2 | Complete | 2026-02-15 |
+| 56. In-Claude Feedback | v5.0 | 0/2 | Planned | - |
 | 57. Web Suggestions | v5.0 | 0/TBD | Not started | - |
 | 58. Training Data | v5.0 | 0/TBD | Not started | - |
 | 59. Suggestion-to-Fork | v5.0 | 0/TBD | Not started | - |
 | 60. Token/Cost Measurement | v5.0 | 0/TBD | Not started | - |
 | 61. Benchmarking Dashboard | v5.0 | 0/TBD | Not started | - |
 
-**Total: 210 plans completed across 54 phases and 9 milestones. v5.0: 0 plans, 0/7 phases complete.**
+**Total: 215 plans completed across 55 phases and 9 milestones. v5.0: 2 plans, 1/7 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
