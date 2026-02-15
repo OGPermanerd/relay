@@ -253,7 +253,10 @@ Plans:
   2. For small changes, author can create a new skill version inline without a full fork, directly from the suggestion view
   3. Accepted suggestions link to the resulting fork or version, providing traceability from feedback to improvement
   4. Suggestion status automatically updates to "implemented" when the linked fork or version is published
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 59-01-PLAN.md -- Schema migration (implementedBySkillId), DB services, Accept & Fork + Apply Inline server actions
+- [ ] 59-02-PLAN.md -- Suggestion card UI buttons + auto-implement hooks in publish flows
 
 #### Phase 60: Token/Cost Measurement
 **Goal**: Every skill execution captures token usage, cost estimate, latency, and model name, with per-skill cost aggregation visible on detail pages
@@ -327,7 +330,7 @@ Phases execute respecting dependencies: 55 -> 56/57/60 (parallel) -> 58/59 (para
 | 56. In-Claude Feedback | v5.0 | 2/2 | Complete | 2026-02-15 |
 | 57. Web Suggestions | v5.0 | 3/3 | Complete | 2026-02-15 |
 | 58. Training Data | v5.0 | 0/3 | Planned | - |
-| 59. Suggestion-to-Fork | v5.0 | 0/TBD | Not started | - |
+| 59. Suggestion-to-Fork | v5.0 | 0/2 | Planned | - |
 | 60. Token/Cost Measurement | v5.0 | 3/3 | Complete | 2026-02-15 |
 | 61. Benchmarking Dashboard | v5.0 | 0/TBD | Not started | - |
 
