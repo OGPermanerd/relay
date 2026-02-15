@@ -95,21 +95,30 @@ Previous milestones:
 - ✓ Search analytics with normalized query tracking and admin dashboard — v3.0
 - ✓ Homepage redesign with AI greeting, compact stats, category tiles, discovery search — v3.0
 
-### Active — v4.0 Gmail Workflow Diagnostic
+### Validated — v4.0 Gmail Workflow Diagnostic
 
-## Current Milestone: v4.0 Gmail Workflow Diagnostic
+- ✓ Gmail connector via separate OAuth flow with encrypted token storage — v4.0
+- ✓ Email pattern analysis with two-pass classification (rule-based + AI) — v4.0
+- ✓ AI-powered skill recommendations matching work activity to skill catalog — v4.0
+- ✓ Diagnostic dashboard with category PieChart, time BarChart, and hero KPIs — v4.0
+- ✓ Deployment plan with ranked adoption sequence and cumulative FTE savings projection — v4.0
+- ✓ Privacy-first: analyze and discard raw metadata, persist only aggregates — v4.0
+- ✓ DEFAULT_TENANT_ID cleanup (tenant resolved from session in all code paths) — v4.0
+- ✓ Semantic search supplement on /skills page via Ollama embeddings — post-v4.0
 
-**Goal:** Transform EverySkill from a passive skill catalog into a proactive workflow advisor — connect to Gmail, analyze email patterns with AI, and recommend skills that save the most time, with a visual dashboard and deployment plan.
+### Active — v5.0 Feedback, Training & Benchmarking
+
+## Current Milestone: v5.0 Feedback, Training & Benchmarking
+
+**Goal:** Close the loop from skill usage to skill improvement — capture feedback in Claude and on web, collect training data from authors and real usage, measure actual token/cost per skill, and show benchmarking dashboards by model.
 
 **Target features:**
-- Gmail connector via extended Google OAuth (readonly scope on existing sign-in)
-- Email pattern analysis (volume, types, response patterns, recurring email categories)
-- AI-powered recommendations — Claude analyzes patterns, matches to existing skills with reasoning
-- Diagnostic dashboard with visual time breakdown showing where time goes
-- Deployment plan with ranked skill recommendations and suggested adoption order
-- Privacy-first: analyze and discard raw data, persist only summary/recommendations
-- DEFAULT_TENANT_ID cleanup (resolve tenant from session in all code paths)
-- General stability hardening
+- In-Claude feedback via MCP hook — smart-frequency thumbs up/down after skill use
+- Web feedback — detailed comments and improvement suggestions on skill pages
+- Suggestion-to-fork pipeline — user suggestions auto-generate draft forks, queued for author review
+- Training data — authors seed golden input/output pairs; real usage captures more (with permission)
+- Token/cost measurement — enhance PostToolUse hook to capture actual token usage per skill run
+- Benchmarking dashboard — per-skill view showing tokens, estimated cost, quality score by model version
 
 ### Validated — Post-v2.0 (ad hoc)
 
@@ -230,4 +239,4 @@ Previous milestones:
 | PNG logo over animated SVG | New brand identity; transparent background works on both light and dark headers | ✓ Good |
 
 ---
-*Last updated: 2026-02-14 — v4.0 milestone started*
+*Last updated: 2026-02-15 — v5.0 milestone started*
