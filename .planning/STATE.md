@@ -65,6 +65,10 @@ v5.0 milestone decisions:
 - Estimate switching cost: look at how many different task types/contexts someone switches between; leverage academic research on optimal focus/switching productivity
 - "How does your brain work" section: sliders for users to adjust how the system calculates most important skills for them (personalized weighting)
 - Boot/seed the database with top skills from open source skills packages (e.g., https://mcpmarket.com/tools/skills/kung-fu-skill-manager) -- curate most valuable skills to populate initial database
+- Skill visibility: expose all 4 levels in upload form (currently only tenant/personal); add ability to change visibility after upload on skill edit/detail page
+- Default skill visibility scope to company-visible (tenant) instead of requiring selection
+- Personal skills recommendation: revisit how skills are ranked for a user given the needs assessment process (operator wizard output should inform ranking)
+- Add ability to rerun the "Operator Skills Wizard" to refresh skills recommendations on demand
 
 ### Blockers/Concerns
 
