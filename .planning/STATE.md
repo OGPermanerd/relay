@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 61 of TBD (Benchmarking Dashboard)
-Plan: 2 of 3 in Phase 61
-Status: Phase 61 Plan 02 complete — benchmark dashboard UI components
-Last activity: 2026-02-15 — Completed 61-02 (server action, BenchmarkTab, CostTrendChart)
+Plan: 3 of 3 in Phase 61 (PHASE COMPLETE)
+Status: Phase 61 COMPLETE — benchmarking dashboard fully integrated into skill detail page
+Last activity: 2026-02-15 — Completed 61-03 (benchmark tab wired into skill detail page)
 
-Progress: [#####################.........] 83% (223/~270 est. plans across all milestones)
+Progress: [#####################.........] 84% (228/~270 est. plans across all milestones)
 
 ## Milestones
 
@@ -32,12 +32,12 @@ Progress: [#####################.........] 83% (223/~270 est. plans across all m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 227
+- Total plans completed: 228
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~11.6 hours
+- Total execution time: ~11.7 hours
 
 **Cumulative:**
-- 227 plans across 61 phases and 9 milestones
+- 228 plans across 61 phases and 9 milestones
 - ~19,700 LOC TypeScript
 - 8 days total development time
 
@@ -101,6 +101,8 @@ v5.0 milestone decisions:
 - Training tab conditionally visible to authors and admins (showTrainingTab prop); form renders only for authors
 - trainingDataCaptureEnabled preserved as hidden field across all 4 admin form sections to prevent settings loss
 - Per-user trainingDataConsent checkbox in preferences page defaults to off
+- Benchmark data reuses existing trainingExamples fetch for hasTrainingExamples boolean (avoids duplicate DB query)
+- Model comparison stats fetched conditionally after Promise.all (depends on run ID from latestBenchmarkRun)
 
 ### Pending Todos
 
@@ -108,7 +110,7 @@ v5.0 milestone decisions:
 - Fix staging discover search without keywords
 - Create aveone tenant and subdomain for staging branding/whitelabeling test
 - Rename skill matching as "Operator Skills Wizard" (better branding)
-- Expand work-activity analysis beyond Gmail: review Google Docs, Slack, and any connected channels
+- Expand work-activity analysis beyond Gmail: review Google Docs, Slack, browser history (Chrome, Safari, Edge), and any connected channels
 - Estimate switching cost: look at how many different task types/contexts someone switches between; leverage academic research on optimal focus/switching productivity
 - "How does your brain work" section: sliders for users to adjust how the system calculates most important skills for them (personalized weighting)
 - Boot/seed the database with top skills from open source skills packages (e.g., https://mcpmarket.com/tools/skills/kung-fu-skill-manager) -- curate most valuable skills to populate initial database
@@ -127,5 +129,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 61 Plan 02 COMPLETE — benchmark dashboard UI (server action + BenchmarkTab + CostTrendChart)
-Resume file: .planning/phases/61-benchmarking-dashboard/61-02-SUMMARY.md
+Stopped at: Phase 61 COMPLETE — benchmarking dashboard fully integrated (all 3 plans shipped)
+Resume file: .planning/phases/61-benchmarking-dashboard/61-03-SUMMARY.md
