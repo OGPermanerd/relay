@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 60 of 61 -- Token/Cost Measurement (Wave 1, parallel with 56/57)
-Plan: 02 of 03 in Phase 60 complete
-Status: In progress -- Plan 60-02 complete, Plans 60-01 and 60-03 remaining
-Last activity: 2026-02-15 -- Completed 60-02: PostToolUse hook transcript parsing for token capture
+Phase: 56 of 61 -- In-Claude Feedback Collection (Wave 1, parallel with 57/60)
+Plan: 01 of 01 in Phase 56 complete
+Status: In progress -- Phase 56 complete, Phases 57 and 60 in parallel
+Last activity: 2026-02-15 -- Completed 56-01: Feedback data service, API endpoint, and MCP action
 
-Progress: [#####################.........] 80% (216/~270 est. plans across all milestones)
+Progress: [#####################.........] 80% (217/~270 est. plans across all milestones)
 
 ## Milestones
 
@@ -32,12 +32,12 @@ Progress: [#####################.........] 80% (216/~270 est. plans across all m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 216
+- Total plans completed: 217
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~10.9 hours
 
 **Cumulative:**
-- 216 plans across 55 phases and 9 milestones
+- 217 plans across 56 phases and 9 milestones
 - ~19,500 LOC TypeScript
 - 8 days total development time
 
@@ -60,6 +60,9 @@ v5.0 milestone decisions:
 - Multi-FK disambiguation with relationName for skill_feedback reviewer vs user relations
 - Portable transcript parsing: tail -n 100 + jq select + tail -1 (no tac for macOS compatibility)
 - Token fields optional in hook payload -- omitted when transcript unavailable (not defaulted to 0)
+- MCP feedback handler uses inline aggregate recalculation (same SQL as DB service) for direct DB access
+- MCP comment sanitization: simple trim+truncate (cannot import web app's sanitizePayload); API uses full sanitizePayload
+- trackUsage with skipIncrement:true for feedback (don't inflate skill totalUses)
 
 ### Pending Todos
 
@@ -86,5 +89,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Plan 60-02 COMPLETE -- Plans 60-01, 60-03 remaining; Phases 56, 57 in parallel
-Resume file: .planning/phases/60-token-cost-measurement/60-02-SUMMARY.md
+Stopped at: Phase 56 COMPLETE (Plan 56-01) -- Phases 57 and 60 in parallel
+Resume file: .planning/phases/56-in-claude-feedback-collection/56-01-SUMMARY.md
