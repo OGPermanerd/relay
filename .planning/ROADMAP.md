@@ -261,7 +261,11 @@ Plans:
   3. Latency (ms) is tracked per skill execution alongside token data
   4. The `/api/track` endpoint accepts optional `token_count`, `model_name`, and `latency_ms` fields in a backward-compatible extension of the existing payload schema
   5. Skill detail pages display per-skill cost aggregation (average cost per use, total estimated cost) derived from the token_measurements table
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 60-01-PLAN.md -- Pricing table, token measurement DB service, /api/track extension
+- [ ] 60-02-PLAN.md -- PostToolUse hook transcript parsing for token/model capture
+- [ ] 60-03-PLAN.md -- Skill detail page cost aggregation display
 
 #### Phase 61: Benchmarking Dashboard
 **Goal**: Each skill has a "Benchmark" tab showing cost, token, quality, and feedback metrics with model comparison and staleness detection
@@ -320,7 +324,7 @@ Phases execute respecting dependencies: 55 -> 56/57/60 (parallel) -> 58/59 (para
 | 57. Web Suggestions | v5.0 | 0/3 | Planned | - |
 | 58. Training Data | v5.0 | 0/TBD | Not started | - |
 | 59. Suggestion-to-Fork | v5.0 | 0/TBD | Not started | - |
-| 60. Token/Cost Measurement | v5.0 | 0/TBD | Not started | - |
+| 60. Token/Cost Measurement | v5.0 | 0/3 | Planned | - |
 | 61. Benchmarking Dashboard | v5.0 | 0/TBD | Not started | - |
 
 **Total: 215 plans completed across 55 phases and 9 milestones. v5.0: 2 plans, 1/7 phases complete.**
