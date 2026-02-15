@@ -4,15 +4,15 @@
 
 See: .planning/PROJECT.md (updated 2026-02-15)
 
-**Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v5.0 COMPLETE — all 7 phases shipped
+**Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
+**Current focus:** v6.0 IP Dashboard & Skills Portfolio — defining requirements
 
 ## Current Position
 
-Phase: 61 of 61 — v5.0 COMPLETE
-Plan: All plans complete across all phases
-Status: v5.0 Feedback, Training & Benchmarking — SHIPPED
-Last activity: 2026-02-15 — Completed all 7 phases (55-61), 16 plans, ~50 commits
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements for v6.0
+Last activity: 2026-02-15 — Milestone v6.0 started
 
 Progress: [##########################....] 85% (228/~270 est. plans across all milestones)
 
@@ -28,6 +28,7 @@ Progress: [##########################....] 85% (228/~270 est. plans across all m
 - v3.0 AI Discovery & Workflow Intelligence - 21 plans - shipped 2026-02-13
 - v4.0 Gmail Workflow Diagnostic - 17 plans - shipped 2026-02-14
 - v5.0 Feedback, Training & Benchmarking - 7/7 phases - shipped 2026-02-15
+- v6.0 IP Dashboard & Skills Portfolio - defining requirements
 
 ## Performance Metrics
 
@@ -129,5 +130,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: v5.0 COMPLETE — all 7 phases (55-61) shipped with 16 plans
-Resume file: .planning/ROADMAP.md
+Stopped at: v6.0 milestone started — defining requirements
+Resume file: .planning/MILESTONE-CONTEXT.md

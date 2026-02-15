@@ -1,31 +1,36 @@
-# Relay
+# EverySkill
 
 ## What This Is
 
-Relay is an internal skill marketplace where Claude skills, prompts, workflows, and agent configurations are discovered, deployed, and collectively improved. Think Apple App Store polish with wiki-style contribution — anyone can add versions to any skill, and metrics (usage, ratings, FTE Days Saved) surface quality organically. Skills are living documents that get more valuable as the org iterates on them.
+EverySkill is an AI skills platform that turns scattered prompts, workflows, and agent configurations into managed, measurable intellectual property. Built on four architectural layers:
+
+1. **Smart Skills Database** — A multi-tenant, privacy-scoped repository that analyzes your work patterns to surface the skills that will have the most impact on what you're actually doing.
+2. **IP Stewardship & High Velocity Growth** — Protect and grow your IP. Fast. Tracks usage, measures quality, captures feedback, collects training data, benchmarks across models, and channels improvement suggestions back into skills.
+3. **AI Independence** — Skills are portable text, training data is model-agnostic, and benchmarking compares models head-to-head. No lock-in to any single AI provider.
+4. **Universally Integrated Access** — Low friction equals adoption. Skills are accessible wherever you work — browser, prompt, code, or API — with zero context switching.
 
 ## Core Value
 
-Skills get better as they pass through more hands, with real metrics proving that value.
+Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value — and the IP is protected for both companies and individuals.
 
 ## Current State
 
-**v3.0 shipped 2026-02-13** — AI discovery, hybrid search, Loom video, MCP unification, user preferences, admin global skills, search analytics, homepage redesign.
+**v5.0 shipped 2026-02-15** — Feedback loops, training data, benchmarking, token/cost measurement.
 
-**Post-v3.0 (2026-02-14):** Homepage dynamic greeting, skills table reorder (Days Saved), install flow improvements (claude:// deep link, admin download toggle, download tracking), staging smoke tests.
+Tech stack: Next.js 16.1.6, PostgreSQL 16, Drizzle ORM, Auth.js v5, MCP SDK, Anthropic SDK, Ollama, pgvector, Recharts, Playwright
+LOC: ~50,000 TypeScript across 386 files
 
-Tech stack: Next.js 16.1.6, PostgreSQL, Drizzle ORM, Auth.js v5, MCP SDK, mcp-handler, Playwright, vitest, nuqs, react-swipeable, Recharts, Voyage AI, pgvector, Anthropic SDK, Ollama (nomic-embed-text)
-LOC: ~18,000 TypeScript across 350+ files
-
-Previous milestones:
+Milestones:
+- v5.0 shipped 2026-02-15 — Feedback, training data, benchmarking, cost measurement
+- v4.0 shipped 2026-02-14 — Gmail workflow diagnostic, work-activity skill recommendations
 - v3.0 shipped 2026-02-13 — AI discovery, hybrid search, homepage redesign, user preferences
 - v2.0 shipped 2026-02-08 — Quality-gated publishing, conversational MCP, fork drift detection
 - v1.5 shipped 2026-02-08 — Production deployment, multi-tenancy, RBAC, branding, email notifications
 - v1.4 shipped 2026-02-06 — Employee analytics, remote MCP, extended search
-- v1.3 shipped 2026-02-04 — AI-driven skill review, semantic similarity, fork-based versioning, cross-platform install
-- v1.2 shipped 2026-02-02 — Two-panel UI redesign with sortable table, inline expansion, keyboard navigation
-- v1.1 shipped 2026-02-01 — Quality scorecards and comprehensive E2E test coverage
-- v1.0 shipped 2026-01-31 — Full internal skill marketplace with MCP integration
+- v1.3 shipped 2026-02-04 — AI review, semantic similarity, forking, cross-platform install
+- v1.2 shipped 2026-02-02 — Two-panel UI redesign, keyboard navigation
+- v1.1 shipped 2026-02-01 — Quality scorecards, E2E test coverage
+- v1.0 shipped 2026-01-31 — MVP: skill CRUD, MCP integration, search, ratings
 
 ## Requirements
 
@@ -106,19 +111,30 @@ Previous milestones:
 - ✓ DEFAULT_TENANT_ID cleanup (tenant resolved from session in all code paths) — v4.0
 - ✓ Semantic search supplement on /skills page via Ollama embeddings — post-v4.0
 
-### Active — v5.0 Feedback, Training & Benchmarking
+### Validated — v5.0 Feedback, Training & Benchmarking
 
-## Current Milestone: v5.0 Feedback, Training & Benchmarking
+- ✓ In-Claude feedback via MCP with smart frequency gating (first 3 uses, then every 10th) — v5.0
+- ✓ Web feedback with thumbs up/down, comments, and aggregated sentiment trends — v5.0
+- ✓ Structured suggestion form with category, severity, and author review workflow — v5.0
+- ✓ Suggestion-to-fork pipeline with Accept & Fork, Apply Inline, and auto-implement on publish — v5.0
+- ✓ Training data with author-seeded golden examples and consent-gated usage capture — v5.0
+- ✓ Token/cost measurement with transcript parsing, static pricing table, and cost StatCards — v5.0
+- ✓ Cross-model benchmarking with blinded AI judge and cost trend visualization — v5.0
+- ✓ Secret detection and sanitization across all user-submitted content — v5.0
 
-**Goal:** Close the loop from skill usage to skill improvement — capture feedback in Claude and on web, collect training data from authors and real usage, measure actual token/cost per skill, and show benchmarking dashboards by model.
+### Active — v6.0 IP Dashboard & Skills Portfolio
+
+## Current Milestone: v6.0 IP Dashboard & Skills Portfolio
+
+**Goal:** Make the IP stewardship value proposition tangible — give companies an IP dashboard showing what they've captured and what's at risk, and give individuals a skills portfolio showing their contributions and portable IP.
 
 **Target features:**
-- In-Claude feedback via MCP hook — smart-frequency thumbs up/down after skill use
-- Web feedback — detailed comments and improvement suggestions on skill pages
-- Suggestion-to-fork pipeline — user suggestions auto-generate draft forks, queued for author review
-- Training data — authors seed golden input/output pairs; real usage captures more (with permission)
-- Token/cost measurement — enhance PostToolUse hook to capture actual token usage per skill run
-- Benchmarking dashboard — per-skill view showing tokens, estimated cost, quality score by model version
+- Company IP Dashboard with total skills captured, hours saved, estimated replacement cost, IP concentration risk
+- Individual Skills Portfolio showing personal contributions, usage metrics, portable vs company IP
+- IP Value Estimation quantifying what it would cost to recreate skills from scratch
+- Org-wide quality trends over time (are our skills getting better?)
+- IP risk alerts for key person dependency (skills with single author and high usage)
+- IP Report export (PDF/CSV) for board presentations
 
 ### Validated — Post-v2.0 (ad hoc)
 
@@ -166,24 +182,27 @@ Previous milestones:
 
 ## Context
 
-**The "Relay" concept:** Skills are passed like a baton from person to person, each handoff making them better. This relays institutional knowledge across the org while continuously improving the tools themselves.
+**IP protection — bidirectional:** Companies need institutional knowledge to survive employee turnover. Employees need their personal expertise to be portable. EverySkill solves both: tenant-scoped skills capture company IP that stays when people leave; personal-scoped skills belong to the creator regardless of employer.
 
-**MCP is the tracking backbone:** Usage metrics only work for skills deployed through the MCP integration. Skills downloaded and used manually are invisible to the system. This creates strong incentive for MCP adoption.
+**The feedback loop is the engine:** Use → Track → Feedback → Suggestion → Fork → Improved skill → More use. This continuous improvement cycle is what makes skills living assets rather than static documents. Every layer reinforces this loop.
+
+**MCP is the tracking backbone:** Usage metrics only work for skills deployed through the MCP integration. Skills downloaded and used manually are invisible to the system. This creates strong incentive for MCP adoption and enables the feedback loop.
 
 **Metrics-driven quality:** No gatekeeping on contributions. Anyone can publish a new version to any skill. Bad versions get low ratings and usage; good ones rise. The numbers do the talking.
 
-**FTE Days Saved is the core metric:** This is the primary measure of Relay's value to the organization. It's calculated per-version and aggregated across the platform. Creator provides initial estimate (or asks Relay to estimate), but user-submitted estimates from reviews take precedence once available.
+**FTE Days Saved is the core metric:** Primary measure of value to the organization. Calculated per-version and aggregated across the platform. Creator provides initial estimate, but user-submitted estimates from reviews take precedence.
 
 **Scale:** Enterprise-wide rollout targeting 500+ users in year one. Multi-tenant architecture enables multiple organizations to run isolated instances on shared infrastructure.
 
-**Reliable usage tracking:** The honor-system `log_skill_usage` MCP tool is insufficient. v1.5 introduces deterministic tracking via Claude Code hooks embedded in a mandatory compliance skill and auto-injected into deployed skill files. Hooks fire PostToolUse callbacks to the production tracking endpoint.
+**AI Independence:** Skills are markdown text, training data is input/output pairs, benchmarking evaluates across models. When the next AI platform arrives, skills and their quality data transfer — no vendor lock-in.
 
 ## Constraints
 
-- **Tech stack**: Next.js 15, PostgreSQL, Drizzle ORM, Auth.js v5 — established in v1.0
+- **Tech stack**: Next.js 16, PostgreSQL 16, Drizzle ORM, Auth.js v5 — established in v1.0, evolved through 10 milestones
 - **Authentication**: Google Workspace SSO only, domain maps to tenant — no public registration
-- **MCP compatibility**: Must work with Claude Code's MCP server architecture
+- **MCP compatibility**: Must work with Claude Code's MCP server architecture (stdio + HTTP transports)
 - **Skill format flexibility**: System must handle heterogeneous skill types without forcing a single format
+- **Privacy-first**: Raw behavioral data (emails, browsing) analyzed and discarded; only aggregates persisted
 
 ## Key Decisions
 
@@ -239,4 +258,4 @@ Previous milestones:
 | PNG logo over animated SVG | New brand identity; transparent background works on both light and dark headers | ✓ Good |
 
 ---
-*Last updated: 2026-02-15 — v5.0 milestone started*
+*Last updated: 2026-02-15 — v5.0 shipped, 4-layer architecture documented*
