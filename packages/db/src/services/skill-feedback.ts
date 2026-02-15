@@ -114,6 +114,8 @@ export interface SuggestionWithUser {
   severity: string | null;
   status: string;
   implementedBySkillId: string | null;
+  implementedBySkillSlug: string | null;
+  implementedBySkillName: string | null;
   reviewNotes: string | null;
   reviewedBy: string | null;
   reviewedAt: Date | null;
@@ -162,6 +164,7 @@ export async function getSuggestionsForSkill(skillId: string): Promise<Suggestio
   if (!db) return [];
 
   const reviewerAlias = alias(users, "reviewer");
+  const implementedSkillAlias = alias(skills, "implementedSkill");
 
   const rows = await db
     .select({
@@ -172,6 +175,8 @@ export async function getSuggestionsForSkill(skillId: string): Promise<Suggestio
       suggestedDiff: skillFeedback.suggestedDiff,
       status: skillFeedback.status,
       implementedBySkillId: skillFeedback.implementedBySkillId,
+      implementedBySkillSlug: implementedSkillAlias.slug,
+      implementedBySkillName: implementedSkillAlias.name,
       reviewNotes: skillFeedback.reviewNotes,
       reviewedBy: skillFeedback.reviewedBy,
       reviewedAt: skillFeedback.reviewedAt,
@@ -183,6 +188,10 @@ export async function getSuggestionsForSkill(skillId: string): Promise<Suggestio
     .from(skillFeedback)
     .leftJoin(users, eq(skillFeedback.userId, users.id))
     .leftJoin(reviewerAlias, eq(skillFeedback.reviewedBy, reviewerAlias.id))
+    .leftJoin(
+      implementedSkillAlias,
+      eq(skillFeedback.implementedBySkillId, implementedSkillAlias.id)
+    )
     .where(
       sql`${skillFeedback.skillId} = ${skillId} AND ${skillFeedback.feedbackType} = 'suggestion'`
     )
@@ -210,6 +219,8 @@ export async function getSuggestionsForSkill(skillId: string): Promise<Suggestio
       severity,
       status: row.status,
       implementedBySkillId: row.implementedBySkillId,
+      implementedBySkillSlug: row.implementedBySkillSlug ?? null,
+      implementedBySkillName: row.implementedBySkillName ?? null,
       reviewNotes: row.reviewNotes,
       reviewedBy: row.reviewedBy,
       reviewedAt: row.reviewedAt,

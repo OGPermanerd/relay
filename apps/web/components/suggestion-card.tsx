@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateSuggestionStatus, replySuggestion } from "@/app/actions/skill-feedback";
+import {
+  updateSuggestionStatus,
+  replySuggestion,
+  acceptAndForkSuggestion,
+  applyInlineSuggestion,
+} from "@/app/actions/skill-feedback";
+import Link from "next/link";
 
 // =============================================================================
 // Constants
@@ -56,6 +62,9 @@ export interface SuggestionCardData {
   category: string;
   severity: string;
   status: string;
+  implementedBySkillId: string | null;
+  implementedBySkillSlug: string | null;
+  implementedBySkillName: string | null;
   reviewNotes: string | null;
   reviewedAt: string | null;
   createdAt: string;
@@ -166,6 +175,41 @@ export function SuggestionCard({ suggestion, isAuthor, skillSlug }: SuggestionCa
     }
   }
 
+  async function handleAcceptAndFork() {
+    setPending("fork");
+    setError(null);
+    try {
+      const result = await acceptAndForkSuggestion(suggestion.id);
+      if (result?.error) {
+        setError(result.error);
+      }
+      // If successful, the server action calls redirect() which navigates away
+    } catch (e) {
+      // Re-throw Next.js redirect signals (they use a special digest property)
+      if (typeof e === "object" && e !== null && "digest" in e) throw e;
+      setError("An unexpected error occurred");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  async function handleApplyInline() {
+    setPending("inline");
+    setError(null);
+    try {
+      const result = await applyInlineSuggestion(suggestion.id);
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError("An unexpected error occurred");
+    } finally {
+      setPending(null);
+    }
+  }
+
   // ------------------------------------------
   // Render
   // ------------------------------------------
@@ -231,6 +275,19 @@ export function SuggestionCard({ suggestion, isAuthor, skillSlug }: SuggestionCa
         </div>
       )}
 
+      {/* Traceability: link to implemented fork/skill */}
+      {suggestion.implementedBySkillId && suggestion.implementedBySkillSlug && (
+        <div className="mb-3 flex items-center gap-2 text-sm">
+          <span className="text-gray-500">Implemented in:</span>
+          <Link
+            href={`/skills/${suggestion.implementedBySkillSlug}`}
+            className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+          >
+            {suggestion.implementedBySkillName || "View Skill"}
+          </Link>
+        </div>
+      )}
+
       {/* Error display */}
       {error && (
         <div className="mb-3 rounded-md bg-red-50 border border-red-200 px-3 py-2">
@@ -245,12 +302,21 @@ export function SuggestionCard({ suggestion, isAuthor, skillSlug }: SuggestionCa
           {status === "pending" && (
             <>
               <button
-                onClick={() => handleStatusUpdate("accepted")}
+                onClick={handleAcceptAndFork}
                 disabled={pending !== null}
                 className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {pending === "accepted" ? "Accepting..." : "Accept"}
+                {pending === "fork" ? "Forking..." : "Accept & Fork"}
               </button>
+              {suggestion.suggestedContent && (
+                <button
+                  onClick={handleApplyInline}
+                  disabled={pending !== null}
+                  className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {pending === "inline" ? "Applying..." : "Apply Inline"}
+                </button>
+              )}
               <button
                 onClick={() => handleStatusUpdate("dismissed")}
                 disabled={pending !== null}
@@ -271,6 +337,22 @@ export function SuggestionCard({ suggestion, isAuthor, skillSlug }: SuggestionCa
           {/* Accepted status actions */}
           {status === "accepted" && (
             <>
+              <button
+                onClick={handleAcceptAndFork}
+                disabled={pending !== null}
+                className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {pending === "fork" ? "Forking..." : "Accept & Fork"}
+              </button>
+              {suggestion.suggestedContent && (
+                <button
+                  onClick={handleApplyInline}
+                  disabled={pending !== null}
+                  className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {pending === "inline" ? "Applying..." : "Apply Inline"}
+                </button>
+              )}
               <button
                 onClick={() => handleStatusUpdate("implemented")}
                 disabled={pending !== null}
