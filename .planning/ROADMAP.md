@@ -11,6 +11,7 @@
 - ✅ **v2.0 Skill Ecosystem** - Phases 34-39 (shipped 2026-02-08)
 - ✅ **v3.0 AI Discovery & Workflow Intelligence** - Phases 40-48 (shipped 2026-02-13)
 - ✅ **v4.0 Gmail Workflow Diagnostic** - Phases 49-54 (shipped 2026-02-14)
+- 🚧 **v5.0 Feedback, Training & Benchmarking** - Phases 55-61 (in progress)
 
 ## Phases
 
@@ -150,134 +151,148 @@ Total: 21 plans completed. 9 phases, 26 requirements.
 
 </details>
 
-### ✅ v4.0 Gmail Workflow Diagnostic (Shipped 2026-02-14)
+<details>
+<summary>✅ v4.0 Gmail Workflow Diagnostic (Phases 49-54) - SHIPPED 2026-02-14</summary>
 
-**Milestone Goal:** Transform EverySkill from a passive skill catalog into a proactive workflow advisor -- connect to Gmail, analyze email patterns with AI, and recommend skills that save the most time, with a visual dashboard and deployment plan. Privacy-first: analyze and discard raw data, persist only aggregates.
+See archived roadmap: .planning/milestones/v4.0-ROADMAP.md
+
+**Summary:**
+- Phase 49: Tenant Resolution Cleanup (3 plans)
+- Phase 50: Gmail OAuth Infrastructure (3 plans)
+- Phase 51: Email Analysis Pipeline (5 plans)
+- Phase 52: Diagnostic Dashboard (2 plans)
+- Phase 53: Skill Recommendations (2 plans)
+- Phase 54: Deployment Plan (2 plans)
+
+Total: 17 plans completed. 6 phases, 22 requirements.
+
+</details>
+
+### 🚧 v5.0 Feedback, Training & Benchmarking (In Progress)
+
+**Milestone Goal:** Close the loop from skill usage to skill improvement -- capture feedback in Claude and on web, collect training data from authors and real usage, measure actual token/cost per skill, and show benchmarking dashboards by model.
 
 **Phase Numbering:**
-- Integer phases (49, 50, ...): Planned milestone work
-- Decimal phases (49.1, 49.2): Urgent insertions (marked with INSERTED)
+- Integer phases (55, 56, ...): Planned milestone work
+- Decimal phases (55.1, 55.2): Urgent insertions (marked with INSERTED)
 
-- [x] **Phase 49: Tenant Resolution Cleanup** - Eliminate DEFAULT_TENANT_ID hardcoding across codebase
-- [x] **Phase 50: Gmail OAuth Infrastructure** - Separate OAuth flow for Gmail with encrypted token storage
-- [x] **Phase 51: Email Analysis Pipeline** - Fetch, classify, and aggregate 90 days of email metadata
-- [x] **Phase 52: Diagnostic Dashboard** - Visual email time breakdown with charts and KPIs
-- [x] **Phase 53: Skill Recommendations** - AI-powered skill matching based on email patterns
-- [x] **Phase 54: Deployment Plan** - Ranked adoption sequence with projected time savings
+- [ ] **Phase 55: Schema Foundation & Data Sanitization** - New tables, denormalized columns, and secret-stripping utilities
+- [ ] **Phase 56: In-Claude Feedback Collection** - Thumbs up/down via MCP with smart frequency gating
+- [ ] **Phase 57: Web Feedback & Suggestions** - Structured suggestion form with author review workflow
+- [ ] **Phase 58: Training Data & Golden Dataset** - Author-seeded examples and usage capture with consent
+- [ ] **Phase 59: Suggestion-to-Fork Pipeline** - Accepted suggestions become forks or inline versions
+- [ ] **Phase 60: Token/Cost Measurement** - Capture tokens, cost, latency, and model per skill execution
+- [ ] **Phase 61: Benchmarking Dashboard** - Per-skill benchmark tab with charts, model comparison, and staleness detection
 
-#### Phase 49: Tenant Resolution Cleanup
-**Goal**: All code paths resolve tenant from the authenticated session, eliminating the hardcoded DEFAULT_TENANT_ID constant
-**Depends on**: Nothing (foundation cleanup, must precede new tables)
-**Requirements**: CLEAN-01
+#### Phase 55: Schema Foundation & Data Sanitization
+**Goal**: All new database tables exist with proper multi-tenancy, and a sanitization utility prevents secrets from entering feedback and tracking data
+**Depends on**: Nothing (foundation for all v5.0 work)
+**Requirements**: SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, SCHEMA-05, SCHEMA-06, SCHEMA-07
 **Success Criteria** (what must be TRUE):
-  1. No code path references the DEFAULT_TENANT_ID constant for runtime tenant resolution -- every query, insert, and filter derives tenant from the user session
-  2. All existing functionality (skills CRUD, search, analytics, MCP, admin) continues working identically after the change -- no regressions in E2E tests
-  3. A new user signing in for the first time is correctly assigned to a tenant via the existing domain-to-tenant mapping without any hardcoded fallback
-**Plans:** 3 plans
-Plans:
-- [x] 49-01-PLAN.md -- Test infrastructure + utility function signature changes
-- [x] 49-02-PLAN.md -- Server actions + server components + DB service tenant resolution
-- [x] 49-03-PLAN.md -- MCP tools + API routes tenant resolution
+  1. The `skill_feedback`, `token_measurements`, `benchmark_runs`, and `benchmark_results` tables exist in the database with proper indexes, foreign keys, and TypeScript types exported from the schema package
+  2. The `skills` table has new denormalized columns (`total_feedback`, `positive_feedback_pct`, `avg_token_cost_microcents`) that default to zero and are queryable
+  3. All new tables include `tenant_id` NOT NULL with RLS policies following the established multi-tenancy pattern from Phase 25
+  4. A payload sanitization utility detects and strips known secret patterns (API keys, passwords, bearer tokens, connection strings) from arbitrary text input, with unit tests proving it catches common formats
+**Plans**: TBD
 
-#### Phase 50: Gmail OAuth Infrastructure
-**Goal**: Users can securely connect and disconnect their Gmail account via a dedicated OAuth flow, with encrypted token storage and admin control
-**Depends on**: Phase 49 (tenant resolution must be dynamic before adding new tenant-scoped tables)
-**Requirements**: GMAIL-01, GMAIL-02, GMAIL-03, GMAIL-04, GMAIL-05, GMAIL-06
+#### Phase 56: In-Claude Feedback Collection
+**Goal**: Users can give thumbs up/down feedback on skills directly in Claude, and feedback sentiment is visible on skill detail pages
+**Depends on**: Phase 55 (skill_feedback table must exist)
+**Requirements**: FDBK-01, FDBK-02, FDBK-03, FDBK-04, FDBK-05, FDBK-06
 **Success Criteria** (what must be TRUE):
-  1. User can click "Connect Gmail" on a settings page, complete a Google OAuth consent flow requesting `gmail.readonly` scope, and return to see their Gmail shown as connected
-  2. Gmail OAuth tokens are stored in a dedicated `gmail_tokens` table with AES-256-GCM encryption at rest -- access tokens, refresh tokens, and expiry timestamps are never stored in plaintext
-  3. User can click "Disconnect Gmail" and all tokens are immediately deleted from the database and revoked with Google, with the UI reverting to "not connected" state
-  4. Token refresh happens automatically and race-condition-safely when access tokens expire, so returning users never see auth errors
-  5. Admin can toggle the Gmail diagnostic feature on/off per tenant from the admin panel, and when disabled, the "Connect Gmail" option is hidden for that tenant's users
-**Plans:** 3 plans
-Plans:
-- [x] 50-01-PLAN.md -- Schema, crypto, migration, and gmail token service
-- [x] 50-02-PLAN.md -- OAuth API routes (connect, callback, disconnect, status) and middleware
-- [x] 50-03-PLAN.md -- Settings connections UI and admin toggle
+  1. User can invoke the MCP `feedback` action in Claude (via `everyskill action:feedback`) with a thumbs up/down vote and optional text comment, and the feedback is persisted to the database
+  2. The PostToolUse hook injects `additionalContext` prompting Claude to ask the user for feedback with smart frequency -- on the first 3 uses of a skill, then every 10th use thereafter
+  3. The `/api/feedback` endpoint validates incoming feedback with Zod, requires Bearer auth, and enforces rate limiting to prevent abuse
+  4. Skill detail pages display feedback sentiment (e.g., "85% positive over last 30 days") derived from aggregated thumbs up/down votes
+  5. Feedback trend data (positive/negative ratio over time) is visible in the skill's metrics section
+**Plans**: TBD
 
-#### Phase 51: Email Analysis Pipeline
-**Goal**: The system fetches 90 days of email headers, classifies them into categories using rules and AI, estimates time spent, and stores only anonymous aggregate results
-**Depends on**: Phase 50 (Gmail tokens must exist to make API calls)
-**Requirements**: ANAL-01, ANAL-02, ANAL-03, ANAL-04, ANAL-05, ANAL-06
+#### Phase 57: Web Feedback & Suggestions
+**Goal**: Users can submit structured improvement suggestions on skill pages, and authors can review and act on them
+**Depends on**: Phase 55 (skill_feedback table must exist)
+**Requirements**: SUGGEST-01, SUGGEST-02, SUGGEST-03, SUGGEST-04, SUGGEST-05, SUGGEST-06
 **Success Criteria** (what must be TRUE):
-  1. User can trigger a diagnostic scan that fetches email metadata (From, Subject, Date, List-Unsubscribe headers) for the last 90 days via Gmail API using `gmail.readonly` scope with `format: 'metadata'` -- no email bodies are ever accessed
-  2. Emails are categorized into distinct types (newsletters, notifications, internal threads, external correspondence, meetings, action items) with rule-based classification handling ~70% and Claude AI classifying the remaining ~30% ambiguous emails
-  3. Time estimates are calculated per category using a transparent heuristic model (category-weighted base time multiplied by thread depth and reply factors), producing a total weekly email hours estimate
-  4. After analysis completes, only aggregate statistics (counts, percentages, time estimates per category) are persisted in the database -- raw email metadata is discarded and never written to any persistent storage
-  5. The scan handles large mailboxes gracefully with batched API calls, date-range filtering, sampling for 5000+ message mailboxes, and a progress indicator during the 60-90 second analysis
-**Plans**: 5 plans
-Plans:
-- [x] 51-01-PLAN.md -- Schema and service for email_diagnostics table (aggregate-only storage)
-- [x] 51-02-PLAN.md -- Gmail client: fetch email metadata with batching and pagination
-- [x] 51-03-PLAN.md -- Two-pass email classifier (rule-based + AI)
-- [x] 51-04-PLAN.md -- Time estimator + aggregator + server action orchestrator
-- [x] 51-05-PLAN.md -- Diagnostic card UI with progress indicator
+  1. User can submit an improvement suggestion on any skill detail page, selecting a category (output quality, missing feature, error, performance, other) and severity (nice to have, important, critical)
+  2. Skill author sees a list of pending suggestions on their skill with Accept, Dismiss, and Reply actions
+  3. Suggestion status tracks through a lifecycle (open -> accepted -> dismissed -> implemented) and the current status is visible to both author and suggester
+  4. Author receives a notification when a new suggestion is submitted on their skill
+  5. Suggester receives a notification when their suggestion's status changes (accepted, dismissed, implemented)
+**Plans**: TBD
 
-#### Phase 52: Diagnostic Dashboard
-**Goal**: Users see a visual breakdown of where their email time goes, with clear charts and the ability to re-run the analysis
-**Depends on**: Phase 51 (aggregate diagnostic data must exist to display)
-**Requirements**: DASH-01, DASH-02, DASH-03, DASH-04
+#### Phase 58: Training Data & Golden Dataset
+**Goal**: Authors can seed golden input/output examples for their skills, and real usage can be captured as training data with explicit consent
+**Depends on**: Phase 55 (skill_feedback table with training_example type), Phase 57 (web UI patterns for skill detail page additions)
+**Requirements**: TRAIN-01, TRAIN-02, TRAIN-03, TRAIN-04, TRAIN-05, TRAIN-06
 **Success Criteria** (what must be TRUE):
-  1. Diagnostic dashboard page displays an email category breakdown chart (Recharts PieChart or BarChart) showing the distribution of email types with counts and percentages
-  2. A "screentime"-style time-per-category visualization shows how many hours per week each email category consumes, with the total estimated weekly email hours displayed prominently as a hero KPI
-  3. User can click "Re-run Diagnostic" to trigger a fresh 90-day analysis, and the dashboard updates with the new results, showing the date of the last scan
-**Plans**: 2 plans
-Plans:
-- [x] 52-01-PLAN.md -- Chart components (category PieChart, time BarChart)
-- [x] 52-02-PLAN.md -- Dashboard page + re-run + email-diagnostic-card link
+  1. Author can add golden examples (input/expected_output pairs) on the skill detail page, and they are stored as `feedbackType='training_example'` records in the skill_feedback table
+  2. Real usage data can be captured as training examples when the user has explicitly opted in, with a per-user consent toggle that defaults to off
+  3. All captured training data is run through the sanitization utility before storage, stripping any detected secrets
+  4. The skill detail page displays a training example count, and a tenant-level admin setting controls whether usage-based capture is available for that organization
+**Plans**: TBD
 
-#### Phase 53: Skill Recommendations
-**Goal**: AI analyzes the user's email patterns and recommends specific EverySkill skills that would save them the most time, with personalized reasoning
-**Depends on**: Phase 51 (diagnostic results needed for matching), Phase 52 can run in parallel if files are separate
-**Requirements**: RECO-01, RECO-02, RECO-03
+#### Phase 59: Suggestion-to-Fork Pipeline
+**Goal**: Accepted suggestions flow into concrete skill improvements via forks or inline version updates
+**Depends on**: Phase 57 (suggestions must exist with Accept action)
+**Requirements**: SFORK-01, SFORK-02, SFORK-03, SFORK-04
 **Success Criteria** (what must be TRUE):
-  1. After a diagnostic scan, Claude AI analyzes the user's email category breakdown and generates search queries that map each high-time category to potential skill automation opportunities, using existing hybrid search to find matching skills
-  2. Top 3-5 skill recommendations are displayed with personalized explanations (e.g., "You spend 4.2 hrs/week on newsletters -- this Email Digest skill could automate summarization and save ~3 hrs/week")
-  3. Each recommendation card includes a one-click install button that launches the existing install flow, so users can go from insight to deployment without leaving the diagnostic page
-**Plans**: 2 plans
-Plans:
-- [x] 53-01-PLAN.md -- AI recommendation engine (query generation, search, ranking)
-- [x] 53-02-PLAN.md -- Recommendation UI (cards, section, my-leverage integration)
+  1. Author can click "Accept & Fork" on a suggestion, creating a fork pre-populated with the suggestion context using the existing `forkSkill()` action
+  2. For small changes, author can create a new skill version inline without a full fork, directly from the suggestion view
+  3. Accepted suggestions link to the resulting fork or version, providing traceability from feedback to improvement
+  4. Suggestion status automatically updates to "implemented" when the linked fork or version is published
+**Plans**: TBD
 
-#### Phase 54: Deployment Plan
-**Goal**: Users see a prioritized skill adoption roadmap with projected cumulative time savings
-**Depends on**: Phase 53 (skill recommendations must exist to sequence)
-**Requirements**: PLAN-01, PLAN-02, PLAN-03
+#### Phase 60: Token/Cost Measurement
+**Goal**: Every skill execution captures token usage, cost estimate, latency, and model name, with per-skill cost aggregation visible on detail pages
+**Depends on**: Phase 55 (token_measurements table must exist)
+**Requirements**: TOKEN-01, TOKEN-02, TOKEN-03, TOKEN-04, TOKEN-05, TOKEN-06
 **Success Criteria** (what must be TRUE):
-  1. A ranked skill adoption list orders recommended skills by estimated time savings (highest ROI first), with each entry showing the skill name, matched email category, and projected hours saved per week
-  2. A cumulative FTE Days Saved projection chart (Recharts AreaChart) shows expected savings accumulating over time as each skill is adopted in sequence
-  3. A sequential "start here" adoption order suggests which skill to try first with clear reasoning, guiding users from their biggest time sink to progressively smaller ones
-**Plans:** 2 plans
-Plans:
-- [x] 54-01-PLAN.md -- AreaChart component + deployment plan page + dashboard
-- [x] 54-02-PLAN.md -- Recommendations link + E2E tests
+  1. Token counts (input + output) and model name are captured per skill execution via the PostToolUse hook or transcript parsing, and stored in the `token_measurements` table
+  2. Cost estimation is calculated using a static Anthropic pricing table (model -> $/MTok) and stored as `estimatedCostMicrocents` for aggregation
+  3. Latency (ms) is tracked per skill execution alongside token data
+  4. The `/api/track` endpoint accepts optional `token_count`, `model_name`, and `latency_ms` fields in a backward-compatible extension of the existing payload schema
+  5. Skill detail pages display per-skill cost aggregation (average cost per use, total estimated cost) derived from the token_measurements table
+**Plans**: TBD
+
+#### Phase 61: Benchmarking Dashboard
+**Goal**: Each skill has a "Benchmark" tab showing cost, token, quality, and feedback metrics with model comparison and staleness detection
+**Depends on**: Phase 56 (feedback sentiment data), Phase 60 (token/cost data)
+**Requirements**: BENCH-01, BENCH-02, BENCH-03, BENCH-04, BENCH-05, BENCH-06, BENCH-07, BENCH-08
+**Success Criteria** (what must be TRUE):
+  1. Each skill detail page has a "Benchmark" tab displaying quick stats: average cost, average tokens, quality score, and feedback sentiment
+  2. When multi-model data is available, a model comparison table shows side-by-side metrics (tokens, cost, quality) per model
+  3. A cost trend chart (Recharts AreaChart) shows cost per use over time on the benchmark tab
+  4. Admin can trigger a benchmark run that executes the skill's golden examples across models (Anthropic SDK required, OpenAI and Google AI SDKs optional), with async execution and polling for results
+  5. Benchmark staleness is detected (90-day warning) with a "Re-benchmark" button that triggers a fresh run
+
+**Plans**: TBD
 
 #### Dependency Graph
 
 ```
-Phase 49 (Tenant Cleanup) ──> Phase 50 (Gmail OAuth) ──> Phase 51 (Email Analysis)
-                                                                    │
-                                                          ┌────────┤
-                                                          v        v
-                                                  Phase 52 (Dashboard)  Phase 53 (Recommendations)
-                                                                                  │
-                                                                                  v
-                                                                        Phase 54 (Deployment Plan)
+Phase 55 (Schema Foundation) ──┬──> Phase 56 (In-Claude Feedback) ──────────────┐
+                               │                                                 │
+                               ├──> Phase 57 (Web Suggestions) ──┬──> Phase 58 (Training Data)
+                               │                                 │
+                               │                                 └──> Phase 59 (Suggestion-to-Fork)
+                               │
+                               └──> Phase 60 (Token/Cost Measurement) ──────────┐
+                                                                                │
+                                                                    Phase 61 (Benchmarking Dashboard)
+                                                                    depends on 56 + 60
 ```
 
 **Parallel execution opportunities:**
-- Wave 1: Phase 49 (Tenant Cleanup -- must be first)
-- Wave 2: Phase 50 (Gmail OAuth -- depends on 49)
-- Wave 3: Phase 51 (Email Analysis -- depends on 50)
-- Wave 4: Phase 52 + Phase 53 (Dashboard + Recommendations -- both depend on 51, can parallelize if separate files)
-- Wave 5: Phase 54 (Deployment Plan -- depends on 53)
+- Wave 0: Phase 55 (Schema Foundation -- must be first)
+- Wave 1: Phase 56 + Phase 57 + Phase 60 (In-Claude Feedback, Web Suggestions, Token/Cost -- all depend only on Phase 55, independent of each other)
+- Wave 2: Phase 58 + Phase 59 (Training Data depends on 55+57, Suggestion-to-Fork depends on 57)
+- Wave 3: Phase 61 (Benchmarking Dashboard -- depends on Phase 56 and Phase 60)
 
-**Note:** This milestone is mostly sequential because each phase builds on the previous one's data layer. The only parallelization opportunity is Wave 4 (dashboard visualization and AI recommendation logic touch different files).
+**Note:** Wave 1 has three parallel tracks. Phase 60 (Token/Cost) has the highest technical risk (transcript_path parsing is unverified). Starting it in Wave 1 gives maximum time for investigation and fallback strategies.
 
 ## Progress
 
 **Execution Order:**
-Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
+Phases execute respecting dependencies: 55 -> 56/57/60 (parallel) -> 58/59 (parallel) -> 61
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -289,14 +304,16 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 | 25-33 | v1.5 | 55/55 | Complete | 2026-02-08 |
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
 | 40-48 | v3.0 | 21/21 | Complete | 2026-02-13 |
-| 49. Tenant Cleanup | v4.0 | 3/3 | Complete | 2026-02-14 |
-| 50. Gmail OAuth | v4.0 | 3/3 | Complete | 2026-02-14 |
-| 51. Email Analysis | v4.0 | 5/5 | Complete | 2026-02-14 |
-| 52. Dashboard | v4.0 | 2/2 | Complete | 2026-02-14 |
-| 53. Recommendations | v4.0 | 2/2 | Complete | 2026-02-14 |
-| 54. Deployment Plan | v4.0 | 0/2 | Not started | - |
+| 49-54 | v4.0 | 17/17 | Complete | 2026-02-14 |
+| 55. Schema Foundation | v5.0 | 0/TBD | Not started | - |
+| 56. In-Claude Feedback | v5.0 | 0/TBD | Not started | - |
+| 57. Web Suggestions | v5.0 | 0/TBD | Not started | - |
+| 58. Training Data | v5.0 | 0/TBD | Not started | - |
+| 59. Suggestion-to-Fork | v5.0 | 0/TBD | Not started | - |
+| 60. Token/Cost Measurement | v5.0 | 0/TBD | Not started | - |
+| 61. Benchmarking Dashboard | v5.0 | 0/TBD | Not started | - |
 
-**Total: 215 plans completed across 53 phases and 9 milestones. v4.0: 15 plans done, 5/6 phases complete.**
+**Total: 210 plans completed across 54 phases and 9 milestones. v5.0: 0 plans, 0/7 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
@@ -304,8 +321,9 @@ Phases execute respecting dependencies: 49 -> 50 -> 51 -> 52/53 (parallel) -> 54
 *v1.1 completed: 2026-02-01*
 *v1.2 completed: 2026-02-02*
 *v1.3 completed: 2026-02-04*
-*v1.4 completed: 2026-06*
+*v1.4 completed: 2026-02-06*
 *v1.5 completed: 2026-02-08*
-*v2.0 completed: 2026-08*
+*v2.0 completed: 2026-02-08*
 *v3.0 completed: 2026-02-13*
-*v4.0 roadmap created: 2026-02-14*
+*v4.0 completed: 2026-02-14*
+*v5.0 roadmap created: 2026-02-15*

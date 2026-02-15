@@ -92,7 +92,7 @@ Deferred to future milestone. Tracked but not in current roadmap.
 
 - **AIIND-01**: Translate/port skills to other LLMs (Google, Llama, on-prem)
 - **AIIND-02**: Real-time token streaming (post-hoc measurement sufficient for now)
-- **AIIND-03**: Per-employee cost attribution (deferred — creates anxiety, defeats adoption goal)
+- **AIIND-03**: Per-employee cost attribution (deferred -- creates anxiety, defeats adoption goal)
 
 ## Out of Scope
 
@@ -112,12 +112,55 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| _(to be filled by roadmapper)_ | | |
+| SCHEMA-01 | Phase 55 | Pending |
+| SCHEMA-02 | Phase 55 | Pending |
+| SCHEMA-03 | Phase 55 | Pending |
+| SCHEMA-04 | Phase 55 | Pending |
+| SCHEMA-05 | Phase 55 | Pending |
+| SCHEMA-06 | Phase 55 | Pending |
+| SCHEMA-07 | Phase 55 | Pending |
+| FDBK-01 | Phase 56 | Pending |
+| FDBK-02 | Phase 56 | Pending |
+| FDBK-03 | Phase 56 | Pending |
+| FDBK-04 | Phase 56 | Pending |
+| FDBK-05 | Phase 56 | Pending |
+| FDBK-06 | Phase 56 | Pending |
+| SUGGEST-01 | Phase 57 | Pending |
+| SUGGEST-02 | Phase 57 | Pending |
+| SUGGEST-03 | Phase 57 | Pending |
+| SUGGEST-04 | Phase 57 | Pending |
+| SUGGEST-05 | Phase 57 | Pending |
+| SUGGEST-06 | Phase 57 | Pending |
+| TRAIN-01 | Phase 58 | Pending |
+| TRAIN-02 | Phase 58 | Pending |
+| TRAIN-03 | Phase 58 | Pending |
+| TRAIN-04 | Phase 58 | Pending |
+| TRAIN-05 | Phase 58 | Pending |
+| TRAIN-06 | Phase 58 | Pending |
+| SFORK-01 | Phase 59 | Pending |
+| SFORK-02 | Phase 59 | Pending |
+| SFORK-03 | Phase 59 | Pending |
+| SFORK-04 | Phase 59 | Pending |
+| TOKEN-01 | Phase 60 | Pending |
+| TOKEN-02 | Phase 60 | Pending |
+| TOKEN-03 | Phase 60 | Pending |
+| TOKEN-04 | Phase 60 | Pending |
+| TOKEN-05 | Phase 60 | Pending |
+| TOKEN-06 | Phase 60 | Pending |
+| BENCH-01 | Phase 61 | Pending |
+| BENCH-02 | Phase 61 | Pending |
+| BENCH-03 | Phase 61 | Pending |
+| BENCH-04 | Phase 61 | Pending |
+| BENCH-05 | Phase 61 | Pending |
+| BENCH-06 | Phase 61 | Pending |
+| BENCH-07 | Phase 61 | Pending |
+| BENCH-08 | Phase 61 | Pending |
 
 **Coverage:**
-- v5.0 requirements: 38 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 38
+- v5.0 requirements: 43 total
+- Mapped to phases: 43/43
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-15*
+*Traceability updated: 2026-02-15*
