@@ -10,9 +10,10 @@ interface SkillDetailTabsProps {
   trainingContent?: ReactNode;
   trainingExampleCount?: number;
   showTrainingTab?: boolean;
+  benchmarkContent?: ReactNode;
 }
 
-type TabKey = "details" | "ai-review" | "suggestions" | "training";
+type TabKey = "details" | "ai-review" | "suggestions" | "training" | "benchmark";
 
 export function SkillDetailTabs({
   children,
@@ -22,6 +23,7 @@ export function SkillDetailTabs({
   trainingContent = null,
   trainingExampleCount,
   showTrainingTab = false,
+  benchmarkContent = null,
 }: SkillDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("details");
 
@@ -44,6 +46,7 @@ export function SkillDetailTabs({
           },
         ]
       : []),
+    { key: "benchmark" as TabKey, label: "Benchmark" },
   ];
 
   return (
@@ -101,6 +104,14 @@ export function SkillDetailTabs({
         hidden={activeTab !== "training"}
       >
         {trainingContent}
+      </div>
+      <div
+        role="tabpanel"
+        id="tabpanel-benchmark"
+        aria-labelledby="tab-benchmark"
+        hidden={activeTab !== "benchmark"}
+      >
+        {benchmarkContent}
       </div>
     </div>
   );
