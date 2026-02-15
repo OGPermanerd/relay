@@ -168,7 +168,7 @@ Total: 17 plans completed. 6 phases, 22 requirements.
 
 </details>
 
-### 🚧 v5.0 Feedback, Training & Benchmarking (In Progress)
+### v5.0 Feedback, Training & Benchmarking (In Progress)
 
 **Milestone Goal:** Close the loop from skill usage to skill improvement -- capture feedback in Claude and on web, collect training data from authors and real usage, measure actual token/cost per skill, and show benchmarking dashboards by model.
 
@@ -223,7 +223,11 @@ Plans:
   3. Suggestion status tracks through a lifecycle (open -> accepted -> dismissed -> implemented) and the current status is visible to both author and suggester
   4. Author receives a notification when a new suggestion is submitted on their skill
   5. Suggester receives a notification when their suggestion's status changes (accepted, dismissed, implemented)
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 57-01-PLAN.md -- DB service, server actions, notification type extensions (backend)
+- [ ] 57-02-PLAN.md -- Suggestion form component and tab extension (submission UI)
+- [ ] 57-03-PLAN.md -- Suggestion list and card components with author review actions (review UI)
 
 #### Phase 58: Training Data & Golden Dataset
 **Goal**: Authors can seed golden input/output examples for their skills, and real usage can be captured as training data with explicit consent
@@ -313,7 +317,7 @@ Phases execute respecting dependencies: 55 -> 56/57/60 (parallel) -> 58/59 (para
 | 49-54 | v4.0 | 17/17 | Complete | 2026-02-14 |
 | 55. Schema Foundation | v5.0 | 2/2 | Complete | 2026-02-15 |
 | 56. In-Claude Feedback | v5.0 | 0/2 | Planned | - |
-| 57. Web Suggestions | v5.0 | 0/TBD | Not started | - |
+| 57. Web Suggestions | v5.0 | 0/3 | Planned | - |
 | 58. Training Data | v5.0 | 0/TBD | Not started | - |
 | 59. Suggestion-to-Fork | v5.0 | 0/TBD | Not started | - |
 | 60. Token/Cost Measurement | v5.0 | 0/TBD | Not started | - |
