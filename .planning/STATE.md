@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 62 of 68 (Company IP Dashboard Core)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-15 -- v6.0 roadmap created (7 phases, 12 requirements)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-15 -- Completed 62-01-PLAN.md (IP Dashboard data layer & nav)
 
-Progress: [##########################....] 85% (228 plans across 61 phases, 10 milestones)
+Progress: [##########################....] 85% (229 plans across 61 phases, 10 milestones)
 
 ## Milestones
 
@@ -28,17 +28,17 @@ Progress: [##########################....] 85% (228 plans across 61 phases, 10 m
 - v3.0 AI Discovery & Workflow Intelligence - 21 plans - shipped 2026-02-13
 - v4.0 Gmail Workflow Diagnostic - 17 plans - shipped 2026-02-14
 - v5.0 Feedback, Training & Benchmarking - 18 plans - shipped 2026-02-15
-- v6.0 IP Dashboard & Skills Portfolio - 7 phases, 0/TBD plans - in progress
+- v6.0 IP Dashboard & Skills Portfolio - 7 phases, 1/TBD plans - in progress
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 228
+- Total plans completed: 229
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~11.7 hours
 
 **Cumulative:**
-- 228 plans across 61 phases and 10 milestones
+- 229 plans across 61 phases and 10 milestones
 - ~50,000 LOC TypeScript across 386 files
 - 16 days total development time
 
@@ -48,11 +48,14 @@ Progress: [##########################....] 85% (228 plans across 61 phases, 10 m
 
 All prior decisions archived in PROJECT.md Key Decisions table and milestone archives.
 
-v6.0 decisions (pending -- to be made during planning):
+v6.0 decisions:
 - IP dashboard placement: new page under /leverage (follows existing analytics pattern)
 - Portfolio page: new /portfolio route (not extension of existing /profile)
 - No new schema for IPDASH phases (all SQL aggregation on existing tables)
 - New schema needed only for PORT-06 (work_artifacts table)
+- Three separate SQL queries merged by month for quality trends (not complex JOIN)
+- Hours saved = SUM(hours_saved * total_uses) from skills denormalized aggregates
+- Rating normalized 1-5 to 0-100 scale (multiply by 20)
 
 ### Pending Todos
 
@@ -67,5 +70,5 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: v6.0 roadmap created -- 7 phases (62-68), 12 requirements mapped
-Resume file: .planning/ROADMAP.md
+Stopped at: Phase 62 plan 01 complete -- IP dashboard data layer & nav tab
+Resume file: .planning/phases/62-company-ip-dashboard-core/62-01-SUMMARY.md
