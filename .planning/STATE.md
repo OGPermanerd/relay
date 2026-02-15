@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v5.0 Phase 56/57/60 - Feedback, Suggestions & Token Measurement
+**Current focus:** v5.0 Phase 61 Benchmarking Dashboard — Plan 01 complete
 
 ## Current Position
 
-Phase: 57 of 61 -- Web Feedback & Suggestions (Wave 1, parallel with 56/60)
-Plan: 03 of 03 in Phase 57 complete (Phase 57 COMPLETE)
-Status: In progress -- Phase 56 complete, Phase 57 complete, Phase 60 complete
-Last activity: 2026-02-15 -- Completed 57-03: Suggestion list and management UI
+Phase: 61 of TBD (Benchmarking Dashboard)
+Plan: 1 of TBD in Phase 61
+Status: Phase 61 Plan 01 complete — benchmark service + runner built
+Last activity: 2026-02-15 — Completed 61-01 (benchmark DB service + execution engine)
 
-Progress: [#####################.........] 81% (220/~270 est. plans across all milestones)
+Progress: [#####################.........] 82% (221/~270 est. plans across all milestones)
 
 ## Milestones
 
@@ -27,17 +27,17 @@ Progress: [#####################.........] 81% (220/~270 est. plans across all m
 - v2.0 Skill Ecosystem - 23 plans - shipped 2026-02-08
 - v3.0 AI Discovery & Workflow Intelligence - 21 plans - shipped 2026-02-13
 - v4.0 Gmail Workflow Diagnostic - 17 plans - shipped 2026-02-14
-- v5.0 Feedback, Training & Benchmarking - 3/7 phases - in progress
+- v5.0 Feedback, Training & Benchmarking - 4/7 phases - in progress
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 220
+- Total plans completed: 221
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~11.0 hours
+- Total execution time: ~11.1 hours
 
 **Cumulative:**
-- 220 plans across 57 phases and 9 milestones
+- 221 plans across 58 phases and 9 milestones
 - ~19,700 LOC TypeScript
 - 8 days total development time
 
@@ -77,6 +77,10 @@ v5.0 milestone decisions:
 - Skill names with single quotes stripped (not escaped) in hook frontmatter for shell safety
 - Direct useState + async handler pattern (not useActionState) for suggestion action buttons, matching admin-review-detail pattern
 - Reply button available on all statuses (pending, accepted, implemented) so author can communicate at any lifecycle stage
+- Benchmark DB null guards: throw Error for writes (createBenchmarkRun, insertBenchmarkResult), return empty for reads
+- Two default benchmark models (Sonnet 4.5 + Haiku 4.5) for fast execution under 60s
+- Blinded AI judge: Claude Sonnet evaluates outputs without knowing which model produced them (BENCH-07)
+- Individual model failures stored as error results via Promise.allSettled, don't fail entire run
 
 ### Pending Todos
 
@@ -103,5 +107,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 57 COMPLETE -- all 3 phases in Wave 1 (56, 57, 60) complete
-Resume file: .planning/phases/57-web-feedback-suggestions/57-03-SUMMARY.md
+Stopped at: Phase 61 Plan 01 COMPLETE — benchmark service + runner ready for UI
+Resume file: .planning/phases/61-benchmarking-dashboard/61-01-SUMMARY.md
