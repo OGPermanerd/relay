@@ -12,11 +12,12 @@
 - ✅ **v3.0 AI Discovery & Workflow Intelligence** - Phases 40-48 (shipped 2026-02-13)
 - ✅ **v4.0 Gmail Workflow Diagnostic** - Phases 49-54 (shipped 2026-02-14)
 - ✅ **v5.0 Feedback, Training & Benchmarking** - Phases 55-61 (shipped 2026-02-15)
+- **v6.0 IP Dashboard & Skills Portfolio** - Phases 62-68 (in progress)
 
 ## Phases
 
 <details>
-<summary>✅ v1.0 MVP (Phases 1-8) - SHIPPED 2026-01-31</summary>
+<summary>v1.0 MVP (Phases 1-8) - SHIPPED 2026-01-31</summary>
 
 See archived roadmap: .planning/milestones/v1.0-ROADMAP.md
 
@@ -35,7 +36,7 @@ Total: 33 plans completed in 120 minutes.
 </details>
 
 <details>
-<summary>✅ v1.1 Quality & Polish (Phases 9-11) - SHIPPED 2026-02-01</summary>
+<summary>v1.1 Quality & Polish (Phases 9-11) - SHIPPED 2026-02-01</summary>
 
 See archived roadmap: .planning/milestones/v1.1-ROADMAP.md
 
@@ -49,7 +50,7 @@ Total: 9 plans completed in 45 minutes.
 </details>
 
 <details>
-<summary>✅ v1.2 UI Redesign (Phases 12-14) - SHIPPED 2026-02-02</summary>
+<summary>v1.2 UI Redesign (Phases 12-14) - SHIPPED 2026-02-02</summary>
 
 See archived roadmap: .planning/milestones/v1.2-ROADMAP.md
 
@@ -63,7 +64,7 @@ Total: 12 plans completed.
 </details>
 
 <details>
-<summary>✅ v1.3 AI Quality & Cross-Platform (Phases 15-19) - SHIPPED 2026-02-04</summary>
+<summary>v1.3 AI Quality & Cross-Platform (Phases 15-19) - SHIPPED 2026-02-04</summary>
 
 See archived roadmap: .planning/milestones/v1.3-ROADMAP.md
 
@@ -79,7 +80,7 @@ Total: 15 plans completed.
 </details>
 
 <details>
-<summary>✅ v1.4 Employee Analytics & Remote MCP (Phases 20-24) - SHIPPED 2026-02-06</summary>
+<summary>v1.4 Employee Analytics & Remote MCP (Phases 20-24) - SHIPPED 2026-02-06</summary>
 
 See archived roadmap: .planning/milestones/v1.4-ROADMAP.md
 
@@ -95,7 +96,7 @@ Total: 25 plans completed.
 </details>
 
 <details>
-<summary>✅ v1.5 Production, Multi-Tenancy & Reliable Usage Tracking (Phases 25-33) - SHIPPED 2026-02-08</summary>
+<summary>v1.5 Production, Multi-Tenancy & Reliable Usage Tracking (Phases 25-33) - SHIPPED 2026-02-08</summary>
 
 See archived roadmap: .planning/milestones/v1.5-ROADMAP.md
 
@@ -115,7 +116,7 @@ Total: 55 plans completed.
 </details>
 
 <details>
-<summary>✅ v2.0 Skill Ecosystem (Phases 34-39) - SHIPPED 2026-02-08</summary>
+<summary>v2.0 Skill Ecosystem (Phases 34-39) - SHIPPED 2026-02-08</summary>
 
 See archived roadmap: .planning/milestones/v2.0-ROADMAP.md
 
@@ -132,7 +133,7 @@ Total: 23 plans completed. 44 requirements across 6 categories.
 </details>
 
 <details>
-<summary>✅ v3.0 AI Discovery & Workflow Intelligence (Phases 40-48) - SHIPPED 2026-02-13</summary>
+<summary>v3.0 AI Discovery & Workflow Intelligence (Phases 40-48) - SHIPPED 2026-02-13</summary>
 
 See archived roadmap: .planning/milestones/v3.0-ROADMAP.md
 
@@ -152,7 +153,7 @@ Total: 21 plans completed. 9 phases, 26 requirements.
 </details>
 
 <details>
-<summary>✅ v4.0 Gmail Workflow Diagnostic (Phases 49-54) - SHIPPED 2026-02-14</summary>
+<summary>v4.0 Gmail Workflow Diagnostic (Phases 49-54) - SHIPPED 2026-02-14</summary>
 
 See archived roadmap: .planning/milestones/v4.0-ROADMAP.md
 
@@ -168,156 +169,138 @@ Total: 17 plans completed. 6 phases, 22 requirements.
 
 </details>
 
-### v5.0 Feedback, Training & Benchmarking (In Progress)
+<details>
+<summary>v5.0 Feedback, Training & Benchmarking (Phases 55-61) - SHIPPED 2026-02-15</summary>
 
-**Milestone Goal:** Close the loop from skill usage to skill improvement -- capture feedback in Claude and on web, collect training data from authors and real usage, measure actual token/cost per skill, and show benchmarking dashboards by model.
+See archived roadmap: .planning/milestones/v5.0-ROADMAP.md
+
+**Summary:**
+- Phase 55: Schema Foundation & Data Sanitization (2 plans)
+- Phase 56: In-Claude Feedback Collection (2 plans)
+- Phase 57: Web Feedback & Suggestions (3 plans)
+- Phase 58: Training Data & Golden Dataset (3 plans)
+- Phase 59: Suggestion-to-Fork Pipeline (2 plans)
+- Phase 60: Token/Cost Measurement (3 plans)
+- Phase 61: Benchmarking Dashboard (3 plans)
+
+Total: 18 plans completed. 7 phases, 12 requirements.
+
+</details>
+
+### v6.0 IP Dashboard & Skills Portfolio (In Progress)
+
+**Milestone Goal:** Make the IP stewardship value proposition tangible -- give companies an IP dashboard showing what they've captured and what's at risk, and give individuals a skills portfolio showing their contributions and portable IP.
 
 **Phase Numbering:**
-- Integer phases (55, 56, ...): Planned milestone work
-- Decimal phases (55.1, 55.2): Urgent insertions (marked with INSERTED)
+- Integer phases (62, 63, ...): Planned milestone work
+- Decimal phases (62.1, 62.2): Urgent insertions (marked with INSERTED)
 
-- [x] **Phase 55: Schema Foundation & Data Sanitization** - New tables, denormalized columns, and secret-stripping utilities ✅
-- [x] **Phase 56: In-Claude Feedback Collection** - Thumbs up/down via MCP with smart frequency gating ✅
-- [x] **Phase 57: Web Feedback & Suggestions** - Structured suggestion form with author review workflow ✅
-- [x] **Phase 58: Training Data & Golden Dataset** - Author-seeded examples and usage capture with consent ✅
-- [x] **Phase 59: Suggestion-to-Fork Pipeline** - Accepted suggestions become forks or inline versions ✅
-- [x] **Phase 60: Token/Cost Measurement** - Capture tokens, cost, latency, and model per skill execution ✅
-- [x] **Phase 61: Benchmarking Dashboard** - Per-skill benchmark tab with charts, model comparison, and staleness detection ✅
+- [ ] **Phase 62: Company IP Dashboard Core** - Hero KPIs and org-wide quality trend charts on a new IP dashboard page
+- [ ] **Phase 63: IP Risk Analysis** - Key person dependency detection and IP concentration risk visualization
+- [ ] **Phase 64: IP Valuation & Export** - Replacement cost estimation and PDF/CSV IP report for board presentations
+- [ ] **Phase 65: Individual Skills Portfolio** - Personal portfolio page with contribution stats and portable vs company IP breakdown
+- [ ] **Phase 66: Impact Measurement** - Skills impact timeline and value-added calculator for individuals
+- [ ] **Phase 67: Skills Resume** - Shareable formatted summary of skills and impact for job applications
+- [ ] **Phase 68: Pre-LLM History** - Upload historical work artifacts to demonstrate pre-platform impact
 
-#### Phase 55: Schema Foundation & Data Sanitization
-**Goal**: All new database tables exist with proper multi-tenancy, and a sanitization utility prevents secrets from entering feedback and tracking data
-**Depends on**: Nothing (foundation for all v5.0 work)
-**Requirements**: SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, SCHEMA-05, SCHEMA-06, SCHEMA-07
+#### Phase 62: Company IP Dashboard Core
+**Goal**: Admins can see a company-wide IP dashboard with total skills captured, usage, hours saved, active contributors, and quality trends over time
+**Depends on**: Nothing (first phase -- builds on existing data in skills, usage_events, ratings, skill_feedback, token_measurements tables)
+**Requirements**: IPDASH-01, IPDASH-04
 **Success Criteria** (what must be TRUE):
-  1. The `skill_feedback`, `token_measurements`, `benchmark_runs`, and `benchmark_results` tables exist in the database with proper indexes, foreign keys, and TypeScript types exported from the schema package
-  2. The `skills` table has new denormalized columns (`total_feedback`, `positive_feedback_pct`, `avg_token_cost_microcents`) that default to zero and are queryable
-  3. All new tables include `tenant_id` NOT NULL with RLS policies following the established multi-tenancy pattern from Phase 25
-  4. A payload sanitization utility detects and strips known secret patterns (API keys, passwords, bearer tokens, connection strings) from arbitrary text input, with unit tests proving it catches common formats
-**Plans:** 2 plans
-Plans:
-- [x] 55-01-PLAN.md -- Schema files, migrations, relations for all 4 new tables + skills aggregate columns ✅
-- [x] 55-02-PLAN.md -- Sanitization utility with TDD (secret detection and stripping) ✅
+  1. Admin navigates to a new IP Dashboard page (under /leverage) and sees hero stat cards: total skills captured, total uses, total hours saved, and active contributors for the tenant
+  2. Admin sees an org-wide quality trends chart showing average quality scores, feedback sentiment, and benchmark results over time (monthly granularity, Recharts)
+  3. Quality trend data is derived from existing skill_feedback, ratings, and benchmark_results tables without new schema
+  4. The page is admin-only (RBAC-gated) and tenant-scoped, following the existing /leverage layout pattern
+**Plans**: TBD
 
-#### Phase 56: In-Claude Feedback Collection
-**Goal**: Users can give thumbs up/down feedback on skills directly in Claude, and feedback sentiment is visible on skill detail pages
-**Depends on**: Phase 55 (skill_feedback table must exist)
-**Requirements**: FDBK-01, FDBK-02, FDBK-03, FDBK-04, FDBK-05, FDBK-06
+#### Phase 63: IP Risk Analysis
+**Goal**: Admins can identify IP concentration risks -- which critical skills depend on a single author and would be lost if that person left
+**Depends on**: Phase 62 (IP dashboard page must exist)
+**Requirements**: IPDASH-02, IPDASH-05
 **Success Criteria** (what must be TRUE):
-  1. User can invoke the MCP `feedback` action in Claude (via `everyskill action:feedback`) with a thumbs up/down vote and optional text comment, and the feedback is persisted to the database
-  2. The PostToolUse hook injects `additionalContext` prompting Claude to ask the user for feedback with smart frequency -- on the first 3 uses of a skill, then every 10th use thereafter
-  3. The `/api/feedback` endpoint validates incoming feedback with Zod, requires Bearer auth, and enforces rate limiting to prevent abuse
-  4. Skill detail pages display feedback sentiment (e.g., "85% positive over last 30 days") derived from aggregated thumbs up/down votes
-  5. Feedback trend data (positive/negative ratio over time) is visible in the skill's metrics section
-**Plans:** 2 plans
-Plans:
-- [x] 56-01-PLAN.md -- DB service, API endpoint, middleware exemption, MCP feedback action handler ✅
-- [x] 56-02-PLAN.md -- PostToolUse feedback prompt hook + skill detail page sentiment display ✅
+  1. Admin sees an IP concentration risk section showing employees ranked by how much critical IP they solely own (single-author skills with high usage)
+  2. Admin sees alert badges on skills where there is key person dependency -- single author, high usage, no forks
+  3. Admin can drill down on any employee to see which high-value skills they are the sole author of
+  4. Risk alerts surface proactively on the IP dashboard (not hidden behind a click) with amber/red severity indicators
+**Plans**: TBD
 
-#### Phase 57: Web Feedback & Suggestions
-**Goal**: Users can submit structured improvement suggestions on skill pages, and authors can review and act on them
-**Depends on**: Phase 55 (skill_feedback table must exist)
-**Requirements**: SUGGEST-01, SUGGEST-02, SUGGEST-03, SUGGEST-04, SUGGEST-05, SUGGEST-06
+#### Phase 64: IP Valuation & Export
+**Goal**: Admins can see estimated replacement cost for high-value skills and export a complete IP report for board presentations
+**Depends on**: Phase 62 (dashboard stats), Phase 63 (risk data)
+**Requirements**: IPDASH-03, IPDASH-06
 **Success Criteria** (what must be TRUE):
-  1. User can submit an improvement suggestion on any skill detail page, selecting a category (output quality, missing feature, error, performance, other) and severity (nice to have, important, critical)
-  2. Skill author sees a list of pending suggestions on their skill with Accept, Dismiss, and Reply actions
-  3. Suggestion status tracks through a lifecycle (open -> accepted -> dismissed -> implemented) and the current status is visible to both author and suggester
-  4. Author receives a notification when a new suggestion is submitted on their skill
-  5. Suggester receives a notification when their suggestion's status changes (accepted, dismissed, implemented)
-**Plans:** 3 plans
-Plans:
-- [x] 57-01-PLAN.md -- DB service, server actions, notification type extensions (backend) ✅
-- [x] 57-02-PLAN.md -- Suggestion form component and tab extension (submission UI) ✅
-- [x] 57-03-PLAN.md -- Suggestion list and card components with author review actions (review UI) ✅
+  1. Each high-value skill displays an estimated replacement cost based on usage volume, hours saved, complexity (instruction length, training examples count), and quality score
+  2. Admin sees a total estimated IP value for the organization (sum of all skill replacement costs) as a hero stat on the IP dashboard
+  3. Admin can export a PDF IP Report containing: executive summary, total IP value, top skills by value, risk assessment, quality trends, and contributor highlights
+  4. Admin can export a CSV of all skill-level IP data (name, author, uses, hours saved, replacement cost, risk level) for spreadsheet analysis
+**Plans**: TBD
 
-#### Phase 58: Training Data & Golden Dataset
-**Goal**: Authors can seed golden input/output examples for their skills, and real usage can be captured as training data with explicit consent
-**Depends on**: Phase 55 (skill_feedback table with training_example type), Phase 57 (web UI patterns for skill detail page additions)
-**Requirements**: TRAIN-01, TRAIN-02, TRAIN-03, TRAIN-04, TRAIN-05, TRAIN-06
+#### Phase 65: Individual Skills Portfolio
+**Goal**: Users can view their personal skills portfolio showing what they've built, how much impact it's had, and which skills are portable vs company-owned
+**Depends on**: Nothing (independent of IP dashboard -- builds on existing /profile page and user-stats)
+**Requirements**: PORT-01, PORT-02
 **Success Criteria** (what must be TRUE):
-  1. Author can add golden examples (input/expected_output pairs) on the skill detail page, and they are stored as `feedbackType='training_example'` records in the skill_feedback table
-  2. Real usage data can be captured as training examples when the user has explicitly opted in, with a per-user consent toggle that defaults to off
-  3. All captured training data is run through the sanitization utility before storage, stripping any detected secrets
-  4. The skill detail page displays a training example count, and a tenant-level admin setting controls whether usage-based capture is available for that organization
-**Plans:** 3 plans
-Plans:
-- [x] 58-01-PLAN.md -- Migration, schema updates, DB service functions, and server action (backend foundation) ✅
-- [x] 58-02-PLAN.md -- Training example form, list, tab extension, page wiring, and admin settings toggle (UI) ✅
-- [x] 58-03-PLAN.md -- Usage capture in /api/track with dual consent gating and sanitization (usage capture) ✅
+  1. User navigates to a portfolio page and sees their skills authored, total usage across all their skills, total hours saved, and their contribution ranking within the tenant
+  2. User sees a clear breakdown of portable vs company IP -- personal-scoped skills (theirs forever regardless of employer) vs tenant-scoped skills (company's IP)
+  3. Each skill in the portfolio list shows its visibility scope with a visual indicator (personal badge vs company badge)
+  4. Portfolio stats include comparison context (e.g., "Top 15% of contributors" or "3rd highest impact")
+**Plans**: TBD
 
-#### Phase 59: Suggestion-to-Fork Pipeline
-**Goal**: Accepted suggestions flow into concrete skill improvements via forks or inline version updates
-**Depends on**: Phase 57 (suggestions must exist with Accept action)
-**Requirements**: SFORK-01, SFORK-02, SFORK-03, SFORK-04
+#### Phase 66: Impact Measurement
+**Goal**: Users can see how their contributions have grown over time and quantify the total value they've added to the company
+**Depends on**: Phase 65 (portfolio page must exist with skill data)
+**Requirements**: PORT-03, PORT-05
 **Success Criteria** (what must be TRUE):
-  1. Author can click "Accept & Fork" on a suggestion, creating a fork pre-populated with the suggestion context using the existing `forkSkill()` action
-  2. For small changes, author can create a new skill version inline without a full fork, directly from the suggestion view
-  3. Accepted suggestions link to the resulting fork or version, providing traceability from feedback to improvement
-  4. Suggestion status automatically updates to "implemented" when the linked fork or version is published
-**Plans:** 2 plans
-Plans:
-- [x] 59-01-PLAN.md -- Schema migration (implementedBySkillId), DB services, Accept & Fork + Apply Inline server actions ✅
-- [x] 59-02-PLAN.md -- Suggestion card UI buttons + auto-implement hooks in publish flows ✅
+  1. User sees a skills impact timeline (Recharts) showing when they created or improved skills and cumulative impact (hours saved) growing over time
+  2. User sees an impact calculator displaying total value added to the company: cumulative hours saved, estimated cost equivalent (hours * hourly rate), and skills improved via forks/suggestions
+  3. The timeline distinguishes between skill creation events, fork events, and suggestion-implemented events as different markers
+  4. Impact metrics update in real time as the user's skills accumulate more usage
+**Plans**: TBD
 
-#### Phase 60: Token/Cost Measurement
-**Goal**: Every skill execution captures token usage, cost estimate, latency, and model name, with per-skill cost aggregation visible on detail pages
-**Depends on**: Phase 55 (token_measurements table must exist)
-**Requirements**: TOKEN-01, TOKEN-02, TOKEN-03, TOKEN-04, TOKEN-05, TOKEN-06
+#### Phase 67: Skills Resume
+**Goal**: Users can generate a shareable, formatted summary of their skills and impact suitable for job applications and professional profiles
+**Depends on**: Phase 65 (portfolio data), Phase 66 (impact metrics)
+**Requirements**: PORT-04
 **Success Criteria** (what must be TRUE):
-  1. Token counts (input + output) and model name are captured per skill execution via the PostToolUse hook or transcript parsing, and stored in the `token_measurements` table
-  2. Cost estimation is calculated using a static Anthropic pricing table (model -> $/MTok) and stored as `estimatedCostMicrocents` for aggregation
-  3. Latency (ms) is tracked per skill execution alongside token data
-  4. The `/api/track` endpoint accepts optional `token_count`, `model_name`, and `latency_ms` fields in a backward-compatible extension of the existing payload schema
-  5. Skill detail pages display per-skill cost aggregation (average cost per use, total estimated cost) derived from the token_measurements table
-**Plans:** 3 plans
-Plans:
-- [x] 60-01-PLAN.md -- Pricing table, token measurement DB service, /api/track extension ✅
-- [x] 60-02-PLAN.md -- PostToolUse hook transcript parsing for token/model capture ✅
-- [x] 60-03-PLAN.md -- Skill detail page cost aggregation display ✅
+  1. User can generate a "Skills Resume" that shows: skills authored (with categories), total impact (hours saved, people helped), quality achievements (Gold/Silver badges earned), and contribution timeline
+  2. The resume is formatted for professional use -- clean layout, no internal jargon, emphasis on quantified impact (e.g., "Saved 120 hours across 45 team members")
+  3. User can share the resume via a public URL (read-only, no auth required) or download as PDF
+  4. Only portable/personal-scoped skills are included by default (company IP is excluded unless explicitly toggled on)
+**Plans**: TBD
 
-#### Phase 61: Benchmarking Dashboard
-**Goal**: Each skill has a "Benchmark" tab showing cost, token, quality, and feedback metrics with model comparison and staleness detection
-**Depends on**: Phase 56 (feedback sentiment data), Phase 60 (token/cost data)
-**Requirements**: BENCH-01, BENCH-02, BENCH-03, BENCH-04, BENCH-05, BENCH-06, BENCH-07, BENCH-08
+#### Phase 68: Pre-LLM History
+**Goal**: Users can upload historical work artifacts to demonstrate impact from before they started using the platform
+**Depends on**: Phase 65 (portfolio page must exist to display historical contributions)
+**Requirements**: PORT-06
 **Success Criteria** (what must be TRUE):
-  1. Each skill detail page has a "Benchmark" tab displaying quick stats: average cost, average tokens, quality score, and feedback sentiment
-  2. When multi-model data is available, a model comparison table shows side-by-side metrics (tokens, cost, quality) per model
-  3. A cost trend chart (Recharts AreaChart) shows cost per use over time on the benchmark tab
-  4. Admin can trigger a benchmark run that executes the skill's golden examples across models (Anthropic SDK required, OpenAI and Google AI SDKs optional), with async execution and polling for results
-  5. Benchmark staleness is detected (90-day warning) with a "Re-benchmark" button that triggers a fresh run
-
-**Plans:** 3 plans
-Plans:
-- [x] 61-01-PLAN.md -- Benchmark DB service + execution engine (CRUD, cross-model runner, AI judge) ✅
-- [x] 61-02-PLAN.md -- Server action + BenchmarkTab UI + CostTrendChart component ✅
-- [x] 61-03-PLAN.md -- Tab extension + skill detail page wiring ✅
+  1. User can upload pre-LLM work artifacts (documents, emails, templates, scripts) via a file upload interface on their portfolio page
+  2. Uploaded artifacts are stored with metadata (title, date, category, description) in a new `work_artifacts` table with proper tenant scoping
+  3. Uploaded artifacts appear in the user's portfolio timeline alongside platform-created skills, distinguished with a "Pre-platform" badge
+  4. The system analyzes uploaded artifacts to suggest which existing skills in the catalog are relevant to the user's historical work (informing skill recommendations)
+**Plans**: TBD
 
 #### Dependency Graph
 
 ```
-Phase 55 (Schema Foundation) ──┬──> Phase 56 (In-Claude Feedback) ──────────────┐
-                               │                                                 │
-                               ├──> Phase 57 (Web Suggestions) ──┬──> Phase 58 (Training Data)
-                               │                                 │
-                               │                                 └──> Phase 59 (Suggestion-to-Fork)
-                               │
-                               └──> Phase 60 (Token/Cost Measurement) ──────────┐
-                                                                                │
-                                                                    Phase 61 (Benchmarking Dashboard)
-                                                                    depends on 56 + 60
+Phase 62 (IP Dashboard Core) ──> Phase 63 (IP Risk Analysis) ──> Phase 64 (IP Valuation & Export)
+
+Phase 65 (Individual Portfolio) ──> Phase 66 (Impact Measurement) ──> Phase 67 (Skills Resume)
+                                │
+                                └──> Phase 68 (Pre-LLM History)
 ```
 
 **Parallel execution opportunities:**
-- Wave 0: Phase 55 (Schema Foundation -- must be first)
-- Wave 1: Phase 56 + Phase 57 + Phase 60 (In-Claude Feedback, Web Suggestions, Token/Cost -- all depend only on Phase 55, independent of each other)
-- Wave 2: Phase 58 + Phase 59 (Training Data depends on 55+57, Suggestion-to-Fork depends on 57)
-- Wave 3: Phase 61 (Benchmarking Dashboard -- depends on Phase 56 and Phase 60)
+- Wave 0: Phase 62 + Phase 65 (IP Dashboard Core and Individual Portfolio are independent -- one is admin, one is user)
+- Wave 1: Phase 63 + Phase 66 + Phase 68 (Risk Analysis depends on 62; Impact Measurement and Pre-LLM History depend on 65)
+- Wave 2: Phase 64 + Phase 67 (IP Valuation & Export depends on 62+63; Skills Resume depends on 65+66)
 
-**Note:** Wave 1 has three parallel tracks. Phase 60 (Token/Cost) has the highest technical risk (transcript_path parsing is unverified). Starting it in Wave 1 gives maximum time for investigation and fallback strategies.
+**Note:** The two main tracks (company IP dashboard and individual portfolio) are fully independent and can be built in parallel. Phase 64 is the only phase that depends on two prior phases (62+63). Phase 68 (Pre-LLM History) is the only phase requiring new schema.
 
 ## Progress
 
 **Execution Order:**
-Phases execute respecting dependencies: 55 -> 56/57/60 (parallel) -> 58/59 (parallel) -> 61
+Phases execute respecting dependencies: 62+65 (parallel) -> 63+66+68 (parallel) -> 64+67 (parallel)
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -330,15 +313,16 @@ Phases execute respecting dependencies: 55 -> 56/57/60 (parallel) -> 58/59 (para
 | 34-39 | v2.0 | 23/23 | Complete | 2026-02-08 |
 | 40-48 | v3.0 | 21/21 | Complete | 2026-02-13 |
 | 49-54 | v4.0 | 17/17 | Complete | 2026-02-14 |
-| 55. Schema Foundation | v5.0 | 2/2 | Complete | 2026-02-15 |
-| 56. In-Claude Feedback | v5.0 | 2/2 | Complete | 2026-02-15 |
-| 57. Web Suggestions | v5.0 | 3/3 | Complete | 2026-02-15 |
-| 58. Training Data | v5.0 | 0/3 | Planned | - |
-| 59. Suggestion-to-Fork | v5.0 | 0/2 | Planned | - |
-| 60. Token/Cost Measurement | v5.0 | 3/3 | Complete | 2026-02-15 |
-| 61. Benchmarking Dashboard | v5.0 | 0/3 | Planned | - |
+| 55-61 | v5.0 | 18/18 | Complete | 2026-02-15 |
+| 62. IP Dashboard Core | v6.0 | 0/TBD | Not started | - |
+| 63. IP Risk Analysis | v6.0 | 0/TBD | Not started | - |
+| 64. IP Valuation & Export | v6.0 | 0/TBD | Not started | - |
+| 65. Individual Portfolio | v6.0 | 0/TBD | Not started | - |
+| 66. Impact Measurement | v6.0 | 0/TBD | Not started | - |
+| 67. Skills Resume | v6.0 | 0/TBD | Not started | - |
+| 68. Pre-LLM History | v6.0 | 0/TBD | Not started | - |
 
-**Total: 220 plans completed across 57 phases and 9 milestones. v5.0: 10 plans, 4/7 phases complete.**
+**Total: 228 plans completed across 61 phases and 10 milestones. v6.0: 0 plans, 0/7 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
@@ -351,4 +335,5 @@ Phases execute respecting dependencies: 55 -> 56/57/60 (parallel) -> 58/59 (para
 *v2.0 completed: 2026-02-08*
 *v3.0 completed: 2026-02-13*
 *v4.0 completed: 2026-02-14*
-*v5.0 roadmap created: 2026-02-15*
+*v5.0 completed: 2026-02-15*
+*v6.0 roadmap created: 2026-02-15*

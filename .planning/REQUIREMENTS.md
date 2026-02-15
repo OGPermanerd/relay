@@ -78,24 +78,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| IPDASH-01 | — | Pending |
-| IPDASH-02 | — | Pending |
-| IPDASH-03 | — | Pending |
-| IPDASH-04 | — | Pending |
-| IPDASH-05 | — | Pending |
-| IPDASH-06 | — | Pending |
-| PORT-01 | — | Pending |
-| PORT-02 | — | Pending |
-| PORT-03 | — | Pending |
-| PORT-04 | — | Pending |
-| PORT-05 | — | Pending |
-| PORT-06 | — | Pending |
+| IPDASH-01 | Phase 62: Company IP Dashboard Core | Pending |
+| IPDASH-02 | Phase 63: IP Risk Analysis | Pending |
+| IPDASH-03 | Phase 64: IP Valuation & Export | Pending |
+| IPDASH-04 | Phase 62: Company IP Dashboard Core | Pending |
+| IPDASH-05 | Phase 63: IP Risk Analysis | Pending |
+| IPDASH-06 | Phase 64: IP Valuation & Export | Pending |
+| PORT-01 | Phase 65: Individual Skills Portfolio | Pending |
+| PORT-02 | Phase 65: Individual Skills Portfolio | Pending |
+| PORT-03 | Phase 66: Impact Measurement | Pending |
+| PORT-04 | Phase 67: Skills Resume | Pending |
+| PORT-05 | Phase 66: Impact Measurement | Pending |
+| PORT-06 | Phase 68: Pre-LLM History | Pending |
 
 **Coverage:**
 - v6.0 requirements: 12 total
-- Mapped to phases: 0
-- Unmapped: 12
+- Mapped to phases: 12
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-15*
-*Last updated: 2026-02-15 after initial definition*
+*Last updated: 2026-02-15 after roadmap creation (all 12 requirements mapped to phases 62-68)*
