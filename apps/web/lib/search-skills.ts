@@ -1,6 +1,7 @@
-import { db, skills, users } from "@everyskill/db";
-import { buildVisibilityFilter } from "@everyskill/db/lib/visibility";
-import { sql, eq, desc, and } from "drizzle-orm";
+import { db, skills, users, getSiteSettings } from "@everyskill/db";
+import { buildVisibilityFilter, visibilitySQL } from "@everyskill/db/lib/visibility";
+import { sql, eq, desc, and, inArray } from "drizzle-orm";
+import { generateEmbedding } from "./ollama";
 
 export interface SearchSkillResult {
   id: string;
@@ -42,9 +43,46 @@ const TIER_THRESHOLDS = {
 } as const;
 
 /**
- * Search skills using PostgreSQL full-text search
+ * Best-effort semantic search supplement.
+ * Returns skill IDs ordered by cosine similarity, or empty array on any failure.
+ */
+async function getSemanticSkillIds(query: string, userId?: string): Promise<string[]> {
+  try {
+    if (!db) return [];
+    const settings = await getSiteSettings();
+    if (!settings?.semanticSimilarityEnabled) return [];
+
+    const embedding = await generateEmbedding(query, {
+      url: settings.ollamaUrl,
+      model: settings.ollamaModel,
+    });
+    if (!embedding) return [];
+
+    const vectorStr = `[${embedding.join(",")}]`;
+    const threshold = 0.5;
+
+    const results = await db.execute(sql`
+      SELECT s.id
+      FROM skill_embeddings se
+      JOIN skills s ON s.id = se.skill_id
+      WHERE (se.embedding <=> ${vectorStr}::vector) < ${threshold}
+        AND s.status = 'published'
+        AND ${visibilitySQL(userId)}
+      ORDER BY se.embedding <=> ${vectorStr}::vector
+      LIMIT 10
+    `);
+
+    return (results as unknown as { id: string }[]).map((r) => r.id);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Search skills using PostgreSQL full-text search + semantic similarity
  *
- * When query is provided: Uses websearch_to_tsquery for parsing and ts_rank for ordering
+ * When query is provided: Uses websearch_to_tsquery for parsing and ts_rank for ordering,
+ * then supplements with semantically similar skills via Ollama embeddings.
  * When query is empty: Returns all skills ordered by totalUses descending
  *
  * Supports quality tier filtering (gold/silver/bronze) and sorting by quality score.
@@ -176,24 +214,72 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
   const daysSavedSql = sql`(${skills.totalUses} * COALESCE(${skills.hoursSaved}, 1)) / 8.0`;
 
   // Determine sort order
+  let keywordResults: SearchSkillResult[];
   if (params.sortBy === "quality") {
-    // Sort by quality score descending, unranked (-1) at the end
-    return filteredQuery.orderBy(sql`(${qualityScoreSql}) DESC NULLS LAST`);
+    keywordResults = await filteredQuery.orderBy(sql`(${qualityScoreSql}) DESC NULLS LAST`);
   } else if (params.sortBy === "rating") {
-    return filteredQuery.orderBy(desc(skills.averageRating));
+    keywordResults = await filteredQuery.orderBy(desc(skills.averageRating));
   } else if (params.sortBy === "uses") {
-    return filteredQuery.orderBy(desc(skills.totalUses));
+    keywordResults = await filteredQuery.orderBy(desc(skills.totalUses));
   } else if (params.sortBy === "days_saved") {
-    return filteredQuery.orderBy(sql`${daysSavedSql} DESC`);
+    keywordResults = await filteredQuery.orderBy(sql`${daysSavedSql} DESC`);
   } else if (params.query && params.query.trim()) {
-    // Order by relevance when searching
-    return filteredQuery.orderBy(
+    keywordResults = await filteredQuery.orderBy(
       sql`ts_rank(${skills.searchVector}, websearch_to_tsquery('english', ${params.query})) DESC`
     );
+  } else {
+    keywordResults = await filteredQuery.orderBy(sql`${daysSavedSql} DESC`);
   }
 
-  // Default: order by days_saved (totalUses * hoursSaved / 8)
-  return filteredQuery.orderBy(sql`${daysSavedSql} DESC`);
+  // Supplement with semantic results when a query is present
+  if (params.query && params.query.trim()) {
+    try {
+      const semanticIds = await getSemanticSkillIds(params.query.trim(), params.userId);
+      const keywordIds = new Set(keywordResults.map((r) => r.id));
+      const newIds = semanticIds.filter((id) => !keywordIds.has(id));
+
+      if (newIds.length > 0 && db) {
+        const semanticResults = await db
+          .select({
+            id: skills.id,
+            name: skills.name,
+            slug: skills.slug,
+            description: skills.description,
+            category: skills.category,
+            tags: skills.tags,
+            totalUses: skills.totalUses,
+            averageRating: skills.averageRating,
+            totalRatings:
+              sql<number>`(SELECT count(*) FROM ratings WHERE skill_id = ${skills.id})`.as(
+                "totalRatings"
+              ),
+            hoursSaved: skills.hoursSaved,
+            companyApproved: skills.companyApproved,
+            loomUrl: skills.loomUrl,
+            createdAt: skills.createdAt,
+            author: {
+              id: users.id,
+              name: users.name,
+              image: users.image,
+            },
+          })
+          .from(skills)
+          .leftJoin(users, eq(skills.authorId, users.id))
+          .where(inArray(skills.id, newIds));
+
+        // Preserve semantic ranking order
+        const byId = new Map(semanticResults.map((r) => [r.id, r]));
+        for (const id of newIds) {
+          const skill = byId.get(id);
+          if (skill) keywordResults.push(skill);
+        }
+      }
+    } catch {
+      // Semantic supplement failed — return keyword results only
+    }
+  }
+
+  return keywordResults;
 }
 
 /**
