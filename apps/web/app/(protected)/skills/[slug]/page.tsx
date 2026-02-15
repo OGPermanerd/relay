@@ -10,6 +10,9 @@ import {
   getSuggestionsForSkill,
   getTrainingExamplesForSkill,
   getTrainingExampleCount,
+  getLatestBenchmarkRun,
+  getModelComparisonStats,
+  getCostTrendData,
 } from "@everyskill/db/services";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { SkillDetail } from "@/components/skill-detail";
@@ -27,6 +30,7 @@ import { SuggestionForm } from "@/components/suggestion-form";
 import { SuggestionList } from "@/components/suggestion-list";
 import { TrainingExampleForm } from "@/components/training-example-form";
 import { TrainingExampleList } from "@/components/training-example-list";
+import { BenchmarkTab } from "@/components/benchmark-tab";
 import { ReviewsList } from "@/components/reviews-list";
 import { SearchInput } from "@/components/search-input";
 import { SkillTypeFilter } from "@/components/skill-type-filter";
@@ -104,6 +108,8 @@ export default async function SkillPage(props: SkillPageProps) {
     feedbackStats,
     trainingExamples,
     trainingExampleCount,
+    latestBenchmarkRun,
+    costTrendData,
   ] = await Promise.all([
     getSkillStats(skill.id),
     getSkillDetailTrends(skill.id),
@@ -120,9 +126,31 @@ export default async function SkillPage(props: SkillPageProps) {
     getSkillFeedbackStats(skill.id),
     getTrainingExamplesForSkill(skill.id),
     getTrainingExampleCount(skill.id),
+    getLatestBenchmarkRun(skill.id),
+    getCostTrendData(skill.id),
   ]);
 
   const pendingSuggestionCount = suggestions.filter((s) => s.status === "pending").length;
+
+  // Fetch model comparison stats only if a benchmark run exists
+  const modelComparison = latestBenchmarkRun
+    ? await getModelComparisonStats(latestBenchmarkRun.id)
+    : [];
+
+  // Serialize benchmark run for client component (Date -> ISO string)
+  const serializedBenchmarkRun = latestBenchmarkRun
+    ? {
+        id: latestBenchmarkRun.id,
+        status: latestBenchmarkRun.status,
+        models: latestBenchmarkRun.models,
+        bestModel: latestBenchmarkRun.bestModel,
+        bestQualityScore: latestBenchmarkRun.bestQualityScore,
+        cheapestModel: latestBenchmarkRun.cheapestModel,
+        cheapestCostMicrocents: latestBenchmarkRun.cheapestCostMicrocents,
+        completedAt: latestBenchmarkRun.completedAt?.toISOString() ?? null,
+        createdAt: latestBenchmarkRun.createdAt.toISOString(),
+      }
+    : null;
 
   const allowDownload = siteSettings?.allowSkillDownload ?? true;
 
@@ -278,6 +306,23 @@ export default async function SkillPage(props: SkillPageProps) {
                 <p className="text-sm text-gray-500">Sign in to submit and view suggestions.</p>
               )}
             </div>
+          }
+          benchmarkContent={
+            <BenchmarkTab
+              skillId={skill.id}
+              skillSlug={skill.slug}
+              isAdmin={userIsAdmin}
+              isAuthor={isAuthor}
+              latestRun={serializedBenchmarkRun}
+              modelComparison={modelComparison}
+              costTrendData={costTrendData}
+              costStats={costStats}
+              feedbackStats={{
+                totalFeedback: feedbackStats.totalFeedback,
+                positivePct: feedbackStats.positivePct,
+              }}
+              hasTrainingExamples={trainingExamples.length > 0}
+            />
           }
         >
           {/* Details tab content -- preserves existing page layout */}
