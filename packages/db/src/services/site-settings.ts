@@ -20,13 +20,19 @@ export async function getSiteSettings(tenantId?: string): Promise<SiteSettings |
   if (!db) return null;
 
   try {
-    const row = tenantId
+    let row = tenantId
       ? await db.query.siteSettings.findFirst({
           where: (t, { eq: e, and: a }) => a(e(t.id, "default"), e(t.tenantId, tenantId)),
         })
-      : await db.query.siteSettings.findFirst({
-          where: (t, { eq: e }) => e(t.id, "default"),
-        });
+      : undefined;
+
+    // Fallback: if no tenant-specific row, load the single settings row
+    if (!row) {
+      row = await db.query.siteSettings.findFirst({
+        where: (t, { eq: e }) => e(t.id, "default"),
+      });
+    }
+
     if (row) {
       cachedSettings.set(cacheKey, { data: row, timestamp: now });
     }
@@ -55,7 +61,7 @@ export async function updateSiteSettings(
     .values({ id: "default", tenantId: tid, ...updates, updatedAt: new Date() })
     .onConflictDoUpdate({
       target: siteSettings.id,
-      set: { ...updates, updatedAt: new Date() },
+      set: { ...updates, tenantId: tid, updatedAt: new Date() },
     })
     .returning();
 

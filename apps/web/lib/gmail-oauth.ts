@@ -5,9 +5,9 @@ import { OAuth2Client } from "google-auth-library";
  * Uses NEXTAUTH_URL as the base URL.
  */
 export function getGmailRedirectUri(): string {
-  const baseUrl = process.env.NEXTAUTH_URL;
+  const baseUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL;
   if (!baseUrl) {
-    throw new Error("NEXTAUTH_URL environment variable is not set");
+    throw new Error("AUTH_URL or NEXTAUTH_URL environment variable is not set");
   }
   return `${baseUrl}/api/gmail/callback`;
 }

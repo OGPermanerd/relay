@@ -7,7 +7,7 @@ import { TenantSettingsForm } from "@/components/admin-settings-form";
 export default async function AdminSettingsPage() {
   const session = await auth();
 
-  const settings = await getSiteSettings();
+  const settings = await getSiteSettings(session?.user?.tenantId);
 
   // Query current tenant data
   const tenantRows =
