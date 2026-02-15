@@ -1,0 +1,37 @@
+v3 Milestone ideas:
+AI Independence, training, benchmarking
+One overall theme for value provided to the enterprise (tenant) using the system is to provide "AI independence" from any given underlying model (eg Claude or Openai or whatever). We thus want the system to be able to validate skill performance and portability across LLMs. Some useful utilities in that regard:
+1 - Store training and assessment data for any given skill (in order to be able to story and rank what 'good' performance looks like for a given skill x model (=LLM model x model version, for instance Claude, opus 4.6).
+2 - A benchmarking tool showing how many tokens the skill requires, a cost estimation tool showing the average cost of deployment of that skill x LLM and version, as well as a date of the benchmarking. The tool should also have some objective measure of quality or goodness if it has access to the training data and desired output for the skill.
+3 - The system can continue to gather training data to improve from user feedback (solicited within claude, within UI) for each usage.
+4 - To prevent drift, authors have to approve suggested changes, but those suggested changes can come from any user / user's use of everyskill.
+5 - to scope not implement -back it / translate it to w/ Google / Llama (on prem-private instances)
+
+Leveraging AI for discovery, integration into workflow
+Another part of the value proposition for a better method of discovery is to allow the user to input 'what are you trying to solve today' and also from their claude interface from any prompt: /everyskill should invoke a search for matching potential skills to leverage for a prompt use case. The top recommended 3 skills to consider should come back with a prompt on whether to see or try those skills to solve the problem (eg look at https://mcpmarket.com/tools/skills/kung-fu-skill-manager for inspiration)
+
+There should be a 'tell me what I need' skillset where everyskill can run a diagnostic based on connection to google drive, gmail and calendar to give people something like a 'screentime' view that shows what they are doing (% of time), what % of that time they can get back, and which skills to deploy + give them and run a deployment plan to sequentially integrate and test those skills in their workflow.
+
+Skill visibility or ownership scopes to add: Global Company (visible) vs employee visible vs employee invisible vs employee personal scoping. Section with global stamped w/ approval skills (eg global brand standards authorized by a business admin or department head group)
+-Solve for ability to filter / adapt a skill for personal preferences
+--Suggest pulling things out from skills that are personal preference, including them in a cross-AI personal pref layer, pushing / syncing to claude.ai or other.
+-Allow for the DB to also scan and pickup existing prefs (claude.md or other places) to build that pref layer to apply to all skills
+
+Add education + news section / component
+-Skills onboarding and training
+-reddit-style user threads
+-News feed
+--Most recent skills created.
+--Corp AI related hub
+
+Skill view refinement
+-Add ability for user to record and upload a video with loom explaining how the skill works and how to use it (connector section in profile, connect to loom).
+-Reviewers can as well.
+
+-Add tags to filters and search
+--Personal productivity
+--Marketing
+--Research
+
+-Add ability for enterprise user to upload Org structure
+--Then employee can have skills suggestions that relate to their role.

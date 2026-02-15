@@ -31,6 +31,10 @@ Thumbs.db
 coverage/
 playwright-report/
 test-results/
+playwright/.auth/
+
+# Misc
+cookies.txt
 
 # Drizzle
 drizzle/meta/
