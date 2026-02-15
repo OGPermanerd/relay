@@ -11,6 +11,7 @@ interface PreferencesFormProps {
     preferredCategories: string[];
     defaultSort: string;
     claudeMdWorkflowNotes: string;
+    trainingDataConsent: boolean;
   };
 }
 
@@ -85,7 +86,7 @@ export function PreferencesForm({ initialPreferences }: PreferencesFormProps) {
         </div>
 
         {/* Section 3: Workflow Notes for AI Export */}
-        <div className="p-6">
+        <div className="border-b border-gray-200 p-6">
           <h2 className="text-base font-medium text-gray-900">Workflow Notes</h2>
           <p className="mt-1 text-sm text-gray-500">
             Personal notes about your workflow preferences (included in CLAUDE.md export)
@@ -101,6 +102,28 @@ export function PreferencesForm({ initialPreferences }: PreferencesFormProps) {
               placeholder="E.g., I prefer concise prompts with examples..."
             />
             <p className="mt-1 text-xs text-gray-400">{notesLength}/2000 characters</p>
+          </div>
+        </div>
+
+        {/* Section 4: Training Data Consent */}
+        <div className="p-6">
+          <h2 className="text-base font-medium text-gray-900">Training Data</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Control whether your skill usage can be captured as training examples to improve skill
+            quality
+          </p>
+          <div className="mt-4">
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                name="trainingDataConsent"
+                defaultChecked={initialPreferences.trainingDataConsent}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">
+                Allow my skill usage to be captured as training data
+              </span>
+            </label>
           </div>
         </div>
       </div>

@@ -23,6 +23,7 @@ interface AdminSettingsFormProps {
     lastSuccessfulConnection: string | null;
     allowSkillDownload: boolean;
     gmailDiagnosticEnabled: boolean;
+    trainingDataCaptureEnabled: boolean;
   } | null;
 }
 
@@ -50,6 +51,7 @@ export function AdminSettingsForm({ initialSettings }: AdminSettingsFormProps) {
     lastSuccessfulConnection: null,
     allowSkillDownload: true,
     gmailDiagnosticEnabled: false,
+    trainingDataCaptureEnabled: false,
   };
 
   return (
@@ -77,6 +79,11 @@ export function AdminSettingsForm({ initialSettings }: AdminSettingsFormProps) {
             type="hidden"
             name="gmailDiagnosticEnabled"
             value={defaults.gmailDiagnosticEnabled ? "on" : ""}
+          />
+          <input
+            type="hidden"
+            name="trainingDataCaptureEnabled"
+            value={defaults.trainingDataCaptureEnabled ? "on" : ""}
           />
 
           {/* Enable toggle */}
@@ -247,6 +254,11 @@ export function AdminSettingsForm({ initialSettings }: AdminSettingsFormProps) {
             name="gmailDiagnosticEnabled"
             value={defaults.gmailDiagnosticEnabled ? "on" : ""}
           />
+          <input
+            type="hidden"
+            name="trainingDataCaptureEnabled"
+            value={defaults.trainingDataCaptureEnabled ? "on" : ""}
+          />
 
           <div className="flex items-center gap-3">
             <input
@@ -298,6 +310,11 @@ export function AdminSettingsForm({ initialSettings }: AdminSettingsFormProps) {
             name="allowSkillDownload"
             value={defaults.allowSkillDownload ? "on" : ""}
           />
+          <input
+            type="hidden"
+            name="trainingDataCaptureEnabled"
+            value={defaults.trainingDataCaptureEnabled ? "on" : ""}
+          />
 
           <div className="flex items-center gap-3">
             <input
@@ -309,6 +326,65 @@ export function AdminSettingsForm({ initialSettings }: AdminSettingsFormProps) {
             />
             <label htmlFor="gmailDiagnosticEnabled" className="text-sm font-medium text-gray-700">
               Enable Gmail diagnostic feature
+            </label>
+          </div>
+
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={savePending}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+            >
+              {savePending ? "Saving..." : "Save"}
+            </button>
+            {saveState.success && <span className="text-sm text-green-600">Settings saved</span>}
+            {saveState.error && <span className="text-sm text-red-600">{saveState.error}</span>}
+          </div>
+        </form>
+      </div>
+
+      {/* Training Data Capture Section */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <h2 className="text-lg font-semibold text-gray-900">Training Data Capture</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Allow capturing real skill usage as training examples. Users must also opt in individually
+          via their preferences.
+        </p>
+
+        <form action={saveAction} className="mt-6">
+          {/* Preserve other settings as hidden fields */}
+          <input
+            type="hidden"
+            name="semanticSimilarityEnabled"
+            value={defaults.semanticSimilarityEnabled ? "on" : ""}
+          />
+          <input type="hidden" name="ollamaUrl" value={defaults.ollamaUrl} />
+          <input type="hidden" name="ollamaModel" value={defaults.ollamaModel} />
+          <input type="hidden" name="embeddingDimensions" value={defaults.embeddingDimensions} />
+          <input
+            type="hidden"
+            name="allowSkillDownload"
+            value={defaults.allowSkillDownload ? "on" : ""}
+          />
+          <input
+            type="hidden"
+            name="gmailDiagnosticEnabled"
+            value={defaults.gmailDiagnosticEnabled ? "on" : ""}
+          />
+
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="trainingDataCaptureEnabled"
+              name="trainingDataCaptureEnabled"
+              defaultChecked={defaults.trainingDataCaptureEnabled}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label
+              htmlFor="trainingDataCaptureEnabled"
+              className="text-sm font-medium text-gray-700"
+            >
+              Enable training data capture
             </label>
           </div>
 

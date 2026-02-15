@@ -48,6 +48,7 @@ export default async function AdminSettingsPage() {
                     settings.lastSuccessfulConnection?.toISOString() ?? null,
                   allowSkillDownload: settings.allowSkillDownload,
                   gmailDiagnosticEnabled: settings.gmailDiagnosticEnabled,
+                  trainingDataCaptureEnabled: settings.trainingDataCaptureEnabled,
                 }
               : null
           }

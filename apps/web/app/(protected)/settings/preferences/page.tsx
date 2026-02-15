@@ -19,6 +19,7 @@ export default async function UserPreferencesPage() {
           preferredCategories: PREFERENCES_DEFAULTS.preferredCategories,
           defaultSort: PREFERENCES_DEFAULTS.defaultSort,
           claudeMdWorkflowNotes: PREFERENCES_DEFAULTS.claudeMdWorkflowNotes,
+          trainingDataConsent: PREFERENCES_DEFAULTS.trainingDataConsent,
         }
       }
     />

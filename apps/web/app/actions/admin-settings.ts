@@ -28,6 +28,7 @@ export async function saveSettingsAction(
   const embeddingDimensions = parseInt(formData.get("embeddingDimensions") as string, 10) || 768;
   const allowSkillDownload = formData.get("allowSkillDownload") === "on";
   const gmailDiagnosticEnabled = formData.get("gmailDiagnosticEnabled") === "on";
+  const trainingDataCaptureEnabled = formData.get("trainingDataCaptureEnabled") === "on";
 
   if (embeddingDimensions < 1 || embeddingDimensions > 4096) {
     return { error: "Embedding dimensions must be between 1 and 4096" };
@@ -59,6 +60,7 @@ export async function saveSettingsAction(
         embeddingDimensions,
         allowSkillDownload,
         gmailDiagnosticEnabled,
+        trainingDataCaptureEnabled,
       },
       session.user.tenantId
     );

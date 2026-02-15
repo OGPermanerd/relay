@@ -8,6 +8,8 @@ import {
   getParentSkill,
   getSkillCostStats,
   getSuggestionsForSkill,
+  getTrainingExamplesForSkill,
+  getTrainingExampleCount,
 } from "@everyskill/db/services";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { SkillDetail } from "@/components/skill-detail";
@@ -23,6 +25,8 @@ import { auth } from "@/auth";
 import { RatingForm } from "@/components/rating-form";
 import { SuggestionForm } from "@/components/suggestion-form";
 import { SuggestionList } from "@/components/suggestion-list";
+import { TrainingExampleForm } from "@/components/training-example-form";
+import { TrainingExampleList } from "@/components/training-example-list";
 import { ReviewsList } from "@/components/reviews-list";
 import { SearchInput } from "@/components/search-input";
 import { SkillTypeFilter } from "@/components/skill-type-filter";
@@ -98,6 +102,8 @@ export default async function SkillPage(props: SkillPageProps) {
     siteSettings,
     suggestions,
     feedbackStats,
+    trainingExamples,
+    trainingExampleCount,
   ] = await Promise.all([
     getSkillStats(skill.id),
     getSkillDetailTrends(skill.id),
@@ -112,6 +118,8 @@ export default async function SkillPage(props: SkillPageProps) {
     getSiteSettings(),
     getSuggestionsForSkill(skill.id),
     getSkillFeedbackStats(skill.id),
+    getTrainingExamplesForSkill(skill.id),
+    getTrainingExampleCount(skill.id),
   ]);
 
   const pendingSuggestionCount = suggestions.filter((s) => s.status === "pending").length;
@@ -167,6 +175,12 @@ export default async function SkillPage(props: SkillPageProps) {
     reviewedAt: s.reviewedAt?.toISOString() ?? null,
     category: s.category || "other",
     severity: s.severity || "nice_to_have",
+  }));
+
+  // Serialize training examples for client components (Date -> ISO string)
+  const serializedTrainingExamples = trainingExamples.map((t) => ({
+    ...t,
+    createdAt: t.createdAt.toISOString(),
   }));
 
   // Map review to props shape for AiReviewTab (serialize Date to string for client component)
@@ -243,6 +257,14 @@ export default async function SkillPage(props: SkillPageProps) {
             />
           }
           suggestionCount={pendingSuggestionCount}
+          showTrainingTab={isAuthor || userIsAdmin}
+          trainingExampleCount={trainingExampleCount}
+          trainingContent={
+            <div className="space-y-6">
+              {isAuthor && <TrainingExampleForm skillId={skill.id} skillSlug={skill.slug} />}
+              <TrainingExampleList examples={serializedTrainingExamples} />
+            </div>
+          }
           suggestionsContent={
             <div className="space-y-6">
               {session?.user && <SuggestionForm skillId={skill.id} skillSlug={skill.slug} />}

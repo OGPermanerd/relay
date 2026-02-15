@@ -11,6 +11,7 @@ export type UserPreferencesResult = {
   preferredCategories: string[];
   defaultSort: string;
   claudeMdWorkflowNotes: string;
+  trainingDataConsent: boolean;
 } | null;
 
 /**
@@ -30,6 +31,7 @@ export async function getMyUserPreferences(): Promise<UserPreferencesResult> {
     preferredCategories: prefs.preferredCategories,
     defaultSort: prefs.defaultSort,
     claudeMdWorkflowNotes: prefs.claudeMdWorkflowNotes,
+    trainingDataConsent: prefs.trainingDataConsent,
   };
 }
 
@@ -56,11 +58,13 @@ export async function saveMyUserPreferences(
     );
     const defaultSort = (formData.get("defaultSort") as string) || "days_saved";
     const claudeMdWorkflowNotes = (formData.get("claudeMdWorkflowNotes") as string) || "";
+    const trainingDataConsent = formData.get("trainingDataConsent") === "on";
 
     const parsed = userPreferencesSchema.safeParse({
       preferredCategories,
       defaultSort,
       claudeMdWorkflowNotes,
+      trainingDataConsent,
     });
 
     if (!parsed.success) {
