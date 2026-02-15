@@ -177,11 +177,11 @@ Total: 17 plans completed. 6 phases, 22 requirements.
 - Decimal phases (55.1, 55.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 55: Schema Foundation & Data Sanitization** - New tables, denormalized columns, and secret-stripping utilities ✅
-- [ ] **Phase 56: In-Claude Feedback Collection** - Thumbs up/down via MCP with smart frequency gating
-- [ ] **Phase 57: Web Feedback & Suggestions** - Structured suggestion form with author review workflow
+- [x] **Phase 56: In-Claude Feedback Collection** - Thumbs up/down via MCP with smart frequency gating ✅
+- [x] **Phase 57: Web Feedback & Suggestions** - Structured suggestion form with author review workflow ✅
 - [ ] **Phase 58: Training Data & Golden Dataset** - Author-seeded examples and usage capture with consent
 - [ ] **Phase 59: Suggestion-to-Fork Pipeline** - Accepted suggestions become forks or inline versions
-- [ ] **Phase 60: Token/Cost Measurement** - Capture tokens, cost, latency, and model per skill execution
+- [x] **Phase 60: Token/Cost Measurement** - Capture tokens, cost, latency, and model per skill execution ✅
 - [ ] **Phase 61: Benchmarking Dashboard** - Per-skill benchmark tab with charts, model comparison, and staleness detection
 
 #### Phase 55: Schema Foundation & Data Sanitization
@@ -210,8 +210,8 @@ Plans:
   5. Feedback trend data (positive/negative ratio over time) is visible in the skill's metrics section
 **Plans:** 2 plans
 Plans:
-- [ ] 56-01-PLAN.md -- DB service, API endpoint, middleware exemption, MCP feedback action handler
-- [ ] 56-02-PLAN.md -- PostToolUse feedback prompt hook + skill detail page sentiment display
+- [x] 56-01-PLAN.md -- DB service, API endpoint, middleware exemption, MCP feedback action handler ✅
+- [x] 56-02-PLAN.md -- PostToolUse feedback prompt hook + skill detail page sentiment display ✅
 
 #### Phase 57: Web Feedback & Suggestions
 **Goal**: Users can submit structured improvement suggestions on skill pages, and authors can review and act on them
@@ -225,9 +225,9 @@ Plans:
   5. Suggester receives a notification when their suggestion's status changes (accepted, dismissed, implemented)
 **Plans:** 3 plans
 Plans:
-- [ ] 57-01-PLAN.md -- DB service, server actions, notification type extensions (backend)
-- [ ] 57-02-PLAN.md -- Suggestion form component and tab extension (submission UI)
-- [ ] 57-03-PLAN.md -- Suggestion list and card components with author review actions (review UI)
+- [x] 57-01-PLAN.md -- DB service, server actions, notification type extensions (backend) ✅
+- [x] 57-02-PLAN.md -- Suggestion form component and tab extension (submission UI) ✅
+- [x] 57-03-PLAN.md -- Suggestion list and card components with author review actions (review UI) ✅
 
 #### Phase 58: Training Data & Golden Dataset
 **Goal**: Authors can seed golden input/output examples for their skills, and real usage can be captured as training data with explicit consent
@@ -238,7 +238,11 @@ Plans:
   2. Real usage data can be captured as training examples when the user has explicitly opted in, with a per-user consent toggle that defaults to off
   3. All captured training data is run through the sanitization utility before storage, stripping any detected secrets
   4. The skill detail page displays a training example count, and a tenant-level admin setting controls whether usage-based capture is available for that organization
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 58-01-PLAN.md -- Migration, schema updates, DB service functions, and server action (backend foundation)
+- [ ] 58-02-PLAN.md -- Training example form, list, tab extension, page wiring, and admin settings toggle (UI)
+- [ ] 58-03-PLAN.md -- Usage capture in /api/track with dual consent gating and sanitization (usage capture)
 
 #### Phase 59: Suggestion-to-Fork Pipeline
 **Goal**: Accepted suggestions flow into concrete skill improvements via forks or inline version updates
@@ -263,9 +267,9 @@ Plans:
   5. Skill detail pages display per-skill cost aggregation (average cost per use, total estimated cost) derived from the token_measurements table
 **Plans:** 3 plans
 Plans:
-- [ ] 60-01-PLAN.md -- Pricing table, token measurement DB service, /api/track extension
-- [ ] 60-02-PLAN.md -- PostToolUse hook transcript parsing for token/model capture
-- [ ] 60-03-PLAN.md -- Skill detail page cost aggregation display
+- [x] 60-01-PLAN.md -- Pricing table, token measurement DB service, /api/track extension ✅
+- [x] 60-02-PLAN.md -- PostToolUse hook transcript parsing for token/model capture ✅
+- [x] 60-03-PLAN.md -- Skill detail page cost aggregation display ✅
 
 #### Phase 61: Benchmarking Dashboard
 **Goal**: Each skill has a "Benchmark" tab showing cost, token, quality, and feedback metrics with model comparison and staleness detection
@@ -320,14 +324,14 @@ Phases execute respecting dependencies: 55 -> 56/57/60 (parallel) -> 58/59 (para
 | 40-48 | v3.0 | 21/21 | Complete | 2026-02-13 |
 | 49-54 | v4.0 | 17/17 | Complete | 2026-02-14 |
 | 55. Schema Foundation | v5.0 | 2/2 | Complete | 2026-02-15 |
-| 56. In-Claude Feedback | v5.0 | 0/2 | Planned | - |
-| 57. Web Suggestions | v5.0 | 0/3 | Planned | - |
-| 58. Training Data | v5.0 | 0/TBD | Not started | - |
+| 56. In-Claude Feedback | v5.0 | 2/2 | Complete | 2026-02-15 |
+| 57. Web Suggestions | v5.0 | 3/3 | Complete | 2026-02-15 |
+| 58. Training Data | v5.0 | 0/3 | Planned | - |
 | 59. Suggestion-to-Fork | v5.0 | 0/TBD | Not started | - |
-| 60. Token/Cost Measurement | v5.0 | 0/3 | Planned | - |
+| 60. Token/Cost Measurement | v5.0 | 3/3 | Complete | 2026-02-15 |
 | 61. Benchmarking Dashboard | v5.0 | 0/TBD | Not started | - |
 
-**Total: 215 plans completed across 55 phases and 9 milestones. v5.0: 2 plans, 1/7 phases complete.**
+**Total: 220 plans completed across 57 phases and 9 milestones. v5.0: 10 plans, 4/7 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
