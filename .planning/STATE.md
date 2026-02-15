@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 60 of 61 -- Token/Cost Measurement (Wave 1, parallel with 56/57)
-Plan: 03 of 03 in Phase 60 complete (Phase 60 COMPLETE)
-Status: In progress -- Phase 60 complete, Phases 56/57 in parallel
-Last activity: 2026-02-15 -- Completed 60-03: Skill detail cost display
+Phase: 57 of 61 -- Web Feedback & Suggestions (Wave 1, parallel with 56/60)
+Plan: 02 of 03 in Phase 57 complete
+Status: In progress -- Phase 60 complete, Phase 57 plan 02 complete, continue 57-03 and Phase 56
+Last activity: 2026-02-15 -- Completed 57-02: Suggestion form UI and tab integration
 
 Progress: [#####################.........] 81% (219/~270 est. plans across all milestones)
 
@@ -70,6 +70,8 @@ v5.0 milestone decisions:
 - Alias imports (dbUpdateSuggestionStatus) used when server action names match DB function names
 - Cost StatCards conditionally rendered in skill detail stats grid (only when measurementCount > 0)
 - Model name suffix shortened by stripping claude- prefix and -202X date for readability
+- SuggestionForm follows rating-form pattern (useActionState, hidden skillId/skillSlug, field-level errors)
+- Tab props optional with defaults for backward compatibility when adding new tabs
 
 ### Pending Todos
 
@@ -96,5 +98,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 60 COMPLETE -- continue with 56/57 remaining plans
-Resume file: .planning/phases/60-token-cost-measurement/60-03-SUMMARY.md
+Stopped at: Phase 57 Plan 02 COMPLETE -- continue with 57-03 (suggestion list/management) and Phase 56
+Resume file: .planning/phases/57-web-feedback-suggestions/57-02-SUMMARY.md
