@@ -32,12 +32,12 @@ Progress: [#####################.........] 83% (223/~270 est. plans across all m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 226
+- Total plans completed: 227
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~11.5 hours
+- Total execution time: ~11.6 hours
 
 **Cumulative:**
-- 226 plans across 61 phases and 9 milestones
+- 227 plans across 61 phases and 9 milestones
 - ~19,700 LOC TypeScript
 - 8 days total development time
 
@@ -98,6 +98,9 @@ v5.0 milestone decisions:
 - Accept & Fork replaces old Accept button on pending suggestions -- forking is the primary acceptance action
 - Redirect-safe error handling: re-throw Next.js redirect digest errors in client handlers, catch only real errors
 - autoImplementLinkedSuggestions placed before embedding generation in both publish paths (submitForReview + approveSkillAction)
+- Training tab conditionally visible to authors and admins (showTrainingTab prop); form renders only for authors
+- trainingDataCaptureEnabled preserved as hidden field across all 4 admin form sections to prevent settings loss
+- Per-user trainingDataConsent checkbox in preferences page defaults to off
 
 ### Pending Todos
 
