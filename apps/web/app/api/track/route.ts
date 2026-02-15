@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey } from "@everyskill/db/services/api-keys";
 import { insertTrackingEvent } from "@everyskill/db/services/usage-tracking";
+import { insertTokenMeasurement } from "@everyskill/db/services/token-measurements";
 import { checkRateLimit } from "@/lib/rate-limiter";
 import { verifyHmac } from "@/lib/hmac";
 import { z } from "zod";
@@ -12,6 +13,11 @@ const trackingPayloadSchema = z.object({
   hook_event: z.string().optional(),
   tool_input_snippet: z.string().max(1000).optional(),
   tool_output_snippet: z.string().max(1000).optional(),
+  // Token measurement fields (optional -- backward compatible)
+  model_name: z.string().max(100).optional(),
+  input_tokens: z.number().int().min(0).optional(),
+  output_tokens: z.number().int().min(0).optional(),
+  latency_ms: z.number().int().min(0).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -73,6 +79,22 @@ export async function POST(request: NextRequest) {
       isExpiredKey: keyResult.isExpired,
     },
   });
+
+  // 7b. Insert token measurement if model data is present (fire-and-forget)
+  if (
+    parsed.data.model_name &&
+    (parsed.data.input_tokens !== undefined || parsed.data.output_tokens !== undefined)
+  ) {
+    void insertTokenMeasurement({
+      tenantId: keyResult.tenantId,
+      userId: keyResult.userId,
+      skillId: parsed.data.skill_id,
+      modelName: parsed.data.model_name,
+      inputTokens: parsed.data.input_tokens ?? 0,
+      outputTokens: parsed.data.output_tokens ?? 0,
+      latencyMs: parsed.data.latency_ms,
+    });
+  }
 
   // 8. Return success
   return new NextResponse(null, { status: 200 });
