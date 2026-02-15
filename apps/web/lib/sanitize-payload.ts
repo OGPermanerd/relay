@@ -144,9 +144,10 @@ export function sanitizePayload(input: string): SanitizeResult {
  * Returns the sanitized structure and a deduplicated list of all secret
  * pattern types found across all string values.
  */
-export function sanitizeObject(
-  obj: Record<string, unknown>
-): SanitizeResult & { sanitized: Record<string, unknown> } {
+export function sanitizeObject(obj: Record<string, unknown>): {
+  sanitized: Record<string, unknown>;
+  secretsFound: string[];
+} {
   const secretsFoundSet = new Set<string>();
 
   function recurse(value: unknown): unknown {
