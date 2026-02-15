@@ -104,8 +104,12 @@ export {
   getSuggestionsForSkill,
   updateSuggestionStatus,
   replySuggestion,
+  createTrainingExample,
+  getTrainingExamplesForSkill,
+  getTrainingExampleCount,
   type InsertFeedbackParams,
   type SuggestionWithUser,
+  type TrainingExampleWithUser,
 } from "./skill-feedback";
 export { ANTHROPIC_PRICING, estimateCostMicrocents, type ModelPricing } from "./pricing";
 export {
@@ -114,3 +118,16 @@ export {
   type InsertTokenMeasurementInput,
   type SkillCostStats,
 } from "./token-measurements";
+export {
+  createBenchmarkRun,
+  completeBenchmarkRun,
+  insertBenchmarkResult,
+  getLatestBenchmarkRun,
+  getBenchmarkResultsByRun,
+  getModelComparisonStats,
+  getCostTrendData,
+  getTrainingExamples,
+  type BenchmarkRunWithResults,
+  type ModelComparisonRow,
+  type CostTrendPoint,
+} from "./benchmark";
