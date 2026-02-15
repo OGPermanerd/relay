@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v5.0 Phase 55 - Schema Foundation & Data Sanitization
+**Current focus:** v5.0 Phase 56/57/60 - Feedback, Suggestions & Token Measurement
 
 ## Current Position
 
-Phase: 55 of 61 (Schema Foundation & Data Sanitization)
-Plan: 2 of TBD in current phase
-Status: In progress
-Last activity: 2026-02-15 -- Completed 55-01-PLAN.md (Schema Foundation) + 55-02-PLAN.md (Payload Sanitization)
+Phase: 60 of 61 -- Token/Cost Measurement (Wave 1, parallel with 56/57)
+Plan: 02 of 03 in Phase 60 complete
+Status: In progress -- Plan 60-02 complete, Plans 60-01 and 60-03 remaining
+Last activity: 2026-02-15 -- Completed 60-02: PostToolUse hook transcript parsing for token capture
 
-Progress: [####################..........] 78% (213/~270 est. plans across all milestones)
+Progress: [#####################.........] 80% (216/~270 est. plans across all milestones)
 
 ## Milestones
 
@@ -27,17 +27,17 @@ Progress: [####################..........] 78% (213/~270 est. plans across all m
 - v2.0 Skill Ecosystem - 23 plans - shipped 2026-02-08
 - v3.0 AI Discovery & Workflow Intelligence - 21 plans - shipped 2026-02-13
 - v4.0 Gmail Workflow Diagnostic - 17 plans - shipped 2026-02-14
-- v5.0 Feedback, Training & Benchmarking - 0/7 phases - in progress
+- v5.0 Feedback, Training & Benchmarking - 1/7 phases - in progress
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 213
+- Total plans completed: 216
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~10.8 hours
+- Total execution time: ~10.9 hours
 
 **Cumulative:**
-- 213 plans across 55 phases and 9 milestones
+- 216 plans across 55 phases and 9 milestones
 - ~19,500 LOC TypeScript
 - 8 days total development time
 
@@ -58,6 +58,8 @@ v5.0 milestone decisions:
 - Pattern order matters: Anthropic (sk-ant-) before OpenAI (sk-) to prevent double-matching
 - usageEventId stored as plain text (no FK) due to uuid/text type mismatch with usage_events
 - Multi-FK disambiguation with relationName for skill_feedback reviewer vs user relations
+- Portable transcript parsing: tail -n 100 + jq select + tail -1 (no tac for macOS compatibility)
+- Token fields optional in hook payload -- omitted when transcript unavailable (not defaulted to 0)
 
 ### Pending Todos
 
@@ -77,12 +79,12 @@ v5.0 milestone decisions:
 
 ### Blockers/Concerns
 
-- PostToolUse hook payload capabilities unknown -- need research in Phase 60
-- transcript_path JSONL contents unverified for token data -- highest technical risk
+- PostToolUse hook payload: VERIFIED -- transcript_path available in stdin, JSONL contains .message.model and .message.usage (Plan 60-02)
+- transcript_path JSONL: VERIFIED -- tail+jq parsing works correctly for token extraction (Plan 60-02)
 - LLM-as-judge evaluation methodology needs validation in Phase 61
 
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Completed 55-01 (Schema Foundation) + 55-02 (Payload Sanitization) -- continue Phase 55
-Resume file: .planning/phases/55-schema-foundation-data-sanitization/55-01-SUMMARY.md
+Stopped at: Plan 60-02 COMPLETE -- Plans 60-01, 60-03 remaining; Phases 56, 57 in parallel
+Resume file: .planning/phases/60-token-cost-measurement/60-02-SUMMARY.md
