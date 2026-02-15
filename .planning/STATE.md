@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 57 of 61 -- Web Feedback & Suggestions (Wave 1, parallel with 56/60)
-Plan: 02 of 03 in Phase 57 complete
-Status: In progress -- Phase 60 complete, Phase 57 plan 02 complete, continue 57-03 and Phase 56
-Last activity: 2026-02-15 -- Completed 57-02: Suggestion form UI and tab integration
+Plan: 02 of 02 in Phase 56 complete (Phase 56 COMPLETE)
+Status: In progress -- Phase 56 complete, Phase 60 complete, Phase 57 plan 02 complete, continue 57-03
+Last activity: 2026-02-15 -- Completed 56-02: Feedback prompt hook and sentiment display
 
 Progress: [#####################.........] 81% (219/~270 est. plans across all milestones)
 
@@ -72,6 +72,9 @@ v5.0 milestone decisions:
 - Model name suffix shortened by stripping claude- prefix and -202X date for readability
 - SuggestionForm follows rating-form pattern (useActionState, hidden skillId/skillSlug, field-level errors)
 - Tab props optional with defaults for backward compatibility when adding new tabs
+- Sync PostToolUse hook uses file-based counter at /tmp/everyskill-fb-{skillId}.cnt for frequency gating
+- Feedback StatCard uses amber (#f59e0b) trendColor to distinguish from other stat sparklines
+- Skill names with single quotes stripped (not escaped) in hook frontmatter for shell safety
 
 ### Pending Todos
 
@@ -98,5 +101,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 57 Plan 02 COMPLETE -- continue with 57-03 (suggestion list/management) and Phase 56
-Resume file: .planning/phases/57-web-feedback-suggestions/57-02-SUMMARY.md
+Stopped at: Phase 56 COMPLETE -- continue with 57-03 (suggestion list/management)
+Resume file: .planning/phases/56-in-claude-feedback-collection/56-02-SUMMARY.md
