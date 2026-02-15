@@ -1,153 +1,175 @@
-# Domain Pitfalls: AI Discovery, Workspace Intelligence, Visibility Scoping
+# Domain Pitfalls: AI Feedback, Training Data & Benchmarking
 
-**Domain:** Adding Google Workspace integration, visibility scoping, AI intent search, Loom video embeds, homepage redesign, and personal preferences to an existing multi-tenant skill marketplace
-**Project:** EverySkill v3.0
-**Researched:** 2026-02-13
-**Overall confidence:** HIGH (direct codebase analysis of ~17,000 LOC, verified external API constraints)
+**Domain:** Adding feedback collection via PostToolUse hooks, training data management, token counting, LLM benchmarking, suggestion-to-fork pipelines, and smart frequency feedback to an existing MCP-based skill marketplace
+**Project:** EverySkill (subsequent milestone after v3.0)
+**Researched:** 2026-02-15
+**Overall confidence:** HIGH (PostToolUse hook constraints verified from official Claude Code docs; Anthropic token counting API verified from official docs; benchmarking pitfalls verified from multiple sources; codebase analysis of existing hook infrastructure)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause data leakage, broken authentication, or require rewrites.
+Mistakes that cause data loss, privacy violations, user revolt, or require rewrites.
 
 ---
 
-### Pitfall 1: Google Workspace API OAuth Scope Escalation Breaks Existing Auth Flow
+### Pitfall 1: PostToolUse Hooks Run Unsandboxed with Full User Permissions -- Feedback Payloads Can Leak Secrets
 
-**What goes wrong:** EverySkill currently uses Google OAuth with minimal scopes (openid, email, profile) configured in `apps/web/auth.config.ts`. Adding Google Workspace Directory API requires additional scopes like `https://www.googleapis.com/auth/admin.directory.user.readonly`. This creates three compounding problems:
+**What goes wrong:** The existing PostToolUse hook fires a curl command to `/api/track` with `skill_id`, `tool_name`, and `timestamp`. Extending this to capture richer feedback -- tool_input snippets, tool_output content, conversation context, error messages -- means the hook command now processes and transmits real user data. Because PostToolUse hooks run with the user's full system permissions and NO sandbox (verified from official Claude Code docs), the hook command can access anything the user can: environment variables, SSH keys, AWS credentials, source code. If the feedback payload construction is sloppy (e.g., capturing the full `tool_input` object without filtering), secrets embedded in tool inputs get transmitted to the EverySkill server.
 
-1. **Scope escalation triggers re-consent for ALL users.** Adding Directory API scopes to the Google provider's `authorization.params.scope` in `auth.config.ts` means every user sees a new consent screen on next login. Many will be confused or decline, thinking they've been hacked.
+**Specifically what the hook receives (from official docs):**
 
-2. **Directory API requires admin-level scopes.** The `admin.directory.user.readonly` scope only works for users who are Google Workspace admins, or for service accounts with Domain-Wide Delegation. Regular users authenticating via OAuth cannot read the company directory. The current auth flow authenticates individual users -- it cannot query the directory on their behalf.
+```json
+{
+  "session_id": "abc123",
+  "transcript_path": "/Users/.../.claude/projects/.../transcript.jsonl",
+  "cwd": "/Users/.../my-project",
+  "permission_mode": "default",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/path/to/file.txt",
+    "content": "file content here -- may contain API keys, passwords, etc."
+  },
+  "tool_response": {
+    "filePath": "/path/to/file.txt",
+    "success": true
+  },
+  "tool_use_id": "toolu_01ABC123..."
+}
+```
 
-3. **Auth.js v5 stores tokens in the `accounts` table.** The current schema (`packages/db/src/schema/auth.ts`) stores `access_token`, `refresh_token`, and `scope`. The access token expires after 1 hour. Auth.js v5 does NOT implement token refresh out of the box -- there are numerous open issues about this (GitHub discussions #3016, #3940, #8205). Without `access_type: "offline"` and a custom refresh implementation, the stored tokens become useless after 60 minutes.
+The `tool_input` and `tool_response` fields contain EVERYTHING the tool received and returned. For a Bash tool call, `tool_input.command` could contain `export API_KEY=sk-xxx`. For a Write tool, `tool_input.content` could be an `.env` file with database credentials.
 
-**Why it happens:** Developers assume "we already have Google OAuth, adding more scopes is trivial." In reality, Google Workspace Admin APIs are a completely different authorization tier from basic OAuth login.
+**Why it happens:** The existing hook already captures `tool_input_snippet` and `tool_output_snippet` (1000 chars max, per the Zod schema in `/api/track/route.ts`). Extending to richer feedback means capturing more of this data. Developers naturally think "capture more context for better training data" without considering what that context contains.
 
 **Consequences:**
-- If scopes are added naively to the Google provider, every existing user must re-consent. Users who don't re-consent will have their sessions invalidated or see errors.
-- If you try to call Directory API with a regular user's access token, you get 403 Forbidden. This will appear to work in development (where the developer is a Workspace admin) and break in production (where most users are not).
-- If tokens expire after 1 hour and aren't refreshed, any background sync jobs that use the stored token fail silently.
-- The 8-hour JWT session maxAge (SOC2-04 compliance, `auth.config.ts` line 28) outlives the Google access token. The session is valid but the Google token is expired.
+- User credentials, API keys, and proprietary code transmitted to EverySkill's PostgreSQL database in the `metadata` JSONB column of `usage_events`.
+- Data stored in plaintext in a multi-tenant database. Even with RLS, a database compromise exposes all training data across tenants.
+- SOC2 violation: storing credentials outside the authorized boundary.
+- GDPR violation if European user data (emails, names, addresses) appears in tool inputs and gets stored as training data without consent.
 
 **Prevention:**
-1. **Do NOT add Workspace scopes to the user OAuth flow.** Use a separate service account with Domain-Wide Delegation for Directory API access. This requires the tenant's Google Workspace admin to grant DWD to a service account in the Google Admin Console -- this is a tenant onboarding step, not a per-user flow.
-2. **Store the service account credentials per tenant.** Add a `workspace_credentials` table or encrypted columns on the `tenants` table. Each tenant's admin configures their Workspace connection via an admin settings page.
-3. **If you must use user tokens for any Workspace feature:** add `access_type: "offline"` to the Google provider configuration, implement token refresh in the JWT callback following the Auth.js refresh token rotation guide, and handle the re-consent UX with an explanation screen.
-4. **Never mix the user auth token with the Workspace sync token.** The user logs in with basic scopes; the Workspace sync uses a service account.
+1. **Sanitize on the client side (in the hook command).** Before sending data, strip known secret patterns: `s/[A-Za-z0-9_-]*KEY[=:][^ ]*/[REDACTED]/g`, environment variables, bearer tokens, base64 strings longer than 100 chars. This runs in the bash hook before the curl.
+2. **Sanitize on the server side (in `/api/track`).** Add a `sanitizePayload()` function that runs regex patterns against `tool_input_snippet` and `tool_output_snippet` before inserting into the database. Use patterns from tools like `detect-secrets` or `trufflehog`.
+3. **Size-limit snippets aggressively.** The current 1000-char limit on snippets is already set. For training data, keep it. Do NOT increase this limit to "capture more context." 1000 chars of code is enough for quality assessment without containing full files.
+4. **Never capture the full `tool_input.content` for Write operations.** This is the most dangerous field -- it contains entire file contents. Capture only the `file_path` and a truncated first-line summary.
+5. **Add an opt-in consent flag.** Before capturing any training data, the user must explicitly opt in via an environment variable or skill configuration: `EVERYSKILL_TRAINING_DATA=true`. The hook checks this before including snippets.
+6. **Encrypt training data at rest.** Use PostgreSQL's `pgcrypto` extension to encrypt the `metadata` JSONB column, or store training data in a separate encrypted table.
 
-**Detection:** After implementing, remove the service account credentials for a tenant. The login flow should still work perfectly. Workspace features should degrade gracefully with a "Connect Google Workspace" prompt in admin settings.
+**Detection:** After implementing, search the `usage_events.metadata` column for common secret patterns: `sk-`, `AKIA`, `ghp_`, `password`, `secret`. If any matches, the sanitization is insufficient.
 
-**Phase:** Must be designed before any Workspace feature is built. The authentication architecture decision cascades to every Workspace-dependent feature.
+**Phase:** Must be addressed in the FIRST phase of feedback extension. The sanitization pipeline is a prerequisite for any richer data collection.
 
-**Confidence:** HIGH -- verified against [Auth.js refresh token rotation guide](https://authjs.dev/guides/refresh-token-rotation), [Google DWD docs](https://support.google.com/a/answer/162106), and [Directory API scope docs](https://developers.google.com/workspace/admin/directory/v1/guides/authorizing).
+**Confidence:** HIGH -- PostToolUse hook permissions verified from [official Claude Code hooks reference](https://code.claude.com/docs/en/hooks): "Hooks run with your system user's full permissions. They can modify, delete, or access any files your user account can access."
 
 ---
 
-### Pitfall 2: Visibility Scoping Without RLS Enforcement Causes Cross-Scope Data Leakage
+### Pitfall 2: Training Data Consent and GDPR "Right to Erasure" Conflict
 
-**What goes wrong:** Adding visibility scopes (e.g., `public`, `team`, `private`, `department`) to skills creates a new dimension of access control on top of the existing tenant isolation. The current RLS policies on every table check ONLY `tenant_id = current_setting('app.current_tenant_id', true)`. They know nothing about visibility or the requesting user.
+**What goes wrong:** Collecting real usage data as training data for skill quality assessment creates a data pipeline subject to privacy regulations. Three specific problems:
 
-If visibility scoping is implemented only at the application layer (WHERE clauses in queries), any missed query path leaks skills across scopes. The codebase has 15+ query paths for skills (as audited in v2.0 research). Every one of them needs visibility filtering.
+1. **Implicit collection without consent.** The current PostToolUse hook fires silently ("Silent with local log" per Phase 28 decisions). Extending it to capture training data without explicit user consent violates GDPR Article 6 (lawfulness of processing) and Article 13 (right to be informed). The user doesn't know their tool interactions are being stored as training data.
 
-**Why it happens:** Developers think "RLS handles isolation" and add visibility as a simple WHERE clause. But RLS handles TENANT isolation. Visibility within a tenant is a different concern. The defense-in-depth approach requires both.
+2. **Right to erasure (GDPR Article 17).** A user requests deletion of their data. You must delete their usage events from `usage_events`, but you've already used those events to compute benchmark scores, training datasets, and quality metrics for skills. The derived data may still contain traces of the user's interactions.
 
-**Specific risk surface in the current codebase:**
+3. **Cross-tenant training data contamination.** If training data from tenant A is used to improve skill quality scores visible to tenant B, tenant A's proprietary workflows leak into tenant B's environment. Even aggregated data can reveal patterns (e.g., "this skill is most commonly used with financial data" derived from tenant A's banking workflows).
 
-| Query Path | Needs Visibility Filter | Risk If Missed |
-|---|---|---|
-| `apps/web/lib/search-skills.ts` -- searchSkills() | YES | Private skills appear in search results |
-| `packages/db/src/services/search-skills.ts` -- searchSkillsByQuery() | YES | MCP exposes private skills |
-| `packages/db/src/services/semantic-search.ts` -- semanticSearchSkills() | YES | AI discovery recommends private skills |
-| `apps/web/lib/trending.ts` -- getTrendingSkills() | YES | Private skills appear in trending |
-| `apps/web/lib/leaderboard.ts` | YES | Private skill usage inflates leaderboard |
-| `apps/web/lib/platform-stats.ts` | MAYBE | Private skills inflate org metrics |
-| `apps/web/app/(protected)/skills/[slug]/page.tsx` | YES | Direct URL to private skill visible to others |
-| `apps/mcp/src/tools/list.ts` | YES | MCP lists private skills |
-| `apps/mcp/src/tools/search.ts` | YES | MCP search returns private skills |
-| `apps/web/lib/similar-skills.ts` | YES | Private skills in similarity panel |
-| `apps/web/app/actions/search.ts` -- quickSearch() | YES | Quick search dropdown shows private skills |
+**Why it happens:** Developers treat usage tracking and training data collection as the same thing. Usage tracking ("skill X was used 50 times") is low-risk. Training data collection ("here's what the user did with skill X, including their inputs and outputs") is high-risk.
 
 **Consequences:**
-- A user marks a skill as "private" expecting only they can see it. Another user finds it via search, trending, or direct URL.
-- A department-scoped skill leaks to other departments via semantic search (vector queries don't filter by visibility).
-- MCP tools have no concept of the requesting user's department/team, so they cannot filter by visibility without new parameters.
+- Regulatory fines under GDPR (up to 4% of global revenue or EUR 20M) or EU AI Act (up to EUR 35M or 7% of revenue).
+- If a user exercises their right to erasure and you can't fully comply because training data is woven into benchmark scores, you face a compliance incident.
+- If training data leaks between tenants (even in aggregate), you violate the multi-tenant isolation that is the foundation of EverySkill's architecture.
 
 **Prevention:**
-1. **Add a `visibility` column to `skills` table** with values: `public` (default, visible to all in tenant), `team` (visible to author's team), `private` (author-only), `department` (visible to author's department). Default to `public` so existing skills are unaffected.
-2. **Create a reusable visibility filter function** -- `buildVisibilityFilter(userId, userTeam?, userDepartment?)` -- that returns a SQL condition. Import this in EVERY query path.
-3. **Do NOT use RLS for visibility.** RLS policies cannot access the requesting user's ID (only `app.current_tenant_id` is set at connection level). Adding `app.current_user_id` to every connection would require threading the user ID through `withTenant()` -- possible but risky for the connection pool.
-4. **For the semantic search path:** the visibility filter must be applied AFTER vector similarity scoring, as a WHERE clause on the JOIN with skills. The `semanticSearchSkills()` function at `packages/db/src/services/semantic-search.ts` line 58 already joins `skillEmbeddings` to `skills` -- add the visibility filter to the WHERE clause alongside the existing `status = 'published'` check.
-5. **Migration for existing skills:** `ALTER TABLE skills ADD COLUMN visibility TEXT NOT NULL DEFAULT 'public'`. All existing skills become public. No data loss.
-6. **MCP tools need a visibility parameter or must default to `public` only.** The MCP user context has `userId` (resolved from API key in `apps/mcp/src/auth.ts`). Pass this through to queries for visibility filtering.
+1. **Separate usage tracking from training data collection.** Usage events (`usage_events` table) track WHAT was used. Training data (new `training_examples` table) stores HOW it was used. These are different data categories with different consent requirements.
+2. **Explicit opt-in for training data.** Add a tenant-level setting: "Allow skill usage data to be used for quality assessment." This is an admin decision, not per-user. Display it prominently in tenant settings.
+3. **Per-user opt-out.** Even with tenant-level opt-in, individual users can opt out of training data collection. Store this as a user preference. The hook checks `EVERYSKILL_TRAINING_DATA=false` and skips snippet capture.
+4. **Implement data erasure.** When a user requests deletion: (a) delete all `training_examples` where `userId = X`, (b) recalculate any benchmark scores that used their data, (c) log the erasure in the audit trail.
+5. **Never mix training data across tenants.** Training examples must have `tenantId` and RLS policies. Benchmark scores derived from training data are tenant-scoped. A skill's quality assessment in tenant A is independent of tenant B.
+6. **Retention policy.** Training data older than 12 months is automatically purged. This limits the erasure surface and keeps data fresh.
+7. **Add a `consent_version` field to training examples.** When the consent terms change, old data collected under the previous version can be identified and re-consented or purged.
 
-**Detection:** Create a private skill, then search for it as a different user. It must not appear. Repeat for semantic search, trending, MCP tools, and direct URL access. Automate this as an E2E test.
+**Detection:** Create training data as user A. Delete user A's account. Verify: (a) all training examples with userId=A are gone, (b) benchmark scores are recalculated without user A's data, (c) no remnants exist in the `metadata` JSONB column of any table.
 
-**Phase:** Visibility schema and filter function should be a SINGLE phase done before any feature that depends on scoped content. The filter function is a prerequisite for AI intent search, homepage personalization, and team-based features.
+**Phase:** Consent framework must be designed BEFORE any training data collection begins. It shapes the entire data pipeline.
 
-**Confidence:** HIGH -- cross-tenant leakage patterns verified via [Multi-Tenant Leakage: When Row-Level Security Fails in SaaS](https://medium.com/@instatunnel/multi-tenant-leakage-when-row-level-security-fails-in-saas-da25f40c788c).
+**Confidence:** HIGH -- GDPR requirements verified from [Enterprise LLM Privacy Concerns](https://www.protecto.ai/blog/enterprise-llm-privacy-concerns/) and [Privacy Risks in LLMs](https://secureprivacy.ai/blog/privacy-risks-llms-enterprise-ai-governance). EU AI Act requirements from [EDPB Opinion 28/2024](https://www.edpb.europa.eu/).
 
 ---
 
-### Pitfall 3: AI Intent Search Hallucinating Skill Recommendations
+### Pitfall 3: Token Counting is Model-Specific and the Anthropic API is the ONLY Accurate Source
 
-**What goes wrong:** AI-powered search that interprets user intent ("I need help writing performance reviews") and recommends skills can hallucinate recommendations -- suggesting skills that don't exist, conflating two skills into one, or fabricating capabilities. The current search architecture uses pgvector semantic search + PostgreSQL full-text search. Adding an LLM layer on top to "interpret intent" creates a new failure mode: the LLM generates a confident natural-language response about skills that don't match what the vector search actually returned.
+**What goes wrong:** Benchmarking skills across LLM models requires knowing how many tokens each skill consumes. Developers assume they can count tokens locally using a tokenizer library (like tiktoken for OpenAI) and apply those counts universally. This is fundamentally wrong:
 
-**Why it happens:** The LLM receives search results and is asked to synthesize a recommendation. If the search results are poor matches (low similarity scores), the LLM fills gaps with plausible-sounding but fabricated information. It might say "the 'Performance Review Writer' skill handles 360 feedback and calibration" when the actual skill only generates basic review paragraphs.
+1. **Each model family has its own tokenizer.** Claude, GPT, Llama, and Gemini all tokenize text differently. The same skill prompt that is 500 tokens on Claude might be 480 on GPT-4 and 520 on Llama. There is no universal token count.
+
+2. **Anthropic does not publish a local tokenizer.** Unlike OpenAI (which provides tiktoken), Anthropic's tokenizer is only available via their [Token Counting API](https://platform.claude.com/docs/en/build-with-claude/token-counting) (`POST /v1/messages/count_tokens`). Using tiktoken to estimate Claude tokens gives inaccurate results -- "the accuracy rate for Claude token counts is understandably not great" when using tiktoken.
+
+3. **Token counts are estimates even from the official API.** Anthropic's own documentation states: "The token count should be considered an **estimate**. In some cases, the actual number of input tokens used when creating a message may differ by a small amount." Additionally, "Token counts may include tokens added automatically by Anthropic for system optimizations."
+
+4. **Token counting API has rate limits.** The endpoint is free but rate-limited: 100 RPM for tier 1, up to 8,000 RPM for tier 4. If you're benchmarking 500 skills, each with 3 prompts, that's 1,500 API calls just for token counting. At 100 RPM, that's 15 minutes of waiting.
+
+**Why it happens:** Developers see "token counter" and assume it's a deterministic local calculation. For OpenAI models this is largely true (tiktoken runs locally). For Claude, it requires an API call.
 
 **Consequences:**
-- Users trust AI recommendations and install skills that don't do what the AI described.
-- If the AI recommends a skill by name that doesn't exist (hallucinated from training data), clicking the link 404s, destroying trust.
-- Users report bugs because the skill "doesn't work as described" -- the AI described capabilities the skill doesn't have.
-- In an enterprise context, misleading AI recommendations about internal tools can cause workflow disruptions.
+- Token counts stored in benchmarks are wrong if calculated with the wrong tokenizer, making cost estimates misleading.
+- Cost comparisons between models are invalid if token counts aren't model-specific.
+- Rate limits on the token counting API throttle benchmark runs, making the process much slower than expected.
+- If the token count is used for context window management ("will this skill fit in the context?"), wrong counts cause silent truncation or API errors.
 
 **Prevention:**
-1. **Ground ALL recommendations in actual search results.** The architecture must be: user query -> embed query (same model as stored embeddings) -> vector search (pgvector) -> return TOP N results with similarity scores -> LLM synthesizes response ONLY from those N results. The LLM must not invent skills.
-2. **Include a similarity score threshold.** If the best match has similarity < 0.3, the response should be "No relevant skills found. Try creating one?" not a hallucinated recommendation. The current `semanticSearchSkills()` returns similarity scores -- enforce a minimum.
-3. **Template the LLM prompt to constrain output.** Provide search results as structured data (name, description, slug, similarity) and instruct: "Only recommend skills from the provided list. Do not invent or embellish capabilities beyond what the description states."
-4. **Always link to the actual skill page.** Every recommendation must include a clickable link to `/skills/[slug]`. If the LLM mentions a skill, it must use the slug from the search results. Verify programmatically that mentioned slugs exist.
-5. **Show the raw search results alongside the AI summary.** This lets users verify the AI's claims and builds trust. Pattern: AI summary at top, then "Skills matching your query:" with the actual result cards.
-6. **Use the existing Anthropic integration pattern from `apps/web/lib/ai-review.ts`** -- structured JSON output with Zod validation. Define a response schema: `{ recommendations: [{ skillSlug, reason, confidence }], summary }`. Parse and validate before rendering.
+1. **Store token counts PER MODEL.** The benchmark table must have: `skillId`, `modelId`, `modelVersion`, `inputTokens`, `outputTokens`, `totalTokens`, `measuredAt`. Do not store a single "token count" per skill.
+2. **Use the Anthropic Token Counting API for Claude models.** Call `POST /v1/messages/count_tokens` with the actual skill prompt, system message, and tool definitions. This is the only accurate source for Claude token counts.
+3. **For non-Anthropic models:** use model-specific tokenizers. tiktoken for OpenAI, the Gemini tokenizer for Google models, SentencePiece for Llama.
+4. **Cache token counts aggressively.** Token counts only change when the skill content changes. Hash the skill content and only re-count tokens when the hash changes. Store the content hash alongside the token count.
+5. **Batch token counting.** Don't count tokens for all skills at once. Count tokens lazily -- when a skill is viewed, deployed, or benchmarked. Pre-compute counts for popular skills in a background job.
+6. **Display token counts as ranges, not exact numbers.** "~500 tokens" is more honest than "503 tokens" given that the official API is an estimate.
+7. **Cost estimation must use model-specific pricing.** Token count * price-per-token, where both values are model-specific. Store pricing as configuration, not hardcoded, since providers change pricing frequently.
 
-**Detection:** Query for a topic where no skills exist. The AI should say "no matching skills" not fabricate recommendations. Query for a topic where skills exist but are weak matches. The AI should qualify its recommendations ("partially related") not oversell them.
+**Detection:** Count tokens for the same skill using Anthropic's API and tiktoken. If the numbers match exactly, something is wrong (they should differ). Verify that changing one character in the skill content triggers a re-count.
 
-**Phase:** AI intent search phase. Design the grounding architecture before building the UI.
+**Phase:** Token counting infrastructure should be built as part of the benchmarking foundation phase, before any cost estimation or model comparison features.
 
-**Confidence:** HIGH -- [RAG hallucination mitigation patterns](https://arxiv.org/html/2510.24476v1) well-documented; enterprise context analysis from [Glean](https://www.glean.com/perspectives/when-llms-hallucinate-in-enterprise-contexts-and-how-contextual-grounding).
+**Confidence:** HIGH -- Anthropic's token counting API docs verified at [platform.claude.com](https://platform.claude.com/docs/en/build-with-claude/token-counting). Rate limits verified. Tiktoken inaccuracy for Claude verified from [multiple sources](https://blog.gopenai.com/counting-claude-tokens-without-a-tokenizer-e767f2b6e632).
 
 ---
 
-### Pitfall 4: DEFAULT_TENANT_ID Hardcoded in 30+ Files Collides with New Features
+### Pitfall 4: Benchmarks Become Invalid When Models Update, But Old Data Persists
 
-**What goes wrong:** `DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000"` is hardcoded in 30+ files across the codebase (verified via grep -- apps/web actions, MCP tools, E2E tests, lib files). Every new v3.0 feature (Workspace integration, visibility scoping, AI search, preferences) will need tenant context. If the pattern continues, new files will copy-paste the hardcoded string, and the eventual migration to dynamic tenant resolution becomes exponentially harder.
+**What goes wrong:** You benchmark skill X on "Claude Opus 4" in February 2026 -- it costs $0.03, uses 500 tokens, and produces "good" output. In April 2026, Anthropic updates Claude Opus 4 with improved capabilities (possibly under the same model ID, or a new version like "claude-opus-4-20260401"). Your benchmark data still shows the February numbers. Three failure modes:
 
-The specific danger for v3.0: **Workspace integration is inherently multi-tenant** (each tenant connects to their own Google Workspace). If the Workspace sync service uses `DEFAULT_TENANT_ID`, it will store all tenants' directory data in a single namespace, creating cross-tenant data leakage of employee information.
+1. **Silent model version changes.** Anthropic and OpenAI regularly update model weights behind the same API endpoint. The model called `claude-opus-4-6` today may have subtly different behavior than three months ago. If your benchmarks don't record the exact model version string (including the date suffix), you can't tell whether performance changes are due to the skill or the model.
 
-**Files currently hardcoding DEFAULT_TENANT_ID (from codebase audit):**
+2. **Prompt sensitivity across versions.** A skill prompt that gets 95% quality on model version A might get 75% on version B because the model interprets instructions differently. This is not a skill regression -- it's a model change. But if the benchmark doesn't distinguish the two, the skill appears to have degraded.
 
-| Category | Count | Examples |
-|---|---|---|
-| Server actions | 8 | skills.ts, fork-skill.ts, ratings.ts, api-keys.ts, skill-messages.ts, notification-preferences.ts |
-| API routes | 3 | install-callback, dev-login, mcp transport |
-| MCP tools | 5 | create.ts, update-skill.ts, submit-for-review.ts, review-skill.ts, tracking/events.ts |
-| Lib files | 1 | embedding-generator.ts |
-| E2E tests | 7 | auth.setup.ts, fork-skill, install, mcp-usage-tracking, skill-rating, ai-review, delete-skill, my-skills |
-| Admin pages | 3 | admin/layout.tsx, admin/reviews/[skillId]/page.tsx, admin/reviews/page.tsx |
-| DB client | 1 | packages/db/src/client.ts (connection-level setting) |
+3. **Historical benchmark inflation.** Old benchmarks are never re-run. A skill benchmarked once on a favorable model version shows perpetually good numbers. Newer skills benchmarked on a harder model version look worse by comparison, even if they're objectively better.
+
+4. **Benchmark contamination.** If the benchmark test cases are derived from real usage (training data), and those test cases were generated by the same model being evaluated, the benchmark is testing the model on its own output -- a form of data contamination that inflates scores.
+
+**Why it happens:** Teams treat LLM benchmarking like traditional software testing, where the test environment is stable. In LLM benchmarking, the "environment" (the model) changes unpredictably and often silently.
+
+**Consequences:**
+- Cost estimates become misleading: a skill shows "$0.03/use" based on February pricing, but April pricing or token efficiency changed.
+- Quality scores become meaningless: a skill shows "9/10 quality" but that was on an older model version.
+- Cross-model comparisons are invalid: "Claude scores 9/10, GPT scores 7/10" if measured at different times with different model versions.
+- Enterprise customers lose trust in the benchmarking system when numbers don't match reality.
 
 **Prevention:**
-1. **For v3.0 new code: ALWAYS resolve tenant from session.** Use `session.user.tenantId` (available since Phase 26) instead of `DEFAULT_TENANT_ID`. The JWT callback in `apps/web/auth.ts` already injects `tenantId`.
-2. **Create a `resolveTenantId(session)` helper** that returns `session.user.tenantId` and throws if missing. Use this in all new server actions and services. Never fall back to DEFAULT_TENANT_ID in new code.
-3. **For Workspace integration specifically:** the service account credentials, sync state, and directory cache MUST be keyed by `tenantId`. A Workspace sync job takes `tenantId` as a parameter, not a global.
-4. **For new DB services:** accept `tenantId` as a required parameter (not optional with DEFAULT fallback). This is the pattern used in `upsertSkillEmbedding()` -- follow it consistently.
-5. **Do NOT attempt to migrate all 30+ existing files in v3.0.** That's a separate cleanup. Just prevent new proliferation.
+1. **Record the EXACT model version string.** Not "claude-opus-4" but "claude-opus-4-6-20250929" (the full model ID returned by the API). Store this in every benchmark record.
+2. **Add a `benchmarkedAt` timestamp.** Every benchmark record has a date. Display this prominently: "Benchmarked on 2026-02-15 with claude-opus-4-6."
+3. **Implement benchmark expiration.** Benchmarks older than 90 days are marked as "stale" in the UI. Show a warning: "This benchmark was run 4 months ago. Model performance may have changed." Offer a "Re-benchmark" button.
+4. **Detect model version changes.** On each API call, capture the model version from the response headers. If the version changes from the last known version, flag all benchmarks for that model as potentially stale.
+5. **Separate the test cases from the training data.** Use a held-out evaluation set that is never used for training. If the training data changes, the evaluation set does not. This prevents contamination.
+6. **Normalize cross-model comparisons.** Don't compare absolute scores across models. Instead, show relative performance: "This skill performs in the top 20% on Claude" and "top 30% on GPT." These percentile rankings are meaningful even when absolute scores differ.
+7. **Version the benchmark methodology.** If you change how quality is scored (new rubric, new evaluation prompts), increment a `benchmarkVersion` field. Old results under version 1 are not comparable to new results under version 2.
 
-**Detection:** After v3.0 development, grep for `"default-tenant-000"` in new files. Count should be zero in newly created files.
+**Detection:** Run the same benchmark twice, 30 days apart, on the same model. If the scores differ significantly (>10%), investigate whether the model version changed. Check the model version strings in both runs.
 
-**Phase:** Enforced from the start of v3.0. Not a separate phase -- a coding standard for all phases.
+**Phase:** Benchmark schema design must be in the foundation phase. Staleness detection and re-benchmarking can be a follow-up phase.
 
-**Confidence:** HIGH -- verified via direct codebase grep.
+**Confidence:** HIGH -- Model version instability verified from [HoneyHive evaluation pitfalls](https://www.honeyhive.ai/post/avoiding-common-pitfalls-in-llm-evaluation): "changes to the underlying models are often opaque, invalidating previous evaluation baselines." Confirmed by [LLM benchmarks 2026 analysis](https://llm-stats.com/benchmarks).
 
 ---
 
@@ -155,232 +177,219 @@ The specific danger for v3.0: **Workspace integration is inherently multi-tenant
 
 ---
 
-### Pitfall 5: Google Workspace Directory Sync Rate Limits and Data Freshness
+### Pitfall 5: Feedback Fatigue -- Users Ignore or Resent Prompts for Quality Ratings
 
-**What goes wrong:** The Google Workspace Directory API has specific rate limits: 2,400 queries per minute per user per project (verified from [official docs](https://developers.google.com/workspace/admin/directory/v1/limits)). A full directory sync for a large organization (5,000+ users) requires paginated LIST calls (500 users per page max). The sync is needed to populate team/department/manager data for visibility scoping and people search.
+**What goes wrong:** EverySkill already has a rating system (star ratings with time-saved estimates on `/skills/[slug]`). Adding in-session feedback prompts (via PostToolUse hooks or MCP tools) creates a second feedback channel. If this fires too often, users develop "feedback blindness" -- they stop reading prompts and either always click "good" or actively disable the hook.
 
-Three problems arise:
+Three specific failure modes in the EverySkill context:
 
-1. **Initial sync storms.** When a new tenant connects their Workspace, the first sync fetches all users. For 5,000 users = 10 API calls, no problem. For 50,000 users = 100 API calls. But if 10 tenants onboard simultaneously, you hit the per-project quota.
+1. **PostToolUse feedback hooks fire on EVERY tool call.** The current tracking hook fires on every tool invocation with `matcher: "*"`. If you add a feedback prompt on the same cadence, a session that makes 50 tool calls will prompt for feedback 50 times. This is unusable.
 
-2. **Stale data drift.** If sync runs daily, a user who changed departments today won't see correct visibility scoping until tomorrow. Skills scoped to "my department" use yesterday's department assignment.
+2. **Feedback inside Claude Code disrupts flow.** The PostToolUse hook can return `additionalContext` or `systemMessage` to Claude, or print to stderr (shown in verbose mode). But ANY output from a PostToolUse hook is visible to Claude and may affect its behavior. A feedback prompt like "Rate this skill 1-5" in the hook output would confuse Claude -- it would try to rate the skill itself rather than wait for the user.
 
-3. **Partial sync failures.** If the sync crashes midway (token expired, rate limit hit, service account revoked), you have a partially updated directory. Some users have fresh data, others have stale data. Visibility scoping based on stale department data shows wrong results.
+3. **Feedback in the web UI competes with existing ratings.** The skill detail page already has star ratings. Adding a separate "Was this skill helpful?" or "Rate this session" widget duplicates the feedback mechanism and confuses users about which one matters.
 
-**Prevention:**
-1. **Implement incremental sync, not full sync.** Use the Directory API's `orderBy=email&pageToken` with a stored last-sync timestamp. On subsequent syncs, only fetch users modified since the last sync (use the `customField` or `updatedMin` parameter if available, otherwise compare cached vs fetched).
-2. **Queue sync jobs per tenant.** Use a simple database-backed queue (a `workspace_sync_jobs` table with status, tenant_id, last_page_token). Process one tenant at a time. If rate-limited, back off and resume from the last page token.
-3. **Store sync metadata.** For each tenant: `lastFullSyncAt`, `lastIncrementalSyncAt`, `syncStatus` (idle, in_progress, failed, rate_limited), `totalUsersSync`. Show this on the admin Workspace settings page.
-4. **Handle partial failures gracefully.** If sync fails midway, do NOT clear old data. Keep the existing directory data and mark the sync as failed. Show "Directory data may be outdated" in the UI. Resume from the last page token on retry.
-5. **Cache directory data in EverySkill's database.** Create a `workspace_users` table with: `tenantId`, `googleUserId`, `email`, `name`, `department`, `manager`, `team`, `title`, `syncedAt`. This is the source of truth for visibility scoping -- never query Google's API at request time.
-
-**Detection:** Mock the Directory API to return errors after 50% of records. Verify the sync saves what it got and doesn't lose previously synced data. Verify visibility scoping works with partial data (users not yet synced default to `public` visibility skills only).
-
-**Phase:** Workspace integration phase. Sync infrastructure must be built before visibility scoping can use department/team data.
-
-**Confidence:** MEDIUM -- rate limits verified from official docs; incremental sync patterns are common practice but specific API behavior (updatedMin parameter) needs verification at implementation time.
-
----
-
-### Pitfall 6: Loom Embed SDK Staleness and Video Availability
-
-**What goes wrong:** The `@loomhq/loom-embed` npm package was last published 2 years ago (v1.7.0). Loom was acquired by Atlassian in 2023. The SDK stability is uncertain. If EverySkill stores Loom URLs in skill descriptions and renders them as embedded players, three failure modes emerge:
-
-1. **SDK breaks on Loom infrastructure changes.** A stale SDK that hasn't been updated in 2 years may stop working if Loom changes their embed endpoints, authentication, or player markup. There's no active maintenance signal.
-
-2. **Video deletion/privacy changes.** A skill references a Loom video. The video creator deletes it, makes it private, or leaves the organization. The embed shows a broken player with "Video not available." The skill looks broken even though the text content is fine.
-
-3. **Loom access requires authentication.** If Loom videos are set to "team only" or "logged-in users only," the embedded player may prompt for Loom authentication inside the EverySkill page, creating a confusing dual-login UX. The viewer needs both an EverySkill session AND a Loom session.
-
-**Prevention:**
-1. **Use Loom's oEmbed endpoint, not the npm SDK.** Call `https://www.loom.com/v1/oembed?url={loomUrl}` at render time to get the embed HTML. This is more resilient to SDK deprecation. If oEmbed fails, fall back to a simple link with thumbnail.
-2. **Cache oEmbed responses.** Store the oEmbed HTML in the database alongside the Loom URL. Re-validate periodically (e.g., daily cron). If oEmbed returns an error on re-validation, flag the skill as having a broken video and notify the author.
-3. **Detect Loom URLs via regex, don't require special input.** Skills already have markdown content. Detect `https://www.loom.com/share/*` URLs in content and auto-embed. This avoids a special "add Loom video" UI -- just paste the URL.
-4. **Handle broken embeds gracefully.** If the oEmbed call fails or the video is unavailable, render a gray placeholder with "Video unavailable" and a link to the original URL. Do NOT crash the skill detail page.
-5. **CSP headers.** Loom embeds use iframes from `*.loom.com`. Ensure the Content-Security-Policy allows `frame-src https://*.loom.com`. Check `apps/web/next.config.ts` for existing CSP rules.
-6. **Consider making Loom integration generic.** Support any oEmbed provider (Loom, YouTube, Vimeo) by detecting URLs and calling the appropriate oEmbed endpoint. This avoids vendor lock-in to Loom specifically.
-
-**Detection:** Embed a Loom video in a skill, then delete the video on Loom. The skill page should show a graceful fallback, not a broken iframe or JavaScript error. Test with a private Loom video -- verify the embed shows "sign in to Loom" or a fallback, not a blank player.
-
-**Phase:** Loom integration phase. Should be a lightweight feature, not a large phase.
-
-**Confidence:** MEDIUM -- SDK staleness verified via [npm](https://www.npmjs.com/package/@loomhq/loom-embed); oEmbed endpoint availability confirmed via [Loom developer docs](https://dev.loom.com/docs/embed-sdk/api). Loom's long-term embed strategy under Atlassian is LOW confidence.
-
----
-
-### Pitfall 7: Homepage Redesign Performance Regression from Additional Data Fetching
-
-**What goes wrong:** The current homepage (`apps/web/app/(protected)/page.tsx`) already fetches 8 parallel queries in `Promise.all()` on every page load:
-
-```
-getPlatformStats(), getPlatformStatTrends(), getTrendingSkills(6),
-getLeaderboard(5), getSkillsUsed(user.id), getSkillsUsedStats(user.id),
-getSkillsCreated(user.id), getSkillsCreatedStats(user.id)
-```
-
-A v3.0 homepage redesign with AI-powered features will want to add: personalized recommendations (AI intent search), recent activity feed, team skills, workspace diagnostics, "skills your colleagues use," and department trending. Each of these is another database query or AI API call. Adding 4-5 more queries doubles the homepage data fetching.
-
-**Why it happens:** Server components in Next.js make it easy to fetch everything in parallel. But "parallel" doesn't mean "free" -- each query competes for database connections, and the page doesn't render until ALL parallel queries resolve. The slowest query determines page load time.
+**Why it happens:** Teams want rich feedback data. "More prompts = more data." But feedback quality degrades rapidly with frequency. Research shows survey fatigue causes respondents to either disengage entirely or provide low-quality angry responses.
 
 **Consequences:**
-- Homepage Time To First Byte (TTFB) increases from ~200ms to 500ms+ as queries multiply.
-- If the AI recommendation call takes 2+ seconds (Anthropic API latency), the entire homepage is blocked.
-- Database connection pool exhaustion: each parallel query uses a connection. 8 queries * N concurrent users approaches the postgres connection limit.
-- The existing homepage queries don't use tenant scoping from the session (they rely on connection-level `app.current_tenant_id`). Adding visibility-scoped queries on top means some queries use RLS and some don't -- inconsistent behavior.
+- Users disable feedback hooks entirely, losing ALL feedback data.
+- Feedback data is biased: only frustrated users respond (selection bias), or users always click the same answer (acquiescence bias).
+- Claude interprets feedback prompts as instructions, corrupting the skill's behavior mid-session.
+- Multiple feedback channels (in-session hook, web UI ratings, MCP tool) create contradictory data about the same skill.
 
 **Prevention:**
-1. **Separate static and dynamic content.** Platform stats, trending, and leaderboard change slowly -- cache them for 5 minutes (use React's `unstable_cache` or a simple in-memory cache). Personal data (my leverage, recommendations) must be fresh.
-2. **Move AI recommendations to client-side loading.** Render the homepage with static + personal data. Then load AI recommendations asynchronously via a client component that calls a server action after mount. This prevents AI latency from blocking the page.
-3. **Implement Suspense boundaries.** Wrap non-critical sections (recommendations, activity feed) in `<Suspense fallback={<Skeleton />}>`. This allows the critical content to render first.
-4. **Set a budget: max 10 parallel queries on homepage.** If a new feature needs homepage data, it must either replace an existing query or be loaded asynchronously.
-5. **Monitor database connection pool.** The current `postgres()` client in `packages/db/src/client.ts` uses default pool size (probably 10). With 8+ queries per page load, concurrent users will exhaust the pool quickly. Consider increasing `max` or implementing query batching.
+1. **Smart frequency gating.** Never prompt for feedback more than once per session per skill. Use a local file (`/tmp/everyskill-feedback-state.json`) to track which skills have already prompted in this session. The hook checks this file before prompting.
+2. **Probabilistic sampling.** Don't prompt every user every time. Prompt 10-20% of sessions, randomly. This gets statistically valid data without fatiguing every user. Implement in the hook: `if (( RANDOM % 10 == 0 )); then ...`.
+3. **Prompt at session END, not during.** Use the `Stop` or `SessionEnd` hook instead of PostToolUse for feedback. After Claude finishes its work, ask "How was skill X?" This doesn't disrupt the workflow.
+4. **Use implicit signals over explicit prompts.** Instead of asking users to rate, infer quality from behavior: Did the user re-run the skill? Did they fork it? Did they uninstall it? Did the session succeed (no errors)? These implicit signals are available from the existing usage tracking data without ANY user prompts.
+5. **Consolidate feedback channels.** One canonical feedback mechanism: the web UI star rating. In-session feedback should AUGMENT this with implicit signals, not duplicate it with explicit prompts.
+6. **If you MUST prompt in-session:** use a `Notification` hook (which shows to the user, not Claude) rather than PostToolUse output (which shows to Claude). The `Notification` event is specifically designed for user-facing messages.
+7. **Respect "don't ask again."** If a user dismisses feedback 3 times in a row, stop asking for 30 days. Store this preference in the local state file.
 
-**Detection:** Measure TTFB before and after the redesign. Set a performance budget: homepage TTFB must be under 400ms for the 95th percentile. Load test with 20 concurrent users.
+**Detection:** Monitor feedback response rates over time. If the response rate drops below 20%, feedback fatigue has set in. If 80%+ of responses are the same rating, acquiescence bias has taken over.
 
-**Phase:** Homepage redesign phase. Performance budgets should be set before adding new data sources.
+**Phase:** Feedback mechanism design should be its own focused phase. Don't bolt feedback onto the tracking hook as an afterthought.
 
-**Confidence:** HIGH -- verified from direct analysis of `apps/web/app/(protected)/page.tsx` showing 8 parallel queries.
+**Confidence:** HIGH -- Feedback fatigue patterns verified from [Fortune survey fatigue analysis](https://fortune.com/2025/12/28/customer-survey-fatigue-feedback-consumer-experience/) and [UX research best practices](https://www.userinterviews.com/ux-research-field-guide-chapter/continuous-user-feedback-surveys).
 
 ---
 
-### Pitfall 8: Visibility Scoping Requires Department/Team Data That Doesn't Exist Yet
+### Pitfall 6: Fork Spam from Auto-Generated Suggestions Overwhelms the Review Queue
 
-**What goes wrong:** Implementing `team` and `department` visibility scopes requires knowing which team/department each user belongs to. This data doesn't exist in the EverySkill database. The `users` table (`packages/db/src/schema/users.ts`) has only: `id`, `tenantId`, `email`, `role`, `name`, `emailVerified`, `image`, `createdAt`, `updatedAt`. No `department`, `team`, `manager`, or organizational unit fields.
+**What goes wrong:** The v3 milestone idea says "suggested changes can come from any user / user's use of everyskill." If the system auto-generates improvement suggestions based on usage patterns or feedback data, and those suggestions automatically create fork proposals, the review queue gets flooded.
 
-If visibility scoping is built before the Workspace directory sync populates this data, the `team` and `department` scopes are unusable. Skills set to "team only" would be invisible to everyone (because no users have a team assigned), or visible to everyone (if the filter falls back to `public` when team data is missing).
+Consider the math: 100 active skills * 50 users * monthly usage = 5,000 usage events. If 5% of events trigger an auto-suggestion (error patterns, common modifications), that's 250 auto-generated fork proposals per month. Each requires author review. Most will be noise (minor formatting differences, environment-specific tweaks, false positive "improvements").
 
-**Why it happens:** Developers plan the visibility feature and the Workspace sync as separate workstreams. Visibility scoping is "simpler" and gets prioritized first. But it depends on data that only Workspace sync provides.
+**Current fork infrastructure in the codebase:**
+- `skills.forkedFromId` tracks the parent skill (self-referential FK)
+- `skills.forkedAtContentHash` enables drift detection
+- `update_skill` MCP tool creates forks: `forkedFromId: skillId` (line 277 of `apps/mcp/src/tools/update-skill.ts`)
+- Fork actions in `apps/web/app/actions/fork-skill.ts` create new skills with `forkedFromId: parent.id`
+- The existing review queue (`status` lifecycle with admin review) is designed for human-authored skills, not machine-generated variants
+
+**Why it happens:** Auto-suggestion systems are easy to build but hard to calibrate. Without quality gates, every minor difference between a user's modified version and the original gets flagged as a "suggestion." The signal-to-noise ratio is terrible.
 
 **Consequences:**
-- Users set skills to "department" visibility. No one can see them because department data hasn't been synced yet.
-- If the visibility filter falls back to `public` when user has no department, all "department" skills become public -- the opposite of the intended behavior.
-- If the visibility filter falls back to `author-only` when department data is missing, legitimate team members can't see the skill.
-- The fallback behavior is a UX landmine regardless of which direction you choose.
+- Skill authors are buried in low-quality suggestions and stop reviewing any of them.
+- The admin review queue (built for 5-10 submissions/week) chokes on hundreds of auto-generated proposals.
+- The `skills` table fills with "suggestion" forks that are never approved, cluttering search results and inflating fork counts.
+- Users who DO make legitimate suggestions have them lost in the noise.
 
 **Prevention:**
-1. **Phase dependency: Workspace sync MUST ship before visibility scoping uses `team` or `department`.** Visibility scoping phase 1 should only support `public` and `private`. Phase 2 adds `team` and `department` after Workspace sync is live.
-2. **Add organizational fields to the users table** (or a separate `user_profiles` table): `department`, `team`, `managerId`, `title`. Populate these from Workspace sync.
-3. **For tenants without Workspace integration:** allow manual team/department assignment in admin settings. This is a fallback for non-Google organizations.
-4. **The visibility filter must handle NULL department/team gracefully.** If `user.department IS NULL` and a skill has `visibility = 'department'`, the user should NOT see the skill (conservative default). Show a message: "Connect Google Workspace to access department-scoped skills."
+1. **Suggestions are NOT forks.** Create a separate `skill_suggestions` table with: `id`, `skillId`, `suggesterId`, `tenantId`, `diff`, `reason`, `status` (pending/accepted/rejected/auto-dismissed), `confidence`, `createdAt`. Do NOT create a new row in `skills` for every suggestion.
+2. **Quality threshold for auto-suggestions.** Only generate suggestions when: (a) multiple users made similar modifications (3+ users changed the same section), (b) the modification demonstrably improved outcomes (measured via training data), (c) the suggestion confidence exceeds a threshold (e.g., 0.8). One user's one-time tweak is NOT a suggestion.
+3. **Rate-limit suggestions per skill per week.** Maximum 3 auto-generated suggestions per skill per week. After that, queue them for the next week. This prevents burst flooding.
+4. **Batch suggestions.** Don't show each suggestion individually. Once per week, send the skill author a digest: "3 improvement suggestions for your skill 'Code Review Checklist'." One notification, not three.
+5. **Author opt-in for auto-suggestions.** When creating a skill, the author chooses: "Accept improvement suggestions from users" (default off). If off, no auto-suggestions are generated. Manual fork-and-propose still works.
+6. **Auto-dismiss low-confidence suggestions.** If a suggestion has confidence < 0.5 and no human endorsement within 14 days, auto-dismiss it. Don't keep it in the queue.
+7. **Separate suggestion UI from the admin review queue.** Author-facing suggestion review is a different workflow from admin quality review. Don't mix them in the same queue.
 
-**Detection:** Create a skill with "department" visibility before any Workspace sync. Verify it's only visible to the author. Then sync the Workspace. Verify department members can now see it.
+**Detection:** After implementing, count suggestions per skill per week. If any skill has >10 suggestions, the threshold is too low. Count the acceptance rate -- if <10%, the quality filter needs tightening.
 
-**Phase:** Visibility scoping must be phased: Phase 1 (public/private), Phase 2 (team/department, requires Workspace sync).
+**Phase:** Suggestion pipeline should be a separate phase AFTER training data collection is stable. You need quality data to generate quality suggestions.
 
-**Confidence:** HIGH -- verified from direct schema analysis showing no organizational fields on users table.
+**Confidence:** MEDIUM -- No direct analogues in the current codebase. Pattern derived from content moderation best practices and the codebase's existing fork architecture.
 
 ---
 
-### Pitfall 9: Embedding Model Transition from Ollama to Cloud Provider Invalidates All Vectors
+### Pitfall 7: PostToolUse Hook Cannot Directly Solicit User Input or Block Session Flow
 
-**What goes wrong:** The current embedding pipeline uses Ollama locally (`nomic-embed-text`, 768 dimensions) via `apps/web/lib/ollama.ts`. AI intent search needs embeddings at request time for query matching. If the v3.0 plan switches to a cloud embedding provider (Voyage AI, OpenAI) for better quality or to eliminate the local Ollama dependency, ALL existing skill embeddings become incompatible. You cannot mix embeddings from different models -- they exist in different vector spaces.
+**What goes wrong:** Developers assume they can use the PostToolUse hook to ask the user a question ("Was this helpful?") and wait for a response. This is architecturally impossible. PostToolUse hooks have these constraints (verified from official docs):
 
-The `skill_embeddings` table (`packages/db/src/schema/skill-embeddings.ts`) stores `modelName` and `dimensions`, but the HNSW index at line 59 is hardcoded to `vector(768)`. Switching to a model with different dimensions (e.g., OpenAI `text-embedding-3-small` at 1536 dimensions) requires rebuilding the table and index.
+1. **PostToolUse cannot block.** Exit code 2 on PostToolUse "Shows stderr to Claude (tool already ran)" -- it does NOT block the session. Unlike PreToolUse (which can deny a tool call), PostToolUse runs after the fact.
+2. **Async hooks cannot return decisions.** The existing hook uses `async: true`. Async hooks "cannot block tool calls or return decisions" -- their output is "delivered on the next conversation turn."
+3. **PostToolUse output goes to CLAUDE, not the user.** The `decision: "block"` field on PostToolUse "prompts Claude with the reason." The `additionalContext` is "for Claude to consider." The `systemMessage` is "shown to the user" but only as a warning, not an interactive prompt.
+4. **No hook type supports interactive user input.** Command hooks, prompt hooks, and agent hooks all produce output -- they don't receive input from the user mid-session. The only user-facing interaction is the `PermissionRequest` hook (which shows an allow/deny dialog), and that's for permissions, not feedback.
 
-**Why it happens:** The embedding model seems like a swappable implementation detail, but it's actually a data commitment. Every existing embedding is bound to the model that created it.
+**Why it happens:** The hook system is designed for automation and guardrails, not for user interaction. Developers coming from web frameworks expect request-response patterns, but hooks are fire-and-forget.
 
 **Consequences:**
-- Switching models without re-embedding: semantic search returns garbage results (comparing vectors from different spaces).
-- Re-embedding all skills: requires one API call per skill. With Voyage AI rate limits (documented in project memory as "tight"), re-embedding 500 skills could take 30+ minutes.
-- If the column is `vector(768)` and the new model outputs 1536 dimensions, inserts fail with a dimension mismatch error.
-- During migration, there's a window where some skills have old embeddings and some have new ones. Search quality degrades.
+- If feedback is put in PostToolUse output, Claude reads it as instructions and may try to act on it (e.g., Claude starts rating its own work).
+- If feedback is put in stderr, it shows in verbose mode only -- most users never see it.
+- If `systemMessage` is used, the user sees a warning banner but has no way to respond to it.
+- Any attempt to "pause for user input" hangs the hook until timeout (default 600 seconds).
 
 **Prevention:**
-1. **Decide the embedding model BEFORE building AI intent search.** If staying with Ollama, ensure Ollama is reliable enough for production (it requires the local server to be running -- see `startOllama()` function). If switching to cloud, plan the re-embedding migration.
-2. **If switching models:** add a `modelVersion` or `modelName` check to the search query. Only compare embeddings with the same model. During migration, run both old and new embeddings in parallel, merging results.
-3. **Re-embedding migration strategy:** batch process skills during off-peak hours. Use the existing `inputHash` field to skip skills that haven't changed. Process in groups of 10-20 with exponential backoff on rate limit errors.
-4. **Consider Voyage AI `voyage-3-lite`** (1024 dimensions, lower cost) as a balance between quality and compatibility. This requires a schema migration: `ALTER TABLE skill_embeddings ALTER COLUMN embedding TYPE vector(1024)` and dropping/recreating the HNSW index.
-5. **If staying with Ollama:** ensure the Ollama service is managed by systemd and auto-starts. The current `startOllama()` function in `ollama.ts` spawns the process ad-hoc, which is fragile for a production service.
+1. **Collect feedback OUTSIDE the hook system.** The hook fires a POST to EverySkill's API with usage data. Feedback collection happens separately: (a) in the EverySkill web UI after the user's session, (b) via a dedicated MCP tool that the user explicitly invokes, (c) via a Notification hook that shows "Rate this skill at [URL]" -- a link the user clicks to go to the web feedback page.
+2. **Use the `Notification` hook for user-visible messages.** If you need the user to see something, use the `Notification` event type, which is specifically for user-facing messages. However, it still can't collect input -- it's one-way.
+3. **Use the `Stop` hook for end-of-session feedback.** The `Stop` event fires when Claude finishes responding. A Stop hook can return `decision: "block"` with a `reason` that asks Claude to prompt the user for feedback. This is the closest to interactive feedback: Claude asks the user, the user responds in the chat, and Claude can relay the rating via an MCP tool call.
+4. **Build a dedicated `rate_skill` MCP tool.** This already fits the EverySkill architecture. The MCP server already has tools like `describe_skill`, `deploy_skill`. Add `rate_skill(skillId, rating, comment)`. Claude can suggest this tool to the user at appropriate moments. The user approves the tool call (via normal Claude Code permissions), providing an implicit consent mechanism.
 
-**Detection:** After switching models, run a known-good query (e.g., "project management automation") and verify the top results make sense. Compare results before and after the model switch.
+**Detection:** Test by examining Claude's conversation after a PostToolUse hook fires with feedback text. If Claude responds to the feedback text as if it's an instruction, the feedback is in the wrong place.
 
-**Phase:** Decide in the AI intent search research/design phase. Execute the migration (if needed) as the first task of the AI search implementation phase.
+**Phase:** This constraint should be understood BEFORE designing the feedback mechanism. It determines the entire feedback architecture.
 
-**Confidence:** HIGH -- vector space incompatibility is well-established; Voyage AI rate limits verified from project memory.
+**Confidence:** HIGH -- All constraints verified from [official Claude Code hooks reference](https://code.claude.com/docs/en/hooks), specifically the PostToolUse section and the async hooks limitations section.
 
 ---
 
-### Pitfall 10: Personal Preferences Creating Data Model Complexity and Sync Conflicts
+### Pitfall 8: Benchmark Evaluation Using LLM-as-Judge is Unreliable and Biased
 
-**What goes wrong:** "Personal preferences" (preferred categories, notification settings, UI customization, default search filters, pinned skills, bookmarks) creates a sprawling data model. The current `notification_preferences` table already has 7+ boolean columns per user. Adding preferences for search, UI, content, and workspace creates either:
+**What goes wrong:** Benchmarking skill quality requires a quality score. The obvious approach is to use an LLM to evaluate skill output: "Rate this output 1-10 for quality." This introduces systematic biases:
 
-1. **One wide table** with 20+ columns, most nullable, requiring schema migrations for each new preference.
-2. **A JSON column** (`preferences JSONB`) that's flexible but untyped, hard to query, and prone to schema drift.
-3. **Multiple tables** (notification_prefs, search_prefs, ui_prefs, content_prefs) that must all be fetched and kept in sync.
+1. **Self-evaluation bias.** If you use Claude to evaluate output that Claude generated, the evaluation is biased toward Claude's own style. Claude rates Claude-generated text higher than human-written text, and vice versa for GPT evaluating GPT output. Verified: "LLM evaluators can hallucinate, make factual errors, or struggle to follow complex instructions" and "exhibit systematic biases favoring LLM-generated over human-written text."
 
-**Why it happens:** Preferences seem simple. "Just add a column." But they proliferate rapidly and each new feature wants its own preferences.
+2. **Positional bias.** When comparing two outputs, the LLM tends to rate the first one higher. If benchmark comparisons always present the "original" skill output first and the "new" version second, the original gets an unfair advantage.
+
+3. **Verbosity bias.** LLMs rate longer, more verbose outputs higher even when shorter outputs are objectively better. A skill that produces concise output scores lower than one that produces verbose output, even if the concise version is more useful.
+
+4. **Rubric drift.** If the evaluation prompt changes (even slightly), all scores shift. "Rate the output quality" vs "Evaluate the output effectiveness" produces different distributions. Your historical benchmarks become incomparable.
+
+**Why it happens:** LLM-as-judge is convenient and scalable. Human evaluation is expensive and slow. Teams default to LLM evaluation for everything.
 
 **Consequences:**
-- If using a wide table: every new preference requires a migration. The table grows to 30+ columns. Default values for new columns must be set carefully or existing users get null preferences.
-- If using JSONB: TypeScript types and database schema diverge. A type says `preferences.searchDefaults.categories: string[]` but the database might have an older shape without that key.
-- If using multiple tables: the homepage needs 3-4 preference queries, adding to the performance problem (Pitfall 7).
-- Sync conflicts if preferences can be set from multiple places (web UI, MCP tool, admin override). Which write wins?
+- Quality scores are inconsistent across evaluation runs, undermining trust.
+- Cross-model comparisons are invalid: Claude rates Claude-output higher, GPT rates GPT-output higher.
+- Skills optimized for LLM-evaluated quality (verbose, well-structured) may not be the best for actual users.
+- Historical benchmarks can't be compared if the evaluation prompt changed.
 
 **Prevention:**
-1. **Use a single `user_preferences` table with a JSONB `data` column.** Define the shape with a Zod schema in TypeScript for runtime validation. The schema serves as the source of truth for what preferences exist and their defaults.
-2. **Define defaults in code, not the database.** When reading preferences, merge the stored JSONB with a `DEFAULT_PREFERENCES` constant. New preferences automatically get defaults without migration.
-3. **Version the preferences schema.** Add a `schemaVersion` field inside the JSONB. When reading, if `schemaVersion < CURRENT_VERSION`, migrate the shape in-memory and write back.
-4. **Fetch preferences ONCE per page load** and pass via React context or server component props. Do NOT fetch preferences in every component.
-5. **Keep `notification_preferences` separate** -- it already exists and works. Don't try to merge it into the new preferences system.
-6. **The `user_preferences` table needs `tenantId` and RLS** like every other table. Import from session, not DEFAULT_TENANT_ID.
+1. **Use LLM-as-judge for RELATIVE comparisons, not absolute scores.** "Is output A better than output B for this task?" is more reliable than "Rate output A on a scale of 1-10." Pairwise comparison reduces bias.
+2. **Use a DIFFERENT model as judge than the model being evaluated.** If benchmarking Claude output, evaluate with GPT (or vice versa). If benchmarking GPT output, evaluate with Claude. This mitigates self-evaluation bias.
+3. **Randomize presentation order.** When comparing two outputs, randomly order them in the evaluation prompt. Log which was presented first to detect positional bias.
+4. **Version-lock the evaluation prompt.** Store the exact evaluation prompt in the benchmark record. If you change the prompt, increment the benchmark version. Never mix scores from different evaluation prompts.
+5. **Supplement with objective metrics.** Token count, execution time, error rate, and tool call count are objective measures that don't require LLM evaluation. Use these as the primary benchmarks, with LLM quality assessment as a secondary signal.
+6. **Calibrate with human baselines.** For the first 50-100 evaluations, have a human rate the same outputs. Compute the LLM-human agreement rate. If agreement < 70%, the LLM evaluation is not reliable enough to use.
+7. **The existing AI review system (`apps/web/lib/ai-review.ts`) already uses Anthropic with structured JSON output and Zod validation.** Extend this pattern for benchmarking evaluation, but add the anti-bias measures above.
 
-**Detection:** Add a new preference type to the Zod schema without a migration. Verify existing users get the default value. Verify users with stored preferences don't lose their existing settings.
+**Detection:** Evaluate the same skill output twice with the same LLM. If scores differ by >1 point (on a 10-point scale), the evaluation is not stable enough for benchmarking.
 
-**Phase:** Personal preferences should be its own small phase, early in v3.0. Other features (search defaults, UI customization) depend on the preferences infrastructure.
+**Phase:** Evaluation methodology should be designed in the benchmarking foundation phase, before any scores are stored.
 
-**Confidence:** HIGH -- preference architecture patterns are well-established; JSONB + Zod is the standard approach for flexible schemas.
+**Confidence:** HIGH -- LLM-as-judge biases verified from [HoneyHive evaluation pitfalls](https://www.honeyhive.ai/post/avoiding-common-pitfalls-in-llm-evaluation) and [LLM evaluation frameworks 2026 analysis](https://medium.com/@future_agi/llm-evaluation-frameworks-metrics-and-best-practices-2026-edition-162790f831f4).
 
 ---
 
-### Pitfall 11: Homepage Redesign Breaking Existing User Workflows
+### Pitfall 9: Training Data Schema Design -- JSONB Blob vs Structured Tables
 
-**What goes wrong:** The current homepage has an established layout: welcome message, search bar, stat cards, trending skills, leaderboard, "Your Impact" section, and a My Leverage tab. Users who have been using EverySkill have muscle memory for these elements. A redesign that moves or removes elements disrupts workflows.
+**What goes wrong:** The existing `usage_events` table stores training-relevant data in a `metadata` JSONB column. The temptation is to keep adding fields to this JSONB blob: `tool_input_snippet`, `tool_output_snippet`, `quality_score`, `user_feedback`, `benchmark_result`, `model_version`. Over time, the JSONB column becomes an untyped, unindexed data swamp.
 
-Specific risks:
-- **Search bar relocation.** The `SearchWithDropdown` component is prominently placed. Moving it behind a tab or into a header breaks the "land on homepage, immediately search" flow.
-- **Removing stat cards.** Executives who share FTE Years Saved screenshots in presentations will be unhappy if the metric moves or changes format.
-- **Tab structure change.** The `HomeTabs` component separates "Browse" and "My Leverage." If these are reorganized, bookmarked tab states break.
-- **Adding AI recommendations that push existing content below the fold.** If the AI recommendation section is added above trending skills, users who scroll to trending will now have to scroll further.
+**Specific problems with the current approach:**
 
-**Prevention:**
-1. **Additive, not disruptive.** Add new sections (AI recommendations, workspace diagnostics, team activity) BELOW existing content. Don't remove or reorder what's already there in the initial redesign.
-2. **Keep the search bar in the same position** (below welcome, above stats). If enhancing search with AI intent, make the enhancement IN the existing search bar (e.g., "Ask anything" placeholder text, AI-powered dropdown results) rather than adding a separate AI search section.
-3. **Feature flags for new homepage sections.** Wrap new sections in a feature flag so they can be toggled per tenant or rolled back quickly.
-4. **Test with actual users before full rollout.** The project has demo datasets ("Avenue One" with 100 users, 50 skills). Load the redesigned homepage with real data and screenshot for review before deploying.
+1. **JSONB is not indexable for complex queries.** "Find all training examples where quality_score > 7 and model_version starts with 'claude'" requires a full table scan or GIN index on the JSONB column. With 100K+ usage events, these queries become slow.
 
-**Detection:** Load the redesigned homepage. Verify: (1) search bar is visible without scrolling, (2) stat cards are visible without scrolling, (3) existing URLs and tab states still work.
+2. **No schema enforcement.** Different hook versions send different JSONB shapes. Events from February have `{ source: "hook", skillName: "..." }`. Events from March might have `{ source: "hook", skillName: "...", quality: 8, modelVersion: "..." }`. There's no way to distinguish "quality is missing because it wasn't measured" from "quality is missing because the hook version didn't support it."
 
-**Phase:** Homepage redesign phase. Should be one of the later phases, after the underlying features (AI search, workspace, preferences) exist.
+3. **Migration complexity.** Changing the shape of JSONB data requires a backfill migration across potentially millions of rows. Unlike column additions (which can have defaults), JSONB fields require explicit UPDATE statements.
 
-**Confidence:** HIGH -- based on direct analysis of current homepage layout.
+4. **Query complexity.** Every query that touches training data needs `metadata->>'quality_score'` casting, null checking, and JSONB path expressions. This is error-prone and verbose.
 
----
-
-### Pitfall 12: Workspace Integration Privacy -- Reading Employee Data Without Consent Framework
-
-**What goes wrong:** Google Workspace Directory API returns employee data: names, email addresses, departments, managers, phone numbers, photos, organizational hierarchy. Storing this in EverySkill creates privacy obligations:
-
-1. **GDPR compliance.** If any tenant has EU employees, storing their organizational data requires a legal basis (usually legitimate interest or consent). The data subject has right to access, rectification, and deletion of their data.
-2. **Employee surveillance perception.** Even if the intent is benign (populate department for visibility scoping), employees may perceive directory sync as surveillance. "Why does EverySkill know my manager and department?"
-3. **Data minimization.** GDPR requires collecting only necessary data. If you only need department for visibility scoping, don't store phone numbers, photos, and physical addresses.
+**Why it happens:** JSONB feels like the "flexible" choice. "We'll figure out the schema later." But "later" never comes, and the blob grows.
 
 **Consequences:**
-- A tenant in the EU stores employee data without DPIA (Data Protection Impact Assessment). Regulatory risk.
-- An employee requests data deletion under GDPR. You need to delete their directory data from EverySkill while keeping their user account and skill ownership intact.
-- A Workspace admin revokes EverySkill's service account access. All cached directory data becomes stale with no way to refresh. If the data isn't purged, it's retained without authorization.
+- Benchmark queries are slow because they scan unindexed JSONB.
+- Training data pipelines break silently when JSONB shapes don't match expectations.
+- Reporting dashboards show incorrect aggregates because of inconsistent JSONB schemas.
+- Data quality deteriorates as different hook versions send different shapes.
 
 **Prevention:**
-1. **Collect ONLY what you need.** For v3.0 features, the minimum is: `email`, `name`, `department`, `team/orgUnit`, `managerId`. Do NOT store phone numbers, photos, physical addresses, or custom fields.
-2. **Display a clear admin consent screen** during Workspace connection: "EverySkill will sync your organization's directory to enable team-based skill sharing. The following data will be stored: [list]. Data is refreshed daily and can be disconnected at any time."
-3. **Implement a "disconnect" button** in admin settings that: revokes the service account, deletes ALL cached directory data for that tenant, and resets visibility scopes that depend on directory data (department/team skills fall back to public).
-4. **Add a data retention policy.** If a tenant disconnects Workspace, purge directory data within 30 days. If a user is removed from the directory on the next sync, mark their directory data as `deletedAt` and purge after 30 days.
-5. **Log all directory sync operations** in the existing audit log (`packages/db/src/services/audit.ts`). Track what data was synced and when, for compliance reporting.
+1. **Create dedicated tables for new data categories.** Don't extend `usage_events.metadata` JSONB. Create:
+   - `training_examples` (id, tenantId, skillId, userId, inputSnippet, outputSnippet, quality, createdAt)
+   - `skill_benchmarks` (id, tenantId, skillId, modelId, modelVersion, inputTokens, outputTokens, costEstimate, qualityScore, evaluationPromptVersion, benchmarkedAt)
+   - `skill_feedback` (id, tenantId, skillId, userId, rating, comment, feedbackType, createdAt)
+2. **Keep `usage_events` for usage tracking only.** It tracks WHAT happened (tool name, timestamp, source). It does NOT store HOW WELL it happened.
+3. **Use proper columns with types and indexes.** `qualityScore INTEGER`, `modelVersion TEXT`, `inputTokens INTEGER` -- not JSONB. Index on `(skillId, modelVersion)` for benchmark queries.
+4. **Add foreign keys and constraints.** `training_examples.skillId` references `skills.id`. `skill_benchmarks.skillId` references `skills.id`. This prevents orphaned data.
+5. **Apply tenant RLS to all new tables.** Follow the established pattern: `tenantId NOT NULL`, pgPolicy for tenant isolation.
+6. **Migrate existing training-relevant data from JSONB to structured tables.** Write a one-time migration that extracts `tool_input_snippet`, `tool_output_snippet`, and `quality_score` from `usage_events.metadata` into the new `training_examples` table.
 
-**Detection:** Connect a tenant's Workspace, verify only necessary fields are stored. Disconnect Workspace, verify directory data is purged. Check that a user's EverySkill account still works after their directory data is purged.
+**Detection:** After implementation, run `EXPLAIN ANALYZE` on benchmark queries. If any show sequential scans on JSONB columns, the schema is wrong.
 
-**Phase:** Workspace integration phase. Consent UI and data minimization must be designed before the sync is implemented.
+**Phase:** Schema design should be the FIRST task of the training/benchmarking phase. Everything else depends on it.
 
-**Confidence:** MEDIUM -- GDPR requirements verified via [Google Workspace GDPR compliance guides](https://support.google.com/a/answer/2888485); specific DPIA requirements depend on jurisdiction and data processed.
+**Confidence:** HIGH -- Directly verified from the existing `usage_events` schema at `packages/db/src/schema/usage-events.ts` which uses untyped `jsonb("metadata").$type<Record<string, unknown>>()`.
+
+---
+
+### Pitfall 10: Existing Rate Limiter (100 RPM) Will Throttle Enriched Feedback Payloads
+
+**What goes wrong:** The current `/api/track` endpoint has an in-memory rate limiter at 100 requests per minute per API key (implemented in `apps/web/lib/rate-limiter.ts`). The existing PostToolUse hook fires on EVERY tool call. In a typical Claude Code session:
+
+- A coding session might make 30-100 tool calls (Read, Write, Edit, Bash, Grep, Glob).
+- Each tool call fires the PostToolUse hook, which sends a request to `/api/track`.
+- At 100 tool calls/minute during an intensive session, the rate limiter starts dropping events.
+
+Adding richer feedback (token counts, quality assessments, benchmark triggers) means each request takes longer to process server-side, and you might want to send additional requests (e.g., a separate "benchmark this" call after certain tool uses). This increases the chance of hitting the rate limit.
+
+**Why it happens:** The 100 RPM limit was set for "prevent abuse" not "handle intensive sessions." Intensive Claude Code sessions easily hit 100 tool calls per minute during bulk operations (e.g., "edit 20 files").
+
+**Consequences:**
+- Usage events are silently dropped (the hook uses `|| true` to swallow errors, including 429 responses).
+- Training data is incomplete: events from the busiest (most interesting) sessions are the most likely to be dropped.
+- The dropped events are NOT retried or queued (the local queue mechanism from Phase 28 was noted as LOW confidence and may not be implemented).
+
+**Prevention:**
+1. **Client-side batching in the hook.** Instead of one HTTP request per tool call, batch events. Accumulate events in a local file (`/tmp/everyskill-batch.jsonl`) and flush every 10 seconds or every 10 events, whichever comes first. One HTTP request sends an array of events.
+2. **Server-side batch endpoint.** Add `POST /api/track/batch` that accepts `{ events: [...] }`. This reduces HTTP overhead and rate limit pressure.
+3. **Selective tracking.** Not every tool call needs rich feedback data. Track ALL tool calls with minimal data (skill_id, tool_name, timestamp). Only capture rich data (snippets, token counts) for a sample of calls, or only for specific tools (Write, Bash -- not Read, Glob).
+4. **Increase the rate limit for known good keys.** The in-memory rate limiter could have per-key configurations: default 100 RPM, but keys associated with active tenants get 500 RPM.
+5. **Implement the local queue.** Failed requests (429s) should be queued locally and retried on the next successful request. The hook appends failed payloads to `/tmp/everyskill-queue.jsonl` and drains the queue on the next flush.
+
+**Detection:** Monitor 429 responses in the server logs. If >5% of tracking requests are rate-limited, the limit is too low for the workload.
+
+**Phase:** Batching and rate limit adjustments should be done in the same phase as enriched feedback collection.
+
+**Confidence:** HIGH -- Rate limiter implementation verified at `apps/web/lib/rate-limiter.ts`. Hook behavior verified from the existing `buildEverySkillFrontmatter()` pattern and Phase 28 research.
 
 ---
 
@@ -388,110 +397,89 @@ Specific risks:
 
 ---
 
-### Pitfall 13: Loom Embed Content Security Policy Conflict
+### Pitfall 11: Benchmark Cost Estimates Become Stale as Provider Pricing Changes
 
-**What goes wrong:** Loom embeds use iframes that load from `https://www.loom.com/embed/*`. If the Next.js app has a Content-Security-Policy header that restricts `frame-src`, Loom embeds will be silently blocked by the browser. The page renders fine but the iframe shows a blank rectangle. No JavaScript error, no visible error message -- just empty space where the video should be.
+**What goes wrong:** Skill benchmarks include cost estimates: "This skill costs ~$0.03 per use on Claude Opus 4.6." Provider pricing changes quarterly or more frequently. If cost data is hardcoded or stored at benchmark time without a mechanism to update it, cost estimates become wrong silently.
 
 **Prevention:**
-1. Check `apps/web/next.config.ts` for existing CSP headers. If none exist, this is not a problem yet but will be when CSP is added.
-2. When adding CSP (or if it exists), ensure `frame-src` includes `https://www.loom.com https://*.loom.com`.
-3. Also allow `https://www.youtube.com` and `https://player.vimeo.com` if supporting generic oEmbed.
-4. Test in both development and production -- CSP headers may differ between environments.
+1. **Separate token counts from cost calculations.** Store token counts in the benchmark table. Calculate costs at DISPLAY TIME using a `model_pricing` configuration table or a pricing service.
+2. **The `model_pricing` table stores: `modelId`, `inputPricePerMToken`, `outputPricePerMToken`, `effectiveDate`, `source`.** When pricing changes, add a new row with the new effective date. Cost queries use the pricing row with the most recent effective date.
+3. **Show the pricing date.** "Estimated cost: $0.03 (based on pricing as of 2026-02-15)."
+4. **Provide a manual "update pricing" admin action.** Don't auto-scrape provider pricing -- it changes format. An admin pastes the new pricing into a settings page.
 
-**Detection:** Open browser DevTools Network tab. If a Loom embed shows blank, check Console for CSP violation messages.
+**Detection:** Compare displayed cost estimates against the provider's current pricing page. If they differ, pricing is stale.
 
-**Phase:** Loom integration phase. A small config task.
+**Phase:** Pricing management can be a lightweight add-on to the benchmarking phase.
 
-**Confidence:** HIGH -- standard CSP behavior.
+**Confidence:** MEDIUM -- Pricing volatility is well-known but specific update frequency varies by provider.
 
 ---
 
-### Pitfall 14: AI Intent Search Latency Destroys Search UX
+### Pitfall 12: Training Data Creates a Feedback Loop that Amplifies Skill Biases
 
-**What goes wrong:** The current search flow is fast: user types -> server action `quickSearch()` runs ILIKE query -> results in <100ms. Adding AI intent search means: user types -> embed query (Ollama ~50ms local, or cloud API ~200ms) -> vector search (~50ms) -> LLM interprets results (~1-3s Anthropic API) -> render. Total latency: 1.5-3.5 seconds for an "intent-aware" search.
-
-Users expect search to be instant. A 3-second delay on every keystroke is unacceptable. Even debounced to 500ms, the AI search adds perceptible lag.
+**What goes wrong:** Training data comes from real usage. If a skill has a bias (e.g., it always suggests Python solutions even when the user is working in TypeScript), the training data captures this bias as "correct" behavior. When this training data is used to evaluate skill quality or suggest improvements, the bias is reinforced: the system thinks Python suggestions are good because that's what the training data shows.
 
 **Prevention:**
-1. **Keep keyword search as the primary, instant path.** The existing `SearchWithDropdown` + `quickSearch()` action should remain the default search experience. AI intent search is a SEPARATE feature for when keyword search doesn't find what the user needs.
-2. **Trigger AI search explicitly, not on every keystroke.** Options: (a) "Ask AI" button next to search bar, (b) AI search triggers only after keyword search returns 0 results, (c) dedicated "AI Discovery" page separate from quick search.
-3. **Show keyword results instantly, then enhance with AI.** Render keyword results in <100ms. If the user waits, show AI-enhanced results after 1-2 seconds as an additional section ("AI also suggests...").
-4. **Cache AI search results.** Same query string -> same results. Use a short-lived cache (5 minutes) keyed by `tenantId + query`. This avoids re-running the LLM for repeated searches.
-5. **Stream the AI response.** If using Anthropic's streaming API, show the AI recommendation as it generates, rather than waiting for the full response. The existing `ai-review.ts` does NOT use streaming -- this would be new.
+1. **Diverse evaluation criteria.** Don't evaluate skills solely on "does the output match the training data." Include criteria like: relevance to the user's context, correctness, conciseness, and adherence to the skill's stated purpose.
+2. **Flag training data outliers.** If 90% of training examples show the same pattern, it might be bias, not quality. Flag these for human review.
+3. **Include negative examples.** Training data should include cases where the skill performed poorly (user switched to a different approach, session ended with errors). This prevents the training data from being exclusively "happy path."
+4. **Periodically refresh the evaluation criteria.** Every 6 months, review what "good skill output" means. Update the evaluation rubric to prevent stagnation.
 
-**Detection:** Measure search latency with and without AI. Set a budget: keyword search < 200ms, AI-enhanced search < 3s. If AI search exceeds 3s, it should timeout and fall back to keyword-only results.
+**Detection:** Analyze training data distribution. If >80% of examples for a skill show the same pattern, investigate whether it's genuinely good or a bias.
 
-**Phase:** AI intent search phase. Performance budgets must be set during design.
+**Phase:** Training data analysis features in a later phase, after data collection is stable.
 
-**Confidence:** HIGH -- latency estimates based on known Anthropic API response times and existing search performance.
+**Confidence:** MEDIUM -- Feedback loop patterns well-documented in ML literature but specific manifestation in skill marketplaces is novel.
 
 ---
 
-### Pitfall 15: Visibility Column Migration Interacts with Status Column
+### Pitfall 13: Async PostToolUse Hook Output Timing is Unpredictable
 
-**What goes wrong:** The `skills` table already has a `status` column (added in v2.0) that determines publishing state. Adding a `visibility` column creates two overlapping access control dimensions:
+**What goes wrong:** The existing tracking hook uses `async: true`, which means "runs in the background without blocking." But the official docs state: "Hook output is delivered on the next conversation turn. If the session is idle, the response waits until the next user interaction." This means:
 
-- `status = 'published'` AND `visibility = 'public'` -> visible to all in tenant
-- `status = 'published'` AND `visibility = 'private'` -> visible to author only
-- `status = 'pending_review'` AND `visibility = 'team'` -> not visible to anyone yet (not published)
-- `status = 'draft'` AND `visibility = 'department'` -> meaningless (draft skills aren't visible regardless)
+1. If the hook finishes while Claude is still working, the output arrives DURING Claude's next tool call -- potentially confusing Claude if the output contains feedback text.
+2. If the hook finishes after the session ends, the output is NEVER delivered.
+3. If multiple async hooks finish at different times, their outputs arrive interleaved on subsequent turns.
 
-The interaction creates a 4x5 matrix of states. Developers will write queries that check one but not the other.
+For the current use case (silent tracking with `-o /dev/null`), this doesn't matter because there's no output. But if enriched feedback hooks return `systemMessage` or `additionalContext`, the timing becomes unpredictable.
 
 **Prevention:**
-1. **Define a clear precedence rule:** `status` takes precedence over `visibility`. If `status != 'published'`, the skill is invisible regardless of visibility setting. Visibility only matters for published skills.
-2. **Document this rule in code comments** on both the `status` and `visibility` column definitions.
-3. **The reusable visibility filter function (from Pitfall 2) must check BOTH:** `WHERE status = 'published' AND (visibility = 'public' OR (visibility = 'private' AND author_id = :userId) OR ...)`.
-4. **Don't allow setting visibility during review.** The visibility setting is only meaningful once the skill is published. Allow setting it during creation (as a preference for after approval), but enforce it only on published skills.
+1. **Keep tracking hooks silent.** Continue using `-o /dev/null` for the tracking curl. Do not return JSON output from async PostToolUse hooks.
+2. **Use synchronous hooks ONLY if blocking is acceptable.** For non-async hooks, the default timeout is 600 seconds. A sync hook that makes an HTTP call adds latency to every tool call. This is why the current design uses async.
+3. **For feedback that must reach Claude:** use a separate mechanism (MCP tool, Stop hook) rather than PostToolUse async output. PostToolUse async output timing is not guaranteed.
 
-**Detection:** Create a skill with `visibility = 'team'` and `status = 'pending_review'`. No one (not even team members) should see it. After approval, team members should see it.
+**Detection:** Run a slow async hook (5-second sleep) and observe when the output appears in Claude's context. It should appear on the next turn, but verify this behavior is consistent.
 
-**Phase:** Visibility scoping phase, after status column is stable.
+**Phase:** Understand this constraint during feedback mechanism design.
 
-**Confidence:** HIGH -- direct schema analysis.
+**Confidence:** HIGH -- Verified from official docs: "Each execution creates a separate background process. There is no deduplication across multiple firings of the same async hook."
 
 ---
 
-### Pitfall 16: MCP Tools Have No Concept of Visibility or Workspace Context
+### Pitfall 14: Benchmarking Requires Anthropic API Key with Sufficient Tier for Token Counting
 
-**What goes wrong:** The MCP server (`apps/mcp/`) authenticates users via API key (`apps/mcp/src/auth.ts`), which resolves to a `userId` and `tenantId`. But MCP tools have no concept of:
-- The requesting user's department or team (needed for visibility filtering)
-- Whether the tenant has Workspace integration enabled
-- What visibility scope the user can access
+**What goes wrong:** The Anthropic Token Counting API is free but rate-limited by tier:
 
-The MCP `search_skills` tool delegates to `searchSkillsByQuery()` in `packages/db/src/services/search-skills.ts`, which has no visibility parameter. After adding visibility scoping to the web app, MCP would still return all skills regardless of visibility.
+| Usage Tier | RPM |
+|---|---|
+| Tier 1 | 100 |
+| Tier 2 | 2,000 |
+| Tier 3 | 4,000 |
+| Tier 4 | 8,000 |
 
-**Prevention:**
-1. **Add a `userId` parameter to search service functions.** The visibility filter needs to know who is asking.
-2. **Resolve user's department/team from the cached directory data** using their `userId`. If no directory data exists (tenant hasn't connected Workspace), default to showing only `public` skills.
-3. **Update MCP search tools to pass the authenticated userId** through to the search function. The user ID is already available from API key validation.
-4. **Consider adding a `visibility` filter parameter to MCP search tools** so MCP clients can explicitly request "show me only my private skills" or "show me team skills."
-
-**Detection:** Create a private skill via the web UI. Search for it via MCP as a different user. It must not appear.
-
-**Phase:** Needs to be addressed in the same phase as visibility scoping. MCP is a first-class access path.
-
-**Confidence:** HIGH -- verified from direct analysis of MCP tools.
-
----
-
-### Pitfall 17: Workspace Diagnostics Exposing Cross-Tenant Usage Patterns
-
-**What goes wrong:** "Workspace diagnostics" features (e.g., "Your team uses 15% fewer skills than the org average") require aggregating usage data across users within a tenant. If the aggregation queries don't scope to the requesting user's tenant, they could include data from other tenants, especially given that `DEFAULT_TENANT_ID` is the connection-level default.
-
-Worse: if diagnostics show "top skills in your department" and the department assignment comes from Workspace sync, a bug in the sync that assigns users to the wrong tenant's departments creates cross-tenant data exposure.
+EverySkill's existing Anthropic integration (for AI review) uses a single API key configured in the environment. Benchmarking hundreds of skills adds significant API volume. If the API key is on Tier 1, benchmarking 500 skills at 100 RPM takes 5 minutes just for token counting, plus the actual benchmark evaluation calls.
 
 **Prevention:**
-1. **All diagnostic queries MUST accept `tenantId` as a required parameter.** Never rely on connection-level RLS for aggregate queries.
-2. **Diagnostic data should be pre-computed and cached per tenant,** not computed at request time. A daily cron job computes diagnostics per tenant and stores results in a `workspace_diagnostics` table with `tenantId` foreign key.
-3. **Workspace sync must validate that the synced users belong to the correct tenant.** Cross-reference email domains: a user synced from Google Workspace for tenant A should have an email domain matching tenant A's configured domain.
-4. **Never show individual user data in diagnostics** -- only aggregates. "Your department used 150 skills this month" not "John used 30 skills, Jane used 20."
+1. **Check the current API tier before building benchmarking.** Run a quick burst test: 100 token-counting calls in 1 minute. If rate-limited, the tier is 1 and needs upgrading.
+2. **Implement exponential backoff for token counting calls.** The API returns 429 with a `retry-after` header. Respect it.
+3. **Cache token counts aggressively.** Token counts for a given skill + model combination only change when the skill content changes. Hash the content and cache the count.
+4. **Run benchmarks as a background job, not at request time.** A cron job that benchmarks 10 skills per hour is sustainable at any tier. Don't try to benchmark everything at once.
 
-**Detection:** Create two tenants. Sync Workspace data for both. View diagnostics for tenant A. Verify no data from tenant B appears.
+**Detection:** Monitor 429 responses from the Anthropic API. If they increase during benchmark runs, the tier is insufficient.
 
-**Phase:** Workspace diagnostics phase (one of the later v3.0 phases).
+**Phase:** Verify API tier during the benchmarking foundation phase.
 
-**Confidence:** HIGH -- multi-tenant aggregate query pitfalls are well-documented.
+**Confidence:** HIGH -- Rate limits verified from [Anthropic token counting docs](https://platform.claude.com/docs/en/build-with-claude/token-counting).
 
 ---
 
@@ -499,65 +487,53 @@ Worse: if diagnostics show "top skills in your department" and the department as
 
 | Phase Topic | Likely Pitfall | Mitigation |
 |---|---|---|
-| Workspace Auth Design | Pitfall 1: OAuth scope escalation | Use service account with DWD, not user OAuth |
-| Workspace Auth Design | Pitfall 4: DEFAULT_TENANT_ID in new code | Use session.user.tenantId, create resolveTenantId() helper |
-| Workspace Directory Sync | Pitfall 5: Rate limits and partial failures | Incremental sync, per-tenant queuing, resume from last page |
-| Workspace Directory Sync | Pitfall 12: Privacy without consent | Collect only necessary data, admin consent screen |
-| Visibility Scoping (Phase 1) | Pitfall 2: Cross-scope data leakage | Reusable visibility filter in ALL 11+ query paths |
-| Visibility Scoping (Phase 1) | Pitfall 15: Status + visibility interaction | Status takes precedence, filter checks both |
-| Visibility Scoping (Phase 2) | Pitfall 8: No department/team data | Depends on Workspace sync; defer team/dept scopes until data exists |
-| AI Intent Search | Pitfall 3: Hallucinated recommendations | Ground in actual search results, similarity threshold, structured output |
-| AI Intent Search | Pitfall 9: Embedding model transition | Decide model before building; plan re-embedding if switching |
-| AI Intent Search | Pitfall 14: Search latency | Keep keyword search instant, AI search explicit or async |
-| Loom Integration | Pitfall 6: SDK staleness | Use oEmbed, not npm SDK; handle broken embeds gracefully |
-| Loom Integration | Pitfall 13: CSP blocks iframes | Add frame-src for loom.com |
-| Homepage Redesign | Pitfall 7: Performance regression | Cache slow queries, async AI, Suspense boundaries |
-| Homepage Redesign | Pitfall 11: Breaking existing workflows | Additive changes, keep search bar position, feature flags |
-| Personal Preferences | Pitfall 10: Data model sprawl | JSONB + Zod schema, code-defined defaults |
-| MCP Tools | Pitfall 16: No visibility awareness | Add userId to search services, update MCP tools |
-| Workspace Diagnostics | Pitfall 17: Cross-tenant aggregation leakage | Per-tenant pre-computed diagnostics, domain validation |
-| All New Code | Pitfall 4: DEFAULT_TENANT_ID proliferation | Never hardcode in new files, always resolve from session |
+| Feedback Hook Extension | Pitfall 1: Secret leakage in tool_input | Client + server side sanitization, size limits |
+| Feedback Hook Extension | Pitfall 7: Hook can't solicit user input | Use Stop hook, Notification hook, or MCP tool instead |
+| Feedback Hook Extension | Pitfall 10: Rate limiter throttles enriched payloads | Client-side batching, selective tracking |
+| Feedback Hook Extension | Pitfall 13: Async output timing unpredictable | Keep hooks silent, use separate feedback channels |
+| Training Data Collection | Pitfall 2: GDPR consent and erasure | Separate consent framework, tenant opt-in, user opt-out |
+| Training Data Collection | Pitfall 9: JSONB blob anti-pattern | Dedicated tables with typed columns and indexes |
+| Training Data Collection | Pitfall 12: Feedback loop bias | Diverse evaluation criteria, negative examples |
+| Benchmarking Foundation | Pitfall 3: Token counts are model-specific | Per-model token counting via official APIs |
+| Benchmarking Foundation | Pitfall 4: Model version changes invalidate benchmarks | Record exact model versions, benchmark expiration |
+| Benchmarking Foundation | Pitfall 8: LLM-as-judge is biased | Cross-model evaluation, pairwise comparison, human calibration |
+| Benchmarking Foundation | Pitfall 11: Cost estimates go stale | Separate token counts from pricing, pricing table |
+| Benchmarking Foundation | Pitfall 14: API tier limits benchmarking throughput | Check tier, cache counts, background jobs |
+| Feedback UX | Pitfall 5: Feedback fatigue | Smart frequency, probabilistic sampling, Stop hook |
+| Suggestion Pipeline | Pitfall 6: Fork spam from auto-suggestions | Separate suggestions table, quality threshold, batching |
+| All Phases | Pitfall 2: Consent before collection | Design consent framework before any data collection |
+| All Phases | Pitfall 9: Schema design before implementation | Dedicated tables for training data and benchmarks |
 
 ---
 
 ## Sources
 
-### Primary -- Direct Codebase Audit
-- Auth config: `apps/web/auth.config.ts` (73 lines -- Google OAuth, JWT sessions, 8h maxAge, domain-scoped cookies)
-- Auth setup: `apps/web/auth.ts` (162 lines -- signIn callback, JWT tenantId injection, token refresh gap)
-- OAuth tokens: `packages/db/src/schema/auth.ts` (accounts table with access_token, refresh_token, scope)
-- Middleware: `apps/web/middleware.ts` (104 lines -- subdomain extraction, tenant header injection, cookie-based auth)
-- Skills schema: `packages/db/src/schema/skills.ts` (87 lines -- no visibility column, RLS on tenant_id only)
-- Users schema: `packages/db/src/schema/users.ts` (47 lines -- no department, team, manager fields)
-- Embeddings: `packages/db/src/schema/skill-embeddings.ts` (70 lines -- vector(768), HNSW index, tenant RLS)
-- Semantic search: `packages/db/src/services/semantic-search.ts` (86 lines -- cosine distance, no visibility filter)
-- Keyword search: `apps/web/lib/search-skills.ts` (211 lines -- full-text + ILIKE, no visibility filter)
-- Quick search: `apps/web/app/actions/search.ts` (31 lines -- delegates to searchSkills)
-- Homepage: `apps/web/app/(protected)/page.tsx` (255 lines -- 8 parallel queries in Promise.all)
-- Embedding generator: `apps/web/lib/embedding-generator.ts` (50 lines -- Ollama, DEFAULT_TENANT_ID hardcoded)
-- AI review: `apps/web/lib/ai-review.ts` (307 lines -- Anthropic SDK, structured JSON output)
-- Ollama client: `apps/web/lib/ollama.ts` (137 lines -- local server management, spawn/systemctl)
-- Site settings: `packages/db/src/schema/site-settings.ts` (46 lines -- embedding config per tenant)
-- Tenant context: `packages/db/src/tenant-context.ts` (26 lines -- withTenant transaction wrapper)
-- DB client: `packages/db/src/client.ts` (59 lines -- connection-level DEFAULT_TENANT_ID)
-- MCP auth: `apps/mcp/src/auth.ts` (resolves userId from API key, no department/team context)
-- Tenants: `packages/db/src/schema/tenants.ts` (26 lines -- no Workspace credentials)
-- Notification preferences: `packages/db/src/schema/notification-preferences.ts` (per-type boolean columns)
-- DEFAULT_TENANT_ID grep: 30+ files across codebase (see Pitfall 4 table)
+### Primary -- Verified Official Documentation
+- [Claude Code Hooks Reference](https://code.claude.com/docs/en/hooks) -- PostToolUse input schema, async limitations, no sandbox, security model, hook output routing (Claude vs user), decision control limitations. Verified 2026-02-15.
+- [Anthropic Token Counting API](https://platform.claude.com/docs/en/build-with-claude/token-counting) -- Official API, rate limits by tier, estimate disclaimer, supported models. Verified 2026-02-15.
+- Existing codebase analysis:
+  - `apps/web/app/api/track/route.ts` -- Current tracking endpoint, Zod schema with 1000-char snippet limits
+  - `packages/db/src/services/usage-tracking.ts` -- insertTrackingEvent, fire-and-forget pattern
+  - `packages/db/src/schema/usage-events.ts` -- JSONB metadata column, tenant RLS
+  - `packages/db/src/schema/skills.ts` -- Fork tracking fields (forkedFromId, forkedAtContentHash)
+  - `apps/web/lib/rate-limiter.ts` -- In-memory 100 RPM rate limiter
+  - `.planning/phases/28-hook-based-usage-tracking/28-RESEARCH.md` -- Original hook architecture decisions
 
-### External
-- [Auth.js Refresh Token Rotation Guide](https://authjs.dev/guides/refresh-token-rotation) -- Token refresh implementation for NextAuth v5
-- [Google Domain-Wide Delegation](https://support.google.com/a/answer/162106) -- Service account setup for Workspace API access
-- [Google Directory API Scopes](https://developers.google.com/workspace/admin/directory/v1/guides/authorizing) -- Required OAuth scopes for directory operations
-- [Google Directory API Rate Limits](https://developers.google.com/workspace/admin/directory/v1/limits) -- 2,400 queries/min/user/project, 500 users/page max
-- [Multi-Tenant Leakage: When Row-Level Security Fails in SaaS](https://medium.com/@instatunnel/multi-tenant-leakage-when-row-level-security-fails-in-saas-da25f40c788c) -- RLS failure patterns
-- [Tenant Isolation in Multi-Tenant Systems](https://securityboulevard.com/2025/12/tenant-isolation-in-multi-tenant-systems-architecture-identity-and-security/) -- Defense-in-depth approaches
-- [RAG Hallucination Mitigation Survey](https://arxiv.org/html/2510.24476v1) -- Grounding techniques for retrieval-augmented generation
-- [Enterprise LLM Hallucinations](https://www.glean.com/perspectives/when-llms-hallucinate-in-enterprise-contexts-and-how-contextual-grounding) -- Contextual grounding in enterprise search
-- [GDPR Compliance for Google Workspace](https://support.google.com/a/answer/2888485) -- Privacy requirements for directory data
-- [Google Workspace API User Data Policy](https://developers.google.com/workspace/workspace-api-user-data-developer-policy) -- Data minimization and consent requirements
-- [Loom Embed SDK API](https://dev.loom.com/docs/embed-sdk/api) -- oEmbed and embed methods
-- [@loomhq/loom-embed npm](https://www.npmjs.com/package/@loomhq/loom-embed) -- Last published 2 years ago, v1.7.0
-- [Loom SDK Changelog](https://sdkchangelog.loom.com/) -- Record SDK package renaming, deprecations
-- [pgvector Performance Benchmarks](https://aws.amazon.com/blogs/database/supercharging-vector-search-performance-and-relevance-with-pgvector-0-8-0-on-amazon-aurora-postgresql/) -- HNSW performance at scale
-- [GitHub: NextAuth Google Refresh Token Issues](https://github.com/nextauthjs/next-auth/discussions/3016) -- Known issues with offline access + JWT sessions
+### Secondary -- Verified External Sources
+- [HoneyHive: Avoiding Common Pitfalls in LLM Evaluation](https://www.honeyhive.ai/post/avoiding-common-pitfalls-in-llm-evaluation) -- LLM-as-judge biases, model version opacity, benchmark contamination, statistical rigor
+- [LLM Evaluation Frameworks 2026](https://medium.com/@future_agi/llm-evaluation-frameworks-metrics-and-best-practices-2026-edition-162790f831f4) -- Benchmark methodology, continuous evaluation
+- [Counting Claude Tokens Without a Tokenizer](https://blog.gopenai.com/counting-claude-tokens-without-a-tokenizer-e767f2b6e632) -- tiktoken inaccuracy for Claude models
+- [Token Counting Guide 2025](https://www.propelcode.ai/blog/token-counting-tiktoken-anthropic-gemini-guide-2025) -- Model-specific tokenization differences
+- [Enterprise LLM Privacy Concerns](https://www.protecto.ai/blog/enterprise-llm-privacy-concerns/) -- GDPR, consent frameworks, data processing obligations
+- [Privacy Risks in LLMs: Enterprise AI Governance Guide](https://secureprivacy.ai/blog/privacy-risks-llms-enterprise-ai-governance) -- Right to erasure challenges, data minimization
+- [Fortune: Customer Survey Fatigue](https://fortune.com/2025/12/28/customer-survey-fatigue-feedback-consumer-experience/) -- Survey frequency degradation, user resentment patterns
+- [Continuous Feedback Surveys UX Research](https://www.userinterviews.com/ux-research-field-guide-chapter/continuous-user-feedback-surveys) -- Smart timing, quality over quantity
+- [LLM Benchmarks 2026](https://llm-stats.com/benchmarks) -- Benchmark saturation, data contamination evidence
+
+### Codebase Evidence
+- PostToolUse hook format: `.planning/phases/28-hook-based-usage-tracking/28-RESEARCH.md` lines 97-163
+- Rate limiter: `apps/web/lib/rate-limiter.ts` (100 RPM per key)
+- Usage events schema: `packages/db/src/schema/usage-events.ts` (JSONB metadata)
+- Fork infrastructure: `packages/db/src/schema/skills.ts` lines 76-78, `apps/mcp/src/tools/update-skill.ts` line 277
+- Tracking endpoint: `apps/web/app/api/track/route.ts` (Zod validation, HMAC, Bearer auth)
+- AI review pattern: `apps/web/lib/ai-review.ts` (Anthropic SDK, structured JSON output)

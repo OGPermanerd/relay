@@ -1,655 +1,551 @@
-# Feature Landscape: v3.0 AI Discovery & Workflow Intelligence
+# Feature Landscape: v5.0 Feedback, Training & Benchmarking
 
-**Domain:** Internal AI skill marketplace -- intent-based discovery, workspace diagnostics, visibility scoping, video integration, homepage redesign
-**Researched:** 2026-02-13
-**Overall confidence:** MEDIUM-HIGH (intent search and visibility scoping are well-established patterns; Google Workspace diagnostic and CLAUDE.md sync are novel combinations requiring deeper validation)
+**Domain:** AI skill feedback loops, training data collection, LLM tool benchmarking
+**Researched:** 2026-02-15
+**Overall confidence:** MEDIUM-HIGH (feedback UX patterns well-established; token measurement via PostToolUse hooks has confirmed limitations requiring investigation; golden dataset patterns well-documented; benchmarking dashboard patterns proven)
 
 ## Context
 
-EverySkill is at v2.0 with a complete skill marketplace including: skill CRUD with 7-status lifecycle (draft through published), AI review with quality/clarity/completeness scoring, fork & improve with diff highlighting, MCP integration (16 tools: search, recommend, deploy, create, review, guide, etc.), multi-tenancy with subdomain routing, RBAC with admin roles, analytics dashboard, semantic search via pgvector + Voyage AI embeddings, and quality-gated publishing with auto-approval thresholds.
-
-v3.0 extends the ecosystem with eight capabilities:
-
-1. **AI-powered intent search** -- Conversational "What are you trying to solve?" with top-3 skill recommendations
-2. **`/everyskill` MCP tool** -- In-prompt discovery for any AI client (Claude, Cursor, Codex)
-3. **Google Workspace diagnostic** -- Connect Drive/Gmail/Calendar, analyze patterns, recommend automations
-4. **Skill visibility scoping** -- Global company / employee visible / employee invisible / personal
-5. **Admin-stamped global skills** -- Department approval workflow for company-wide skills
-6. **Personal preference extraction** -- Parse CLAUDE.md into portable cross-AI preferences
-7. **Loom video integration** -- Video demos attached to skills
-8. **Homepage redesign** -- Intent-first landing, not metrics-first
+EverySkill is at v3.0+ with a mature skill marketplace. v5.0 closes the loop from skill usage to skill improvement by adding feedback collection, training data pipelines, and benchmarking dashboards.
 
 **Existing infrastructure being extended:**
-- `skills` table with `status` lifecycle, `searchVector` tsvector, pgvector `skill_embeddings`
-- `skill_reviews` table with AI-generated quality/clarity/completeness scores
-- MCP server with `search_skills`, `recommend_skills` (semantic), `deploy_skill`, `describe_skill`, `guide_skill`
-- Multi-tenant RLS with `tenant_id` on all tables, subdomain routing
-- `users` table with `role` field (admin/user), `isAdmin()` check
-- Notification system with type-based routing and email preferences
-- Quality scoring formula: usage(50%) + rating(35%) + metadata(15%)
+
+| System | What Exists | What v5.0 Adds |
+|--------|-------------|----------------|
+| **Ratings** | 1-5 stars with comments, `hours_saved_estimate` per rating, `ratings` table | Thumbs up/down in Claude, improvement suggestions, structured feedback |
+| **PostToolUse hooks** | Fire on every MCP tool call, send `tool_name`, `skill_id`, `ts`, input/output snippets to `/api/track` | Feedback prompt injection, token/cost capture (if available), smart frequency |
+| **Usage events** | `usage_events` table with `toolName`, `skillId`, `userId`, JSONB `metadata` | Richer metadata: feedback signal, token counts, model name, latency |
+| **Fork system** | Fork-based versioning, "Fork & Improve" with AI review, `forkedFromId`, content hash drift detection | Suggestion-to-fork pipeline: user suggestions auto-generate draft forks |
+| **AI review** | `skill_reviews` with quality/clarity/completeness scores, `modelName` field | Benchmark comparison: same skill scored by different models |
+| **Quality scores** | Gold/Silver/Bronze badges, usage(50%) + rating(35%) + docs(15%) formula | Quality score enriched with feedback sentiment and benchmark data |
+| **Analytics** | Org-wide trends, per-employee tables, skill leaderboards, CSV export | Per-skill benchmarking: tokens, cost, quality by model version |
 
 ---
 
-## Feature Area 1: AI-Powered Intent Search
+## Feature Area 1: In-Claude Feedback via MCP Hook
 
 ### Table Stakes
 
 | Feature | Why Expected | Complexity | Depends On |
 |---------|--------------|------------|------------|
-| Natural language search bar on homepage | Users expect to describe problems, not type keywords | MEDIUM | Existing semantic search infrastructure |
-| Top-3 ranked recommendations with rationale | Users need a short, curated list with "why this matches" | MEDIUM | Embedding similarity + LLM explanation |
-| Fallback to keyword search when intent is ambiguous | System should degrade gracefully, not return zero results | LOW | Existing `searchSkills()` with ILIKE + tsvector |
-| Loading state with streaming feedback | Users need to know the system is thinking, not broken | LOW | React Suspense or streaming UI |
+| Thumbs up/down after skill execution | Users expect the simplest possible feedback mechanism in their workflow | MEDIUM | PostToolUse hook modification |
+| Smart frequency (not every time) | Constant prompts kill UX; first 3 uses, then every 10th | LOW | Counter in hook metadata or local state |
+| Optional text feedback on thumbs down | "What went wrong?" is essential for actionable data | MEDIUM | Hook must surface a prompt to Claude |
+| Feedback stored with usage context | Feedback without context (which skill, what input, what model) is useless | LOW | Existing `usage_events.metadata` JSONB |
 
-**Expected UX Flow:**
+**How PostToolUse hooks work for this (verified via official docs):**
 
-```
-1. User lands on homepage, sees prominent search bar
-   Placeholder: "What are you trying to solve today?"
-
-2. User types: "I need help reviewing pull requests faster"
-
-3. System processes (500-1500ms):
-   a. Generate embedding via Voyage AI
-   b. pgvector cosine similarity search
-   c. (Optional) LLM reranks top-5 into top-3 with match rationale
-
-4. Results appear inline (NOT a new page):
-   - Skill card with name, author, quality badge, usage count
-   - One-line rationale: "Matches because it automates PR feedback generation"
-   - "Install" and "Learn more" actions
-
-5. If no semantic matches: fall back to tsvector full-text search
-   If no results at all: "No skills match yet. Create one?"
+The PostToolUse hook receives JSON on stdin containing:
+```json
+{
+  "session_id": "abc123",
+  "tool_name": "mcp__everyskill__everyskill",
+  "tool_input": { "action": "search", "query": "..." },
+  "tool_response": { "success": true, "skills": [...] },
+  "tool_use_id": "toolu_01ABC123..."
+}
 ```
 
-**Successful implementations to model:**
-- **Kore.ai enterprise search**: Understands intent behind query, maintains context, guides users from query to action. Their pattern of "query -> understand intent -> retrieve -> present with rationale" is the gold standard.
-- **Algolia InstantSearch**: Sub-200ms results with typo tolerance, faceted navigation. The speed expectation is critical -- anything over 2 seconds feels broken.
-- **Slack AI search**: Natural language across channels with source attribution. Key insight: show *why* a result matched, not just that it matched.
-
-**What would delight:**
-- Remembering the user's recent searches and usage patterns to personalize results
-- Multi-turn refinement: "Show me only workflow-type skills" after initial results
-- Proactive suggestions: "You used 3 code review skills this week. Trending: Advanced PR Automation (new this week)"
-
-**What to avoid:**
-- Do NOT build a chatbot interface. This is search with intelligence, not a conversation. The search bar should feel instant, not like waiting for a chat response.
-- Do NOT show more than 5 results inline. Cognitive overload kills intent search. Top-3 is ideal; link to full results page for exploration.
-- Do NOT require the LLM for every search. Use embedding similarity as the primary path; LLM reranking is an optional enhancement for ambiguous queries.
-
-**Confidence:** HIGH for the search UX pattern, MEDIUM for the LLM reranking quality. The existing pgvector infrastructure (768-dim Voyage AI embeddings, HNSW index, cosine similarity) handles the core matching. LLM reranking adds latency but improves explanation quality.
-
-### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Context-aware search (role, department, recent activity) | Results personalized to the user's context | HIGH | Requires usage history analysis |
-| "Did you mean?" suggestions for zero-result queries | Helps users reformulate without frustration | MEDIUM | Fuzzy matching on skill names |
-| Search analytics (what queries return zero results) | Admin insight into skill gaps -- what should be built | LOW | Log queries + result counts |
-
----
-
-## Feature Area 2: `/everyskill` MCP Tool for In-Prompt Discovery
-
-### Table Stakes
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| Single `everyskill` tool with sub-commands | Clean MCP tool surface -- one tool, multiple intents | LOW | Existing MCP server architecture |
-| `search` sub-command (semantic + text) | Natural language skill discovery from any AI prompt | LOW | Existing `recommend_skills` handler |
-| `install` sub-command | One-step deploy from conversation | LOW | Existing `deploy_skill` handler |
-| `describe` sub-command | Full skill details without leaving conversation | LOW | Existing `describe_skill` handler |
-| Automatic context injection | When a skill is installed, its content becomes available to the AI | MEDIUM | Frontmatter + content in response |
-
-**Expected UX Flow:**
-
-```
-User (in Claude Code): "I need to write a database migration"
-
-Claude: [automatically calls everyskill.search("database migration")]
-        "I found 3 relevant skills in your company's EverySkill marketplace:
-
-         1. Database Migration Helper (Gold, 45 uses, 8.5/10 quality)
-            Automates Drizzle migration generation from schema diffs
-
-         2. Schema Review Workflow (Silver, 23 uses, 7/10 quality)
-            Reviews schema changes for anti-patterns
-
-         3. SQL Query Optimizer (12 uses, 6.5/10 quality)
-            Optimizes slow queries with EXPLAIN analysis
-
-         Want me to install any of these?"
-
-User: "Install #1"
-
-Claude: [calls everyskill.install("database-migration-helper")]
-        "Installed. I now have access to the Database Migration Helper.
-         Let me help you with that migration..."
+The hook can return JSON on stdout with `additionalContext` to inject a feedback prompt into Claude's context:
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PostToolUse",
+    "additionalContext": "After completing this task, ask the user: 'Was this skill helpful? (thumbs up/down)'"
+  }
+}
 ```
 
-**Key design decisions:**
-
-1. **Single tool vs. multiple tools**: The existing MCP server has 16 tools. For external discovery (users who add EverySkill as an MCP server in their client), a single `everyskill` tool with sub-commands is cleaner than exposing all 16. The sub-command pattern (like `git`) keeps the tool surface small while maintaining full capability.
-
-2. **Tool description matters enormously**: The MCP tool description is what the AI reads to decide when to call it. The description should say: "Search and install AI skills from your company's EverySkill marketplace. Use when the user needs help with a task that might have a pre-built skill, workflow, or prompt available." This framing makes the AI proactively search EverySkill when relevant.
-
-3. **Response format for AI consumption**: Return structured JSON that the AI can naturally narrate. Include: skill name, quality badge, usage count, one-line description, install command. Do NOT return raw HTML or markdown tables -- the AI will format appropriately for its context.
-
-**Successful implementations to model:**
-- **MCP Market (mcpmarket.com)**: Agent Skills directory where tools are discoverable and installable from within AI conversations. Their pattern: browse -> inspect -> install is the standard flow.
-- **Composio MCP tools**: Dynamic tool discovery with clear naming conventions and parameter descriptions. Key insight: tools should be self-documenting.
-- **Docker MCP best practices**: Keep tool descriptions under 1024 characters, use clear parameter descriptions, return structured data.
-
-**What would delight:**
-- Proactive skill suggestion: When the AI detects the user is about to do something a skill covers, suggest it before being asked
-- Usage tracking from MCP: "You've used Database Migration Helper 12 times this month, saving an estimated 6 hours"
-- Skill recommendations based on what similar users installed
-
-**What to avoid:**
-- Do NOT expose internal admin tools (review, approve, reject) in the public MCP surface. The `/everyskill` tool is for consumers, not administrators.
-- Do NOT require authentication for read-only search. Anonymous search with usage tracking nudges toward authentication is the existing pattern. Keep it.
-- Do NOT return full skill content in search results. Return metadata only. The `install` command fetches content.
-
-**Confidence:** HIGH. The existing MCP server already has `search_skills`, `recommend_skills`, `deploy_skill`, and `describe_skill`. This feature is primarily about packaging them into a single discoverable tool with better descriptions.
-
-### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Auto-suggest on task detection | AI proactively searches EverySkill when it detects a relevant task | MEDIUM | Requires careful tool description engineering |
-| Cross-client compatibility (Claude, Cursor, Codex) | Works wherever MCP is supported | LOW | MCP is a standard protocol |
-| Skill usage logging from MCP with FTE-days attribution | Every MCP usage contributes to ROI metrics | LOW | Existing `trackUsage()` |
-
----
-
-## Feature Area 3: Google Workspace Diagnostic
-
-### Table Stakes
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| OAuth2 connection for Drive, Gmail, Calendar | Users connect their Google account once | HIGH | Google OAuth2 with restricted scopes |
-| Activity analysis: files viewed, emails sent, meetings attended | Users need a quantified view of where their time goes | HIGH | Google Reports API + Drive Activity API |
-| Time pattern visualization (weekly heatmap) | Show where time clusters -- meetings, email, document work | MEDIUM | Data aggregation + chart rendering |
-| Automation recommendations based on patterns | "You spend 3 hours/week on status update emails. Try this skill." | HIGH | Pattern analysis + skill matching |
-| Deployment plan for recommended automations | Step-by-step: install skill -> configure -> measure impact | MEDIUM | Skill matching + onboarding flow |
-
-**Expected UX Flow:**
-
-```
-1. Admin or user navigates to /diagnostics (new page)
-
-2. "Connect Google Workspace" button
-   - OAuth2 consent screen with MINIMAL scopes:
-     - drive.metadata.readonly (file metadata, not content)
-     - gmail.metadata (email metadata: to/from/subject, not body)
-     - calendar.readonly (event metadata)
-     - admin.reports.audit.readonly (org-level activity, admin only)
-   - CRITICAL: Never request content-reading scopes
-
-3. After connection, system analyzes last 30 days:
-   a. Drive Activity API: documents viewed, edited, shared
-   b. Gmail API: email volume, response times, recurring patterns
-   c. Calendar API: meeting frequency, duration, attendee overlap
-   d. Reports API (admin): org-wide activity patterns
-
-4. Dashboard shows:
-   - Time allocation pie chart (meetings / email / document work / other)
-   - Weekly activity heatmap
-   - Top time sinks: "You attended 12 hours of meetings last week"
-   - Recurring patterns: "Every Monday you send 5 status update emails"
-
-5. Automation recommendations:
-   - "Status Update Automation (matches your Monday email pattern)"
-   - "Meeting Summary Generator (you attend 15+ hours of meetings/week)"
-   - "Document Template Skill (you create similar docs weekly)"
-   - Each recommendation links to an existing EverySkill skill
-
-6. Deployment plan:
-   - Step 1: Install recommended skill
-   - Step 2: Configure for your workflow (guided setup)
-   - Step 3: Track time savings over 2 weeks
-   - Step 4: Report ROI
-```
-
-**Critical implementation considerations:**
-
-1. **Google OAuth scope classification**: Drive metadata and Calendar readonly are "sensitive" scopes requiring Google verification. Gmail metadata is also sensitive. The Reports API requires admin-level access. Budget 2-4 weeks for Google's OAuth verification process for production use.
-
-2. **No content access -- metadata only**: The Drive API returns `viewedByMeTime`, `modifiedByMeTime`, `mimeType`, `name` without reading file content. The Gmail API can list messages with metadata (subject, from, to, date) without reading bodies using `format: metadata`. Calendar events include title, duration, attendees. This is sufficient for pattern analysis and keeps scope minimal.
-
-3. **Data retention and privacy**: Store aggregated analytics only, not raw Google data. Show users exactly what data is analyzed. Provide delete/disconnect at any time. For SOC2 compliance, log all data access.
-
-4. **The "screen time" concept**: Google Workspace APIs do NOT provide actual screen time or active usage duration. They provide event timestamps (when a file was viewed, when an email was sent, when a meeting occurred). "Time analysis" is an inference: if a user edited a Doc from 9am-11am (based on revision history), that's ~2 hours of document work. This is an approximation, not tracking.
-
-**Successful implementations to model:**
-- **RescueTime / Clockwise**: Time analytics dashboards that show where time goes with recommendations for improvement. Their weekly summary email pattern is highly effective.
-- **Notion AI Q&A**: Connects to workspace data and provides insights. Key pattern: connect once, analyze continuously, surface insights proactively.
-
-**What would delight:**
-- Weekly digest email: "This week: 14h meetings, 8h email, 6h documents. 3 automation opportunities identified."
-- Team-level patterns (admin only): "Your engineering team spends 40% of time in meetings. Here are 5 meeting-related skills."
-- ROI tracking after deployment: "Since installing Meeting Summary Generator 2 weeks ago, you've saved an estimated 3 hours."
-
-**What to avoid:**
-- Do NOT build a real-time activity monitor. This is a periodic diagnostic (weekly/monthly), not surveillance.
-- Do NOT read email bodies or document content. Metadata analysis is sufficient and avoids enormous privacy concerns.
-- Do NOT store raw Google data long-term. Analyze, aggregate, discard.
-- Do NOT build this before validating with actual users that they want this level of analysis. This is the highest-risk feature in v3.0.
-
-**Confidence:** LOW-MEDIUM. The Google APIs support the data access needed, but the value proposition is unvalidated. No direct competitor does "workspace diagnostic -> skill recommendation" in this way. The OAuth verification process is a real blocker. Recommend building a manual "what do you spend time on?" survey first, then automating with Google APIs if the survey version proves valuable.
-
-### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Org-wide diagnostic (admin) | Department-level time allocation and automation opportunities | HIGH | Reports API requires admin access |
-| Skill gap analysis | "These patterns have no matching skills. Create them?" | MEDIUM | Compare patterns to skill inventory |
-| ROI projection | "If 50 employees install this skill, estimated annual savings: 400 FTE-days" | LOW | Math from hours_saved * usage projection |
-
----
-
-## Feature Area 4: Skill Visibility Scoping
-
-### Table Stakes
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| `visibility` field on skills: `global`, `team_visible`, `team_hidden`, `personal` | Users need to control who sees their skills | LOW | Schema migration, add column |
-| Global skills visible to entire organization | Company-wide skills are the default for published, admin-approved skills | LOW | Query filter |
-| Team-visible skills visible to same-department users | Department-specific skills (e.g., "Engineering Code Review") | MEDIUM | Department/team association on users |
-| Team-hidden skills visible only to author and admins | Work-in-progress that shouldn't distract colleagues | LOW | Author-only access check |
-| Personal skills visible only to the author | Private skills for personal productivity | LOW | `authorId` filter |
-| Visibility selector on skill creation form | Authors choose scope when creating/editing | LOW | UI dropdown |
-| Visibility filter on browse/search | Users can filter by visibility scope | LOW | Query parameter |
-
-**Expected UX Flow:**
-
-```
-Creating a skill:
-  - Author fills in name, description, content
-  - Visibility dropdown: "Who can see this?"
-    - "Everyone in the company" (global) -- default for published skills
-    - "My team" (team_visible) -- visible to same-department users
-    - "Only me and admins" (team_hidden) -- hidden from browse, discoverable by admin
-    - "Just me" (personal) -- completely private
-
-Browsing skills:
-  - Default view: shows global + team_visible (for user's team) skills
-  - Filter: "My skills" shows personal + team_hidden + user's authored skills
-  - Admin view: shows all skills regardless of visibility
-
-Search:
-  - Global and team_visible skills appear in search results
-  - Personal and team_hidden skills only appear when author searches
-  - MCP search returns only skills the authenticated user can see
-```
-
-**Data model:**
-
-The `skills` table needs a `visibility` column (text, enum: global/team_visible/team_hidden/personal). Additionally, a `team_id` or `department` association is needed on the `users` table to support team-scoped visibility.
-
-**Current gap**: The existing user model does not have a department/team field. Options:
-1. Add `department` text field to `users` table (simple, sufficient for v3.0)
-2. Create a `teams` table with many-to-many user-team relationship (more flexible, more complex)
-
-Recommendation: Start with a `department` text field on `users`. If team structures become more complex, migrate to a teams table later.
-
-**How visibility interacts with existing features:**
-- **Status lifecycle**: Visibility is orthogonal to status. A skill can be `published` + `personal` (live but only visible to author). Or `draft` + `global` (intending to share, not yet reviewed).
-- **RLS**: Visibility scoping adds a second filter layer on top of tenant_id RLS. The query pattern becomes: `WHERE tenant_id = current_tenant AND (visibility = 'global' OR (visibility = 'team_visible' AND department = user_department) OR author_id = user_id)`.
-- **MCP search**: The MCP search handler needs user context (authenticated user's department) to filter visibility. Currently, MCP search only has `userId` from the API key. Department would need to be resolved from the user record.
-
-**Successful implementations to model:**
-- **Salesforce record visibility**: Owner-based, role-based, and organization-wide defaults. Their "OWD (Organization-Wide Default) + sharing rules" pattern is the enterprise standard.
-- **Confluence space permissions**: Spaces have visibility levels (public, restricted, personal). The "personal space" concept maps directly to personal skills.
-- **Google Drive sharing**: Owner / Editor / Viewer with "anyone in organization" or "specific people." The simplicity of their model is what users expect.
-
-**What would delight:**
-- Default visibility based on context: Skills created via MCP default to `personal`, skills created via web UI default to `team_visible`
-- Visibility change notifications: "Jane shared 'Code Review Automation' with the Engineering team"
-- "Share with specific people" option for ad-hoc sharing outside team boundaries
-
-**What to avoid:**
-- Do NOT build complex ACL (Access Control Lists) with per-user permissions. Four visibility levels (global/team_visible/team_hidden/personal) cover 95% of use cases. Per-user sharing is an anti-feature at this scale.
-- Do NOT make all skills global by default. Personal skills are where users experiment. If everything is public immediately, users will be reluctant to create rough drafts.
-- Do NOT gate visibility behind the approval workflow. Visibility and approval are separate concerns. A personal skill does not need admin approval.
-
-**Confidence:** HIGH. Visibility scoping with 4 levels is a well-established pattern across Salesforce, Confluence, Google Drive, and SharePoint. The implementation is a column addition plus query filters.
-
-### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Visibility analytics (admin) | "80% of skills are personal -- encourage sharing" | LOW | Aggregation query |
-| Suggest visibility upgrade | "This personal skill has been used 20 times. Share with your team?" | MEDIUM | Usage threshold notification |
-| Cross-team skill discovery | "Engineering team's most-used skills" visible to other teams | LOW | Team-filtered leaderboard |
-
----
-
-## Feature Area 5: Admin-Stamped Global Skills with Department Approval
-
-### Table Stakes
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| "Stamp as global" admin action | Admin can elevate a team/personal skill to global visibility | LOW | Visibility field update with authorization |
-| Department approval workflow | Department head approves before skill goes global | MEDIUM | Approval chain logic |
-| Global skill badge/indicator | Users can see which skills are company-endorsed | LOW | UI badge component |
-| Audit trail for approval decisions | Who approved what, when, with what notes | LOW | Existing review_decisions table pattern |
-
-**Expected UX Flow:**
-
-```
-Promotion pathway:
-  1. Author creates skill (visibility: personal or team_visible)
-  2. Skill gains usage and positive ratings within team
-  3. Author or admin requests "global promotion"
-  4. Department approval workflow:
-     a. Department head receives notification
-     b. Reviews skill content, usage metrics, ratings
-     c. Approves or requests changes
-  5. Admin (org-level) gives final stamp
-  6. Skill visibility changes to "global" with "Admin Approved" badge
-  7. Skill appears in org-wide browse/search with endorsement indicator
-
-Admin stamp visual:
-  - Blue checkmark badge: "Company Approved"
-  - Shows approver name and date on skill detail page
-  - Appears in search results and browse grid
-```
-
-**Approval chain pattern:**
-
-```
-TEAM_VISIBLE ──request-global──> PENDING_DEPT_APPROVAL
-                                     |
-                              dept head reviews
-                                     |
-                         ┌───────────┼────────────┐
-                         v           v             v
-                   DEPT_APPROVED  CHANGES_REQ  DEPT_REJECTED
-                         |
-                    admin reviews
-                         |
-                    ┌────┼────┐
-                    v         v
-              GLOBAL     ADMIN_REJECTED
-              (stamped)
-```
-
-**How this interacts with the existing status lifecycle:**
-- The existing 7-status lifecycle (draft -> pending_review -> ai_reviewed -> approved -> published) governs content quality.
-- The global promotion workflow governs visibility scope.
-- These are separate concerns: a skill must be `published` (passed content review) before it can be promoted to `global`.
-- Implementation: Add a `globalApprovalStatus` field (pending/dept_approved/admin_approved/rejected) separate from the existing `status` field.
-
-**Successful implementations to model:**
-- **SharePoint Publishing Approval**: Content approval with multi-level sign-off (author -> reviewer -> publisher). Standard enterprise content governance pattern.
-- **Apple App Store review + editorial selection**: Content review (automated) is separate from editorial curation (human). Skills pass automated review to be published, then pass human curation to be featured/global.
-- **Confluence blueprints + admin templates**: Org-wide templates are admin-curated, team templates are self-service.
-
-**What would delight:**
-- Global skills highlighted in a "Company Recommended" section on the homepage
-- Notification to all users when a new global skill is approved: "New company skill: Meeting Summary Generator"
-- Usage metrics comparison: global skills vs team-only skills performance
-
-**What to avoid:**
-- Do NOT require global promotion for every skill. Most skills should be team-visible or personal. Global promotion is for the best-of-the-best.
-- Do NOT create a separate reviewer role for department heads. Use the existing admin role + a `department` field on users to determine departmental authority. If the requesting user's department matches the approver's department, they can approve. Keep it simple.
-- Do NOT block skill usage during the promotion workflow. The skill remains usable at its current visibility while the global promotion is pending.
-
-**Confidence:** MEDIUM-HIGH. Enterprise content approval with multi-level sign-off is well-established. The novel aspect is combining it with the existing skill status lifecycle, which requires careful state management.
-
-### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Auto-nomination based on metrics | "This skill has 50+ uses and 4.5+ rating. Nominate for global?" | LOW | Threshold-based notification |
-| Department skill catalog | Each department has a curated page of their approved skills | MEDIUM | Department-filtered view |
-| Global skill retirement workflow | Admin can deprecate global skills with migration guidance | LOW | Status transition to deprecated |
-
----
-
-## Feature Area 6: Personal Preference Extraction from CLAUDE.md
-
-### Table Stakes
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| CLAUDE.md upload/paste interface | Users provide their CLAUDE.md content | LOW | Text input or file upload |
-| Preference extraction via LLM | Parse CLAUDE.md into structured preferences | MEDIUM | LLM structured output (existing pattern) |
-| Portable preference profile | Extracted preferences stored in user profile | LOW | New profile fields |
-| Export to multiple AI configs | Generate CLAUDE.md, .cursorrules, AGENTS.md from preferences | MEDIUM | Template-based generation |
-
-**Expected UX Flow:**
-
-```
-1. User navigates to /profile/preferences (new page)
-
-2. "Import from CLAUDE.md" button
-   - Paste text or upload file
-
-3. LLM extracts structured preferences:
-   {
-     "coding_style": {
-       "language": "TypeScript",
-       "framework_preferences": ["Next.js", "Tailwind CSS"],
-       "testing": "Playwright for E2E, vitest for unit",
-       "formatting": "Prefer explicit types over inference"
-     },
-     "communication_style": {
-       "verbosity": "concise",
-       "tone": "direct, technical",
-       "avoid": ["emojis in code comments", "unnecessary abstractions"]
-     },
-     "workflow_preferences": {
-       "git": "conventional commits, no force push",
-       "reviews": "prefer small PRs",
-       "documentation": "inline comments over separate docs"
-     }
-   }
-
-4. User reviews and edits extracted preferences
-
-5. Export options:
-   - "Generate CLAUDE.md" -- for Claude Code
-   - "Generate .cursorrules" -- for Cursor
-   - "Generate AGENTS.md" -- for VS Code Copilot / Codex
-   - "Generate settings.json" -- for tool-specific configs
-   - "Copy to clipboard" -- universal
-
-6. Sync: when user updates preferences, regenerate all formats
-```
-
-**Key insight from research:**
-
-The problem of keeping AI configuration in sync across tools is real and growing. Projects like `dot-claude` and `claudius` exist specifically to sync rules across Claude, Codex, Gemini, and Cursor. The user's CLAUDE.md is the richest source of preferences because it evolves organically through use.
-
-**What the LLM extraction should parse:**
-- Language/framework preferences
-- Coding style rules (naming, formatting, patterns)
-- Communication preferences (verbosity, tone, format)
-- Workflow preferences (git, testing, CI/CD)
-- Tool-specific instructions (what to use, what to avoid)
-- Custom commands and aliases
-- Project-specific context (can be flagged as non-portable)
-
-**What to avoid extracting:**
-- API keys and secrets (flag and redact)
-- File paths specific to one machine
-- Project-specific state (current branch, active tasks)
-
-**Successful implementations to model:**
-- **Claudius**: Configuration management for multiple AI agents. Syncs settings across Claude, Codex, Gemini.
-- **dot-claude**: Syncs Claude Code rules to Droid, OpenCode, Codex, Qwen, Cursor, Copilot.
-- **kaush.io AGENTS.md sync**: "One source of truth" pattern -- write once, generate for each tool.
-
-**What would delight:**
-- Team preference templates: "Engineering team defaults" that new hires can start from
-- Preference diff: "Your CLAUDE.md changed since last import. Update preferences?"
-- Skill recommendations based on preferences: "Based on your TypeScript + Next.js preferences, try these skills"
-
-**What to avoid:**
-- Do NOT auto-sync without user confirmation. Preferences are personal; auto-pushing changes to active AI configs could disrupt workflows.
-- Do NOT store the raw CLAUDE.md. Extract structured preferences and discard the raw text (it may contain secrets).
-- Do NOT try to be a full configuration management tool. Extract and export preferences; do not manage the target tool's config files.
-
-**Confidence:** MEDIUM. The extraction concept is sound and the tools exist. The risk is in edge cases: CLAUDE.md files vary wildly in structure (some are 10 lines, some are 500+ lines). The LLM extraction quality depends heavily on the prompt engineering and validation UX. Recommend starting with a "review and edit" step rather than fully automated extraction.
-
-### Differentiators
-
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Preference-aware skill recommendations | "Based on your style preferences, this skill fits your workflow" | HIGH | Cross-reference preferences with skill metadata |
-| Team preference analytics | "Most common preferences across Engineering: TypeScript, ESLint strict" | LOW | Aggregation of team preferences |
-| Preference evolution tracking | "Your preferences have shifted toward functional patterns this quarter" | MEDIUM | Preference history comparison |
-
----
-
-## Feature Area 7: Loom Video Integration
-
-### Table Stakes
-
-| Feature | Why Expected | Complexity | Depends On |
-|---------|--------------|------------|------------|
-| Loom URL field on skill creation/edit form | Authors paste a Loom URL to attach a demo video | LOW | New field on skills table |
-| Embedded video player on skill detail page | Video plays inline without leaving the page | LOW | Loom Embed SDK `oembed()` |
-| Video thumbnail in skill cards/browse | Visual preview of the demo video | LOW | `thumbnail_url` from oEmbed |
-| Video metadata display (duration, title) | Users know what they are about to watch | LOW | oEmbed response fields |
-
-**Expected UX Flow:**
-
-```
-Creating/editing a skill:
-  1. Author pastes Loom URL: https://www.loom.com/share/abc123
-  2. System validates URL format (must be loom.com/share/*)
-  3. System calls Loom oEmbed to fetch metadata
-  4. Preview shows: thumbnail, title, duration
-  5. Author confirms: "Attach this video"
-
-Viewing a skill:
-  1. Skill detail page shows video section below description
-  2. Embedded Loom player (responsive, 16:9 aspect ratio)
-  3. Video metadata: "Demo: Code Review Automation (2:34)"
-  4. Player supports play/pause, speed control, fullscreen (Loom defaults)
-
-Browse/search:
-  1. Skills with videos show a small camera icon on their card
-  2. Video thumbnail appears on hover (optional)
-  3. Filter: "Skills with demos" checkbox
-```
+**Critical limitation (HIGH confidence):** PostToolUse hooks do NOT receive token counts, model name, or cost data. The `tool_response` contains whatever the MCP tool returned, not Anthropic API metadata. Token/cost measurement must come from a different mechanism (see Feature Area 5).
 
 **Implementation approach:**
 
-1. **Loom Embed SDK** (`@loomhq/loom-embed`): Install via npm. Use `oembed()` method to fetch metadata from URL. Returns `{ type, html, title, duration, thumbnail_url, thumbnail_width, thumbnail_height, width, height, provider_name }`.
+The existing tracking hook (auto-injected into skill frontmatter) already fires PostToolUse callbacks to `/api/track`. Extend this hook to:
 
-2. **No authentication required**: The Loom Embed SDK does not require API keys for basic oEmbed embedding. The video must be shared publicly (or with link access) for the embed to work.
+1. Track a local use counter per skill (file-based or env var)
+2. On qualifying uses (1st, 2nd, 3rd, then every 10th), return `additionalContext` asking Claude to solicit feedback
+3. Claude asks: "Was [skill name] helpful? (thumbs up / thumbs down)"
+4. User responds; Claude calls a new MCP tool `everyskill.feedback` to record it
+5. Feedback is stored in a new `skill_feedback` table or as structured metadata in `usage_events`
 
-3. **Data model**: Add `loomUrl` (text, nullable) and `loomThumbnail` (text, nullable) fields to `skills` table. Store the URL and cached thumbnail. Fetch fresh oEmbed data on skill view for the embed HTML.
+**UX pattern (modeled after LangWatch and Microsoft Copilot Studio):**
 
-4. **Server-side rendering**: Call `oembed()` server-side to get the embed HTML. Inject it into the page. This avoids client-side SDK loading and keeps the page fast.
+The LangWatch pattern uses: `trace_id` to correlate feedback with execution, `vote` (1/-1), and optional `feedback` text. Microsoft Copilot Studio similarly provides thumbs up/down reactions directly on agent responses with aggregated analytics.
 
-**Successful implementations to model:**
-- **Trainual**: Uses Loom Embed SDK to auto-convert Loom links into embedded players in training content. Clean, inline video experience.
-- **Linear**: Embeds Loom videos in issue descriptions. The video plays inline without navigating away.
-- **Notion**: oEmbed-based video embedding. Paste a Loom URL, get an embedded player. The simplest UX pattern.
-
-**What would delight:**
-- Auto-detect Loom URLs in skill content markdown and embed them automatically (using `textReplace()` from the SDK)
-- Video timestamp links: "Watch from 1:23 for the deployment step"
-- MCP tool returns video info: "This skill has a 2-minute demo video. View at: [URL]"
+For EverySkill in Claude, the flow is:
+```
+1. User uses skill via MCP
+2. PostToolUse hook fires (smart frequency check)
+3. Hook injects additionalContext: "Ask the user for brief feedback on [skill]"
+4. Claude asks naturally: "How was the [skill]? Quick thumbs up or down?"
+5. User: "thumbs up" or "it was off, the output format was wrong"
+6. Claude: [calls everyskill.feedback with vote=1 or vote=-1 + reason]
+7. Stored with skill_id, user_id, usage_event_id, model context
+```
 
 **What to avoid:**
-- Do NOT build a custom video player or support arbitrary video URLs. Loom-only keeps scope manageable and the embed quality consistent.
-- Do NOT require video for every skill. The field should be optional. Many skills are text-only and that is fine.
-- Do NOT auto-play videos. Users should click to play. Auto-play is hostile UX.
-- Do NOT store video content or cache video files. Only store the URL and metadata. Loom hosts the video.
+- Do NOT ask for feedback on every single use. Users will disable the hook. Smart frequency (first 3, then every 10th) is critical.
+- Do NOT block the user's workflow to collect feedback. The hook injects context; Claude asks naturally. If the user ignores it, move on.
+- Do NOT try to collect structured forms via MCP. Thumbs up/down + optional text is the ceiling for in-Claude feedback.
 
-**Confidence:** HIGH. Loom Embed SDK is well-documented, has no authentication requirement for basic embedding, and returns all needed metadata. The implementation is straightforward: URL field + oEmbed call + embed HTML injection.
+**Confidence:** MEDIUM-HIGH. The PostToolUse hook mechanism is well-documented and already used for usage tracking. The `additionalContext` injection pattern is the correct approach. The main risk is whether users will actually respond to feedback prompts in Claude.
 
 ### Differentiators
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Video-first browse mode | Grid of skill demo thumbnails for visual discovery | LOW | Thumbnail grid view |
-| Loom URL auto-detection in markdown | Paste a Loom link in skill content, auto-embed | MEDIUM | `textReplace()` from SDK |
-| Video analytics (views, watch-through rate) | Track engagement with skill demos | HIGH | Would require Loom API (not available) |
+| Sentiment aggregation per skill | "85% positive over last 30 days" displayed on skill page | LOW | Aggregation query on feedback data |
+| Feedback-triggered notifications | Author notified when skill gets negative feedback | LOW | Existing notification system |
+| Auto-skip for consistently positive skills | Stop asking once a skill has 10+ thumbs up and >90% positive | LOW | Threshold logic in hook |
 
 ---
 
-## Feature Area 8: Homepage Redesign
+## Feature Area 2: Web Feedback with Improvement Suggestions
 
 ### Table Stakes
 
 | Feature | Why Expected | Complexity | Depends On |
 |---------|--------------|------------|------------|
-| Intent-first hero with prominent search | Homepage centered on "What are you trying to solve?" not metrics | MEDIUM | Feature Area 1 (intent search) |
-| Curated sections: "Company Recommended" / "Trending" / "New" | Clear content categories for browsing | LOW | Existing trending + new global skills |
-| Personalized "For You" section | Skills based on user's usage, department, and preferences | MEDIUM | Usage history + department matching |
-| Clean, modern visual design | Current homepage is data-heavy; redesign should be inviting | MEDIUM | Tailwind CSS (existing) |
-| Mobile-responsive layout | Enterprise users access on multiple devices | LOW | Existing responsive framework |
+| Structured feedback form on skill detail page | Web UI supports richer feedback than in-Claude thumbs up/down | MEDIUM | New component on skill detail page |
+| Improvement suggestion text area | "This skill would be better if..." drives specific improvements | LOW | Text field with validation |
+| Category tags (output quality, missing feature, error, too slow) | Structured categories enable aggregate analysis | LOW | Multi-select tags |
+| Suggestion visibility to skill author | Authors must see feedback to act on it | LOW | Query + display component |
 
 **Expected UX Flow:**
 
 ```
-Current homepage structure (v2.0):
-  - Welcome message
-  - Search bar (small, secondary)
-  - Create/Install CTA cards
-  - Platform stats (FTE Years Saved, Total Uses, Downloads, Avg Rating)
-  - Trending Skills + Top Contributors
-  - Your Impact section
+Skill detail page (/skills/[slug]):
+  Existing: Star rating (1-5) with comment + hours saved estimate
+  New section: "Improvement Suggestions"
 
-Proposed homepage structure (v3.0):
-  - Hero: Large search bar with "What are you trying to solve today?"
-    Below: 3-4 quick category pills (Prompts, Workflows, Agents, MCP Tools)
-  - "Company Recommended" section (admin-stamped global skills)
-  - "For You" section (personalized based on usage + department)
-  - "Trending This Week" section (existing, redesigned as cards)
-  - "Recently Added" section (new skills in last 7 days)
-  - Platform impact metrics (condensed to a single banner, not 4 full stat cards)
-  - "Your Leverage" (moved to dedicated tab, not competing with discovery)
+  1. User clicks "Suggest an Improvement"
+  2. Form appears (inline accordion, not modal):
+     - Category: [Output quality] [Missing feature] [Error/bug] [Too slow] [Other]
+     - Suggestion: "The output should include source citations..."
+     - Severity: [Nice to have] [Important] [Critical]
+  3. Submit stores suggestion with user_id, skill_id, category, text
+  4. Author sees suggestion count badge on their skill management page
+  5. Author can: Accept (triggers fork), Dismiss (with reason), or Reply
 ```
 
-**Key design principles from research:**
+**How this differs from the existing rating system:**
 
-1. **5-Second Rule**: Users should understand what they can do within 5 seconds. The current homepage mixes metrics, navigation, and discovery. The redesign should prioritize one thing: **helping users find skills**.
+The existing `ratings` table captures retrospective evaluation (how good was this?). Improvement suggestions capture prospective direction (how should this change?). They are complementary:
 
-2. **Search-first, not metrics-first**: The current homepage leads with "Welcome back, [name]!" and platform stats. This is backwards for a marketplace. The hero should be the search bar. Metrics are important but secondary -- move them to a banner or separate analytics page.
+| Existing Ratings | New Suggestions |
+|-----------------|-----------------|
+| 1-5 stars | Category tags |
+| "Great tool!" (comment) | "Add CSV export support" (actionable) |
+| Hours saved estimate | Severity indicator |
+| One per user per skill | Multiple per user per skill |
 
-3. **Cards, not tables**: The skill browse page uses a table layout (SkillsTable). The homepage should use cards with visual elements (author avatar, quality badge, video thumbnail if available, usage sparkline). Cards invite exploration; tables invite scanning.
+**Data model recommendation:**
 
-4. **Progressive disclosure**: Show 3-4 skills per section with "See all" links. Do not dump 20 skills on the homepage. Curate aggressively.
-
-**Successful implementations to model:**
-- **Atlassian Marketplace**: Hero search bar + category pills + featured apps + trending apps. Clean, discoverable, low cognitive load.
-- **Notion Template Gallery**: Visual cards with preview thumbnails, category filters, "Featured" curation. The browse-by-category experience is outstanding.
-- **Slack App Directory**: Categories on the left, featured apps prominently displayed, search at top. The "categories as navigation" pattern is effective for skill types.
-- **Vercel Dashboard**: Clean, minimal, action-oriented. "What do you want to deploy?" as the primary interaction. Translates to "What do you want to solve?" for EverySkill.
-
-**What would delight:**
-- "Continue where you left off" section showing recently viewed/used skills
-- Seasonal or event-driven featured sections: "New quarter? Skills for planning and goal-setting"
-- Empty state for new users: guided onboarding with "Install your first skill in 60 seconds"
-- Search bar with typeahead showing skill names + categories as user types
+New `skill_suggestions` table:
+```sql
+id TEXT PK
+tenant_id TEXT NOT NULL FK tenants
+skill_id TEXT NOT NULL FK skills
+user_id TEXT NOT NULL FK users
+category TEXT NOT NULL  -- 'output_quality' | 'missing_feature' | 'error' | 'performance' | 'other'
+suggestion TEXT NOT NULL
+severity TEXT NOT NULL DEFAULT 'nice_to_have'  -- 'nice_to_have' | 'important' | 'critical'
+status TEXT NOT NULL DEFAULT 'open'  -- 'open' | 'accepted' | 'dismissed' | 'implemented'
+author_response TEXT  -- Author's reply
+created_at TIMESTAMP NOT NULL DEFAULT NOW()
+resolved_at TIMESTAMP
+```
 
 **What to avoid:**
-- Do NOT preserve the current layout with minor tweaks. The current homepage is a dashboard, not a marketplace. The redesign should fundamentally change the primary interaction from "view metrics" to "find skills."
-- Do NOT show platform stats prominently to regular users. Stats matter to admins and executives. Regular users care about finding skills. Move stats to analytics page or admin dashboard.
-- Do NOT use a carousel/slider for featured skills. Carousels have notoriously low engagement. Use a static grid of 3-4 featured skills.
-- Do NOT auto-rotate or auto-animate anything. Let users control their browsing pace.
+- Do NOT merge suggestions into the existing `ratings` table. They serve different purposes and have different schemas.
+- Do NOT build a full issue tracker. Suggestions have 4 statuses max (open/accepted/dismissed/implemented). No assignees, no due dates, no priority levels beyond severity.
+- Do NOT allow anonymous suggestions. All feedback tied to authenticated users for accountability and anti-spam.
 
-**Confidence:** HIGH. Marketplace homepage patterns are extremely well-established (Atlassian, Notion, Slack, Vercel, Figma Community). The current EverySkill homepage is a v1 dashboard; evolving it into a v3 marketplace landing follows proven patterns.
+**Confidence:** HIGH. Improvement suggestion UX follows established patterns from UserVoice, Canny, and feature request tools. The implementation is straightforward: new table, form component, author notification.
 
 ### Differentiators
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Onboarding flow for new users | Guided "Install your first skill" reduces time-to-value | MEDIUM | Multi-step wizard |
-| Homepage customization | Users can pin sections, hide categories | HIGH | User-level preferences |
-| Admin-curated hero banner | Admins can feature a skill/announcement in the hero | LOW | Admin settings for hero content |
+| Suggestion voting | Other users upvote suggestions: "I want this too" | LOW | Vote counter on suggestions |
+| AI-generated improvement plan | LLM reads top suggestions and drafts improvement plan | MEDIUM | Structured output from existing Anthropic SDK |
+| Public suggestion board per skill | Transparency: users see what's been suggested and status | LOW | Filtered view of suggestions table |
+
+---
+
+## Feature Area 3: Suggestion-to-Fork Pipeline
+
+### Table Stakes
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| "Accept" on suggestion auto-creates draft fork | Bridge from feedback to action without manual copy-paste | MEDIUM | Existing `forkSkill()` action + new trigger |
+| Suggestion context injected into fork | Fork pre-populated with improvement context from the suggestion | LOW | Pass suggestion text to fork metadata |
+| Author notification queue | Author sees pending suggestions that could become forks | LOW | Existing notification system |
+| Link back from fork to originating suggestion | Traceability: which suggestion drove which improvement | LOW | FK `suggestion_id` on skills or fork metadata |
+
+**Expected UX Flow:**
+
+```
+1. User submits suggestion: "Add error handling for malformed input"
+   - Stored in skill_suggestions table (Feature Area 2)
+
+2. Author views suggestion on skill management page
+   - Sees: category, text, severity, user who submitted, date
+   - Actions: [Accept & Fork] [Dismiss] [Reply]
+
+3. Author clicks "Accept & Fork":
+   a. System calls existing forkSkill() with additional context
+   b. Fork is created as draft with:
+      - Original skill content
+      - Suggestion text prepended as a comment: "// Improvement: Add error handling..."
+      - If "Fork & Improve" is selected, AI review auto-triggered with suggestion as guidance
+   c. suggestion.status set to 'accepted'
+   d. Notification sent to suggestion author: "Your suggestion was accepted!"
+
+4. Author iterates on fork, publishes improved version
+   - suggestion.status set to 'implemented'
+   - Notification: "The improvement you suggested has been published!"
+
+5. Original suggestion author can rate the implementation
+```
+
+**How this extends the existing fork system:**
+
+The existing `forkSkill()` action (in `apps/web/app/actions/fork-skill.ts`) already:
+- Creates a new skill with `forkedFromId` pointing to parent
+- Copies content, tags, category from parent
+- Generates embedding for the fork
+- Supports `?improve=1` query param for auto-triggered AI review
+
+The suggestion-to-fork pipeline adds:
+- A trigger from the suggestion UI (instead of manual "Fork" button)
+- Suggestion context injected into the fork's initial content or metadata
+- Status tracking linking suggestion to resulting fork
+
+**Depends on:** Feature Area 2 (suggestions table must exist first)
+
+**What to avoid:**
+- Do NOT auto-create forks from every suggestion. Only author-accepted suggestions should generate forks.
+- Do NOT allow suggestions to modify the original skill directly. All improvements go through the fork flow for proper versioning and review.
+- Do NOT build a merge-back workflow yet. Forks are independent skills. A future milestone could add "merge upstream" if needed.
+
+**Confidence:** HIGH. This is a thin orchestration layer over two existing features (suggestions + forks). The main new work is the UI trigger and status tracking.
+
+### Differentiators
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| AI-assisted fork from suggestion | LLM applies the suggestion to the skill content automatically | HIGH | Uses existing AI review infrastructure |
+| Community-driven improvement queue | Most-upvoted suggestions surface first for author attention | LOW | Sort by vote count |
+| Suggestion leaderboard | "Top Improvers" -- users whose suggestions led to published improvements | LOW | Join suggestions -> forks -> published |
+
+---
+
+## Feature Area 4: Training Data (Golden Dataset)
+
+### Table Stakes
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| Author-seeded input/output pairs per skill | Authors define "this is what good output looks like" | MEDIUM | New table + form on skill edit page |
+| Structured golden format: input, expected_output, context, expected_tools | Industry-standard format (matches deepeval, LangSmith, Confident AI) | LOW | Schema design matching ecosystem standards |
+| Real usage capture (with permission) | Actual usage data is more representative than author examples | HIGH | Consent flow + usage event enrichment |
+| Export as JSON/CSV for external evaluation | Training data must be portable to evaluation tools | LOW | API endpoint + download |
+
+**What a golden dataset looks like (based on deepeval/Confident AI patterns):**
+
+A golden is a test case without runtime outputs -- it defines what the ideal behavior should be:
+
+```json
+{
+  "skill_id": "code-review-helper",
+  "goldens": [
+    {
+      "input": "Review this Python function for security issues: def login(user, pwd): ...",
+      "expected_output": "Found 2 security issues: 1. Password stored in plaintext...",
+      "context": "Enterprise security review context",
+      "expected_tools": ["everyskill"],
+      "additional_metadata": {
+        "category": "security_review",
+        "difficulty": "medium",
+        "author_verified": true,
+        "created_by": "author"
+      }
+    }
+  ]
+}
+```
+
+At evaluation time, the golden is augmented with runtime data:
+- `actual_output`: What the LLM actually produced
+- `tools_called`: What tools were actually invoked
+- `model`: Which model was used
+- `tokens`: Input/output token counts
+- `latency_ms`: Time to completion
+
+**Data model recommendation:**
+
+New `skill_training_data` table:
+```sql
+id TEXT PK
+tenant_id TEXT NOT NULL FK tenants
+skill_id TEXT NOT NULL FK skills
+created_by TEXT NOT NULL FK users
+source TEXT NOT NULL  -- 'author_seeded' | 'usage_captured' | 'ai_generated'
+input TEXT NOT NULL
+expected_output TEXT
+context TEXT
+expected_tools TEXT[]
+additional_metadata JSONB
+is_verified BOOLEAN DEFAULT false  -- Author has verified this example
+created_at TIMESTAMP NOT NULL DEFAULT NOW()
+```
+
+New `skill_eval_results` table (for captured runtime data):
+```sql
+id TEXT PK
+tenant_id TEXT NOT NULL FK tenants
+training_data_id TEXT FK skill_training_data  -- Null for ad-hoc captures
+skill_id TEXT NOT NULL FK skills
+actual_output TEXT NOT NULL
+model_name TEXT NOT NULL
+input_tokens INTEGER
+output_tokens INTEGER
+latency_ms INTEGER
+quality_score NUMERIC  -- LLM-as-judge or human rating
+evaluated_at TIMESTAMP NOT NULL DEFAULT NOW()
+```
+
+**Expected UX Flow:**
+
+```
+Author perspective (seeding golden data):
+  1. Navigate to skill edit page
+  2. New "Training Examples" tab
+  3. Click "Add Example"
+  4. Fill in: Input (required), Expected Output (required), Context (optional)
+  5. Example saved to skill_training_data
+  6. Can add multiple examples (recommend 5-10 per skill)
+  7. Each example shows "Verified" checkbox
+
+Usage capture perspective (with consent):
+  1. Admin enables "Training Data Collection" in tenant settings
+  2. Users see consent banner: "Your usage data may be used to improve skills"
+  3. On each MCP tool use, if consent is given:
+     a. Input snippet (already captured via hook)
+     b. Output snippet (already captured via hook)
+     c. Model name (from hook context if available)
+     d. User's thumbs up/down (from Feature Area 1)
+  4. Positive-rated usage events (thumbs up) are candidates for golden data
+  5. Author can "promote" a usage capture to verified golden example
+```
+
+**The consent model is critical:**
+
+| Level | What's Captured | Who Decides |
+|-------|----------------|-------------|
+| Off | Nothing beyond existing usage events | Admin per tenant |
+| Anonymous | Aggregated patterns only (no individual data) | Admin per tenant |
+| Opt-in | Individual usage with user consent | User opt-in |
+| Full | All usage data captured for training | Enterprise agreement |
+
+**What to avoid:**
+- Do NOT capture full input/output by default. This requires explicit consent due to data sensitivity.
+- Do NOT build a full evaluation pipeline in v5.0. Store the data in golden dataset format; running evaluations against it is a future milestone.
+- Do NOT require training data for skill publishing. It's an optional enhancement for skill quality.
+- Do NOT conflate training data with the existing `usage_events` table. Training data has different schema needs (expected_output, verification status) and different retention requirements.
+
+**Confidence:** MEDIUM. The golden dataset format is well-established (deepeval, LangSmith, Confident AI all use similar structures). The risk is in the consent/capture pipeline -- this touches privacy concerns and requires careful UX.
+
+### Differentiators
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| AI-generated golden examples | LLM generates training pairs from skill content | MEDIUM | Uses existing Anthropic SDK |
+| Training data completeness score | "This skill has 3/10 recommended examples" | LOW | Count query |
+| Cross-skill evaluation | Run same golden set across similar skills to compare | HIGH | Requires evaluation runner (future) |
+
+---
+
+## Feature Area 5: Token/Cost Measurement
+
+### Table Stakes
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| Token count capture per skill execution | Foundation for cost calculation | HIGH | PostToolUse hook limitations -- see below |
+| Model name capture | Different models have different costs | MEDIUM | Must extract from available context |
+| Estimated cost calculation | Translate tokens to dollars using pricing tables | LOW | Static pricing lookup |
+| Per-skill cost aggregation | "This skill costs ~$0.03 per use on average" | LOW | Aggregation query on captured data |
+
+**Critical technical constraint (HIGH confidence):**
+
+The PostToolUse hook's `tool_response` contains what the MCP tool returned, NOT Anthropic API metadata. The hook does NOT receive:
+- `input_tokens` / `output_tokens`
+- Model name
+- Cache hit rates
+- API response headers
+
+This means token/cost data cannot be captured directly from the existing PostToolUse tracking hook.
+
+**Viable approaches for token measurement:**
+
+| Approach | How | Accuracy | Complexity | Recommendation |
+|----------|-----|----------|------------|----------------|
+| **A. Estimate from content length** | Count characters/words in tool_input and tool_response, estimate tokens using ~4 chars/token rule | LOW | LOW | Fallback only |
+| **B. Token counting API** | Call Anthropic's `/v1/messages/count_tokens` endpoint with the tool input/output | HIGH for input | MEDIUM | Good for input tokens |
+| **C. Session transcript analysis** | PostToolUse hook receives `transcript_path` -- parse the JSONL transcript for token usage data | HIGH | HIGH | Best accuracy if transcript contains usage data |
+| **D. Client-side instrumentation** | Modify the MCP client wrapper to capture API response headers before forwarding to the hook | HIGH | HIGH | Requires changes to user-side code |
+| **E. Proxy approach** | Route API calls through a LiteLLM-style proxy that logs token usage | HIGH | HIGH | Infrastructure change, out of scope for v5.0 |
+
+**Recommended approach: Combination of A + B + C**
+
+1. **Always capture content length estimates** (approach A) as a baseline -- cheap, always available
+2. **Use Anthropic token counting API** (approach B) for input token measurement when the skill's input is known
+3. **Investigate transcript parsing** (approach C) during phase research -- the `transcript_path` field in every hook input points to a JSONL file that may contain API usage data
+
+The `transcript_path` is the most promising lead: every hook receives it, and Claude Code's transcript likely logs token usage per turn. If the transcript contains `usage.input_tokens` and `usage.output_tokens` per API call, we can correlate these with tool invocations by `tool_use_id`.
+
+**Model name capture:**
+
+The PostToolUse hook does NOT receive model name directly. Options:
+1. **Session-level**: The `SessionStart` hook receives `model` field -- store it in a file, read from PostToolUse hooks
+2. **Transcript parsing**: The transcript likely contains model information per API call
+3. **MCP tool response**: The EverySkill MCP tool could include the model name in its response metadata
+
+**Cost calculation:**
+
+Once tokens and model are known, cost is a lookup:
+
+```typescript
+const PRICING: Record<string, { input: number; output: number }> = {
+  "claude-sonnet-4-5": { input: 3.0 / 1_000_000, output: 15.0 / 1_000_000 },
+  "claude-opus-4-6": { input: 15.0 / 1_000_000, output: 75.0 / 1_000_000 },
+  "claude-haiku-3-5": { input: 0.80 / 1_000_000, output: 4.0 / 1_000_000 },
+};
+// Blended price using Artificial Analysis 3:1 input:output ratio
+const blendedCost = (inputTokens * pricing.input * 3 + outputTokens * pricing.output) / 4;
+```
+
+**Data model extension:**
+
+Extend `usage_events.metadata` JSONB to include:
+```json
+{
+  "existing_fields": "...",
+  "token_measurement": {
+    "input_tokens": 1234,
+    "output_tokens": 567,
+    "measurement_method": "transcript_parse|api_count|estimate",
+    "model_name": "claude-sonnet-4-5",
+    "estimated_cost_usd": 0.0123,
+    "latency_ms": 2340
+  }
+}
+```
+
+No new table needed -- enriching the existing `usage_events.metadata` JSONB is sufficient.
+
+**What to avoid:**
+- Do NOT block on getting perfect token counts. Estimates are useful. Ship estimates, improve accuracy over time.
+- Do NOT build a pricing management UI. Hardcode current Anthropic pricing. Update when prices change.
+- Do NOT try to capture costs for non-Anthropic models in v5.0. Start with Claude models only.
+
+**Confidence:** LOW-MEDIUM. The PostToolUse hook definitely does not provide token data directly. The transcript parsing approach is the most promising but unverified -- this needs phase-specific research to confirm what data the `transcript_path` JSONL actually contains.
+
+### Differentiators
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Cost alerting | "This skill costs >$0.10 per use, consider optimization" | LOW | Threshold check on aggregated costs |
+| Cost comparison across models | "Same skill: $0.02 on Haiku, $0.15 on Opus" | MEDIUM | Requires multi-model data |
+| Org-wide cost dashboard | "Total AI spend this month: $X across Y skill uses" | LOW | Aggregation of per-use costs |
+
+---
+
+## Feature Area 6: Benchmarking Dashboard
+
+### Table Stakes
+
+| Feature | Why Expected | Complexity | Depends On |
+|---------|--------------|------------|------------|
+| Per-skill benchmark view | Show tokens, cost, quality score for each skill | MEDIUM | Feature Area 5 (token data) + existing quality scores |
+| Model comparison table | Same skill's metrics across different model versions | MEDIUM | Model name capture from Feature Area 5 |
+| Time series of cost/quality trends | "This skill got cheaper and better over the last month" | LOW | Existing Recharts infrastructure |
+| Blended price calculation | Industry-standard 3:1 input:output ratio for comparison | LOW | Static calculation |
+
+**Dashboard layout (modeled after Artificial Analysis, Klu, Vellum leaderboards):**
+
+```
+/skills/[slug]/benchmarks (new tab on skill detail page)
+
++--------------------------------------------------+
+| Benchmark: Code Review Helper                     |
+| Period: [7d] [30d] [90d] [1y]                    |
++--------------------------------------------------+
+|                                                    |
+| Quick Stats                                        |
+| +-----------+----------+---------+----------+      |
+| | Avg Cost  | Avg Tkns | Quality | Feedback |      |
+| | $0.023    | 1,234    | Gold    | 92% pos  |      |
+| +-----------+----------+---------+----------+      |
+|                                                    |
+| Model Comparison                                   |
+| +--------+-------+--------+-------+---------+      |
+| | Model  | Uses  | Tokens | Cost  | Quality |      |
+| +--------+-------+--------+-------+---------+      |
+| | Sonnet | 145   | 1,100  | $0.02 | 8.5/10  |      |
+| | Opus   | 23    | 1,450  | $0.15 | 9.2/10  |      |
+| | Haiku  | 67    | 980    | $0.005| 7.1/10  |      |
+| +--------+-------+--------+-------+---------+      |
+|                                                    |
+| Cost & Quality Trend            [Recharts]         |
+| [Line chart: cost per use over time]               |
+| [Line chart: feedback score over time]             |
+|                                                    |
+| Recent Evaluations (from golden dataset)           |
+| +--------+-------+--------+--------+              |
+| | Input  | Model | Score  | Cost   |              |
+| | "Rev..."| Son  | Pass   | $0.02  |              |
+| | "Rev..."| Opus | Pass   | $0.14  |              |
+| +--------+-------+--------+--------+              |
++--------------------------------------------------+
+```
+
+**Key metrics displayed (following Artificial Analysis methodology):**
+
+| Metric | Source | Calculation |
+|--------|--------|-------------|
+| Average cost per use | `usage_events.metadata.token_measurement` | `AVG(estimated_cost_usd)` grouped by skill |
+| Average tokens | Same source | `AVG(input_tokens + output_tokens)` |
+| Quality score | Existing `skill_reviews.categories` | Weighted average of quality/clarity/completeness |
+| Feedback sentiment | Feature Area 1 (thumbs up/down) | `positive_count / total_count * 100` |
+| Model distribution | Model name from usage events | `COUNT(*) GROUP BY model_name` |
+| Cost trend | Time series of per-use costs | Recharts AreaChart (existing pattern) |
+| Time to first token | Latency capture from hooks | `AVG(latency_ms)` when available |
+
+**How this integrates with the existing analytics dashboard:**
+
+The existing analytics dashboard (`/analytics`) shows org-wide usage: total hours saved, active employees, skill leaderboard. The benchmarking view is per-skill (on the skill detail page), not org-wide. They are complementary:
+
+- `/analytics` answers: "How is the org using EverySkill?"
+- `/skills/[slug]/benchmarks` answers: "How well does this specific skill perform?"
+
+**What to avoid:**
+- Do NOT try to replicate Artificial Analysis or LLM Stats. Those compare models across standardized benchmarks. EverySkill compares models within the context of a specific skill's usage.
+- Do NOT display raw token counts to end users. Show cost (dollars) as the primary metric, tokens as the secondary detail. Users care about cost, not tokens.
+- Do NOT build interactive benchmark comparisons (select model A vs model B scatter plot). Start with a simple table + trend chart. Add interactivity if users request it.
+
+**Confidence:** MEDIUM. The dashboard UI patterns are well-established (Recharts already used for analytics). The main risk is data availability -- the dashboard is only useful if Feature Area 5 (token measurement) successfully captures data.
+
+### Differentiators
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Skill cost optimization recommendations | "Switch to Haiku for this skill -- quality is comparable, 85% cheaper" | MEDIUM | Cross-model quality comparison |
+| Org-wide benchmarking roll-up | "Average cost per skill use across the org: $0.04" | LOW | Aggregation across all skills |
+| Golden dataset evaluation runner | Auto-run golden examples against new model versions | HIGH | Future milestone -- requires evaluation orchestration |
 
 ---
 
@@ -659,154 +555,123 @@ Features to explicitly NOT build. Tempting but counterproductive.
 
 | Anti-Feature | Why Tempting | Why Problematic | Do Instead |
 |--------------|-------------|-----------------|------------|
-| **Full Google Workspace integration (read emails, documents)** | "More data = better recommendations" | Massive security/privacy concern. Reading email bodies and document content is a restricted Google scope requiring annual security audits. Users will NOT trust an internal tool with this access. | Metadata only. File names, timestamps, email counts -- never content. |
-| **Real-time activity tracking / screen time** | "Know exactly how time is spent" | Feels like surveillance. Google APIs do not provide screen time. Building it requires OS-level agents. Employee trust destruction. | Periodic diagnostic based on metadata. Weekly summary, not real-time monitoring. |
-| **Custom video hosting** | "Support any video platform" | Storage costs, transcoding pipeline, CDN setup, player development. Enormous scope for a feature that Loom already solves. | Loom-only via Embed SDK. If demand grows, add YouTube oEmbed as a second provider. |
-| **Full AI configuration management** | "Manage all your AI tools from EverySkill" | Scope explosion. Configuration management across Claude, Cursor, Copilot, Codex is a product in itself. | Extract and export preferences. Do not manage remote configs. |
-| **Per-user skill sharing (ACLs)** | "Share this skill with just Jane and Bob" | Complex permission model, UI for user selection, permission revocation, audit trail. 4 visibility levels cover 95% of cases. | Stick with global/team_visible/team_hidden/personal. If specific sharing is needed later, add as a separate feature. |
-| **AI chatbot on homepage** | "Conversational interface for discovery" | Adds latency, complexity, and cost to every homepage visit. Users expect instant search, not a chatbot. MCP is the conversational interface. | Intent search with semantic matching. Fast, inline results. MCP handles the conversational use case. |
-| **Multi-level approval chain (3+ approvers)** | "More approvers = better governance" | Creates bottlenecks. At 500 users, a 3-approver chain means skills sit in limbo. | Department head + admin (2 levels max). Single admin is sufficient for most orgs. |
-| **Preference auto-sync to AI tools** | "Automatically update CLAUDE.md when preferences change" | Writing to users' local files without explicit action is invasive. Auto-sync could break working configurations. | Export button generates config files. User copies/applies manually. Full control. |
+| **Full LLM evaluation pipeline** | "Run evals automatically on every model release" | Enormous scope. Requires eval runner, scoring pipeline, model API integration, result comparison. This is what LangSmith/deepeval/LangWatch do. | Store golden datasets in standard format. Export for use in external eval tools. Build runner in future milestone. |
+| **Inline skill editing from feedback** | "Let users fix the skill right from the feedback form" | Bypasses the quality review pipeline. Unreviewed edits to published skills breaks the entire governance model. | Suggestion-to-fork pipeline. Improvements go through fork + review. |
+| **Real-time token usage streaming** | "Show live token counter as skill executes" | Requires client-side instrumentation, WebSocket connection, significant UI complexity. Not worth the engineering cost. | Post-hoc token measurement. Show aggregated data on benchmarking dashboard. |
+| **Multi-provider cost comparison** | "Compare Claude vs GPT vs Gemini costs" | EverySkill skills are Claude-native (MCP protocol). Supporting multiple providers requires different skill formats, API integrations, and evaluation frameworks. | Claude-only cost tracking. If multi-provider is needed later, build as separate milestone. |
+| **Automated skill improvement from feedback** | "AI reads negative feedback and auto-improves the skill" | Unsupervised AI editing of production skills is dangerous. Quality regression, hallucinated improvements, loss of author intent. | AI-assisted fork from suggestion (author reviews before publishing). Human in the loop always. |
+| **Feedback gamification** | "Points for feedback, badges for top feedback givers" | Incentivizes quantity over quality. Users submit garbage feedback to earn points. | Show feedback impact: "Your suggestion led to 3 improvements used by 45 people." |
+| **Detailed per-request cost attribution to employees** | "Show each employee how much their AI usage costs" | Creates anxiety about using AI tools. Defeats the purpose of driving adoption. | Aggregate cost data at skill and org level, not per-employee. |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[Intent Search] (#1)
-    |--extends---> existing SearchWithDropdown component
-    |--reuses----> skill_embeddings + pgvector (existing)
-    |--reuses----> Voyage AI embedding generation (existing)
-    |--creates---> new intent search component (homepage)
-    |--creates---> LLM reranking service (optional)
-    |--blocks----> Homepage Redesign (#8) hero section
+[In-Claude Feedback] (#1)
+    |--extends---> existing PostToolUse tracking hook
+    |--creates---> new everyskill.feedback MCP tool
+    |--creates---> feedback storage (new table or metadata extension)
+    |--depends on--> existing usage_events table
+    |--independent of--> web feedback (#2)
 
-[/everyskill MCP Tool] (#2)
-    |--wraps-----> existing MCP handlers (search, recommend, deploy, describe)
-    |--reuses----> MCP server infrastructure (existing)
-    |--reuses----> trackUsage() (existing)
-    |--independent of--> all other features
+[Web Feedback / Suggestions] (#2)
+    |--creates---> skill_suggestions table
+    |--creates---> suggestion form component
+    |--extends---> skill detail page
+    |--independent of--> in-Claude feedback (#1)
+    |--blocks----> Suggestion-to-Fork Pipeline (#3)
 
-[Google Workspace Diagnostic] (#3)
-    |--creates---> OAuth2 integration (new)
-    |--creates---> /diagnostics page (new)
-    |--creates---> activity analysis service (new)
-    |--requires--> Visibility Scoping (#4) for "recommend team skills"
-    |--benefits from--> Intent Search (#1) for matching patterns to skills
-    |--highest risk--> OAuth verification timeline, privacy concerns
+[Suggestion-to-Fork Pipeline] (#3)
+    |--requires---> Web Feedback (#2) for suggestions table
+    |--extends----> existing forkSkill() action
+    |--extends----> existing notification system
+    |--requires---> Feature Area 2 suggestions to exist
 
-[Visibility Scoping] (#4)
-    |--modifies--> skills table (add visibility column)
-    |--modifies--> users table (add department field)
-    |--modifies--> ALL search/browse queries (add visibility filter)
-    |--modifies--> MCP search handlers (add visibility context)
-    |--blocks----> Admin-Stamped Global Skills (#5)
-    |--blocks----> Homepage "For You" section (#8)
+[Training Data / Golden Dataset] (#4)
+    |--creates---> skill_training_data table
+    |--creates---> training examples form on skill edit page
+    |--optional---> usage capture consent flow
+    |--benefits from--> in-Claude feedback (#1) for quality signals
+    |--independent of--> suggestion pipeline (#3)
 
-[Admin-Stamped Global Skills] (#5)
-    |--requires--> Visibility Scoping (#4) for global/team distinction
-    |--extends---> existing admin review actions
-    |--creates---> global promotion workflow
-    |--creates---> "Company Approved" badge component
-    |--blocks----> Homepage "Company Recommended" section (#8)
+[Token/Cost Measurement] (#5)
+    |--extends---> PostToolUse tracking hook
+    |--enriches--> usage_events.metadata
+    |--requires--> Phase research on transcript_path parsing
+    |--independent of--> feedback features (#1, #2, #3)
+    |--blocks----> Benchmarking Dashboard (#6) for cost data
 
-[CLAUDE.md Preference Extraction] (#6)
-    |--creates---> /profile/preferences page (new)
-    |--creates---> LLM extraction service (new)
-    |--creates---> multi-format export (CLAUDE.md, .cursorrules, AGENTS.md)
-    |--independent of--> all other features
-    |--benefits from--> Intent Search (#1) preference-aware recommendations
-
-[Loom Video Integration] (#7)
-    |--modifies--> skills table (add loomUrl field)
-    |--modifies--> skill creation form (add URL field)
-    |--modifies--> skill detail page (add video player)
-    |--adds------> @loomhq/loom-embed dependency
-    |--independent of--> all other features
-
-[Homepage Redesign] (#8)
-    |--requires--> Intent Search (#1) for hero section
-    |--requires--> Visibility Scoping (#4) for "For You" personalization
-    |--requires--> Admin-Stamped Global (#5) for "Company Recommended"
-    |--benefits from--> Loom Video (#7) for video thumbnails in cards
-    |--modifies--> apps/web/app/(protected)/page.tsx (complete rewrite)
-    |--modifies--> multiple home-related components
+[Benchmarking Dashboard] (#6)
+    |--requires--> Token/Cost Measurement (#5) for cost data
+    |--requires--> existing quality scores (quality_score.ts)
+    |--benefits from--> in-Claude feedback (#1) for sentiment data
+    |--benefits from--> Training Data (#4) for eval results
+    |--extends---> skill detail page (new tab)
+    |--reuses----> existing Recharts infrastructure
 ```
 
 ### Critical Path
 
 ```
-Phase 1: Foundation Layer
-    Visibility scoping (schema + queries) -- blocks everything else
-    Loom video integration -- independent, small scope, quick win
-    /everyskill MCP tool -- independent, wraps existing handlers
+Wave 1 (parallel, no dependencies):
+    In-Claude Feedback (#1) -- extends existing hook
+    Web Feedback / Suggestions (#2) -- new table + form
+    Token/Cost Measurement (#5) -- research + hook extension
 
-Phase 2: Discovery Layer
-    Intent search (semantic + LLM reranking)
-    Admin-stamped global skills (requires visibility from Phase 1)
-    CLAUDE.md preference extraction -- independent
+Wave 2 (depends on Wave 1):
+    Suggestion-to-Fork Pipeline (#3) -- requires #2
+    Training Data (#4) -- benefits from #1, independent otherwise
 
-Phase 3: Experience Layer
-    Homepage redesign (requires intent search + visibility + global skills)
-    Google Workspace diagnostic -- independent but highest risk, research more first
-
-Phase 4: Intelligence Layer (if Google diagnostic validated)
-    Google Workspace OAuth + analysis
-    Pattern-to-skill matching
-    ROI tracking
+Wave 3 (depends on Wave 1+2):
+    Benchmarking Dashboard (#6) -- requires #5, benefits from #1 and #4
 ```
 
 ---
 
 ## MVP Recommendation
 
-### Must Have for v3.0
+### Must Have for v5.0
 
-**Visibility Scoping (build first -- foundation):**
-- [ ] `visibility` column on `skills` table: global | team_visible | team_hidden | personal
-- [ ] `department` text field on `users` table
-- [ ] Visibility filter in search/browse queries
-- [ ] Visibility selector on skill creation/edit form
-- [ ] MCP search respects visibility based on authenticated user
+**In-Claude Feedback (build in Wave 1):**
+- [ ] `everyskill.feedback` MCP tool accepting vote (1/-1) + optional text
+- [ ] PostToolUse hook smart frequency (first 3 uses, then every 10th)
+- [ ] `additionalContext` injection asking Claude to solicit feedback
+- [ ] Feedback stored in `usage_events.metadata` or new `skill_feedback` table
+- [ ] Feedback sentiment aggregation on skill detail page
 
-**Intent Search (build second -- core UX):**
-- [ ] Prominent search bar on homepage: "What are you trying to solve today?"
-- [ ] Semantic search via existing pgvector + Voyage AI embeddings
-- [ ] Top-3 results inline with match rationale
-- [ ] Fallback to tsvector full-text search
+**Web Suggestions (build in Wave 1):**
+- [ ] `skill_suggestions` table with category, text, severity, status
+- [ ] Suggestion form on skill detail page (inline accordion)
+- [ ] Author view of suggestions with Accept/Dismiss/Reply actions
+- [ ] Notification to author on new suggestions
 
-**Admin-Stamped Global Skills (build with visibility):**
-- [ ] "Stamp as global" admin action on published skills
-- [ ] "Company Approved" badge on skill cards and detail page
-- [ ] Global skills appear in "Company Recommended" section
+**Suggestion-to-Fork (build in Wave 2):**
+- [ ] "Accept & Fork" button on suggestion triggers `forkSkill()` with context
+- [ ] Suggestion status tracking (open -> accepted -> implemented)
+- [ ] Notification to suggestion author on accept/implement
 
-**Loom Video Integration (quick win, build early):**
-- [ ] `loomUrl` field on skills table
-- [ ] Loom URL input on skill creation/edit form
-- [ ] Embedded video player on skill detail page via Loom Embed SDK
-- [ ] Video thumbnail in skill browse cards
+**Token/Cost Measurement (build in Wave 1, research first):**
+- [ ] Investigate `transcript_path` JSONL for token usage data
+- [ ] Content-length-based token estimation as fallback
+- [ ] Model name capture via SessionStart hook or transcript
+- [ ] Cost calculation using hardcoded Anthropic pricing
+- [ ] Enriched `usage_events.metadata` with token_measurement object
 
-**Homepage Redesign (build after above):**
-- [ ] Hero: large search bar with category pills
-- [ ] "Company Recommended" section (global skills)
-- [ ] "Trending This Week" section (redesigned as cards)
-- [ ] "Recently Added" section
-- [ ] Condensed platform metrics banner
+**Benchmarking Dashboard (build in Wave 3):**
+- [ ] Per-skill benchmark tab on skill detail page
+- [ ] Quick stats: avg cost, avg tokens, quality score, feedback sentiment
+- [ ] Model comparison table (if multi-model data available)
+- [ ] Cost trend chart (Recharts AreaChart)
 
-**/everyskill MCP Tool (build parallel):**
-- [ ] Single `everyskill` tool with search/install/describe sub-commands
-- [ ] Packaged for easy addition to any MCP client
-- [ ] Clear tool description for AI auto-invocation
+### Defer to Post-v5.0
 
-### Defer to Post-v3.0
-
-- [ ] **Google Workspace Diagnostic**: Highest risk, unvalidated value prop. Build a manual "what do you spend time on?" survey first. If users engage, build the Google integration.
-- [ ] **CLAUDE.md Preference Extraction**: Valuable but niche. Start with a simple text import + manual tagging. LLM extraction is phase 2.
-- [ ] **Personalized "For You" section**: Requires usage history analysis. Build after visibility scoping is live and generating data.
-- [ ] **Department approval workflow**: Start with admin-only global stamping. Add department approval chain if org structure demands it.
-- [ ] **Multi-format preference export**: Start with CLAUDE.md export only. Add .cursorrules and AGENTS.md based on user demand.
-- [ ] **Homepage customization**: Users pinning sections is a post-launch optimization.
-- [ ] **Search analytics**: Log queries from day 1, build the dashboard later.
+- [ ] **Training data / golden dataset**: Valuable but complex consent pipeline. Seed with author examples in v5.0; usage capture requires careful privacy engineering.
+- [ ] **Evaluation runner**: Running golden examples against models is a dedicated tool (LangSmith, deepeval). Export data to these tools rather than building a runner.
+- [ ] **Cross-skill benchmarking**: Comparing skills against each other requires normalized metrics. Build after per-skill benchmarking is validated.
+- [ ] **AI-generated golden examples**: LLM generates training pairs from skill content. Useful but secondary to author-seeded examples.
+- [ ] **Suggestion voting**: Upvoting suggestions is nice-to-have. Build if suggestion volume warrants prioritization.
+- [ ] **Cost alerting**: Threshold notifications for expensive skills. Build after baseline cost data is established.
 
 ---
 
@@ -814,81 +679,69 @@ Phase 4: Intelligence Layer (if Google diagnostic validated)
 
 | Feature | User Value | Implementation Cost | Risk | Priority |
 |---------|------------|---------------------|------|----------|
-| Visibility scoping (4 levels) | HIGH (privacy, control) | LOW | LOW | P0 |
-| Intent search (semantic, top-3) | HIGH (core discovery UX) | MEDIUM | LOW | P0 |
-| Homepage redesign (search-first) | HIGH (first impression) | MEDIUM | LOW | P0 |
-| Loom video integration | MEDIUM (demo quality) | LOW | LOW | P0 |
-| /everyskill MCP tool (unified) | HIGH (MCP discovery) | LOW | LOW | P0 |
-| Admin-stamped global skills | MEDIUM (governance) | LOW | LOW | P0 |
-| CLAUDE.md preference extraction | MEDIUM (developer UX) | MEDIUM | MEDIUM | P1 |
-| Department approval workflow | MEDIUM (governance) | MEDIUM | LOW | P1 |
-| Personalized "For You" section | MEDIUM (engagement) | HIGH | MEDIUM | P2 |
-| Google Workspace diagnostic | HIGH if validated (ROI) | HIGH | HIGH | P2 |
-| Multi-format preference export | LOW (niche) | MEDIUM | LOW | P3 |
-| Homepage customization | LOW (power users) | HIGH | LOW | P3 |
+| In-Claude feedback (thumbs up/down) | HIGH (closes feedback loop) | MEDIUM | MEDIUM (user adoption) | P0 |
+| Web suggestions form | HIGH (actionable improvements) | LOW | LOW | P0 |
+| Suggestion-to-fork pipeline | HIGH (feedback -> action) | LOW | LOW | P0 |
+| Token/cost measurement | HIGH (ROI visibility) | HIGH | HIGH (data availability) | P0 |
+| Benchmarking dashboard | MEDIUM (power users, admins) | MEDIUM | MEDIUM (depends on data) | P0 |
+| Training data storage | MEDIUM (future eval capability) | MEDIUM | MEDIUM (consent/privacy) | P1 |
+| Author-seeded golden examples | MEDIUM (quality improvement) | LOW | LOW | P1 |
+| Feedback sentiment aggregation | MEDIUM (skill health signal) | LOW | LOW | P1 |
+| Suggestion voting | LOW (scale feature) | LOW | LOW | P2 |
+| Evaluation runner | HIGH (if built) | HIGH | HIGH (scope) | P3 (future) |
+| Multi-provider cost comparison | LOW (Claude-only platform) | HIGH | MEDIUM | P3 (future) |
 
 ---
 
 ## Sources
 
-### Intent-Based Search (MEDIUM-HIGH confidence)
-- [Meilisearch: AI-Powered Search 2026](https://www.meilisearch.com/blog/ai-powered-search) -- Semantic search patterns
-- [Orbix: AI-Driven UX Patterns SaaS 2026](https://www.orbix.studio/blogs/ai-driven-ux-patterns-saas-2026) -- Conversational search UX
-- [Kore.ai: Best Enterprise Search Software 2026](https://www.kore.ai/blog/best-enterprise-search-software) -- Intent understanding in enterprise search
-- [Algolia: Best Marketplace UX for Search](https://www.algolia.com/blog/ecommerce/best-marketplace-ux-practices-for-search) -- Search UX patterns
-- [Slack: AI Enterprise Search Features 2026](https://slack.com/blog/productivity/ai-enterprise-search-top-features-and-tools-in-2025) -- Enterprise search patterns
+### PostToolUse Hook Architecture (HIGH confidence)
+- [Claude Code Hooks Reference](https://code.claude.com/docs/en/hooks) -- Complete hook event schema, PostToolUse input/output format, `additionalContext` injection, `transcript_path` availability
+- [Claude Code Hooks Guide](https://code.claude.com/docs/en/hooks-guide) -- Practical hook configuration examples
+- [Claude Blog: How to Configure Hooks](https://claude.com/blog/how-to-configure-hooks) -- PostToolUse patterns
 
-### MCP Discovery (HIGH confidence)
-- [MCP Market: Agent Skills Directory](https://mcpmarket.com/tools/skills) -- Skill marketplace UX
-- [Docker: MCP Server Best Practices](https://www.docker.com/blog/mcp-server-best-practices/) -- Tool description and naming
-- [Composio: Using MCP Prompts/Resources/Tools](https://composio.dev/blog/how-to-effectively-use-prompts-resources-and-tools-in-mcp) -- MCP tool design
-- [Speakeasy: Dynamic Tool Discovery in MCP](https://www.speakeasy.com/mcp/tool-design/dynamic-tool-discovery) -- Dynamic tool patterns
-- [MCP Specification: Tools](https://modelcontextprotocol.io/specification/2025-06-18/server/tools) -- Official tool spec
+### LLM Feedback Collection (HIGH confidence)
+- [LangWatch: Thumbs Up/Down API](https://langwatch.ai/docs/user-events/thumbs-up-down) -- `trace_id` + `vote` (1/-1) + optional `feedback` text pattern
+- [Langfuse: User Feedback](https://langfuse.com/docs/observability/features/user-feedback) -- Feedback capture and aggregation patterns
+- [Microsoft Copilot Studio: Feedback Collection](https://learn.microsoft.com/en-us/power-platform/release-plan/2025wave1/microsoft-copilot-studio/collect-thumbs-up-or-down-feedback-comments-agents) -- Enterprise agent feedback UX
+- [NN/g: User Feedback Requests Guidelines](https://www.nngroup.com/articles/user-feedback/) -- UX best practices for feedback collection
 
-### Google Workspace APIs (MEDIUM confidence)
-- [Google Workspace Developer Products](https://developers.google.com/workspace/products) -- Available APIs
-- [Google Drive API: File Metadata](https://developers.google.com/workspace/drive/api/guides/file-metadata) -- viewedByMeTime, modifiedByMeTime
-- [Google Drive Activity API](https://developers.google.com/workspace/drive/activity/v2) -- Activity tracking
-- [Google Reports API Overview](https://developers.google.com/workspace/admin/reports/v1/get-start/overview) -- Org-level activity
-- [Google OAuth2 Scopes](https://developers.google.com/identity/protocols/oauth2/scopes) -- Scope classification
-- [Google Sensitive Scope Verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification) -- Verification requirements
+### Golden Dataset / Training Data (HIGH confidence)
+- [Confident AI: Test Cases, Goldens, and Datasets](https://www.confident-ai.com/docs/llm-evaluation/core-concepts/test-cases-goldens-datasets) -- Golden structure: input, expected_output, context, expected_tools
+- [deepeval: Evaluation Datasets](https://deepeval.com/docs/evaluation-datasets) -- Dataset format, tool_calls, expected_tools parameters
+- [Sigma AI: Golden Datasets](https://sigma.ai/golden-datasets/) -- Quality requirements for golden data
+- [Maxim AI: Building a Golden Dataset](https://www.getmaxim.ai/articles/building-a-golden-dataset-for-ai-evaluation-a-step-by-step-guide/) -- Step-by-step golden dataset creation
+- [LangSmith Evaluation](https://docs.langchain.com/langsmith/evaluation) -- Annotation queues, trace-to-dataset conversion
 
-### Loom Integration (HIGH confidence)
-- [Loom Embed SDK: Getting Started](https://dev.loom.com/docs/embed-sdk/getting-started) -- Installation, methods
-- [Loom Embed SDK: API Reference](https://dev.loom.com/docs/embed-sdk/api) -- oembed(), linkReplace(), textReplace()
-- [Loom: Understanding Embedding](https://support.atlassian.com/loom/docs/understand-embedding-videos-gifs-and-thumbnails/) -- Embedding patterns
-- [Userpilot: Embed Loom in SaaS](https://userpilot.com/blog/embed-loom-video/) -- SaaS integration patterns
+### LLM Benchmarking Dashboards (HIGH confidence)
+- [Artificial Analysis Methodology](https://artificialanalysis.ai/methodology) -- Cost metrics (3:1 input:output blended), speed metrics (TTFT, output speed), quality benchmarks
+- [Klu AI LLM Leaderboard](https://klu.ai/llm-leaderboard) -- Real-world performance + cost + speed comparison
+- [Vellum LLM Leaderboard](https://www.vellum.ai/llm-leaderboard) -- Price, context window, capability comparison
 
-### Visibility & Approval Patterns (HIGH confidence)
-- [RBAC Overview: osohq.com](https://www.osohq.com/learn/rbac-role-based-access-control) -- Role-based access patterns
-- [ButterCMS: Content Approval Process](https://buttercms.com/blog/establish-content-approval-process/) -- Enterprise approval workflows
-- [Wrike: Approval Workflow Guide](https://www.wrike.com/workflow-guide/approval-workflow/) -- Linear/parallel approval patterns
+### Token/Cost Tracking (MEDIUM confidence)
+- [Langfuse: Token and Cost Tracking](https://langfuse.com/docs/observability/features/token-and-cost-tracking) -- PostgreSQL-based cost tracking architecture
+- [LiteLLM with PostgreSQL](https://medium.com/@hithasrinivas4/tracking-llm-usage-spend-with-litellm-postgresql-and-litellm-ui-8ca9e6773f17) -- Token usage dashboard with PostgreSQL
+- [Anthropic: Messages API](https://docs.anthropic.com/en/api/messages) -- Usage response fields: input_tokens, output_tokens, cache tokens
+- [Anthropic: Token Counting API](https://docs.anthropic.com/en/api/messages-count-tokens) -- Pre-request token estimation endpoint
 
-### AI Config Sync (MEDIUM confidence)
-- [dot-claude: Multi-AI Rule Sync](https://github.com/CsHeng/dot-claude) -- Claude/Codex/Cursor sync
-- [Claudius: AI Config Management](https://github.com/cariandrum22/claudius) -- Multi-agent configuration
-- [kaush.io: Keep AGENTS.md in Sync](https://kau.sh/blog/agents-md/) -- One source of truth pattern
-- [Claude Code Settings Docs](https://code.claude.com/docs/en/settings) -- CLAUDE.md structure
-
-### Marketplace Homepage Design (HIGH confidence)
-- [Rigby: Marketplace UX Design Guide](https://www.rigbyjs.com/blog/marketplace-ux) -- Feature-by-feature UX guide
-- [Qubstudio: Marketplace UI/UX Best Practices](https://qubstudio.com/blog/marketplace-ui-ux-design-best-practices-and-features/) -- Cards, search, categories
-- [Excited Agency: Marketplace UX Best Practices](https://excited.agency/blog/marketplace-ux-design/) -- Hero section, navigation
+### Feature Request / Suggestion Pipelines (MEDIUM confidence)
+- [Canny: Feature Request Management](https://canny.io/use-cases/feature-request-management) -- Suggestion collection, voting, status tracking
+- [UserVoice / Supahub / Frill patterns](https://supahub.com/blog/feature-voting-tools) -- Feature voting tool landscape
+- [Userpilot: Feature Requests](https://userpilot.com/blog/feature-request/) -- In-app feedback collection patterns
 
 ### Existing Codebase (HIGH confidence)
-- `packages/db/src/schema/skills.ts` -- Skills schema with status lifecycle, searchVector, visibility extension point
-- `packages/db/src/schema/skill-embeddings.ts` -- pgvector 768-dim embeddings, HNSW index
-- `packages/db/src/services/skill-status.ts` -- 7-status state machine, VALID_TRANSITIONS, canTransition()
-- `apps/web/lib/search-skills.ts` -- Full-text + ILIKE + quality scoring search
-- `apps/web/lib/similar-skills.ts` -- Semantic similarity via pgvector cosine distance
-- `apps/web/components/search-with-dropdown.tsx` -- Current search with debounced quick-search dropdown
-- `apps/web/app/(protected)/page.tsx` -- Current homepage (metrics-first layout)
-- `apps/mcp/src/tools/search.ts` -- MCP search with text matching
-- `apps/mcp/src/tools/recommend.ts` -- MCP semantic search with embedding fallback
-- `apps/web/lib/admin.ts` -- isAdmin() authorization check
+- `packages/db/src/schema/usage-events.ts` -- UsageEvent with JSONB metadata, tenant isolation
+- `packages/db/src/services/usage-tracking.ts` -- `insertTrackingEvent()` with hook metadata
+- `apps/web/app/api/track/route.ts` -- API endpoint receiving hook callbacks with `tool_input_snippet`, `tool_output_snippet`
+- `apps/web/lib/quality-score.ts` -- QualityScoreResult: usage(50%) + rating(35%) + docs(15%)
+- `packages/db/src/schema/ratings.ts` -- 1-5 stars with comment and hours_saved_estimate
+- `apps/web/app/actions/fork-skill.ts` -- `forkSkill()` with content hash, embedding generation, version tracking
+- `apps/web/lib/analytics-queries.ts` -- Recharts-ready time series, employee breakdown, skill usage
+- `apps/mcp/src/tracking/events.ts` -- `trackUsage()` with audit log, skill use increment
+- `apps/mcp/src/server.ts` -- McpServer with everyskill-skills name
 
 ---
 
-*Feature research for: EverySkill v3.0 AI Discovery & Workflow Intelligence*
-*Researched: 2026-02-13*
-*Confidence: HIGH for visibility scoping, Loom integration, homepage redesign, MCP tool (established patterns + existing infrastructure). MEDIUM for intent search and preference extraction (requires prompt engineering and validation). LOW-MEDIUM for Google Workspace diagnostic (unvalidated value proposition, OAuth verification blocker, privacy concerns).*
+*Feature research for: EverySkill v5.0 Feedback, Training & Benchmarking*
+*Researched: 2026-02-15*
+*Confidence: HIGH for feedback UX (thumbs up/down, suggestions, suggestion-to-fork -- all well-established patterns with existing infrastructure). MEDIUM for benchmarking dashboards (UI patterns proven, data availability uncertain). LOW-MEDIUM for token measurement (PostToolUse hook confirmed to not provide token data; transcript_path approach unverified). MEDIUM for golden datasets (format well-documented, consent pipeline needs careful design).*
