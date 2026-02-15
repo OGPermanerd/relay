@@ -7,15 +7,21 @@ interface SkillDetailTabsProps {
   aiReviewContent: ReactNode;
   suggestionsContent?: ReactNode;
   suggestionCount?: number;
+  trainingContent?: ReactNode;
+  trainingExampleCount?: number;
+  showTrainingTab?: boolean;
 }
 
-type TabKey = "details" | "ai-review" | "suggestions";
+type TabKey = "details" | "ai-review" | "suggestions" | "training";
 
 export function SkillDetailTabs({
   children,
   aiReviewContent,
   suggestionsContent = null,
   suggestionCount,
+  trainingContent = null,
+  trainingExampleCount,
+  showTrainingTab = false,
 }: SkillDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("details");
 
@@ -27,6 +33,17 @@ export function SkillDetailTabs({
       label:
         suggestionCount && suggestionCount > 0 ? `Suggestions (${suggestionCount})` : "Suggestions",
     },
+    ...(showTrainingTab
+      ? [
+          {
+            key: "training" as TabKey,
+            label:
+              trainingExampleCount && trainingExampleCount > 0
+                ? `Training (${trainingExampleCount})`
+                : "Training",
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -76,6 +93,14 @@ export function SkillDetailTabs({
         hidden={activeTab !== "suggestions"}
       >
         {suggestionsContent}
+      </div>
+      <div
+        role="tabpanel"
+        id="tabpanel-training"
+        aria-labelledby="tab-training"
+        hidden={activeTab !== "training"}
+      >
+        {trainingContent}
       </div>
     </div>
   );
