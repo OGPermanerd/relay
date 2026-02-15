@@ -129,6 +129,7 @@ const CLASSIFICATION_SCHEMA = {
           },
         },
         required: ["id", "category"],
+        additionalProperties: false,
       },
     },
   },
@@ -175,7 +176,7 @@ async function classifyBatchWithAI(emails: EmailMetadata[]): Promise<Map<string,
 
   // Call Claude Haiku with structured output
   const response = await client.messages.create({
-    model: "claude-haiku-4-5-20251022",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 2048,
     system: SYSTEM_PROMPT,
     messages: [

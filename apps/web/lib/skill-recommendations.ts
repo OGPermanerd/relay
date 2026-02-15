@@ -73,6 +73,7 @@ const QUERY_GENERATION_SCHEMA = {
           estimatedTimeSavings: { type: "number" as const },
         },
         required: ["emailCategory", "searchQuery", "reasoning", "estimatedTimeSavings"],
+        additionalProperties: false,
       },
     },
   },
@@ -170,7 +171,7 @@ Total email time: ${estimatedHoursPerWeek.toFixed(1)} hours/week
 Generate search queries for categories consuming significant time that could be automated.`;
 
   const response = await client.messages.create({
-    model: "claude-haiku-4-5-20251022",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 2048,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],

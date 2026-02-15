@@ -123,17 +123,22 @@ function createAuthConfig(): NextAuthConfig {
         return session;
       },
       async redirect({ url, baseUrl }) {
-        // Allow redirects to any subdomain of the root domain
+        // Allow relative URLs
+        if (url.startsWith("/")) return `${baseUrl}${url}`;
         try {
           const urlObj = new URL(url);
+          const baseUrlObj = new URL(baseUrl);
+          // Allow redirects to any subdomain of the root domain
           if (urlObj.hostname.endsWith(rootDomain)) {
+            return url;
+          }
+          // Allow redirects to the same host as baseUrl (e.g. Tailscale dev)
+          if (urlObj.hostname === baseUrlObj.hostname) {
             return url;
           }
         } catch {
           // Invalid URL — fall through to default handling
         }
-        // Allow relative URLs
-        if (url.startsWith("/")) return `${baseUrl}${url}`;
         return baseUrl;
       },
     },
