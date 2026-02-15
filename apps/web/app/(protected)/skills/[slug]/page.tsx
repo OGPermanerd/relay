@@ -22,6 +22,7 @@ import { fetchLoomOEmbed, extractLoomVideoId } from "@/lib/loom";
 import { auth } from "@/auth";
 import { RatingForm } from "@/components/rating-form";
 import { SuggestionForm } from "@/components/suggestion-form";
+import { SuggestionList } from "@/components/suggestion-list";
 import { ReviewsList } from "@/components/reviews-list";
 import { SearchInput } from "@/components/search-input";
 import { SkillTypeFilter } from "@/components/skill-type-filter";
@@ -159,6 +160,15 @@ export default async function SkillPage(props: SkillPageProps) {
   // Determine if current user is the skill author (reuse from access control)
   const isAuthor = isAuthorOfSkill;
 
+  // Serialize suggestions for client components (Date -> ISO string)
+  const serializedSuggestions = suggestions.map((s) => ({
+    ...s,
+    createdAt: s.createdAt.toISOString(),
+    reviewedAt: s.reviewedAt?.toISOString() ?? null,
+    category: s.category || "other",
+    severity: s.severity || "nice_to_have",
+  }));
+
   // Map review to props shape for AiReviewTab (serialize Date to string for client component)
   const reviewProps = existingReview
     ? {
@@ -236,9 +246,14 @@ export default async function SkillPage(props: SkillPageProps) {
           suggestionsContent={
             <div className="space-y-6">
               {session?.user && <SuggestionForm skillId={skill.id} skillSlug={skill.slug} />}
-              {/* Suggestion list will be added in Plan 57-03 */}
+              <SuggestionList
+                suggestions={serializedSuggestions}
+                isAuthor={isAuthor}
+                currentUserId={session?.user?.id}
+                skillSlug={skill.slug}
+              />
               {!session?.user && (
-                <p className="text-sm text-gray-500">Sign in to submit suggestions.</p>
+                <p className="text-sm text-gray-500">Sign in to submit and view suggestions.</p>
               )}
             </div>
           }
