@@ -1,7 +1,14 @@
 import { notFound } from "next/navigation";
 import { db, skills, getSiteSettings } from "@everyskill/db";
 import { ratings } from "@everyskill/db/schema";
-import { getSkillReview, getForkCount, getTopForks, getParentSkill } from "@everyskill/db/services";
+import {
+  getSkillReview,
+  getForkCount,
+  getTopForks,
+  getParentSkill,
+  getSkillCostStats,
+  getSuggestionsForSkill,
+} from "@everyskill/db/services";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { SkillDetail } from "@/components/skill-detail";
 import { SimilarSkillsSection } from "@/components/similar-skills-section";
@@ -9,10 +16,12 @@ import { SkillDetailTabs } from "@/components/skill-detail-tabs";
 import { AiReviewTab } from "@/components/ai-review-tab";
 import { getSkillStats } from "@/lib/skill-stats";
 import { getSkillDetailTrends } from "@/lib/skill-detail-trends";
+import { getSkillFeedbackStats } from "@/lib/skill-feedback-stats";
 import { hashContent } from "@/lib/content-hash";
 import { fetchLoomOEmbed, extractLoomVideoId } from "@/lib/loom";
 import { auth } from "@/auth";
 import { RatingForm } from "@/components/rating-form";
+import { SuggestionForm } from "@/components/suggestion-form";
 import { ReviewsList } from "@/components/reviews-list";
 import { SearchInput } from "@/components/search-input";
 import { SkillTypeFilter } from "@/components/skill-type-filter";
@@ -73,7 +82,7 @@ export default async function SkillPage(props: SkillPageProps) {
     notFound();
   }
 
-  // Get usage statistics, trends, similar skills, review, content hash, fork data, Loom oEmbed, and site settings in parallel
+  // Get usage statistics, trends, similar skills, review, content hash, fork data, Loom oEmbed, cost stats, and site settings in parallel
   const [
     stats,
     trends,
@@ -84,7 +93,10 @@ export default async function SkillPage(props: SkillPageProps) {
     topForks,
     parentSkill,
     loomEmbed,
+    costStats,
     siteSettings,
+    suggestions,
+    feedbackStats,
   ] = await Promise.all([
     getSkillStats(skill.id),
     getSkillDetailTrends(skill.id),
@@ -95,8 +107,13 @@ export default async function SkillPage(props: SkillPageProps) {
     getTopForks(skill.id, 5),
     skill.forkedFromId ? getParentSkill(skill.forkedFromId) : Promise.resolve(null),
     skill.loomUrl ? fetchLoomOEmbed(skill.loomUrl) : Promise.resolve(null),
+    getSkillCostStats(skill.id),
     getSiteSettings(),
+    getSuggestionsForSkill(skill.id),
+    getSkillFeedbackStats(skill.id),
   ]);
+
+  const pendingSuggestionCount = suggestions.filter((s) => s.status === "pending").length;
 
   const allowDownload = siteSettings?.allowSkillDownload ?? true;
 
@@ -215,6 +232,16 @@ export default async function SkillPage(props: SkillPageProps) {
               parentContent={parentContent ?? undefined}
             />
           }
+          suggestionCount={pendingSuggestionCount}
+          suggestionsContent={
+            <div className="space-y-6">
+              {session?.user && <SuggestionForm skillId={skill.id} skillSlug={skill.slug} />}
+              {/* Suggestion list will be added in Plan 57-03 */}
+              {!session?.user && (
+                <p className="text-sm text-gray-500">Sign in to submit suggestions.</p>
+              )}
+            </div>
+          }
         >
           {/* Details tab content -- preserves existing page layout */}
           <SkillDetail
@@ -228,6 +255,8 @@ export default async function SkillPage(props: SkillPageProps) {
             loomVideoId={loomVideoId}
             loomEmbed={loomEmbed}
             currentUserId={session?.user?.id}
+            costStats={costStats}
+            feedbackStats={feedbackStats}
           />
 
           {/* Install, Fork, and Delete buttons */}

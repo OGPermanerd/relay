@@ -15,6 +15,8 @@ import { SkillSummaryCards } from "./skill-summary-cards";
 import { RelativeTime } from "@/components/relative-time";
 import { FTE_DAYS_PER_YEAR } from "@/lib/constants";
 import { CATEGORY_LABELS, type Category } from "@/lib/categories";
+import { formatCostMicrocents } from "@/lib/pricing-table";
+import type { SkillFeedbackStats } from "@/lib/skill-feedback-stats";
 
 interface SkillWithAuthor {
   id: string;
@@ -45,6 +47,13 @@ interface ParentSkillInfo {
   author: { id: string; name: string | null } | null;
 }
 
+interface CostStats {
+  totalCostMicrocents: number;
+  avgCostPerUseMicrocents: number;
+  measurementCount: number;
+  predominantModel: string | null;
+}
+
 interface SkillDetailProps {
   skill: SkillWithAuthor;
   stats: SkillStats;
@@ -56,6 +65,8 @@ interface SkillDetailProps {
   loomVideoId?: string | null;
   loomEmbed?: LoomOEmbedResponse | null;
   currentUserId?: string;
+  costStats?: CostStats;
+  feedbackStats?: SkillFeedbackStats;
 }
 
 export function SkillDetail({
@@ -69,6 +80,8 @@ export function SkillDetail({
   loomVideoId,
   loomEmbed,
   currentUserId,
+  costStats,
+  feedbackStats,
 }: SkillDetailProps) {
   const isAuthor = currentUserId != null && skill.author?.id === currentUserId;
   // Calculate quality score for badge and breakdown
@@ -151,6 +164,32 @@ export function SkillDetail({
           value={stats.averageRating ?? "N/A"}
           suffix={stats.totalRatings ? `(${stats.totalRatings})` : undefined}
         />
+        {feedbackStats && feedbackStats.totalFeedback > 0 && (
+          <StatCard
+            label="Feedback"
+            value={`${feedbackStats.last30DaysTotal > 0 ? (feedbackStats.last30DaysPositivePct ?? 0) : (feedbackStats.positivePct ?? 0)}%`}
+            suffix={`(${feedbackStats.totalFeedback})`}
+            trendData={feedbackStats.feedbackTrend}
+            trendColor="#f59e0b"
+          />
+        )}
+        {costStats && costStats.measurementCount > 0 && (
+          <>
+            <StatCard
+              label="Avg Cost / Use"
+              value={formatCostMicrocents(costStats.avgCostPerUseMicrocents)}
+            />
+            <StatCard
+              label="Total Est. Cost"
+              value={formatCostMicrocents(costStats.totalCostMicrocents)}
+              suffix={
+                costStats.predominantModel
+                  ? costStats.predominantModel.replace("claude-", "").split("-202")[0]
+                  : undefined
+              }
+            />
+          </>
+        )}
         {forkCount != null && forkCount > 0 && <StatCard label="Forks" value={forkCount} />}
       </div>
 
