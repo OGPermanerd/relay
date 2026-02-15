@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 57 of 61 -- Web Feedback & Suggestions (Wave 1, parallel with 56/60)
-Plan: 01 of 03 in Phase 57 complete
-Status: In progress -- Phase 57 Plan 01 complete, Phases 56/57/60 in parallel
-Last activity: 2026-02-15 -- Completed 57-01: Suggestion CRUD service + server actions
+Phase: 60 of 61 -- Token/Cost Measurement (Wave 1, parallel with 56/57)
+Plan: 03 of 03 in Phase 60 complete (Phase 60 COMPLETE)
+Status: In progress -- Phase 60 complete, Phases 56/57 in parallel
+Last activity: 2026-02-15 -- Completed 60-03: Skill detail cost display
 
 Progress: [#####################.........] 81% (219/~270 est. plans across all milestones)
 
@@ -68,6 +68,8 @@ v5.0 milestone decisions:
 - estimateCostMicrocents returns null for unknown models (graceful degradation)
 - Suggestion functions added to existing skill-feedback.ts (colocated with thumbs feedback, not separate file)
 - Alias imports (dbUpdateSuggestionStatus) used when server action names match DB function names
+- Cost StatCards conditionally rendered in skill detail stats grid (only when measurementCount > 0)
+- Model name suffix shortened by stripping claude- prefix and -202X date for readability
 
 ### Pending Todos
 
@@ -94,5 +96,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 57 Plan 01 COMPLETE -- continue with 57-02 (suggestion form UI) and 57-03 (suggestion list/management)
-Resume file: .planning/phases/57-web-feedback-suggestions/57-01-SUMMARY.md
+Stopped at: Phase 60 COMPLETE -- continue with 56/57 remaining plans
+Resume file: .planning/phases/60-token-cost-measurement/60-03-SUMMARY.md
