@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v5.0 Phase 61 Benchmarking Dashboard — Plan 01 complete
+**Current focus:** v5.0 Phase 58 Training Data & Golden Dataset — Plan 01 complete
 
 ## Current Position
 
-Phase: 61 of TBD (Benchmarking Dashboard)
-Plan: 1 of TBD in Phase 61
-Status: Phase 61 Plan 01 complete — benchmark service + runner built
-Last activity: 2026-02-15 — Completed 61-01 (benchmark DB service + execution engine)
+Phase: 58 of TBD (Training Data & Golden Dataset)
+Plan: 1 of 3 in Phase 58
+Status: Phase 58 Plan 01 complete — backend plumbing for training examples
+Last activity: 2026-02-15 — Completed 58-01 (migration, DB services, server action)
 
-Progress: [#####################.........] 82% (221/~270 est. plans across all milestones)
+Progress: [#####################.........] 82% (222/~270 est. plans across all milestones)
 
 ## Milestones
 
@@ -32,12 +32,12 @@ Progress: [#####################.........] 82% (221/~270 est. plans across all m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 221
+- Total plans completed: 222
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~11.1 hours
+- Total execution time: ~11.2 hours
 
 **Cumulative:**
-- 221 plans across 58 phases and 9 milestones
+- 222 plans across 58 phases and 9 milestones
 - ~19,700 LOC TypeScript
 - 8 days total development time
 
@@ -81,6 +81,10 @@ v5.0 milestone decisions:
 - Two default benchmark models (Sonnet 4.5 + Haiku 4.5) for fast execution under 60s
 - Blinded AI judge: Claude Sonnet evaluates outputs without knowing which model produced them (BENCH-07)
 - Individual model failures stored as error results via Promise.allSettled, don't fail entire run
+- Training examples use feedbackType='training_example' discriminator (same pattern as suggestions, not separate table)
+- createTrainingExample skips updateSkillFeedbackAggregates (training examples don't affect feedback sentiment)
+- Author-only guard on submitTrainingExample (only skill author can add golden examples)
+- trainingDataConsent is required boolean (not optional) matching Zod .default(false) output type
 
 ### Pending Todos
 
@@ -107,5 +111,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 61 Plan 01 COMPLETE — benchmark service + runner ready for UI
-Resume file: .planning/phases/61-benchmarking-dashboard/61-01-SUMMARY.md
+Stopped at: Phase 58 Plan 01 COMPLETE — training data backend plumbing ready
+Resume file: .planning/phases/58-training-data-golden-dataset/58-01-SUMMARY.md
