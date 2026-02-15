@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 60 of 61 -- Token/Cost Measurement (Wave 1, parallel with 56/57)
-Plan: 01 of TBD in Phase 60 complete
-Status: In progress -- Phase 60 Plan 01 complete, Phases 56/57/60 in parallel
-Last activity: 2026-02-15 -- Completed 60-01: Pricing table, token measurement service, /api/track extension
+Phase: 57 of 61 -- Web Feedback & Suggestions (Wave 1, parallel with 56/60)
+Plan: 01 of 03 in Phase 57 complete
+Status: In progress -- Phase 57 Plan 01 complete, Phases 56/57/60 in parallel
+Last activity: 2026-02-15 -- Completed 57-01: Suggestion CRUD service + server actions
 
-Progress: [#####################.........] 81% (218/~270 est. plans across all milestones)
+Progress: [#####################.........] 81% (219/~270 est. plans across all milestones)
 
 ## Milestones
 
@@ -32,12 +32,12 @@ Progress: [#####################.........] 81% (218/~270 est. plans across all m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 218
+- Total plans completed: 219
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~11.0 hours
 
 **Cumulative:**
-- 218 plans across 56 phases and 9 milestones
+- 219 plans across 57 phases and 9 milestones
 - ~19,700 LOC TypeScript
 - 8 days total development time
 
@@ -66,6 +66,8 @@ v5.0 milestone decisions:
 - Pricing table in packages/db/src/services/pricing.ts (pure TS) with re-export from apps/web/lib/pricing-table.ts
 - insertTokenMeasurement is fire-and-forget (void promise) to avoid blocking /api/track response
 - estimateCostMicrocents returns null for unknown models (graceful degradation)
+- Suggestion functions added to existing skill-feedback.ts (colocated with thumbs feedback, not separate file)
+- Alias imports (dbUpdateSuggestionStatus) used when server action names match DB function names
 
 ### Pending Todos
 
@@ -92,5 +94,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 60 Plan 01 COMPLETE -- Phases 56/57/60 in parallel
-Resume file: .planning/phases/60-token-cost-measurement/60-01-SUMMARY.md
+Stopped at: Phase 57 Plan 01 COMPLETE -- continue with 57-02 (suggestion form UI) and 57-03 (suggestion list/management)
+Resume file: .planning/phases/57-web-feedback-suggestions/57-01-SUMMARY.md
