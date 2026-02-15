@@ -61,6 +61,9 @@ export const skills = pgTable(
     // Denormalized aggregates for performance
     totalUses: integer("total_uses").notNull().default(0), // Sum from usageEvents
     averageRating: integer("average_rating"), // Rating * 100 for precision (e.g., 425 = 4.25 stars)
+    totalFeedback: integer("total_feedback").notNull().default(0),
+    positiveFeedbackPct: integer("positive_feedback_pct"), // 0-100 percentage
+    avgTokenCostMicrocents: integer("avg_token_cost_microcents"),
 
     // Full-text search vector (automatically generated)
     searchVector: tsvector("search_vector").generatedAlwaysAs(
