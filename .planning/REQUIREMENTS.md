@@ -1,110 +1,76 @@
-# Requirements: EverySkill v5.0 Feedback, Training & Benchmarking
+# Requirements: EverySkill v6.0 IP Dashboard & Skills Portfolio
 
 **Defined:** 2026-02-15
-**Core Value:** Skills get better as they pass through more hands, with real metrics proving that value.
+**Core Value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
 
-## v5.0 Requirements
+## v6.0 Requirements
 
-Requirements for Feedback, Training & Benchmarking milestone. Each maps to roadmap phases.
+Requirements for IP Dashboard & Skills Portfolio milestone. Each maps to roadmap phases.
 
-### Schema Foundation
+### Company IP Dashboard
 
-- [ ] **SCHEMA-01**: New `skill_feedback` table stores thumbs up/down votes, suggestions, and training examples with `feedbackType` discriminator
-- [ ] **SCHEMA-02**: New `token_measurements` table with typed integer columns for inputTokens, outputTokens, estimatedCostMicrocents, latencyMs, modelName
-- [ ] **SCHEMA-03**: New `benchmark_runs` table for benchmark execution metadata (who triggered, models tested, aggregate results)
-- [ ] **SCHEMA-04**: New `benchmark_results` table for per-test-case results (model, input, output, tokens, quality score) with cascade delete from runs
-- [ ] **SCHEMA-05**: Denormalized aggregate columns on `skills` table (total_feedback, positive_feedback_pct, avg_token_cost_microcents)
-- [ ] **SCHEMA-06**: Payload sanitization utility detects and strips secrets (API keys, passwords, tokens) from feedback and tracking data
-- [ ] **SCHEMA-07**: All new tables include tenant_id with RLS policies following existing multi-tenancy pattern
+- [ ] **IPDASH-01**: Admin can view total skills captured, total uses, total hours saved, and active contributors on a company IP dashboard
+- [ ] **IPDASH-02**: Admin can see IP concentration risk — which employees hold the most critical skills (single-author skills with high usage)
+- [ ] **IPDASH-03**: Admin can see estimated replacement cost for each high-value skill based on usage, hours saved, and complexity
+- [ ] **IPDASH-04**: Admin can view org-wide quality trends over time (quality scores, feedback sentiment, benchmark results as trend charts)
+- [ ] **IPDASH-05**: Admin can see key person dependency alerts when critical skills have only one author
+- [ ] **IPDASH-06**: Admin can export an IP Report (PDF/CSV) summarizing IP captured, risk assessment, and estimated value for board presentations
 
-### In-Claude Feedback
+### Individual Skills Portfolio
 
-- [ ] **FDBK-01**: User can give thumbs up/down feedback on a skill via MCP `feedback` action in Claude
-- [ ] **FDBK-02**: PostToolUse hook injects `additionalContext` prompting Claude to ask user for feedback with smart frequency (first 3 uses, then every 10th)
-- [ ] **FDBK-03**: User can include optional text comment with thumbs up/down vote
-- [ ] **FDBK-04**: `/api/feedback` endpoint with Bearer auth, Zod validation, and rate limiting
-- [ ] **FDBK-05**: Feedback sentiment aggregation displayed on skill detail page ("85% positive over last 30 days")
-- [ ] **FDBK-06**: Feedback trend visible in skill metrics (positive/negative ratio over time)
-
-### Web Feedback & Suggestions
-
-- [ ] **SUGGEST-01**: User can submit improvement suggestion on skill detail page with category (output quality, missing feature, error, performance, other)
-- [ ] **SUGGEST-02**: Suggestions include severity indicator (nice to have, important, critical)
-- [ ] **SUGGEST-03**: Skill author sees pending suggestions with Accept/Dismiss/Reply actions
-- [ ] **SUGGEST-04**: Suggestion status tracks through lifecycle (open -> accepted -> dismissed -> implemented)
-- [ ] **SUGGEST-05**: Author receives notification when new suggestion is submitted on their skill
-- [ ] **SUGGEST-06**: Suggester receives notification when their suggestion status changes
-
-### Suggestion-to-Fork Pipeline
-
-- [ ] **SFORK-01**: Author can "Accept & Fork" a suggestion, creating a fork pre-populated with suggestion context
-- [ ] **SFORK-02**: For small changes, author can create new skill_version inline without full fork
-- [ ] **SFORK-03**: Accepted suggestion links to resulting fork or version for traceability
-- [ ] **SFORK-04**: Suggestion status automatically updates to "implemented" when linked fork/version is published
-
-### Training Data / Golden Dataset
-
-- [ ] **TRAIN-01**: Author can seed golden examples (input/expected_output pairs) on skill detail page
-- [ ] **TRAIN-02**: Golden examples stored in skill_feedback table with feedbackType='training_example'
-- [ ] **TRAIN-03**: Real usage data can be captured as training examples with explicit per-user opt-in consent
-- [ ] **TRAIN-04**: Captured training data sanitized for secrets before storage
-- [ ] **TRAIN-05**: Training example count displayed on skill detail page
-- [ ] **TRAIN-06**: Tenant-level opt-in setting controls whether usage capture is available
-
-### Token/Cost Measurement
-
-- [ ] **TOKEN-01**: Token counts (input + output) captured per skill execution via PostToolUse hook or transcript parsing
-- [ ] **TOKEN-02**: Cost estimation calculated using static Anthropic pricing table (model -> $/MTok)
-- [ ] **TOKEN-03**: Model name captured per execution for accurate cost attribution
-- [ ] **TOKEN-04**: Latency (ms) tracked per skill execution
-- [ ] **TOKEN-05**: Enriched `/api/track` payload accepts optional token_count, model_name, latency_ms fields (backward-compatible)
-- [ ] **TOKEN-06**: Per-skill cost aggregation visible on skill detail page (avg cost per use, total cost)
-
-### Benchmarking Dashboard
-
-- [ ] **BENCH-01**: Per-skill "Benchmark" tab on skill detail page showing key metrics
-- [ ] **BENCH-02**: Quick stats display: avg cost, avg tokens, quality score, feedback sentiment
-- [ ] **BENCH-03**: Model comparison table when multi-model data is available
-- [ ] **BENCH-04**: Cost trend chart (Recharts AreaChart) showing cost over time
-- [ ] **BENCH-05**: Admin can trigger benchmark run (async execution with polling for results)
-- [ ] **BENCH-06**: Cross-model benchmark execution using Anthropic SDK (Claude), with optional OpenAI and Google AI SDKs
-- [ ] **BENCH-07**: AI-judged quality scoring with anti-bias measures (cross-model evaluation, pairwise comparison)
-- [ ] **BENCH-08**: Benchmark staleness detection (90-day warning, "Re-benchmark" button)
+- [ ] **PORT-01**: User can view their personal skills portfolio showing skills authored, total usage, total hours saved, and contribution ranking
+- [ ] **PORT-02**: User can see a portable vs company IP breakdown — which skills are personal-scoped (theirs forever) vs tenant-scoped (company's)
+- [ ] **PORT-03**: User can view a skills impact timeline showing when they created/improved skills and cumulative impact over time
+- [ ] **PORT-04**: User can generate a "Skills Resume" — a shareable, formatted summary of their skills and impact for use in job applications
+- [ ] **PORT-05**: User can see an impact calculator showing how much value they have added to the company over time through their contributions to the skillset
+- [ ] **PORT-06**: User can load pre-LLM history (emails, documents produced, prior work artifacts) to demonstrate historical impact and inform skill recommendations
 
 ## Future Requirements
 
-Deferred to future milestone. Tracked but not in current roadmap.
+Deferred to future milestones. Tracked but not in current roadmap.
 
-### Extended Evaluation
+### v7.0 Multi-Signal Intelligence
 
-- **EVAL-01**: Full LLM evaluation runner with golden dataset export to external tools (deepeval, LangSmith)
-- **EVAL-02**: Cross-skill benchmarking with normalized comparison across skills
-- **EVAL-03**: AI-generated golden examples from skill content
-- **EVAL-04**: Suggestion voting (upvotes from other users)
+- **INTEL-01**: Browser history analysis (Chrome, Safari, Edge) for work-activity skill matching
+- **INTEL-02**: Operator Skills Wizard — guided onboarding flow mapping role/tools/tasks to skills
+- **INTEL-03**: "Brain profile" sliders — personalized skill ranking weights
+- **INTEL-04**: Rerunnable skills assessment on demand
+- **INTEL-05**: Seed database with curated open-source skills
+- **INTEL-06**: Screen time / app usage data upload for behavior analysis
 
-### Extended Workspace Integration
+### v8.0 AI Independence
 
-- **GWORK-01**: Google Calendar integration for meeting time analysis
-- **GWORK-02**: Google Drive integration for document collaboration patterns
-- **GWORK-03**: Periodic re-analysis with progress tracking over time
+- **AIIND-01**: Add OpenAI (GPT-4o) to benchmark runner
+- **AIIND-02**: Add Gemini or Llama to benchmarks
+- **AIIND-03**: Skill format adaptation for non-Claude platforms
+- **AIIND-04**: Universal skill export formatted for specific AI platforms
+- **AIIND-05**: Document the portable skill specification
 
-### AI Independence
+### v9.0 Browser Extension
 
-- **AIIND-01**: Translate/port skills to other LLMs (Google, Llama, on-prem)
-- **AIIND-02**: Real-time token streaming (post-hoc measurement sufficient for now)
-- **AIIND-03**: Per-employee cost attribution (deferred -- creates anxiety, defeats adoption goal)
+- **BEXT-01**: Chrome extension (Manifest V3) with skill search and quick-access
+- **BEXT-02**: Browsing pattern collection (opt-in) for Layer 1 intelligence
+- **BEXT-03**: Skill suggestion popup based on current page context
+- **BEXT-04**: Quick feedback from extension popup
+- **BEXT-05**: Safari and Edge ports via WebExtension API
+
+### v10.0 Skills Marketplace
+
+- **MKTPL-01**: Cross-tenant skill publishing for verified high-quality skills
+- **MKTPL-02**: Marketplace browse/search with quality signals
+- **MKTPL-03**: Skill licensing model with revenue share
+- **MKTPL-04**: Quality threshold for marketplace listing
+- **MKTPL-05**: Import/fork marketplace skills into your tenant
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Real-time token streaming | Post-hoc measurement is sufficient; streaming adds complexity |
-| Per-employee cost attribution | Creates anxiety, defeats adoption goal |
-| Multi-provider cost comparison | Claude-only pricing sufficient for v5.0 |
-| Suggestion voting/upvotes | Low value without large user base; defer |
-| Full LLM evaluation runner | Store golden data now, export to external eval tools later |
-| AI-generated golden examples | Author-seeded + usage-captured is sufficient |
-| LangChain/LiteLLM abstraction | Direct SDKs simpler for 3 providers |
+| Real-time collaboration on skills | High complexity, not core to IP stewardship value |
+| Financial accounting integration | IP valuation is estimation-based, not accounting-grade |
+| Legal IP ownership assignment | Platform shows visibility scope, not legal ownership — that's HR/legal |
+| Automated skill migration between tenants | Security and IP ownership implications require manual process |
+| Pre-LLM history auto-import from all sources | v6.0 covers manual upload; automated connectors deferred to v7.0 |
 
 ## Traceability
 
@@ -112,55 +78,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCHEMA-01 | Phase 55 | Pending |
-| SCHEMA-02 | Phase 55 | Pending |
-| SCHEMA-03 | Phase 55 | Pending |
-| SCHEMA-04 | Phase 55 | Pending |
-| SCHEMA-05 | Phase 55 | Pending |
-| SCHEMA-06 | Phase 55 | Pending |
-| SCHEMA-07 | Phase 55 | Pending |
-| FDBK-01 | Phase 56 | Pending |
-| FDBK-02 | Phase 56 | Pending |
-| FDBK-03 | Phase 56 | Pending |
-| FDBK-04 | Phase 56 | Pending |
-| FDBK-05 | Phase 56 | Pending |
-| FDBK-06 | Phase 56 | Pending |
-| SUGGEST-01 | Phase 57 | Pending |
-| SUGGEST-02 | Phase 57 | Pending |
-| SUGGEST-03 | Phase 57 | Pending |
-| SUGGEST-04 | Phase 57 | Pending |
-| SUGGEST-05 | Phase 57 | Pending |
-| SUGGEST-06 | Phase 57 | Pending |
-| TRAIN-01 | Phase 58 | Pending |
-| TRAIN-02 | Phase 58 | Pending |
-| TRAIN-03 | Phase 58 | Pending |
-| TRAIN-04 | Phase 58 | Pending |
-| TRAIN-05 | Phase 58 | Pending |
-| TRAIN-06 | Phase 58 | Pending |
-| SFORK-01 | Phase 59 | Pending |
-| SFORK-02 | Phase 59 | Pending |
-| SFORK-03 | Phase 59 | Pending |
-| SFORK-04 | Phase 59 | Pending |
-| TOKEN-01 | Phase 60 | Pending |
-| TOKEN-02 | Phase 60 | Pending |
-| TOKEN-03 | Phase 60 | Pending |
-| TOKEN-04 | Phase 60 | Pending |
-| TOKEN-05 | Phase 60 | Pending |
-| TOKEN-06 | Phase 60 | Pending |
-| BENCH-01 | Phase 61 | Pending |
-| BENCH-02 | Phase 61 | Pending |
-| BENCH-03 | Phase 61 | Pending |
-| BENCH-04 | Phase 61 | Pending |
-| BENCH-05 | Phase 61 | Pending |
-| BENCH-06 | Phase 61 | Pending |
-| BENCH-07 | Phase 61 | Pending |
-| BENCH-08 | Phase 61 | Pending |
+| IPDASH-01 | — | Pending |
+| IPDASH-02 | — | Pending |
+| IPDASH-03 | — | Pending |
+| IPDASH-04 | — | Pending |
+| IPDASH-05 | — | Pending |
+| IPDASH-06 | — | Pending |
+| PORT-01 | — | Pending |
+| PORT-02 | — | Pending |
+| PORT-03 | — | Pending |
+| PORT-04 | — | Pending |
+| PORT-05 | — | Pending |
+| PORT-06 | — | Pending |
 
 **Coverage:**
-- v5.0 requirements: 43 total
-- Mapped to phases: 43/43
-- Unmapped: 0
+- v6.0 requirements: 12 total
+- Mapped to phases: 0
+- Unmapped: 12
 
 ---
 *Requirements defined: 2026-02-15*
-*Traceability updated: 2026-02-15*
+*Last updated: 2026-02-15 after initial definition*
