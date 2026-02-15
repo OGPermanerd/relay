@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { generateAndStoreSkillEmbedding } from "@/lib/generate-skill-embedding";
+import { autoImplementLinkedSuggestions } from "@everyskill/db/services/skill-feedback";
 
 // =============================================================================
 // Types
@@ -91,6 +92,9 @@ export async function approveSkillAction(skillId: string, notes?: string): Promi
       .set({ status: "published", updatedAt: new Date() })
       .where(eq(skills.id, skillId));
   });
+
+  // SFORK-04: Auto-mark linked suggestions as implemented
+  autoImplementLinkedSuggestions(skillId).catch(() => {});
 
   // Fire-and-forget: generate embedding for the newly published skill
   void generateAndStoreSkillEmbedding({
