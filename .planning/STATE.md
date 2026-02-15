@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v5.0 Phase 58 Training Data & Golden Dataset — Plan 01 complete
+**Current focus:** v5.0 Phases 58/59/61 Wave 2 — parallel execution
 
 ## Current Position
 
-Phase: 58 of TBD (Training Data & Golden Dataset)
-Plan: 1 of 3 in Phase 58
-Status: Phase 58 Plan 01 complete — backend plumbing for training examples
-Last activity: 2026-02-15 — Completed 58-01 (migration, DB services, server action)
+Phase: 59 of TBD (Suggestion-to-Fork Pipeline)
+Plan: 1 of 2 in Phase 59
+Status: Phase 59 Plan 01 complete — suggestion-to-fork backend foundation
+Last activity: 2026-02-15 — Completed 59-01 (schema, DB services, server actions, frontmatter extraction)
 
-Progress: [#####################.........] 82% (222/~270 est. plans across all milestones)
+Progress: [#####################.........] 83% (223/~270 est. plans across all milestones)
 
 ## Milestones
 
@@ -32,12 +32,12 @@ Progress: [#####################.........] 82% (222/~270 est. plans across all m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 222
+- Total plans completed: 223
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~11.2 hours
+- Total execution time: ~11.3 hours
 
 **Cumulative:**
-- 222 plans across 58 phases and 9 milestones
+- 223 plans across 59 phases and 9 milestones
 - ~19,700 LOC TypeScript
 - 8 days total development time
 
@@ -85,6 +85,10 @@ v5.0 milestone decisions:
 - createTrainingExample skips updateSkillFeedbackAggregates (training examples don't affect feedback sentiment)
 - Author-only guard on submitTrainingExample (only skill author can add golden examples)
 - trainingDataConsent is required boolean (not optional) matching Zod .default(false) output type
+- Shared frontmatter utility at apps/web/lib/frontmatter.ts (extracted from skills.ts, fixed relay_ regex bug)
+- acceptAndForkSuggestion uses direct async handler pattern (not useActionState) matching suggestion-card.tsx button pattern
+- applyInlineSuggestion marks suggestion as "implemented" directly (skipping "accepted") since content is applied immediately
+- autoImplementLinkedSuggestions designed as fire-and-forget for publish hook integration (Plan 59-02)
 
 ### Pending Todos
 
@@ -111,5 +115,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 58 Plan 01 COMPLETE — training data backend plumbing ready
-Resume file: .planning/phases/58-training-data-golden-dataset/58-01-SUMMARY.md
+Stopped at: Phase 59 Plan 01 COMPLETE — suggestion-to-fork backend foundation ready
+Resume file: .planning/phases/59-suggestion-to-fork-pipeline/59-01-SUMMARY.md
