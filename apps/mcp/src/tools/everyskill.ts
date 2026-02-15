@@ -13,6 +13,7 @@ import { handleReviewSkill } from "./review-skill.js";
 import { handleSubmitForReview } from "./submit-for-review.js";
 import { handleCheckReviewStatus } from "./check-review-status.js";
 import { handleCheckSkillStatus } from "./check-skill-status.js";
+import { handleFeedback } from "./feedback.js";
 
 // ---------------------------------------------------------------------------
 // Unified everyskill tool — single tool with action discriminator
@@ -31,6 +32,7 @@ const ACTIONS = [
   "submit_review",
   "check_review",
   "check_status",
+  "feedback",
 ] as const;
 
 type Action = (typeof ACTIONS)[number];
@@ -73,7 +75,7 @@ const EverySkillInputSchema = {
   action: z
     .enum(ACTIONS)
     .describe(
-      "Action to perform: search, list, recommend, describe, install, guide, create, update, review, submit_review, check_review, check_status"
+      "Action to perform: search, list, recommend, describe, install, guide, create, update, review, submit_review, check_review, check_status, feedback"
     ),
   query: z.string().optional().describe("Search query (required for: search, recommend)"),
   category: z
@@ -111,6 +113,11 @@ const EverySkillInputSchema = {
     .optional()
     .describe("Skill visibility (optional for: create, update)"),
   filePath: z.string().optional().describe("Custom local file path (optional for: check_status)"),
+  feedbackType: z
+    .enum(["thumbs_up", "thumbs_down"])
+    .optional()
+    .describe("Feedback type (required for: feedback)"),
+  comment: z.string().optional().describe("Optional feedback comment (used by: feedback)"),
 };
 
 export type EverySkillArgs = {
@@ -126,6 +133,8 @@ export type EverySkillArgs = {
   hoursSaved?: number;
   visibility?: "tenant" | "personal";
   filePath?: string;
+  feedbackType?: "thumbs_up" | "thumbs_down";
+  comment?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -235,6 +244,17 @@ export async function routeEveryskillAction(args: EverySkillArgs) {
       return handleCheckSkillStatus({ skillId: args.skillId, filePath: args.filePath });
     }
 
+    case "feedback": {
+      if (!args.skillId) return missingParam(action, "skillId");
+      if (!args.feedbackType) return missingParam(action, "feedbackType");
+      return handleFeedback({
+        skillId: args.skillId,
+        feedbackType: args.feedbackType,
+        comment: args.comment,
+        userId,
+      });
+    }
+
     default: {
       const _exhaustive: never = action;
       return {
@@ -264,7 +284,7 @@ server.registerTool(
       "Actions: search (keyword search), list (browse all), recommend (AI-powered discovery), describe (full " +
       "details + reviews), install (deploy to local env), guide (usage instructions), create (publish new skill), " +
       "update (push changes), review (AI quality review), submit_review (full review pipeline), check_review " +
-      "(pipeline status), check_status (local vs published diff).",
+      "(pipeline status), check_status (local vs published diff), feedback (thumbs up/down on a skill).",
     inputSchema: EverySkillInputSchema,
   },
   async (args) => routeEveryskillAction(args as unknown as EverySkillArgs)

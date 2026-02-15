@@ -44,6 +44,7 @@ export default async function middleware(req: NextRequest) {
     pathname === "/api/validate-key" ||
     pathname === "/api/health" ||
     pathname === "/api/track" ||
+    pathname === "/api/feedback" ||
     pathname === "/api/check-domain" ||
     pathname.startsWith("/api/cron")
   ) {
