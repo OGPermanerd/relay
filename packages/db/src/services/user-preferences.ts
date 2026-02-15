@@ -10,6 +10,7 @@ const PREFERENCES_DEFAULTS: UserPreferencesData = {
   preferredCategories: [],
   defaultSort: "days_saved",
   claudeMdWorkflowNotes: "",
+  trainingDataConsent: false,
 };
 
 /**

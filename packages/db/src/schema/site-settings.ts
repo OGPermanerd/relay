@@ -29,6 +29,7 @@ export const siteSettings = pgTable(
     allowSkillDownload: boolean("allow_skill_download").notNull().default(true),
     keyExpiryDays: integer("key_expiry_days").notNull().default(90),
     gmailDiagnosticEnabled: boolean("gmail_diagnostic_enabled").notNull().default(false),
+    trainingDataCaptureEnabled: boolean("training_data_capture_enabled").notNull().default(false),
     lastSuccessfulConnection: timestamp("last_successful_connection"),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

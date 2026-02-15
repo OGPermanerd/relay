@@ -24,6 +24,7 @@ export const userPreferencesSchema = z.object({
   preferredCategories: z.array(z.enum(SKILL_CATEGORIES)).default([]),
   defaultSort: z.enum(SORT_OPTIONS).default("days_saved"),
   claudeMdWorkflowNotes: z.string().max(2000).default(""),
+  trainingDataConsent: z.boolean().default(false),
 });
 
 /**
@@ -39,4 +40,5 @@ export const PREFERENCES_DEFAULTS: UserPreferencesData = {
   preferredCategories: [],
   defaultSort: "days_saved",
   claudeMdWorkflowNotes: "",
+  trainingDataConsent: false,
 };

@@ -11,6 +11,7 @@ export interface UserPreferencesData {
   preferredCategories: ("productivity" | "wiring" | "doc-production" | "data-viz" | "code")[];
   defaultSort: "uses" | "quality" | "rating" | "days_saved";
   claudeMdWorkflowNotes: string;
+  trainingDataConsent: boolean;
 }
 
 /**
