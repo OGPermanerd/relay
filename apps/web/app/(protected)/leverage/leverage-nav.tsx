@@ -12,6 +12,7 @@ const tabs = [
   { label: "My Company", href: "/leverage/company", adminOnly: false },
   { label: "Employees", href: "/leverage/employees", adminOnly: true },
   { label: "Skills", href: "/leverage/skills", adminOnly: true },
+  { label: "IP Dashboard", href: "/leverage/ip-dashboard", adminOnly: true },
 ];
 
 export function LeverageNav({ isAdmin }: LeverageNavProps) {
