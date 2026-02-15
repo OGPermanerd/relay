@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 59 of TBD (Suggestion-to-Fork Pipeline)
-Plan: 1 of 2 in Phase 59
-Status: Phase 59 Plan 01 complete — suggestion-to-fork backend foundation
-Last activity: 2026-02-15 — Completed 59-01 (schema, DB services, server actions, frontmatter extraction)
+Phase: 58 of TBD (Training Data & Golden Dataset)
+Plan: 3 of 3 in Phase 58
+Status: Phase 58 Plan 03 complete — usage capture with consent gating
+Last activity: 2026-02-15 — Completed 58-03 (consent-gated usage capture in /api/track)
 
 Progress: [#####################.........] 83% (223/~270 est. plans across all milestones)
 
@@ -32,12 +32,12 @@ Progress: [#####################.........] 83% (223/~270 est. plans across all m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 223
+- Total plans completed: 224
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~11.3 hours
 
 **Cumulative:**
-- 223 plans across 59 phases and 9 milestones
+- 224 plans across 59 phases and 9 milestones
 - ~19,700 LOC TypeScript
 - 8 days total development time
 
@@ -85,6 +85,8 @@ v5.0 milestone decisions:
 - createTrainingExample skips updateSkillFeedbackAggregates (training examples don't affect feedback sentiment)
 - Author-only guard on submitTrainingExample (only skill author can add golden examples)
 - trainingDataConsent is required boolean (not optional) matching Zod .default(false) output type
+- captureUsageAsTraining uses void prefix for fire-and-forget (same pattern as insertTokenMeasurement)
+- Dual consent gating: tenant trainingDataCaptureEnabled checked first (cached), then user trainingDataConsent
 - Shared frontmatter utility at apps/web/lib/frontmatter.ts (extracted from skills.ts, fixed relay_ regex bug)
 - acceptAndForkSuggestion uses direct async handler pattern (not useActionState) matching suggestion-card.tsx button pattern
 - applyInlineSuggestion marks suggestion as "implemented" directly (skipping "accepted") since content is applied immediately
@@ -115,5 +117,5 @@ v5.0 milestone decisions:
 ## Session Continuity
 
 Last session: 2026-02-15
-Stopped at: Phase 59 Plan 01 COMPLETE — suggestion-to-fork backend foundation ready
-Resume file: .planning/phases/59-suggestion-to-fork-pipeline/59-01-SUMMARY.md
+Stopped at: Phase 58 Plan 03 COMPLETE — usage capture with consent gating wired into /api/track
+Resume file: .planning/phases/58-training-data-golden-dataset/58-03-SUMMARY.md
