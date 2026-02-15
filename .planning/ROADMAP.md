@@ -193,7 +193,10 @@ Total: 17 plans completed. 6 phases, 22 requirements.
   2. The `skills` table has new denormalized columns (`total_feedback`, `positive_feedback_pct`, `avg_token_cost_microcents`) that default to zero and are queryable
   3. All new tables include `tenant_id` NOT NULL with RLS policies following the established multi-tenancy pattern from Phase 25
   4. A payload sanitization utility detects and strips known secret patterns (API keys, passwords, bearer tokens, connection strings) from arbitrary text input, with unit tests proving it catches common formats
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 55-01-PLAN.md -- Schema files, migrations, relations for all 4 new tables + skills aggregate columns
+- [ ] 55-02-PLAN.md -- Sanitization utility with TDD (secret detection and stripping)
 
 #### Phase 56: In-Claude Feedback Collection
 **Goal**: Users can give thumbs up/down feedback on skills directly in Claude, and feedback sentiment is visible on skill detail pages
