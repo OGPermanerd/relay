@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 70 of 75 (MCP Preference Sync)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-16 — Phase 69 verified (10/11 → 11/11 after migration), ready for Phase 70
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 70-01-PLAN.md (MCP preference handlers)
 
 Progress: [████░░░░░░░░░░░░░░░░░░░░░░░░░░] 1/7 phases
 
@@ -34,13 +34,13 @@ Progress: [████░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 249
+- Total plans completed: 250
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~12.4 hours
+- Total execution time: ~12.5 hours
 
 **Cumulative:**
-- 249 plans across 68 phases and 11 milestones
-- ~64,000 LOC TypeScript across 469 files
+- 250 plans across 69 phases and 11 milestones
+- ~64,000 LOC TypeScript across 470 files
 - 17 days total development time
 
 ## Accumulated Context
@@ -65,6 +65,10 @@ Phase 69 decisions:
 - Admin gate in server actions uses isAdmin(session) inline check, not middleware
 - MCP tools reject global_approved at handler level with descriptive error (no role info available)
 
+Phase 70 decisions:
+- Read-modify-write pattern for MCP set_preferences to preserve claudeMdWorkflowNotes and trainingDataConsent
+- Auth guard checks both userId AND tenantId before allowing preference access
+
 ### Pending Todos
 
 - Skill visibility: expose all 4 levels in upload form (addressed by Phase 69)
@@ -81,10 +85,10 @@ Phase 69 decisions:
 
 ### Blockers/Concerns
 
-None. Phase 69 complete (all 3 plans done). Ready for Phase 70.
+None. Plan 70-01 complete. Ready for 70-02.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed Phase 69 (all 3 plans), ready for Phase 70
-Resume file: .planning/phases/70-*/70-01-PLAN.md
+Stopped at: Completed 70-01-PLAN.md, ready for 70-02
+Resume file: .planning/phases/70-mcp-preference-sync/70-02-PLAN.md
