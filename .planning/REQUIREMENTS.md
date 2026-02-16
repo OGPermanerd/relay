@@ -87,7 +87,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PORT-01 | Phase 65: Individual Skills Portfolio | Done |
 | PORT-02 | Phase 65: Individual Skills Portfolio | Done |
 | PORT-03 | Phase 66: Impact Measurement | Done |
-| PORT-04 | Phase 67: Skills Resume | Pending |
+| PORT-04 | Phase 67: Skills Resume | Done |
 | PORT-05 | Phase 66: Impact Measurement | Done |
 | PORT-06 | Phase 68: Pre-LLM History | Pending |
 

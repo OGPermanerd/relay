@@ -200,7 +200,7 @@ Total: 18 plans completed. 7 phases, 12 requirements.
 - [x] **Phase 64: IP Valuation & Export** - Replacement cost estimation and PDF/CSV IP report for board presentations (completed 2026-02-16)
 - [x] **Phase 65: Individual Skills Portfolio** - Personal portfolio page with contribution stats and portable vs company IP breakdown (completed 2026-02-16)
 - [x] **Phase 66: Impact Measurement** - Skills impact timeline and value-added calculator for individuals (completed 2026-02-16)
-- [ ] **Phase 67: Skills Resume** - Shareable formatted summary of skills and impact for job applications
+- [x] **Phase 67: Skills Resume** - Shareable formatted summary of skills and impact for job applications (completed 2026-02-16)
 - [ ] **Phase 68: Pre-LLM History** - Upload historical work artifacts to demonstrate pre-platform impact
 
 #### Phase 62: Company IP Dashboard Core
@@ -285,8 +285,8 @@ Plans:
   4. Only portable/personal-scoped skills are included by default (company IP is excluded unless explicitly toggled on)
 **Plans:** 2 plans
 Plans:
-- [ ] 67-01-PLAN.md — Schema, data queries, server actions, and middleware exemption (data layer)
-- [ ] 67-02-PLAN.md — Resume view, PDF download, share controls, public page, and E2E tests (UI layer)
+- [x] 67-01-PLAN.md — Schema, data queries, server actions, and middleware exemption (data layer)
+- [x] 67-02-PLAN.md — Resume view, PDF download, share controls, public page, and E2E tests (UI layer)
 
 #### Phase 68: Pre-LLM History
 **Goal**: Users can upload historical work artifacts to demonstrate impact from before they started using the platform

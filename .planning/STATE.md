@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 67 of 68 (Skills Resume)
-Plan: 2 of TBD in current phase
-Status: In progress
-Last activity: 2026-02-16 -- Completed 67-02-PLAN.md (resume UI)
+Plan: 2 of 2 in current phase
+Status: Phase verified — all 16/16 must-haves passed
+Last activity: 2026-02-16 -- Phase 67 verified and complete.
 
 Progress: [############################..] 94% (242 plans across 67 phases, 10 milestones)
 
@@ -28,7 +28,7 @@ Progress: [############################..] 94% (242 plans across 67 phases, 10 m
 - v3.0 AI Discovery & Workflow Intelligence - 21 plans - shipped 2026-02-13
 - v4.0 Gmail Workflow Diagnostic - 17 plans - shipped 2026-02-14
 - v5.0 Feedback, Training & Benchmarking - 18 plans - shipped 2026-02-15
-- v6.0 IP Dashboard & Skills Portfolio - 7 phases, 10/TBD plans - in progress
+- v6.0 IP Dashboard & Skills Portfolio - 7 phases, 12/TBD plans - in progress
 
 ## Performance Metrics
 
@@ -97,5 +97,5 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 67-02 (resume UI). Resume page, share controls, public page, PDF download, E2E tests all done.
-Resume file: .planning/phases/67-skills-resume/67-02-SUMMARY.md
+Stopped at: Phase 67 verified -- Skills Resume complete. Ready for Phase 68 (Pre-LLM History).
+Resume file: .planning/phases/67-skills-resume/67-VERIFICATION.md
