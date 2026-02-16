@@ -262,7 +262,11 @@ Plans:
   2. Skill cards in search results and browse pages show an "Updated" badge when the skill has been modified since the user's last view
   3. The skill detail page shows a change summary section listing what changed since the user's last visit (version bumps, description updates, new feedback)
   4. The dashboard includes a "What's New" feed showing recently changed skills the user has previously interacted with
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 71-01-PLAN.md -- DB foundation: user_skill_views schema, migration, service layer
+- [ ] 71-02-PLAN.md -- View tracking + change summary on skill detail page (TEMP-01, TEMP-03)
+- [ ] 71-03-PLAN.md -- Updated badge on skill cards + What's New dashboard feed (TEMP-02, TEMP-04)
 
 ### Phase 72: Community Detection
 **Goal**: The system autonomously clusters skills into meaningful thematic communities using embedding similarity
