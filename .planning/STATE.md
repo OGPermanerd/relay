@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- Phase 62 (Company IP Dashboard Core)
+**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- Phase 63 (IP Risk Analysis)
 
 ## Current Position
 
-Phase: 62 of 68 (Company IP Dashboard Core)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-15 -- Completed 62-02-PLAN.md (IP Dashboard page & quality trend chart)
+Phase: 63 of 68 (IP Risk Analysis)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-16 -- Completed 63-01-PLAN.md (IP risk data layer)
 
-Progress: [##########################....] 86% (230 plans across 62 phases, 10 milestones)
+Progress: [##########################....] 87% (231 plans across 63 phases, 10 milestones)
 
 ## Milestones
 
@@ -33,12 +33,12 @@ Progress: [##########################....] 86% (230 plans across 62 phases, 10 m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 230
+- Total plans completed: 231
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~11.8 hours
 
 **Cumulative:**
-- 230 plans across 62 phases and 10 milestones
+- 231 plans across 63 phases and 10 milestones
 - ~50,000 LOC TypeScript across 386 files
 - 16 days total development time
 
@@ -58,6 +58,8 @@ v6.0 decisions:
 - Rating normalized 1-5 to 0-100 scale (multiply by 20)
 - Hero stat cards are all-time cumulative; quality trends chart respects TimeRangeSelector
 - Multi-line chart uses connectNulls for months with partial data across series
+- IP risk: numeric severity (3/2/1) for SQL MAX aggregation, mapped to string risk levels in TypeScript
+- IP risk thresholds: HIGH_USAGE_THRESHOLD=10, CRITICAL_USAGE_THRESHOLD=50 as named constants
 
 ### Pending Todos
 
@@ -71,6 +73,6 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 
 ## Session Continuity
 
-Last session: 2026-02-15
-Stopped at: Phase 62 complete -- IP Dashboard Core (data layer + page + chart)
-Resume file: .planning/phases/62-company-ip-dashboard-core/62-02-SUMMARY.md
+Last session: 2026-02-16
+Stopped at: Phase 63 plan 01 complete -- IP risk data layer (queries + server action + sort hook)
+Resume file: .planning/phases/63-ip-risk-analysis/63-01-SUMMARY.md
