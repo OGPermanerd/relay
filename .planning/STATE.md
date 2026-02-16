@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 64 of 68 (IP Valuation & Export)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-16 -- Completed 64-01-PLAN.md (IP valuation data layer)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-16 -- Completed 64-02-PLAN.md (IP valuation UI + export)
 
-Progress: [############################..] 91% (235 plans across 64 phases, 10 milestones)
+Progress: [############################..] 91% (236 plans across 64 phases, 10 milestones)
 
 ## Milestones
 
@@ -33,12 +33,12 @@ Progress: [############################..] 91% (235 plans across 64 phases, 10 m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 235
+- Total plans completed: 236
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~11.9 hours
 
 **Cumulative:**
-- 235 plans across 64 phases and 10 milestones
+- 236 plans across 64 phases and 10 milestones
 - ~50,000 LOC TypeScript across 386 files
 - 16 days total development time
 
@@ -64,6 +64,9 @@ v6.0 decisions:
 - IP valuation: HOURLY_RATE=$150, replacement cost = base * complexity * quality with clamped multipliers
 - averageRating normalized from 0-500 to 0-1; null defaults to 0.6; quality multiplier [0.5, 1.0]
 - Complexity multiplier uses log10(contentLength/1000), clamped [1.0, 2.0]
+- jsPDF dynamically imported in click handler to keep page bundle small
+- Hero stat grid: 5 columns with "Estimated IP Value" first
+- Valuation table shows top 20 by replacement cost; CSV export includes all skills
 
 ### Pending Todos
 
@@ -78,5 +81,5 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Phase 64 plan 01 complete -- data layer ready, Plan 02 (UI) next
-Resume file: .planning/phases/64-ip-valuation-export/64-01-SUMMARY.md
+Stopped at: Phase 64 complete (IP Valuation & Export) -- both plans shipped
+Resume file: .planning/phases/64-ip-valuation-export/64-02-SUMMARY.md
