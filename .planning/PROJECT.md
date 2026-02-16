@@ -15,12 +15,13 @@ Protect and grow your IP. Fast. Skills get better as they pass through more hand
 
 ## Current State
 
-**v5.0 shipped 2026-02-15** — Feedback loops, training data, benchmarking, token/cost measurement.
+**v6.0 shipped 2026-02-16** — IP dashboard with risk analysis and valuation, individual skills portfolio with impact measurement, shareable skills resume, pre-LLM history upload.
 
-Tech stack: Next.js 16.1.6, PostgreSQL 16, Drizzle ORM, Auth.js v5, MCP SDK, Anthropic SDK, Ollama, pgvector, Recharts, Playwright
-LOC: ~50,000 TypeScript across 386 files
+Tech stack: Next.js 16.1.6, PostgreSQL 16, Drizzle ORM, Auth.js v5, MCP SDK, Anthropic SDK, Ollama, pgvector, Recharts, jsPDF, Playwright
+LOC: ~64,000 TypeScript across 469 files
 
 Milestones:
+- v6.0 shipped 2026-02-16 — IP dashboard, risk analysis, valuation, skills portfolio, resume, pre-LLM history
 - v5.0 shipped 2026-02-15 — Feedback, training data, benchmarking, cost measurement
 - v4.0 shipped 2026-02-14 — Gmail workflow diagnostic, work-activity skill recommendations
 - v3.0 shipped 2026-02-13 — AI discovery, hybrid search, homepage redesign, user preferences
@@ -122,19 +123,15 @@ Milestones:
 - ✓ Cross-model benchmarking with blinded AI judge and cost trend visualization — v5.0
 - ✓ Secret detection and sanitization across all user-submitted content — v5.0
 
-### Active — v6.0 IP Dashboard & Skills Portfolio
+### Validated — v6.0 IP Dashboard & Skills Portfolio
 
-## Current Milestone: v6.0 IP Dashboard & Skills Portfolio
-
-**Goal:** Make the IP stewardship value proposition tangible — give companies an IP dashboard showing what they've captured and what's at risk, and give individuals a skills portfolio showing their contributions and portable IP.
-
-**Target features:**
-- Company IP Dashboard with total skills captured, hours saved, estimated replacement cost, IP concentration risk
-- Individual Skills Portfolio showing personal contributions, usage metrics, portable vs company IP
-- IP Value Estimation quantifying what it would cost to recreate skills from scratch
-- Org-wide quality trends over time (are our skills getting better?)
-- IP risk alerts for key person dependency (skills with single author and high usage)
-- IP Report export (PDF/CSV) for board presentations
+- ✓ Company IP dashboard with hero KPIs (total skills, uses, hours saved, contributors) and quality trends — v6.0
+- ✓ IP concentration risk analysis with key person dependency detection and severity indicators — v6.0
+- ✓ IP valuation with replacement cost formula and PDF/CSV board report export — v6.0
+- ✓ Individual skills portfolio with portable vs company IP breakdown and contribution ranking — v6.0
+- ✓ Skills impact timeline and value-added calculator with cumulative metrics — v6.0
+- ✓ Shareable skills resume with public URL, PDF download, and company skills toggle — v6.0
+- ✓ Pre-LLM work artifact upload with AI-powered skill analysis and timeline integration — v6.0
 
 ### Validated — Post-v2.0 (ad hoc)
 
@@ -256,6 +253,16 @@ Milestones:
 | Local pending state over useActionState isPending | isPending unreliable for programmatic dispatch via startTransition | ✓ Good |
 | Fork differentiation non-fatal | If AI summary fails, still save content — skip summary silently | ✓ Good |
 | PNG logo over animated SVG | New brand identity; transparent background works on both light and dark headers | ✓ Good |
+| IP dashboard under /leverage | Follows existing analytics pattern; admin-only page | ✓ Good |
+| Portfolio as /portfolio route | Separate from /profile; dedicated experience for contributions | ✓ Good |
+| No new schema for IPDASH phases | All SQL aggregation on existing tables; avoids migration complexity | ✓ Good |
+| Replacement cost formula | base * complexity * quality with clamped multipliers; HOURLY_RATE=$150 | ✓ Good |
+| jsPDF dynamic import | Keeps page bundle small; loaded only on PDF export click | ✓ Good |
+| FILTER WHERE conditional aggregation | Single-pass multi-visibility queries; avoids multiple SQL round-trips | ✓ Good |
+| ComposedChart for impact timeline | Area for continuous series + Scatter for categorical event markers | ✓ Good |
+| Token-based resume sharing | Revoke-and-replace pattern; one active share per user | ✓ Good |
+| Fire-and-forget AI artifact analysis | Never blocks user response; errors silently caught | ✓ Good |
+| Client-side file parsing for artifacts | Avoids serializing File objects to server actions; 5MB limit | ✓ Good |
 
 ---
-*Last updated: 2026-02-15 — v5.0 shipped, 4-layer architecture documented*
+*Last updated: 2026-02-16 after v6.0 milestone — IP dashboard, skills portfolio, resume, pre-LLM history*

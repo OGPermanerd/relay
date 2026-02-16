@@ -1,5 +1,97 @@
 # Project Milestones: EverySkill
 
+## v6.0 IP Dashboard & Skills Portfolio (Shipped: 2026-02-16)
+
+**Delivered:** Company IP dashboard with risk analysis and valuation, individual skills portfolio with impact measurement, shareable skills resume, and pre-LLM history upload.
+
+**Phases completed:** 62-68 (15 plans total)
+
+**Key accomplishments:**
+- Company IP dashboard with hero KPIs (total skills, uses, hours saved, contributors) and org-wide quality trend charts
+- IP risk analysis with key person dependency detection, severity indicators, and employee drill-down
+- IP valuation with replacement cost formula and PDF/CSV board report export
+- Individual skills portfolio with portable vs company IP breakdown and tenant-scoped contribution ranking
+- Skills impact timeline and value-added calculator with cumulative hours/cost metrics
+- Shareable skills resume with public URL, PDF download, and company skills toggle
+- Pre-LLM work artifact upload with AI-powered skill analysis and timeline integration
+
+**Stats:**
+- 83 files created/modified
+- ~13,926 lines of TypeScript
+- 7 phases, 15 plans, 12 requirements
+- 2 days (2026-02-15 → 2026-02-16)
+
+**Git range:** `1bfa3a3` (feat(62-01)) → `c0c94db` (docs(phase-68))
+
+**Archive:** [v6.0-ROADMAP.md](milestones/v6.0-ROADMAP.md) | [v6.0-REQUIREMENTS.md](milestones/v6.0-REQUIREMENTS.md)
+
+---
+
+## v5.0 Feedback, Training & Benchmarking (Shipped: 2026-02-15)
+
+**Delivered:** In-Claude and web feedback collection, training data with golden datasets, suggestion-to-fork pipeline, token/cost measurement, and cross-model benchmarking.
+
+**Phases completed:** 55-61 (18 plans total)
+
+**Key accomplishments:**
+- In-Claude feedback via MCP with smart frequency gating (first 3 uses, then every 10th)
+- Web feedback with thumbs up/down, comments, and aggregated sentiment trends
+- Structured suggestion form with category, severity, and author review workflow
+- Training data with author-seeded golden examples and consent-gated usage capture
+- Token/cost measurement with transcript parsing, static pricing table, and cost StatCards
+- Cross-model benchmarking with blinded AI judge and cost trend visualization
+
+**Stats:**
+- 7 phases, 18 plans, 12 requirements
+- 1 day (2026-02-15)
+
+**Archive:** [v5.0-ROADMAP.md](milestones/v5.0-ROADMAP.md) | [v5.0-REQUIREMENTS.md](milestones/v5.0-REQUIREMENTS.md)
+
+---
+
+## v4.0 Gmail Workflow Diagnostic (Shipped: 2026-02-14)
+
+**Delivered:** Gmail OAuth connector, email pattern analysis, AI-powered skill recommendations, diagnostic dashboard, and deployment plan.
+
+**Phases completed:** 49-54 (17 plans total)
+
+**Key accomplishments:**
+- Gmail connector via separate OAuth flow with encrypted token storage
+- Email pattern analysis with two-pass classification (rule-based + AI)
+- AI-powered skill recommendations matching work activity to skill catalog
+- Diagnostic dashboard with category PieChart, time BarChart, and hero KPIs
+- Tenant resolution cleanup (DEFAULT_TENANT_ID removed from all code paths)
+
+**Stats:**
+- 6 phases, 17 plans, 22 requirements
+- 1 day (2026-02-14)
+
+**Archive:** [v4.0-ROADMAP.md](milestones/v4.0-ROADMAP.md) | [v4.0-REQUIREMENTS.md](milestones/v4.0-REQUIREMENTS.md)
+
+---
+
+## v3.0 AI Discovery & Workflow Intelligence (Shipped: 2026-02-13)
+
+**Delivered:** Visibility scoping, Loom video integration, unified MCP tool, user preferences, hybrid search, search analytics, and homepage redesign.
+
+**Phases completed:** 40-48 (21 plans total)
+
+**Key accomplishments:**
+- Skill visibility scoping (global company / employee visible / employee invisible / personal)
+- Loom video integration for skill demos
+- `/everyskill` unified MCP tool with STRAP action router pattern
+- Personal preference extraction and cross-AI pref sync (CLAUDE.md export)
+- Hybrid search with pgvector + ILIKE + RRF fusion
+- Homepage redesign with AI greeting, compact stats, category tiles, discovery search
+
+**Stats:**
+- 9 phases, 21 plans, 26 requirements
+- 5 days (2026-02-08 → 2026-02-13)
+
+**Archive:** [v3.0-ROADMAP.md](milestones/v3.0-ROADMAP.md) | [v3.0-REQUIREMENTS.md](milestones/v3.0-REQUIREMENTS.md)
+
+---
+
 ## v2.0 Skill Ecosystem (Shipped: 2026-02-08)
 
 **Delivered:** Quality-gated skill publishing with AI review, admin approval, conversational MCP discovery, and fork drift detection.
