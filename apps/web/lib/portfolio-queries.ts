@@ -456,3 +456,68 @@ export async function getImpactCalculatorStats(userId: string): Promise<ImpactCa
     suggestionsImplemented: Number(suggestionsRow?.suggestions_implemented ?? 0),
   };
 }
+
+// =============================================================================
+// Work Artifacts
+// =============================================================================
+
+/**
+ * A single work artifact entry for portfolio display.
+ * Dates are serialized as ISO strings to prevent hydration mismatches.
+ */
+export interface WorkArtifactEntry {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  artifactDate: string;
+  fileName: string | null;
+  fileType: string | null;
+  estimatedHoursSaved: number | null;
+  suggestedSkillIds: string[];
+  createdAt: string;
+}
+
+/**
+ * Get all work artifacts for a user, ordered by artifact date descending.
+ *
+ * @param userId The user whose artifacts to retrieve
+ */
+export async function getUserArtifacts(userId: string): Promise<WorkArtifactEntry[]> {
+  if (!db) return [];
+
+  const result = await db.execute(sql`
+    SELECT
+      id,
+      title,
+      description,
+      category,
+      artifact_date,
+      file_name,
+      file_type,
+      estimated_hours_saved,
+      suggested_skill_ids,
+      created_at
+    FROM work_artifacts
+    WHERE user_id = ${userId}
+    ORDER BY artifact_date DESC
+  `);
+
+  const rows = result as unknown as Record<string, unknown>[];
+
+  return rows.map((row) => ({
+    id: String(row.id),
+    title: String(row.title),
+    description: row.description ? String(row.description) : null,
+    category: String(row.category),
+    artifactDate: new Date(String(row.artifact_date)).toISOString(),
+    fileName: row.file_name ? String(row.file_name) : null,
+    fileType: row.file_type ? String(row.file_type) : null,
+    estimatedHoursSaved:
+      row.estimated_hours_saved != null ? Number(row.estimated_hours_saved) : null,
+    suggestedSkillIds: Array.isArray(row.suggested_skill_ids)
+      ? (row.suggested_skill_ids as string[])
+      : [],
+    createdAt: new Date(String(row.created_at)).toISOString(),
+  }));
+}
