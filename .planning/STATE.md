@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 69 of 75 (Extended Visibility)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-16 — v7.0 roadmap created (7 phases, 25 requirements)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 69-01-PLAN.md (visibility foundation)
 
-Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0%
+Progress: [███░░░░░░░░░░░░░░░░░░░░░░░░░░░] 1/3
 
 ## Milestones
 
@@ -34,12 +34,12 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 246
+- Total plans completed: 247
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~12.3 hours
+- Total execution time: ~12.4 hours
 
 **Cumulative:**
-- 246 plans across 68 phases and 11 milestones
+- 247 plans across 68 phases and 11 milestones
 - ~64,000 LOC TypeScript across 469 files
 - 17 days total development time
 
@@ -55,6 +55,11 @@ v7.0 research decisions (from research/SUMMARY.md):
 - Rule-based query classification, no LLM per-query (handles 90%+ correctly)
 - RAGAS as TypeScript judge prompt adaptation, no Python RAGAS library
 - Direct SDKs with dynamic import, no Vercel AI SDK (project already has direct Anthropic SDK)
+
+Phase 69 decisions:
+- CHECK constraint (not enum) for 4 visibility values -- easy to extend without migration
+- RLS cross-tenant reads for global_approved via OR in USING clause, writes restricted to own tenant
+- Vitest added to @everyskill/db as first test framework for that package
 
 ### Pending Todos
 
@@ -72,10 +77,10 @@ v7.0 research decisions (from research/SUMMARY.md):
 
 ### Blockers/Concerns
 
-None. Ready for Phase 69 planning.
+None. Phase 69 plan 01 complete, ready for plans 02-03.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: v7.0 roadmap created, ready for Phase 69 planning
-Resume file: N/A
+Stopped at: Completed 69-01 (visibility foundation), ready for 69-02
+Resume file: .planning/phases/69-extended-visibility/69-02-PLAN.md
