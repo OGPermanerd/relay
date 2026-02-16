@@ -23,6 +23,7 @@ interface TimelineDataPoint {
   creationEvent?: number;
   forkEvent?: number;
   suggestionEvent?: number;
+  artifactEvent?: number;
   eventLabel?: string;
 }
 
@@ -48,6 +49,8 @@ function transformTimelineForChart(events: TimelineEvent[]): TimelineDataPoint[]
       point.forkEvent = event.cumulativeHoursSaved;
     } else if (event.eventType === "suggestion") {
       point.suggestionEvent = event.cumulativeHoursSaved;
+    } else if (event.eventType === "artifact") {
+      point.artifactEvent = event.cumulativeHoursSaved;
     }
 
     return point;
@@ -116,6 +119,7 @@ export function ImpactTimelineChart({ data }: ImpactTimelineChartProps) {
             <Scatter dataKey="creationEvent" fill="#10b981" name="Skill Created" />
             <Scatter dataKey="forkEvent" fill="#8b5cf6" name="Skill Forked" />
             <Scatter dataKey="suggestionEvent" fill="#f59e0b" name="Suggestion Implemented" />
+            <Scatter dataKey="artifactEvent" fill="#d97706" name="Pre-platform Work" />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

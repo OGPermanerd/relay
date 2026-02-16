@@ -10,7 +10,10 @@ import type {
   ContributionRanking,
   TimelineEvent,
   ImpactCalculatorStats,
+  WorkArtifactEntry,
 } from "@/lib/portfolio-queries";
+import { ArtifactUploadForm } from "@/components/artifact-upload-form";
+import { ArtifactList } from "@/components/artifact-list";
 
 interface PortfolioViewProps {
   stats: PortfolioStats;
@@ -18,6 +21,7 @@ interface PortfolioViewProps {
   ranking: ContributionRanking;
   timeline: TimelineEvent[];
   impactStats: ImpactCalculatorStats;
+  artifacts: WorkArtifactEntry[];
 }
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
@@ -41,6 +45,7 @@ export function PortfolioView({
   ranking,
   timeline,
   impactStats,
+  artifacts,
 }: PortfolioViewProps) {
   const hasSkills = stats.skillsAuthored > 0;
   const rankingSubtitle =
@@ -128,6 +133,15 @@ export function PortfolioView({
 
       {/* Impact Calculator */}
       <ImpactCalculator stats={impactStats} />
+
+      {/* Pre-Platform Work Artifacts */}
+      <section>
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">Pre-Platform Work</h2>
+        <ArtifactUploadForm />
+        <div className="mt-4">
+          <ArtifactList artifacts={artifacts} />
+        </div>
+      </section>
 
       {/* Skills List */}
       <section>

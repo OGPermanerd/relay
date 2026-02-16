@@ -297,7 +297,7 @@ function formatOrdinal(n: number): string {
  */
 export interface TimelineEvent {
   date: string; // ISO date string
-  eventType: "creation" | "fork" | "suggestion";
+  eventType: "creation" | "fork" | "suggestion" | "artifact";
   skillName: string;
   hoursImpact: number;
   cumulativeHoursSaved: number;
@@ -358,6 +358,16 @@ export async function getImpactTimeline(userId: string): Promise<TimelineEvent[]
         AND feedback_type = 'suggestion'
         AND status = 'accepted'
         AND implemented_by_skill_id IS NOT NULL
+
+      UNION ALL
+
+      SELECT
+        artifact_date AS event_date,
+        'artifact' AS event_type,
+        title AS skill_name,
+        COALESCE(estimated_hours_saved, 0)::double precision AS hours_impact
+      FROM work_artifacts
+      WHERE user_id = ${userId}
     )
     SELECT
       event_date,
@@ -373,7 +383,7 @@ export async function getImpactTimeline(userId: string): Promise<TimelineEvent[]
 
   return rows.map((row) => ({
     date: new Date(String(row.event_date)).toISOString(),
-    eventType: String(row.event_type) as "creation" | "fork" | "suggestion",
+    eventType: String(row.event_type) as "creation" | "fork" | "suggestion" | "artifact",
     skillName: String(row.skill_name),
     hoursImpact: Number(row.hours_impact ?? 0),
     cumulativeHoursSaved: Number(row.cumulative_hours_saved ?? 0),
