@@ -24,10 +24,10 @@ Requirements for v7.0 Algorithm & Architecture Rewrite. Each maps to roadmap pha
 
 ### Temporal Tracking
 
-- [ ] **TEMP-01**: System tracks when a user last viewed each skill
-- [ ] **TEMP-02**: Skill cards show "Updated" badge when skill changed since user's last view
-- [ ] **TEMP-03**: Skill detail page shows change summary since user's last visit
-- [ ] **TEMP-04**: Dashboard shows "What's New" feed of recently changed skills the user interacts with
+- [x] **TEMP-01**: System tracks when a user last viewed each skill
+- [x] **TEMP-02**: Skill cards show "Updated" badge when skill changed since user's last view
+- [x] **TEMP-03**: Skill detail page shows change summary since user's last visit
+- [x] **TEMP-04**: Dashboard shows "What's New" feed of recently changed skills the user interacts with
 
 ### Extended Visibility
 
