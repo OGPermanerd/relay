@@ -72,15 +72,15 @@ describe("MCP Tools", () => {
     });
 
     it("filters by category", async () => {
-      // Mock returns only prompt skills (DB WHERE filtering is mocked at the chain level)
-      const promptOnly = mockListResults.filter((s) => s.category === "prompt");
-      mockSelectChain(promptOnly);
+      // Mock returns only code skills (DB WHERE filtering is mocked at the chain level)
+      const codeOnly = mockListResults.filter((s) => s.category === "code");
+      mockSelectChain(codeOnly);
 
-      const result = await handleListSkills({ category: "productivity", limit: 20 });
+      const result = await handleListSkills({ category: "code", limit: 20 });
       const data = JSON.parse(result.content[0].text);
 
       expect(data.count).toBe(2);
-      expect(data.skills.every((s: { category: string }) => s.category === "prompt")).toBe(true);
+      expect(data.skills.every((s: { category: string }) => s.category === "code")).toBe(true);
     });
 
     it("respects limit parameter", async () => {
@@ -191,7 +191,7 @@ describe("MCP Tools", () => {
 
       expect(data.count).toBe(1);
       expect(data.skills[0].name).toBe("Test Writer");
-      expect(data.skills[0].category).toBe("prompt");
+      expect(data.skills[0].category).toBe("productivity");
       expect(mockSearchSkills).toHaveBeenCalledWith({
         query: "test",
         category: "productivity",
@@ -267,16 +267,17 @@ describe("MCP Tools", () => {
       expect(mockTrackUsage).toHaveBeenCalledWith({
         toolName: "deploy_skill",
         skillId: "skill-1",
-        metadata: { skillName: "Code Review Assistant", skillCategory: "prompt" },
+        userId: undefined,
+        metadata: { skillName: "Code Review Assistant", skillCategory: "code" },
       });
     });
 
-    it("includes save instructions", async () => {
+    it("includes skill content in HTTP transport response", async () => {
       const result = await handleDeploySkill({ skillId: "skill-1" });
       const data = JSON.parse(result.content[0].text);
 
-      expect(data.instructions).toHaveLength(3);
-      expect(data.instructions[1]).toContain("code-review.md");
+      expect(data.skill.content).toBeDefined();
+      expect(data.message).toContain("available in this conversation");
     });
   });
 
@@ -311,14 +312,14 @@ describe("MCP Tools", () => {
     });
 
     it("routes 'list' action with category filter", async () => {
-      const promptOnly = mockListResults.filter((s) => s.category === "prompt");
-      mockSelectChain(promptOnly);
+      const codeOnly = mockListResults.filter((s) => s.category === "code");
+      mockSelectChain(codeOnly);
 
-      const result = await routeEveryskillAction({ action: "list", category: "productivity" });
+      const result = await routeEveryskillAction({ action: "list", category: "code" });
       const data = JSON.parse(result.content[0].text);
 
       expect(data.count).toBe(2);
-      expect(data.skills.every((s: { category: string }) => s.category === "prompt")).toBe(true);
+      expect(data.skills.every((s: { category: string }) => s.category === "code")).toBe(true);
     });
 
     it("returns error when 'search' action is missing required query param", async () => {
