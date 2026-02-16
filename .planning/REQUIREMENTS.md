@@ -37,6 +37,7 @@ Deferred to future milestones. Tracked but not in current roadmap.
 - **INTEL-04**: Rerunnable skills assessment on demand
 - **INTEL-05**: Seed database with curated open-source skills
 - **INTEL-06**: Screen time / app usage data upload for behavior analysis
+- **INTEL-07**: Claude Code marketplace integration — host marketplace.json on everyskill.ai, bundle MCP server as installable plugin, users add via `/plugin marketplace add https://everyskill.ai/marketplace.json`
 
 ### v8.0 AI Independence
 
