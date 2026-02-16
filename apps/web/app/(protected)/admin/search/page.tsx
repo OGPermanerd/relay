@@ -6,6 +6,7 @@ import {
   getTopQueries,
   getZeroResultQueries,
   getTrendingQueries,
+  getRouteTypeBreakdown,
 } from "@everyskill/db";
 import { AdminSearchTable } from "@/components/admin-search-table";
 
@@ -26,12 +27,15 @@ export default async function AdminSearchPage() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const [stats, topQueries, zeroResultQueries, trendingQueries] = await Promise.all([
-    getSearchSummaryStats(tenantId, thirtyDaysAgo),
-    getTopQueries(tenantId, thirtyDaysAgo, 50),
-    getZeroResultQueries(tenantId, thirtyDaysAgo, 30),
-    getTrendingQueries(tenantId, sevenDaysAgo, 20),
-  ]);
+  const [stats, topQueries, zeroResultQueries, trendingQueries, routeBreakdown] = await Promise.all(
+    [
+      getSearchSummaryStats(tenantId, thirtyDaysAgo),
+      getTopQueries(tenantId, thirtyDaysAgo, 50),
+      getZeroResultQueries(tenantId, thirtyDaysAgo, 30),
+      getTrendingQueries(tenantId, sevenDaysAgo, 20),
+      getRouteTypeBreakdown(tenantId, thirtyDaysAgo),
+    ]
+  );
 
   return (
     <div>
@@ -62,6 +66,25 @@ export default async function AdminSearchPage() {
         </div>
       </div>
       <p className="mt-2 text-xs text-gray-400">Last 30 days</p>
+
+      {/* Route type breakdown */}
+      {routeBreakdown && routeBreakdown.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-sm font-medium text-gray-700">Query Routing</h3>
+          <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {routeBreakdown.map((r) => (
+              <div
+                key={r.routeType}
+                className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
+              >
+                <p className="text-xs font-medium text-gray-500 capitalize">{r.routeType}</p>
+                <p className="mt-1 text-xl font-semibold text-gray-900">{r.count}</p>
+                <p className="text-xs text-gray-400">avg {r.avgResults} results</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Tabbed table */}
       <div className="mt-8">
