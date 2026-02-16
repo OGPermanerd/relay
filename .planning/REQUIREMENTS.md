@@ -9,11 +9,11 @@ Requirements for v7.0 Algorithm & Architecture Rewrite. Each maps to roadmap pha
 
 ### Community Detection
 
-- [ ] **COMM-01**: System clusters skills into thematic communities using embedding similarity
+- [x] **COMM-01**: System clusters skills into thematic communities using embedding similarity
 - [ ] **COMM-02**: Each community has an AI-generated name and summary description
 - [ ] **COMM-03**: User can browse skill communities on a discovery page
 - [ ] **COMM-04**: User can view community detail page with member skills and similarity scores
-- [ ] **COMM-05**: Communities are persisted in the database and refreshed periodically
+- [x] **COMM-05**: Communities are persisted in the database and refreshed periodically
 
 ### Adaptive Query Routing
 
