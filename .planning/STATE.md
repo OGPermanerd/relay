@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- Phase 66 (Impact Measurement)
+**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- Phase 67 (Skills Resume)
 
 ## Current Position
 
-Phase: 66 of 68 (Impact Measurement)
-Plan: 2 of 2 in current phase
-Status: Phase verified — all 10/10 must-haves passed
-Last activity: 2026-02-16 -- Phase 66 verified and complete.
+Phase: 67 of 68 (Skills Resume)
+Plan: 1 of TBD in current phase
+Status: In progress
+Last activity: 2026-02-16 -- Completed 67-01-PLAN.md (data layer)
 
-Progress: [############################..] 93% (240 plans across 66 phases, 10 milestones)
+Progress: [############################..] 94% (241 plans across 67 phases, 10 milestones)
 
 ## Milestones
 
@@ -33,12 +33,12 @@ Progress: [############################..] 93% (240 plans across 66 phases, 10 m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 240
+- Total plans completed: 241
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~11.9 hours
 
 **Cumulative:**
-- 240 plans across 66 phases and 10 milestones
+- 241 plans across 67 phases and 10 milestones
 - ~50,000 LOC TypeScript across 386 files
 - 16 days total development time
 
@@ -77,6 +77,9 @@ v6.0 decisions:
 - Suggestions have 0 hours_impact in timeline but appear as events
 - ComposedChart pattern: Area for continuous series + Scatter for categorical event markers
 - E2E tests for data-dependent sections: heading.or(emptyState) conditional assertion pattern
+- Resume shares: revoke-and-replace pattern (one active share per user)
+- Resume visibility: includeCompanySkills toggle filters personal-only vs all skills
+- Quality tier computed per-skill via calculateQualityScore with total_ratings subquery
 
 ### Pending Todos
 
@@ -91,5 +94,5 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Phase 66 verified -- Impact Measurement complete. Ready for Phase 67 (Skills Resume).
-Resume file: .planning/phases/66-impact-measurement/66-VERIFICATION.md
+Stopped at: Completed 67-01 (data layer). Ready for 67-02 (resume UI page).
+Resume file: .planning/phases/67-skills-resume/67-01-SUMMARY.md
