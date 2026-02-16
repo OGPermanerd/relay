@@ -14,7 +14,11 @@ import type {
   IpRiskEmployee,
   EmployeeAtRiskSkill,
 } from "@/lib/ip-dashboard-queries";
-import { HIGH_USAGE_THRESHOLD, CRITICAL_USAGE_THRESHOLD } from "@/lib/ip-dashboard-queries";
+
+// Inline threshold constants to avoid importing the server-only queries module
+// at runtime. These must stay in sync with ip-dashboard-queries.ts.
+const HIGH_USAGE_THRESHOLD = 10;
+const CRITICAL_USAGE_THRESHOLD = 50;
 
 // ---------------------------------------------------------------------------
 // Risk Badge

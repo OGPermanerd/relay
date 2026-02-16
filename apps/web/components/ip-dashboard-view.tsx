@@ -2,7 +2,13 @@
 
 import { StatCard } from "./stat-card";
 import { QualityTrendChart } from "./quality-trend-chart";
-import type { IpDashboardStats, QualityTrendPoint } from "@/lib/ip-dashboard-queries";
+import { IpRiskSection } from "./ip-risk-section";
+import type {
+  IpDashboardStats,
+  QualityTrendPoint,
+  AtRiskSkillAlert,
+  IpRiskEmployee,
+} from "@/lib/ip-dashboard-queries";
 
 // ---------------------------------------------------------------------------
 // Icons for stat cards
@@ -64,9 +70,16 @@ function formatNumber(n: number): string {
 interface IpDashboardViewProps {
   stats: IpDashboardStats;
   trendData: QualityTrendPoint[];
+  riskEmployees: IpRiskEmployee[];
+  atRiskAlerts: AtRiskSkillAlert[];
 }
 
-export function IpDashboardView({ stats, trendData }: IpDashboardViewProps) {
+export function IpDashboardView({
+  stats,
+  trendData,
+  riskEmployees,
+  atRiskAlerts,
+}: IpDashboardViewProps) {
   return (
     <div className="space-y-6">
       {/* Hero Stat Cards Grid */}
@@ -92,6 +105,9 @@ export function IpDashboardView({ stats, trendData }: IpDashboardViewProps) {
           icon={<UserGroupIcon />}
         />
       </div>
+
+      {/* IP Risk Section (alerts + employee risk table) */}
+      <IpRiskSection riskEmployees={riskEmployees} atRiskAlerts={atRiskAlerts} />
 
       {/* Quality Trends Chart */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
