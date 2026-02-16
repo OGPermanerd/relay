@@ -4,6 +4,8 @@ import {
   getPortfolioStats,
   getPortfolioSkills,
   getContributionRanking,
+  getImpactTimeline,
+  getImpactCalculatorStats,
 } from "@/lib/portfolio-queries";
 import { PortfolioView } from "@/components/portfolio-view";
 
@@ -21,11 +23,21 @@ export default async function PortfolioPage() {
     redirect("/login");
   }
 
-  const [stats, skills, ranking] = await Promise.all([
+  const [stats, skills, ranking, timeline, impactStats] = await Promise.all([
     getPortfolioStats(session.user.id),
     getPortfolioSkills(session.user.id),
     getContributionRanking(session.user.id, tenantId),
+    getImpactTimeline(session.user.id),
+    getImpactCalculatorStats(session.user.id),
   ]);
 
-  return <PortfolioView stats={stats} skills={skills} ranking={ranking} />;
+  return (
+    <PortfolioView
+      stats={stats}
+      skills={skills}
+      ranking={ranking}
+      timeline={timeline}
+      impactStats={impactStats}
+    />
+  );
 }

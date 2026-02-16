@@ -2,12 +2,22 @@
 
 import Link from "next/link";
 import { StatCard } from "@/components/stat-card";
-import type { PortfolioStats, PortfolioSkill, ContributionRanking } from "@/lib/portfolio-queries";
+import { ImpactTimelineChart } from "@/components/impact-timeline-chart";
+import { ImpactCalculator } from "@/components/impact-calculator";
+import type {
+  PortfolioStats,
+  PortfolioSkill,
+  ContributionRanking,
+  TimelineEvent,
+  ImpactCalculatorStats,
+} from "@/lib/portfolio-queries";
 
 interface PortfolioViewProps {
   stats: PortfolioStats;
   skills: PortfolioSkill[];
   ranking: ContributionRanking;
+  timeline: TimelineEvent[];
+  impactStats: ImpactCalculatorStats;
 }
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
@@ -25,7 +35,13 @@ function VisibilityBadge({ visibility }: { visibility: string }) {
   );
 }
 
-export function PortfolioView({ stats, skills, ranking }: PortfolioViewProps) {
+export function PortfolioView({
+  stats,
+  skills,
+  ranking,
+  timeline,
+  impactStats,
+}: PortfolioViewProps) {
   const hasSkills = stats.skillsAuthored > 0;
   const rankingSubtitle =
     ranking.rank === 0
@@ -98,6 +114,12 @@ export function PortfolioView({ stats, skills, ranking }: PortfolioViewProps) {
           </div>
         </div>
       </div>
+
+      {/* Impact Timeline */}
+      <ImpactTimelineChart data={timeline} />
+
+      {/* Impact Calculator */}
+      <ImpactCalculator stats={impactStats} />
 
       {/* Skills List */}
       <section>
