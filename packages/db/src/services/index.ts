@@ -131,3 +131,12 @@ export {
   type ModelComparisonRow,
   type CostTrendPoint,
 } from "./benchmark";
+export {
+  recordSkillView,
+  getUserView,
+  getUserViewsForSkills,
+  getWhatsNewForUser,
+  getVersionNumber,
+  countFeedbackSince,
+  type WhatsNewItem,
+} from "./user-skill-views";
