@@ -255,7 +255,10 @@ Plans:
   2. User sees a clear breakdown of portable vs company IP -- personal-scoped skills (theirs forever regardless of employer) vs tenant-scoped skills (company's IP)
   3. Each skill in the portfolio list shows its visibility scope with a visual indicator (personal badge vs company badge)
   4. Portfolio stats include comparison context (e.g., "Top 15% of contributors" or "3rd highest impact")
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 65-01-PLAN.md — Data layer: portfolio queries (stats, skills, ranking) + nav link
+- [ ] 65-02-PLAN.md — UI layer: portfolio page, view component, and E2E test
 
 #### Phase 66: Impact Measurement
 **Goal**: Users can see how their contributions have grown over time and quantify the total value they've added to the company
