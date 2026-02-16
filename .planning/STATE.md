@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 72 of 75 (Community Detection)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-16 — Completed 72-01-PLAN.md (Skill Communities Schema)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-16 — Completed 72-02-PLAN.md (Community Detection Service)
 
-Progress: [████████████████░░░░░░░░░░░░░░] 4/7 phases
+Progress: [██████████████████░░░░░░░░░░░░] 5/7 phases
 
 ## Milestones
 
@@ -34,12 +34,12 @@ Progress: [████████████████░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 259
+- Total plans completed: 260
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.5 hours
 
 **Cumulative:**
-- 259 plans across 72 phases and 11 milestones
+- 260 plans across 72 phases and 11 milestones
 - ~64,000 LOC TypeScript across 470 files
 - 17 days total development time
 
@@ -90,6 +90,13 @@ Phase 72 decisions (plan 01):
 - Composite index on (tenant_id, community_id) for cluster membership queries
 - UNIQUE on (tenant_id, skill_id) enables UPSERT on re-detection
 
+Phase 72 decisions (plan 02):
+- K=10 nearest neighbors, MIN_SIMILARITY=0.3 edge threshold, RESOLUTION=1.0 Louvain parameter
+- MIN_SKILLS_FOR_DETECTION=5 as lower bound for graceful fallback
+- Atomic refresh via db.transaction (delete + insert) not per-row UPSERT -- simpler and guarantees clean state
+- Console.warn for low-quality partitions (modularity < 0.1) but still persist results
+- CRON_SECRET added to dev env for live testing (gitignored)
+
 ### Pending Todos
 
 - Skill visibility: expose all 4 levels in upload form (addressed by Phase 69)
@@ -106,10 +113,10 @@ Phase 72 decisions (plan 01):
 
 ### Blockers/Concerns
 
-None. Phase 72 plan 01 complete. Ready for plan 02 (community detection service).
+None. Phase 72 complete. Community detection service operational with 4 communities detected from 91 skills.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 72-01-PLAN.md (Skill Communities Schema)
-Resume file: .planning/phases/72-community-detection/72-02-PLAN.md
+Stopped at: Completed 72-02-PLAN.md (Community Detection Service) — Phase 72 complete
+Resume file: Next phase (73+)
