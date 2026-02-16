@@ -4,6 +4,7 @@ import { useActionState, useState, useEffect, useRef } from "react";
 import { triggerBenchmark } from "@/app/actions/benchmark";
 import { StatCard } from "@/components/stat-card";
 import { CostTrendChart } from "./cost-trend-chart";
+import { RadarDimensionChart } from "./radar-dimension-chart";
 import { formatCostMicrocents } from "@/lib/pricing-table";
 
 // ---------------------------------------------------------------------------
@@ -30,11 +31,22 @@ interface BenchmarkTabProps {
   modelComparison: {
     modelName: string;
     avgQuality: number;
+    avgFaithfulness: number;
+    avgRelevancy: number;
+    avgPrecision: number;
+    avgRecall: number;
     avgCost: number;
     avgTokens: number;
     avgLatency: number;
     testCases: number;
   }[];
+  dimensionAggregates: {
+    avgFaithfulness: number;
+    avgRelevancy: number;
+    avgPrecision: number;
+    avgRecall: number;
+    runsWithDimensions: number;
+  } | null;
   costTrendData: { date: string; avgCost: number }[];
   costStats: {
     totalCostMicrocents: number;
@@ -127,6 +139,7 @@ export function BenchmarkTab({
   isAuthor,
   latestRun,
   modelComparison,
+  dimensionAggregates,
   costTrendData,
   costStats,
   feedbackStats,
@@ -159,6 +172,12 @@ export function BenchmarkTab({
     : "";
 
   const canTrigger = isAdmin || isAuthor;
+
+  // Detect if any model in the current run has dimension scores
+  const hasDimensionData = modelComparison.some(
+    (row) =>
+      row.avgFaithfulness > 0 || row.avgRelevancy > 0 || row.avgPrecision > 0 || row.avgRecall > 0
+  );
 
   return (
     <div className="space-y-6">
@@ -292,6 +311,14 @@ export function BenchmarkTab({
                 <tr className="border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <th className="pb-2 pr-4">Model</th>
                   <th className="pb-2 pr-4">Quality</th>
+                  {hasDimensionData && (
+                    <>
+                      <th className="pb-2 pr-4">Faith</th>
+                      <th className="pb-2 pr-4">Rel</th>
+                      <th className="pb-2 pr-4">Prec</th>
+                      <th className="pb-2 pr-4">Rec</th>
+                    </>
+                  )}
                   <th className="pb-2 pr-4">Avg Cost</th>
                   <th className="pb-2 pr-4">Avg Tokens</th>
                   <th className="pb-2 pr-4">Latency</th>
@@ -337,6 +364,22 @@ export function BenchmarkTab({
                         </span>
                         <span className="text-gray-400">/100</span>
                       </td>
+                      {hasDimensionData && (
+                        <>
+                          <td className="py-2 pr-4 text-gray-600">
+                            {row.avgFaithfulness || "\u2014"}
+                          </td>
+                          <td className="py-2 pr-4 text-gray-600">
+                            {row.avgRelevancy || "\u2014"}
+                          </td>
+                          <td className="py-2 pr-4 text-gray-600">
+                            {row.avgPrecision || "\u2014"}
+                          </td>
+                          <td className="py-2 pr-4 text-gray-600">
+                            {row.avgRecall || "\u2014"}
+                          </td>
+                        </>
+                      )}
                       <td className="py-2 pr-4 text-gray-600">
                         {formatCostMicrocents(row.avgCost)}
                       </td>
@@ -350,6 +393,38 @@ export function BenchmarkTab({
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* 4b. Dimension Radar Chart (BENCH-02) */}
+      {hasDimensionData && modelComparison.length >= 2 && (
+        <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-800">Quality Dimensions</h3>
+          <p className="text-xs text-gray-500">
+            Per-dimension comparison across models (0-100 scale)
+          </p>
+          <RadarDimensionChart models={modelComparison} />
+        </div>
+      )}
+
+      {/* 4c. Skill Dimension Aggregates (BENCH-04) */}
+      {dimensionAggregates && (
+        <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-800">Aggregate Dimension Scores</h3>
+          <p className="text-xs text-gray-500">
+            Averaged across {dimensionAggregates.runsWithDimensions} benchmark run
+            {dimensionAggregates.runsWithDimensions !== 1 ? "s" : ""} with dimension scoring
+          </p>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard
+              label="Faithfulness"
+              value={dimensionAggregates.avgFaithfulness}
+              suffix="/100"
+            />
+            <StatCard label="Relevancy" value={dimensionAggregates.avgRelevancy} suffix="/100" />
+            <StatCard label="Precision" value={dimensionAggregates.avgPrecision} suffix="/100" />
+            <StatCard label="Recall" value={dimensionAggregates.avgRecall} suffix="/100" />
           </div>
         </div>
       )}
