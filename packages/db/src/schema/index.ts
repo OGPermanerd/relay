@@ -27,3 +27,4 @@ export * from "./email-diagnostics";
 export * from "./skill-feedback";
 export * from "./token-measurements";
 export * from "./benchmark-runs";
+export * from "./resume-shares";

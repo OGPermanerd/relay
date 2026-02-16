@@ -46,7 +46,8 @@ export default async function middleware(req: NextRequest) {
     pathname === "/api/track" ||
     pathname === "/api/feedback" ||
     pathname === "/api/check-domain" ||
-    pathname.startsWith("/api/cron")
+    pathname.startsWith("/api/cron") ||
+    pathname.startsWith("/r/")
   ) {
     return NextResponse.next();
   }

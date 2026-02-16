@@ -21,6 +21,7 @@ import {
   tokenMeasurements,
   benchmarkRuns,
   benchmarkResults,
+  resumeShares,
 } from "../schema";
 
 /**
@@ -134,6 +135,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   reviewedFeedback: many(skillFeedback, { relationName: "reviewedFeedback" }),
   tokenMeasurements: many(tokenMeasurements),
   benchmarkRuns: many(benchmarkRuns),
+  resumeShares: many(resumeShares),
 }));
 
 /**
@@ -195,6 +197,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   tokenMeasurements: many(tokenMeasurements),
   benchmarkRuns: many(benchmarkRuns),
   benchmarkResults: many(benchmarkResults),
+  resumeShares: many(resumeShares),
 }));
 
 /**
@@ -414,6 +417,22 @@ export const benchmarkResultsRelations = relations(benchmarkResults, ({ one }) =
   benchmarkRun: one(benchmarkRuns, {
     fields: [benchmarkResults.benchmarkRunId],
     references: [benchmarkRuns.id],
+  }),
+}));
+
+/**
+ * ResumeShares relations
+ * - user: many-to-one with users
+ * - tenant: many-to-one with tenants
+ */
+export const resumeSharesRelations = relations(resumeShares, ({ one }) => ({
+  user: one(users, {
+    fields: [resumeShares.userId],
+    references: [users.id],
+  }),
+  tenant: one(tenants, {
+    fields: [resumeShares.tenantId],
+    references: [tenants.id],
   }),
 }));
 
