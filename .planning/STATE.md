@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 
 ## Current Position
 
-Phase: 63 of 68 (IP Risk Analysis — COMPLETE)
-Plan: 2 of 2 in current phase
-Status: Phase verified — all 7/7 must-haves passed
-Last activity: 2026-02-16 -- Phase 63 verified and complete
+Phase: 64 of 68 (IP Valuation & Export)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-16 -- Completed 64-01-PLAN.md (IP valuation data layer)
 
-Progress: [############################..] 90% (234 plans across 63 phases, 10 milestones)
+Progress: [############################..] 91% (235 plans across 64 phases, 10 milestones)
 
 ## Milestones
 
@@ -33,12 +33,12 @@ Progress: [############################..] 90% (234 plans across 63 phases, 10 m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 234
+- Total plans completed: 235
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~11.9 hours
 
 **Cumulative:**
-- 234 plans across 63 phases and 10 milestones
+- 235 plans across 64 phases and 10 milestones
 - ~50,000 LOC TypeScript across 386 files
 - 16 days total development time
 
@@ -61,6 +61,9 @@ v6.0 decisions:
 - IP risk: numeric severity (3/2/1) for SQL MAX aggregation, mapped to string risk levels in TypeScript
 - IP risk thresholds: HIGH_USAGE_THRESHOLD=10, CRITICAL_USAGE_THRESHOLD=50 as named constants
 - IP risk UI: threshold constants inlined in client component (server-only module can't be imported at runtime in "use client")
+- IP valuation: HOURLY_RATE=$150, replacement cost = base * complexity * quality with clamped multipliers
+- averageRating normalized from 0-500 to 0-1; null defaults to 0.6; quality multiplier [0.5, 1.0]
+- Complexity multiplier uses log10(contentLength/1000), clamped [1.0, 2.0]
 
 ### Pending Todos
 
@@ -75,5 +78,5 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Phase 63 verified -- IP risk analysis complete, ready for Phase 64/65
-Resume file: .planning/phases/63-ip-risk-analysis/63-VERIFICATION.md
+Stopped at: Phase 64 plan 01 complete -- data layer ready, Plan 02 (UI) next
+Resume file: .planning/phases/64-ip-valuation-export/64-01-SUMMARY.md
