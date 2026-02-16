@@ -110,37 +110,37 @@ Requirements for v7.0 Algorithm & Architecture Rewrite. Each maps to roadmap pha
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COMM-01 | TBD | Pending |
-| COMM-02 | TBD | Pending |
-| COMM-03 | TBD | Pending |
-| COMM-04 | TBD | Pending |
-| COMM-05 | TBD | Pending |
-| ROUTE-01 | TBD | Pending |
-| ROUTE-02 | TBD | Pending |
-| ROUTE-03 | TBD | Pending |
-| ROUTE-04 | TBD | Pending |
-| TEMP-01 | TBD | Pending |
-| TEMP-02 | TBD | Pending |
-| TEMP-03 | TBD | Pending |
-| TEMP-04 | TBD | Pending |
-| VIS-01 | TBD | Pending |
-| VIS-02 | TBD | Pending |
-| VIS-03 | TBD | Pending |
-| VIS-04 | TBD | Pending |
-| VIS-05 | TBD | Pending |
-| VIS-06 | TBD | Pending |
-| VIS-07 | TBD | Pending |
-| BENCH-01 | TBD | Pending |
-| BENCH-02 | TBD | Pending |
-| BENCH-03 | TBD | Pending |
-| BENCH-04 | TBD | Pending |
-| BENCH-05 | TBD | Pending |
+| COMM-01 | Phase 72 | Pending |
+| COMM-02 | Phase 73 | Pending |
+| COMM-03 | Phase 73 | Pending |
+| COMM-04 | Phase 73 | Pending |
+| COMM-05 | Phase 72 | Pending |
+| ROUTE-01 | Phase 74 | Pending |
+| ROUTE-02 | Phase 74 | Pending |
+| ROUTE-03 | Phase 74 | Pending |
+| ROUTE-04 | Phase 74 | Pending |
+| TEMP-01 | Phase 71 | Pending |
+| TEMP-02 | Phase 71 | Pending |
+| TEMP-03 | Phase 71 | Pending |
+| TEMP-04 | Phase 71 | Pending |
+| VIS-01 | Phase 69 | Pending |
+| VIS-02 | Phase 69 | Pending |
+| VIS-03 | Phase 69 | Pending |
+| VIS-04 | Phase 69 | Pending |
+| VIS-05 | Phase 69 | Pending |
+| VIS-06 | Phase 70 | Pending |
+| VIS-07 | Phase 70 | Pending |
+| BENCH-01 | Phase 75 | Pending |
+| BENCH-02 | Phase 75 | Pending |
+| BENCH-03 | Phase 75 | Pending |
+| BENCH-04 | Phase 75 | Pending |
+| BENCH-05 | Phase 75 | Pending |
 
 **Coverage:**
 - v7.0 requirements: 25 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 25
+- Mapped to phases: 25/25 (100%)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-16*
-*Last updated: 2026-02-16 after initial definition*
+*Last updated: 2026-02-16 after roadmap creation — all 25 requirements mapped to phases 69-75*

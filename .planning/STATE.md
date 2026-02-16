@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v7.0 Algorithm & Architecture Rewrite — defining requirements
+**Current focus:** v7.0 Algorithm & Architecture Rewrite — Phase 69 (Extended Visibility)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements for v7.0
-Last activity: 2026-02-16 — Milestone v7.0 started
+Phase: 69 of 75 (Extended Visibility)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-02-16 — v7.0 roadmap created (7 phases, 25 requirements)
 
 Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0%
 
@@ -29,6 +29,7 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 - v4.0 Gmail Workflow Diagnostic - 17 plans - shipped 2026-02-14
 - v5.0 Feedback, Training & Benchmarking - 18 plans - shipped 2026-02-15
 - v6.0 IP Dashboard & Skills Portfolio - 15 plans - shipped 2026-02-16
+- v7.0 Algorithm & Architecture Rewrite - 7 phases planned
 
 ## Performance Metrics
 
@@ -48,24 +49,33 @@ Progress: [░░░░░░░░░░░░░░░░░░░░░░░
 
 All prior decisions archived in PROJECT.md Key Decisions table and milestone archives.
 
+v7.0 research decisions (from research/SUMMARY.md):
+- PostgreSQL adjacency lists for graphs, no graph DB (scale too small for Neo4j)
+- Louvain/Leiden in JS, no Python sidecar (graphology-communities-louvain or vendor ~300 lines)
+- Rule-based query classification, no LLM per-query (handles 90%+ correctly)
+- RAGAS as TypeScript judge prompt adaptation, no Python RAGAS library
+- Direct SDKs with dynamic import, no Vercel AI SDK (project already has direct Anthropic SDK)
+
 ### Pending Todos
 
-- Skill visibility: expose all 4 levels in upload form
-- Default skill visibility scope to company-visible (tenant)
+- Skill visibility: expose all 4 levels in upload form (addressed by Phase 69)
+- Default skill visibility scope to company-visible (tenant) (addressed by Phase 69)
 - Portfolio PDF download (backlogged)
 - OAuth re-link / user migration tool (backlogged)
 
-### Roadmap Evolution
+### Research Flags
 
-- v7.0 pivoted from Multi-Signal Intelligence to Algorithm & Architecture Rewrite based on docs/algoresearch.md research
-- Original v7.0 scope (browser history, operator wizard, brain profile) deferred to v8.0+
+- MEDIUM confidence: Leiden npm package API needs verification at implementation time (Phase 72)
+- MEDIUM confidence: @google/genai SDK token counting API needs verification (Phase 75 if multi-model added)
+- Critical pitfall: Visibility touches 15+ files in 2 patterns (centralized helper vs inline SQL)
+- Critical pitfall: Similarity graph CROSS JOIN is quadratic — must use KNN approach
 
 ### Blockers/Concerns
 
-None. Ready for v7.0 requirements definition.
+None. Ready for Phase 69 planning.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: v7.0 milestone started, defining requirements
+Stopped at: v7.0 roadmap created, ready for Phase 69 planning
 Resume file: N/A

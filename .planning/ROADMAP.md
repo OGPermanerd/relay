@@ -13,6 +13,7 @@
 - ✅ **v4.0 Gmail Workflow Diagnostic** - Phases 49-54 (shipped 2026-02-14)
 - ✅ **v5.0 Feedback, Training & Benchmarking** - Phases 55-61 (shipped 2026-02-15)
 - ✅ **v6.0 IP Dashboard & Skills Portfolio** - Phases 62-68 (shipped 2026-02-16)
+- 🚧 **v7.0 Algorithm & Architecture Rewrite** - Phases 69-75 (in progress)
 
 ## Phases
 
@@ -205,10 +206,105 @@ Total: 15 plans completed. 7 phases, 12 requirements.
 
 </details>
 
+### 🚧 v7.0 Algorithm & Architecture Rewrite (In Progress)
+
+**Milestone Goal:** Implement research-backed algorithmic infrastructure -- GraphRAG communities, adaptive query routing, temporal tracking, extended visibility, multi-model benchmarking -- to make the "smart skills database" promise real.
+
+**Phase Numbering:**
+- Integer phases (69, 70, 71...): Planned milestone work
+- Decimal phases (69.1, 69.2): Urgent insertions (marked with INSERTED)
+
+- [ ] **Phase 69: Extended Visibility** - Expand from 2 to 4 visibility levels with cross-tenant RLS and 15+ query site updates
+- [ ] **Phase 70: MCP Preference Sync** - MCP tools for reading/writing user preferences with search boost integration
+- [ ] **Phase 71: Temporal Tracking** - Track user-skill interactions to surface "what changed since you last looked"
+- [ ] **Phase 72: Community Detection** - Build similarity graph and cluster skills into thematic communities
+- [ ] **Phase 73: Community Discovery UI** - AI-generated community labels, browse page, and detail page
+- [ ] **Phase 74: Adaptive Query Routing** - Classify search queries and route to optimal retrieval strategy
+- [ ] **Phase 75: RAGAS Benchmarking** - 4-dimension quality scoring with radar visualization and backward-compatible overall score
+
+## Phase Details
+
+### Phase 69: Extended Visibility
+**Goal**: Users and admins can manage skills across 4 graduated visibility levels with correct tenant isolation
+**Depends on**: Nothing (first v7.0 phase)
+**Requirements**: VIS-01, VIS-02, VIS-03, VIS-04, VIS-05
+**Success Criteria** (what must be TRUE):
+  1. Skills can be created with any of the 4 visibility levels (global_approved, tenant, personal, private) and the selection persists correctly
+  2. A user in tenant A can see global_approved skills from tenant B in search results, but cannot see tenant B's tenant-scoped skills
+  3. Only users with admin role can set or change a skill's visibility to global_approved
+  4. Trending, leaderboard, portfolio, and all other aggregate views correctly include/exclude skills based on the new visibility levels (no silent disappearances, no inappropriate inclusions)
+  5. All existing skills with "tenant" or "personal" visibility continue to behave identically to before the change
+**Plans**: TBD
+
+### Phase 70: MCP Preference Sync
+**Goal**: Users' search preferences flow bidirectionally between the web UI and MCP tools
+**Depends on**: Nothing (parallel with Phase 69)
+**Requirements**: VIS-06, VIS-07
+**Success Criteria** (what must be TRUE):
+  1. An authenticated MCP user can call a tool to read their current search preferences (preferred categories, default sort) and get the same values shown in the web UI
+  2. An authenticated MCP user can call a tool to update their search preferences, and the changes appear in the web UI on next page load
+  3. MCP search results for authenticated users are boosted by their preferred categories (matching web discovery behavior)
+**Plans**: TBD
+
+### Phase 71: Temporal Tracking
+**Goal**: Users can see what changed in skills since they last looked, reducing information overload
+**Depends on**: Nothing (parallel with Phases 69-70)
+**Requirements**: TEMP-01, TEMP-02, TEMP-03, TEMP-04
+**Success Criteria** (what must be TRUE):
+  1. After a user views a skill detail page, the system records the view timestamp and version number, and subsequent views to the same skill update this record
+  2. Skill cards in search results and browse pages show an "Updated" badge when the skill has been modified since the user's last view
+  3. The skill detail page shows a change summary section listing what changed since the user's last visit (version bumps, description updates, new feedback)
+  4. The dashboard includes a "What's New" feed showing recently changed skills the user has previously interacted with
+**Plans**: TBD
+
+### Phase 72: Community Detection
+**Goal**: The system autonomously clusters skills into meaningful thematic communities using embedding similarity
+**Depends on**: Nothing (parallel, but benefits from Phase 69 being done for correct visibility filtering)
+**Requirements**: COMM-01, COMM-05
+**Success Criteria** (what must be TRUE):
+  1. Running community detection on a tenant with 20+ published skills produces distinct communities where each community's member skills share thematic similarity (average intra-community cosine similarity > 0.5)
+  2. Community assignments are persisted in the database with tenant isolation and can be refreshed via a cron endpoint without affecting live queries
+  3. Running detection on a tenant with fewer than 20 published skills or a sparse graph gracefully falls back (no crash, no meaningless single-giant community)
+**Plans**: TBD
+
+### Phase 73: Community Discovery UI
+**Goal**: Users can browse and explore skill communities to discover related skills they would not have found through search
+**Depends on**: Phase 72 (communities must exist in the database)
+**Requirements**: COMM-02, COMM-03, COMM-04
+**Success Criteria** (what must be TRUE):
+  1. Each community has an AI-generated name and summary description that accurately reflects its member skills
+  2. A discovery page section (or dedicated route) shows community cards with name, summary, member count, and top skills
+  3. Clicking a community navigates to a detail page listing all member skills with their similarity scores to the community centroid
+**Plans**: TBD
+
+### Phase 74: Adaptive Query Routing
+**Goal**: Search queries are automatically classified and routed to the optimal retrieval strategy, making simple queries faster and complex queries smarter
+**Depends on**: Nothing (independent; community_explore intent deferred to v8.0+)
+**Requirements**: ROUTE-01, ROUTE-02, ROUTE-03, ROUTE-04
+**Success Criteria** (what must be TRUE):
+  1. The system classifies each search query as keyword, semantic, hybrid, or browse and uses the appropriate retrieval strategy (observable via search analytics)
+  2. Short keyword queries (1-2 words matching skill names) skip embedding generation and return results measurably faster than the current always-hybrid path
+  3. Each search query's classified route type is logged in the search_queries table and visible in the search analytics dashboard
+  4. A keyword search returning zero results automatically falls back to hybrid search, and the user sees results from the fallback without any manual intervention
+**Plans**: TBD
+
+### Phase 75: RAGAS Benchmarking
+**Goal**: Benchmark results provide 4-dimension quality insight (faithfulness, relevancy, precision, recall) alongside the existing overall score
+**Depends on**: Nothing (independent)
+**Requirements**: BENCH-01, BENCH-02, BENCH-03, BENCH-04, BENCH-05
+**Success Criteria** (what must be TRUE):
+  1. Running a benchmark produces per-dimension scores (faithfulness, relevancy, precision, recall) for each model-test-case combination, stored in the benchmark_results table
+  2. The benchmark results page displays a radar chart comparing dimension scores across models for a single benchmark run
+  3. A per-dimension model comparison table shows each model's dimension scores side-by-side (e.g., "Sonnet: faithfulness 92, relevancy 88; Haiku: faithfulness 78, relevancy 75")
+  4. The skill's benchmark summary view shows aggregate dimension scores across all benchmark runs for that skill
+  5. Existing benchmark results with only an overall quality score continue to display correctly without errors or missing data
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute respecting dependencies: 62+65 (parallel) -> 63+66+68 (parallel) -> 64+67 (parallel)
+Phases 69+70+71+72+74+75 can run in parallel (no cross-dependencies). Phase 73 depends on Phase 72.
+Recommended sequencing: 69 -> 70 -> 71 -> 72 -> 73 -> 74 -> 75 (serial for focus, but parallelizable)
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -223,8 +319,15 @@ Phases execute respecting dependencies: 62+65 (parallel) -> 63+66+68 (parallel) 
 | 49-54 | v4.0 | 17/17 | Complete | 2026-02-14 |
 | 55-61 | v5.0 | 18/18 | Complete | 2026-02-15 |
 | 62-68 | v6.0 | 15/15 | Complete | 2026-02-16 |
+| 69. Extended Visibility | v7.0 | 0/TBD | Not started | - |
+| 70. MCP Preference Sync | v7.0 | 0/TBD | Not started | - |
+| 71. Temporal Tracking | v7.0 | 0/TBD | Not started | - |
+| 72. Community Detection | v7.0 | 0/TBD | Not started | - |
+| 73. Community Discovery UI | v7.0 | 0/TBD | Not started | - |
+| 74. Adaptive Query Routing | v7.0 | 0/TBD | Not started | - |
+| 75. RAGAS Benchmarking | v7.0 | 0/TBD | Not started | - |
 
-**Total: 246 plans completed across 68 phases and 11 milestones.**
+**Total: 246 plans completed across 68 phases and 11 milestones. 7 new phases planned for v7.0.**
 
 ---
 *Roadmap created: 2026-01-31*
@@ -238,4 +341,5 @@ Phases execute respecting dependencies: 62+65 (parallel) -> 63+66+68 (parallel) 
 *v3.0 completed: 2026-02-13*
 *v4.0 completed: 2026-02-14*
 *v5.0 completed: 2026-02-15*
-*v6.0 roadmap created: 2026-02-15*
+*v6.0 completed: 2026-02-16*
+*v7.0 roadmap created: 2026-02-16*
