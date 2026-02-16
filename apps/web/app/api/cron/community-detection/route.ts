@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { detectCommunities } from "@everyskill/db";
+import { generateAndPersistCommunityLabels } from "@/lib/community-label-generator";
 
 const DEFAULT_TENANT_ID = "default-tenant-000-0000-000000000000";
 
@@ -24,7 +25,14 @@ export async function GET(request: NextRequest) {
       `[COMMUNITY DETECTION] ${result.communities} communities detected, modularity=${result.modularity.toFixed(3)}, skills=${result.skills}, edges=${result.edges}${result.skipped ? ` (skipped: ${result.skipped})` : ""}`
     );
 
-    return NextResponse.json(result);
+    // Generate AI labels for detected communities
+    let labelsGenerated = 0;
+    if (!result.skipped && result.communities > 0) {
+      labelsGenerated = await generateAndPersistCommunityLabels(tenantId);
+      console.log(`[COMMUNITY DETECTION] Generated labels for ${labelsGenerated} communities`);
+    }
+
+    return NextResponse.json({ ...result, labelsGenerated });
   } catch (err) {
     console.error("[COMMUNITY DETECTION] Failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
