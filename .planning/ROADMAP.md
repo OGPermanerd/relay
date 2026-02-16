@@ -226,7 +226,10 @@ Plans:
   2. Admin sees alert badges on skills where there is key person dependency -- single author, high usage, no forks
   3. Admin can drill down on any employee to see which high-value skills they are the sole author of
   4. Risk alerts surface proactively on the IP dashboard (not hidden behind a click) with amber/red severity indicators
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 63-01-PLAN.md — Risk query functions, server action, and sort hook (data layer)
+- [ ] 63-02-PLAN.md — IP Risk Section component and page wiring (UI layer)
 
 #### Phase 64: IP Valuation & Export
 **Goal**: Admins can see estimated replacement cost for high-value skills and export a complete IP report for board presentations
