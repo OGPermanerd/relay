@@ -1,5 +1,6 @@
 import { db } from "@everyskill/db";
 import { sql } from "drizzle-orm";
+import { HOURLY_RATE } from "@/lib/ip-valuation";
 
 /**
  * Aggregate stats for a user's published skill portfolio
@@ -283,4 +284,175 @@ function formatOrdinal(n: number): string {
   const mod100 = n % 100;
   const suffix = suffixes[(mod100 - 20) % 10] || suffixes[mod100] || suffixes[0];
   return `${n}${suffix}`;
+}
+
+// =============================================================================
+// Impact Timeline
+// =============================================================================
+
+/**
+ * A single event in the user's impact timeline.
+ * Events come from skill creations, forks, and implemented suggestions.
+ * cumulativeHoursSaved is computed via PostgreSQL window function.
+ */
+export interface TimelineEvent {
+  date: string; // ISO date string
+  eventType: "creation" | "fork" | "suggestion";
+  skillName: string;
+  hoursImpact: number;
+  cumulativeHoursSaved: number;
+}
+
+/**
+ * Get the user's impact timeline — a chronological list of contribution events
+ * with a running cumulative total of hours saved.
+ *
+ * Uses UNION ALL to combine three event sources:
+ * 1. Original skill creations (forked_from_id IS NULL)
+ * 2. Fork creations (forked_from_id IS NOT NULL)
+ * 3. Implemented suggestions from skill_feedback
+ *
+ * A SUM() OVER (ORDER BY event_date ROWS UNBOUNDED PRECEDING) window function
+ * computes the running cumulative hours saved across all event types.
+ *
+ * @param userId The user whose timeline to retrieve
+ */
+export async function getImpactTimeline(userId: string): Promise<TimelineEvent[]> {
+  if (!db) return [];
+
+  const result = await db.execute(sql`
+    WITH events AS (
+      SELECT
+        created_at AS event_date,
+        'creation' AS event_type,
+        name AS skill_name,
+        (total_uses * COALESCE(hours_saved, 1))::double precision AS hours_impact
+      FROM skills
+      WHERE author_id = ${userId}
+        AND forked_from_id IS NULL
+        AND published_version_id IS NOT NULL
+        AND status = 'published'
+
+      UNION ALL
+
+      SELECT
+        created_at AS event_date,
+        'fork' AS event_type,
+        name AS skill_name,
+        (total_uses * COALESCE(hours_saved, 1))::double precision AS hours_impact
+      FROM skills
+      WHERE author_id = ${userId}
+        AND forked_from_id IS NOT NULL
+        AND published_version_id IS NOT NULL
+        AND status = 'published'
+
+      UNION ALL
+
+      SELECT
+        COALESCE(reviewed_at, created_at) AS event_date,
+        'suggestion' AS event_type,
+        'Suggestion' AS skill_name,
+        0::double precision AS hours_impact
+      FROM skill_feedback
+      WHERE user_id = ${userId}
+        AND feedback_type = 'suggestion'
+        AND status = 'accepted'
+        AND implemented_by_skill_id IS NOT NULL
+    )
+    SELECT
+      event_date,
+      event_type,
+      skill_name,
+      hours_impact,
+      SUM(hours_impact) OVER (ORDER BY event_date ROWS UNBOUNDED PRECEDING) AS cumulative_hours_saved
+    FROM events
+    ORDER BY event_date ASC
+  `);
+
+  const rows = result as unknown as Record<string, unknown>[];
+
+  return rows.map((row) => ({
+    date: new Date(String(row.event_date)).toISOString(),
+    eventType: String(row.event_type) as "creation" | "fork" | "suggestion",
+    skillName: String(row.skill_name),
+    hoursImpact: Number(row.hours_impact ?? 0),
+    cumulativeHoursSaved: Number(row.cumulative_hours_saved ?? 0),
+  }));
+}
+
+// =============================================================================
+// Impact Calculator Stats
+// =============================================================================
+
+/**
+ * Aggregate stats for the impact calculator card display.
+ * Shows total value contributed and breakdown by contribution type.
+ */
+export interface ImpactCalculatorStats {
+  totalHoursSaved: number;
+  estimatedCostSaved: number; // totalHoursSaved * HOURLY_RATE
+  skillsCreated: number;
+  skillsForked: number;
+  suggestionsImplemented: number;
+}
+
+/**
+ * Get aggregate impact calculator stats for a user.
+ *
+ * Two queries:
+ * 1. Skills query — uses FILTER (WHERE) conditional aggregation to count
+ *    original creations vs forks in a single pass
+ * 2. Suggestions query — counts accepted suggestions with implementations
+ *
+ * estimatedCostSaved = totalHoursSaved * HOURLY_RATE ($150/hr)
+ *
+ * @param userId The user whose impact stats to retrieve
+ */
+export async function getImpactCalculatorStats(userId: string): Promise<ImpactCalculatorStats> {
+  if (!db) {
+    return {
+      totalHoursSaved: 0,
+      estimatedCostSaved: 0,
+      skillsCreated: 0,
+      skillsForked: 0,
+      suggestionsImplemented: 0,
+    };
+  }
+
+  const [skillsResult, suggestionsResult] = await Promise.all([
+    db.execute(sql`
+      SELECT
+        COALESCE(SUM(total_uses * COALESCE(hours_saved, 1)), 0)::double precision AS total_hours_saved,
+        COUNT(*) FILTER (WHERE forked_from_id IS NULL)::integer AS skills_created,
+        COUNT(*) FILTER (WHERE forked_from_id IS NOT NULL)::integer AS skills_forked
+      FROM skills
+      WHERE author_id = ${userId}
+        AND published_version_id IS NOT NULL
+        AND status = 'published'
+    `),
+    db.execute(sql`
+      SELECT COUNT(*)::integer AS suggestions_implemented
+      FROM skill_feedback
+      WHERE user_id = ${userId}
+        AND feedback_type = 'suggestion'
+        AND status = 'accepted'
+        AND implemented_by_skill_id IS NOT NULL
+    `),
+  ]);
+
+  const skillsRows = skillsResult as unknown as Record<string, unknown>[];
+  const suggestionsRows = suggestionsResult as unknown as Record<string, unknown>[];
+
+  const skillsRow = skillsRows[0];
+  const suggestionsRow = suggestionsRows[0];
+
+  const totalHoursSaved = Number(skillsRow?.total_hours_saved ?? 0);
+
+  return {
+    totalHoursSaved,
+    estimatedCostSaved: totalHoursSaved * HOURLY_RATE,
+    skillsCreated: Number(skillsRow?.skills_created ?? 0),
+    skillsForked: Number(skillsRow?.skills_forked ?? 0),
+    suggestionsImplemented: Number(suggestionsRow?.suggestions_implemented ?? 0),
+  };
 }
