@@ -206,7 +206,7 @@ Total: 15 plans completed. 7 phases, 12 requirements.
 
 </details>
 
-### 🚧 v7.0 Algorithm & Architecture Rewrite (In Progress)
+### v7.0 Algorithm & Architecture Rewrite (In Progress)
 
 **Milestone Goal:** Implement research-backed algorithmic infrastructure -- GraphRAG communities, adaptive query routing, temporal tracking, extended visibility, multi-model benchmarking -- to make the "smart skills database" promise real.
 
@@ -289,7 +289,10 @@ Plans:
   1. Each community has an AI-generated name and summary description that accurately reflects its member skills
   2. A discovery page section (or dedicated route) shows community cards with name, summary, member count, and top skills
   3. Clicking a community navigates to a detail page listing all member skills with their similarity scores to the community centroid
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 73-01-PLAN.md -- Schema migration + query services + AI label generator + cron integration
+- [ ] 73-02-PLAN.md -- Community browse page, detail page, card component, dashboard section
 
 ### Phase 74: Adaptive Query Routing
 **Goal**: Search queries are automatically classified and routed to the optimal retrieval strategy, making simple queries faster and complex queries smarter
@@ -337,7 +340,7 @@ Recommended sequencing: 69 -> 70 -> 71 -> 72 -> 73 -> 74 -> 75 (serial for focus
 | 70. MCP Preference Sync | v7.0 | 2/2 | Complete | 2026-02-16 |
 | 71. Temporal Tracking | v7.0 | 3/3 | Complete | 2026-02-16 |
 | 72. Community Detection | v7.0 | 2/2 | Complete | 2026-02-16 |
-| 73. Community Discovery UI | v7.0 | 0/TBD | Not started | - |
+| 73. Community Discovery UI | v7.0 | 0/2 | Not started | - |
 | 74. Adaptive Query Routing | v7.0 | 0/TBD | Not started | - |
 | 75. RAGAS Benchmarking | v7.0 | 0/TBD | Not started | - |
 
