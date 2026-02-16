@@ -31,6 +31,7 @@ export interface SkillTableRow {
 export interface SkillsTableProps {
   skills: SkillTableRow[];
   usageTrends: Map<string, number[]>;
+  updatedSkillIds?: string[];
 }
 
 /**
@@ -60,10 +61,13 @@ const COLUMN_LABELS: Record<string, string> = {
   rating: "Rating",
 };
 
-export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
+export function SkillsTable({ skills, usageTrends, updatedSkillIds }: SkillsTableProps) {
   const router = useRouter();
   const { sortBy, sortDir, toggleSort } = useSortState();
   const { expandRow, collapseRow, isExpanded } = useExpandedRows();
+
+  // Convert serialized array to Set for O(1) lookups
+  const updatedSet = useMemo(() => new Set(updatedSkillIds ?? []), [updatedSkillIds]);
 
   // Roving tabindex for keyboard navigation (single column: row focus only)
   const { getTabIndex, handleKeyDown, registerCell } = useRovingTabindex({
@@ -233,6 +237,7 @@ export function SkillsTable({ skills, usageTrends }: SkillsTableProps) {
               onKeyDown={(e: React.KeyboardEvent) => handleRowKeyDown(e, skill.slug)}
               registerRef={(el: HTMLTableRowElement | null) => registerCell(index, 0, el)}
               rowIndex={index}
+              isUpdated={updatedSet.has(skill.id)}
             />
           ))}
         </tbody>

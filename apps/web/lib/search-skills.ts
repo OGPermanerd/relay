@@ -17,6 +17,7 @@ export interface SearchSkillResult {
   companyApproved: boolean;
   loomUrl: string | null;
   createdAt: Date;
+  updatedAt: Date;
   author: {
     id: string;
     name: string | null;
@@ -198,6 +199,7 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
       companyApproved: skills.companyApproved,
       loomUrl: skills.loomUrl,
       createdAt: skills.createdAt,
+      updatedAt: skills.updatedAt,
       author: {
         id: users.id,
         name: users.name,
@@ -257,6 +259,7 @@ export async function searchSkills(params: SearchParams): Promise<SearchSkillRes
             companyApproved: skills.companyApproved,
             loomUrl: skills.loomUrl,
             createdAt: skills.createdAt,
+            updatedAt: skills.updatedAt,
             author: {
               id: users.id,
               name: users.name,

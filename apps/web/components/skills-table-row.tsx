@@ -9,6 +9,7 @@ import { InstallButton } from "./install-button";
 import { RelativeTime } from "@/components/relative-time";
 import type { SkillTableRow } from "./skills-table";
 import { CompanyApprovedBadge } from "./company-approved-badge";
+import { UpdatedBadge } from "@/components/updated-badge";
 
 interface SkillsTableRowProps {
   skill: SkillTableRow & {
@@ -25,6 +26,7 @@ interface SkillsTableRowProps {
   onKeyDown: (e: KeyboardEvent) => void;
   registerRef: (el: HTMLTableRowElement | null) => void;
   rowIndex: number;
+  isUpdated?: boolean;
 }
 
 /**
@@ -48,6 +50,7 @@ export function SkillsTableRow({
   onKeyDown,
   registerRef,
   rowIndex,
+  isUpdated,
 }: SkillsTableRowProps) {
   const router = useRouter();
   const rowRef = useRef<HTMLTableRowElement>(null);
@@ -133,6 +136,11 @@ export function SkillsTableRow({
           {skill.companyApproved && (
             <span className="ml-2">
               <CompanyApprovedBadge size="sm" />
+            </span>
+          )}
+          {isUpdated && (
+            <span className="ml-2">
+              <UpdatedBadge size="sm" />
             </span>
           )}
         </td>

@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { searchSkills } from "@/lib/search-skills";
 import { getUsageTrends } from "@/lib/usage-trends";
 import { getLeaderboard } from "@/lib/leaderboard";
-import { logSearchQuery } from "@everyskill/db";
+import { logSearchQuery, getUserViewsForSkills } from "@everyskill/db";
 import { TwoPanelLayout } from "@/components/two-panel-layout";
 import { SkillsTable } from "@/components/skills-table";
 import { LeaderboardTable } from "@/components/leaderboard-table";
@@ -51,9 +51,23 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
     }).catch(() => {});
   }
 
-  // Fetch usage trends for sparklines (batched query)
+  // Fetch usage trends for sparklines and user views for "Updated" badges (batched queries)
   const skillIds = skills.map((s) => s.id);
-  const usageTrends = await getUsageTrends(skillIds);
+  const [usageTrends, viewMap] = await Promise.all([
+    getUsageTrends(skillIds),
+    session?.user?.id
+      ? getUserViewsForSkills(session.user.id, skillIds)
+      : Promise.resolve(new Map<string, never>()),
+  ]);
+
+  // Compute which skills have been updated since the user's last view
+  const updatedSkillIds = new Set<string>();
+  for (const skill of skills) {
+    const view = viewMap.get(skill.id);
+    if (view && new Date(skill.updatedAt) > new Date(view.lastViewedAt)) {
+      updatedSkillIds.add(skill.id);
+    }
+  }
 
   // Determine empty state type
   const hasFilters = query || authorId || categories;
@@ -81,8 +95,13 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
             </>
           ) : (
             <SkillsTable
-              skills={skills.map((s) => ({ ...s, createdAt: s.createdAt.toISOString() }))}
+              skills={skills.map((s) => ({
+                ...s,
+                createdAt: s.createdAt.toISOString(),
+                updatedAt: s.updatedAt.toISOString(),
+              }))}
               usageTrends={usageTrends}
+              updatedSkillIds={Array.from(updatedSkillIds)}
             />
           )
         }
