@@ -128,9 +128,11 @@ export {
   getModelComparisonStats,
   getCostTrendData,
   getTrainingExamples,
+  getSkillDimensionAggregates,
   type BenchmarkRunWithResults,
   type ModelComparisonRow,
   type CostTrendPoint,
+  type SkillDimensionAggregates,
 } from "./benchmark";
 export {
   recordSkillView,

@@ -16,10 +16,22 @@ export type BenchmarkRunWithResults = BenchmarkRun & {
 export interface ModelComparisonRow {
   modelName: string;
   avgQuality: number;
+  avgFaithfulness: number;
+  avgRelevancy: number;
+  avgPrecision: number;
+  avgRecall: number;
   avgCost: number;
   avgTokens: number;
   avgLatency: number;
   testCases: number;
+}
+
+export interface SkillDimensionAggregates {
+  avgFaithfulness: number;
+  avgRelevancy: number;
+  avgPrecision: number;
+  avgRecall: number;
+  runsWithDimensions: number;
 }
 
 export interface CostTrendPoint {
@@ -141,6 +153,10 @@ export async function getModelComparisonStats(runId: string): Promise<ModelCompa
     .select({
       modelName: benchmarkResults.modelName,
       avgQuality: sql<number>`COALESCE(AVG(${benchmarkResults.qualityScore}), 0)::int`,
+      avgFaithfulness: sql<number>`COALESCE(AVG(${benchmarkResults.faithfulnessScore}), 0)::int`,
+      avgRelevancy: sql<number>`COALESCE(AVG(${benchmarkResults.relevancyScore}), 0)::int`,
+      avgPrecision: sql<number>`COALESCE(AVG(${benchmarkResults.precisionScore}), 0)::int`,
+      avgRecall: sql<number>`COALESCE(AVG(${benchmarkResults.recallScore}), 0)::int`,
       avgCost: sql<number>`COALESCE(AVG(${benchmarkResults.estimatedCostMicrocents}), 0)::int`,
       avgTokens: sql<number>`COALESCE(AVG(${benchmarkResults.totalTokens}), 0)::int`,
       avgLatency: sql<number>`COALESCE(AVG(${benchmarkResults.latencyMs}), 0)::int`,
@@ -177,6 +193,37 @@ export async function getCostTrendData(
     .orderBy(sql`date_trunc('day', ${tokenMeasurements.createdAt})`);
 
   return rows;
+}
+
+/**
+ * Aggregate dimension scores across ALL benchmark runs for a skill.
+ * Only includes results where dimension data exists (faithfulness_score IS NOT NULL).
+ * Returns null if no dimension data is available.
+ */
+export async function getSkillDimensionAggregates(
+  skillId: string
+): Promise<SkillDimensionAggregates | null> {
+  if (!db) return null;
+
+  const rows = await db
+    .select({
+      avgFaithfulness: sql<number>`AVG(${benchmarkResults.faithfulnessScore})::int`,
+      avgRelevancy: sql<number>`AVG(${benchmarkResults.relevancyScore})::int`,
+      avgPrecision: sql<number>`AVG(${benchmarkResults.precisionScore})::int`,
+      avgRecall: sql<number>`AVG(${benchmarkResults.recallScore})::int`,
+      runsWithDimensions: sql<number>`COUNT(DISTINCT ${benchmarkResults.benchmarkRunId})::int`,
+    })
+    .from(benchmarkResults)
+    .innerJoin(benchmarkRuns, eq(benchmarkResults.benchmarkRunId, benchmarkRuns.id))
+    .where(
+      and(
+        eq(benchmarkRuns.skillId, skillId),
+        sql`${benchmarkResults.faithfulnessScore} IS NOT NULL`
+      )
+    );
+
+  const result = rows[0];
+  return result && result.runsWithDimensions > 0 ? result : null;
 }
 
 /**
