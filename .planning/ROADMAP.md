@@ -283,7 +283,10 @@ Plans:
   2. The resume is formatted for professional use -- clean layout, no internal jargon, emphasis on quantified impact (e.g., "Saved 120 hours across 45 team members")
   3. User can share the resume via a public URL (read-only, no auth required) or download as PDF
   4. Only portable/personal-scoped skills are included by default (company IP is excluded unless explicitly toggled on)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 67-01-PLAN.md — Schema, data queries, server actions, and middleware exemption (data layer)
+- [ ] 67-02-PLAN.md — Resume view, PDF download, share controls, public page, and E2E tests (UI layer)
 
 #### Phase 68: Pre-LLM History
 **Goal**: Users can upload historical work artifacts to demonstrate impact from before they started using the platform
@@ -335,7 +338,7 @@ Phases execute respecting dependencies: 62+65 (parallel) -> 63+66+68 (parallel) 
 | 64. IP Valuation & Export | v6.0 | 0/TBD | Not started | - |
 | 65. Individual Portfolio | v6.0 | 0/TBD | Not started | - |
 | 66. Impact Measurement | v6.0 | 0/2 | Not started | - |
-| 67. Skills Resume | v6.0 | 0/TBD | Not started | - |
+| 67. Skills Resume | v6.0 | 0/2 | Not started | - |
 | 68. Pre-LLM History | v6.0 | 0/TBD | Not started | - |
 
 **Total: 230 plans completed across 62 phases and 10 milestones. v6.0: 2 plans, 1/7 phases complete.**
