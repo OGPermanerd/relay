@@ -1,5 +1,6 @@
 import { db } from "@everyskill/db";
 import { sql } from "drizzle-orm";
+import type { SkillValuationRow } from "@/lib/ip-valuation";
 
 // =============================================================================
 // Constants
@@ -406,5 +407,71 @@ export async function getEmployeeAtRiskSkills(
       Number(row.total_uses) >= CRITICAL_USAGE_THRESHOLD
         ? ("critical" as const)
         : ("high" as const),
+  }));
+}
+
+// =============================================================================
+// IP Valuation Query Functions
+// =============================================================================
+
+/**
+ * Get skill valuation data for all published skills in a tenant.
+ *
+ * Returns the raw ingredients needed for replacement cost calculation:
+ * total_uses, hours_saved, content_length, average_rating, plus author and
+ * risk level information.
+ *
+ * @param tenantId - Tenant ID to filter by
+ * @returns All published skills with valuation data, ordered by total uses descending
+ */
+export async function getSkillValuationData(tenantId: string): Promise<SkillValuationRow[]> {
+  if (!db) return [];
+
+  const result = await db.execute(sql`
+    SELECT
+      s.id AS skill_id,
+      s.name,
+      s.slug,
+      s.category,
+      s.total_uses,
+      COALESCE(s.hours_saved, 1) AS hours_saved,
+      LENGTH(s.content) AS content_length,
+      s.average_rating,
+      u.name AS author_name,
+      COALESCE(u.email, '') AS author_email,
+      CASE
+        WHEN s.total_uses >= ${CRITICAL_USAGE_THRESHOLD} AND NOT EXISTS (
+          SELECT 1 FROM skills fork WHERE fork.forked_from_id = s.id AND fork.status = 'published' AND fork.tenant_id = s.tenant_id
+        ) THEN 'critical'
+        WHEN s.total_uses >= ${HIGH_USAGE_THRESHOLD} AND NOT EXISTS (
+          SELECT 1 FROM skills fork WHERE fork.forked_from_id = s.id AND fork.status = 'published' AND fork.tenant_id = s.tenant_id
+        ) THEN 'high'
+        ELSE NULL
+      END AS risk_level
+    FROM skills s
+    LEFT JOIN users u ON u.id = s.author_id
+    WHERE s.tenant_id = ${tenantId}
+      AND s.status = 'published'
+    ORDER BY s.total_uses DESC
+  `);
+
+  const rows = result as unknown as Record<string, unknown>[];
+  return rows.map((row) => ({
+    skillId: String(row.skill_id),
+    name: String(row.name),
+    slug: String(row.slug),
+    category: String(row.category ?? ""),
+    authorName: row.author_name ? String(row.author_name) : null,
+    authorEmail: String(row.author_email ?? ""),
+    totalUses: Number(row.total_uses ?? 0),
+    hoursSaved: Number(row.hours_saved ?? 1),
+    contentLength: Number(row.content_length ?? 0),
+    averageRating: row.average_rating != null ? Number(row.average_rating) : null,
+    riskLevel:
+      row.risk_level === "critical"
+        ? ("critical" as const)
+        : row.risk_level === "high"
+          ? ("high" as const)
+          : null,
   }));
 }
