@@ -269,7 +269,10 @@ Plans:
   2. User sees an impact calculator displaying total value added to the company: cumulative hours saved, estimated cost equivalent (hours * hourly rate), and skills improved via forks/suggestions
   3. The timeline distinguishes between skill creation events, fork events, and suggestion-implemented events as different markers
   4. Impact metrics update in real time as the user's skills accumulate more usage
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 66-01-PLAN.md — Data layer + components: timeline/calculator queries and chart/calculator components
+- [ ] 66-02-PLAN.md — Page wiring: integrate into portfolio page and E2E tests
 
 #### Phase 67: Skills Resume
 **Goal**: Users can generate a shareable, formatted summary of their skills and impact suitable for job applications and professional profiles
@@ -331,7 +334,7 @@ Phases execute respecting dependencies: 62+65 (parallel) -> 63+66+68 (parallel) 
 | 63. IP Risk Analysis | v6.0 | 0/TBD | Not started | - |
 | 64. IP Valuation & Export | v6.0 | 0/TBD | Not started | - |
 | 65. Individual Portfolio | v6.0 | 0/TBD | Not started | - |
-| 66. Impact Measurement | v6.0 | 0/TBD | Not started | - |
+| 66. Impact Measurement | v6.0 | 0/2 | Not started | - |
 | 67. Skills Resume | v6.0 | 0/TBD | Not started | - |
 | 68. Pre-LLM History | v6.0 | 0/TBD | Not started | - |
 
