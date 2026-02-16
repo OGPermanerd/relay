@@ -1,8 +1,8 @@
-# Architecture Patterns: Feedback Loop, Training Data & Benchmarking
+# Architecture Patterns: v7.0 Algorithm & Architecture Rewrite
 
-**Domain:** AI skill feedback collection, training data storage, token measurement, and cross-LLM benchmarking
-**Researched:** 2026-02-15
-**Confidence:** HIGH (architecture derived from direct codebase analysis of existing schema, API endpoints, MCP hooks, and service patterns; no external dependencies requiring verification)
+**Domain:** GraphRAG community detection, adaptive query routing, temporal version tracking, extended visibility, multi-model benchmarking
+**Researched:** 2026-02-16
+**Confidence:** HIGH (architecture derived from direct codebase analysis of 25+ schema files, 30+ service files, 15+ visibility query sites, and existing benchmark/search infrastructure; external research verified via official docs)
 
 ---
 
@@ -10,718 +10,959 @@
 
 ### Current Architecture Summary
 
-- **Monorepo:** `packages/db` (Drizzle ORM 0.42.0, PostgreSQL 15 + pgvector) + `apps/web` (Next.js 16.1.6) + `apps/mcp` (MCP server via stdio + Streamable HTTP)
-- **Schema:** 17+ tables, all with `tenant_id` NOT NULL FK to `tenants`, RLS policies via `app.current_tenant_id`
-- **Tracking pipeline:** MCP PostToolUse bash hooks -> curl to `/api/track` -> `insertTrackingEvent()` -> `usage_events` table
-- **Existing tracking payload:** `{ skill_id, tool_name, ts, hook_event, tool_input_snippet, tool_output_snippet }` (Zod-validated)
-- **Fork system:** `skills.forkedFromId`, `skills.forkedAtContentHash`, `skill_versions` table with immutable version records
-- **Rating system:** `ratings` table with 1-5 stars, optional comment, hours_saved_estimate
-- **AI review:** `skill_reviews` table with quality/clarity/completeness scores (1-10), `review_decisions` for admin audit trail
-- **Analytics:** `usage_events` queried via raw SQL in `analytics-queries.ts` and `my-leverage.ts`, rendered via Recharts
-- **MCP tool:** Single unified `everyskill` tool with action discriminator pattern (search, list, recommend, describe, install, guide, create, update, review, submit_review, check_review, check_status)
-
-### Current Data Flow
-
 ```
-User installs skill via MCP
-    |
-    v
-deploy.ts writes skill file with PostToolUse frontmatter hooks
-    |
-    v
-User uses skill -> PostToolUse bash hook fires
-    |
-    v
-curl POST /api/track (Bearer auth with EVERYSKILL_API_KEY)
-    |
-    v
-validateApiKey() -> checkRateLimit() -> Zod parse -> HMAC verify (optional)
-    |
-    v
-insertTrackingEvent() -> usage_events row (metadata JSONB)
-    |
-    v
-incrementSkillUses() -> skills.totalUses += 1
-    |
-    v
-Leverage dashboard queries usage_events for analytics
+apps/web (Next.js 16.1.6)           apps/mcp (MCP server)
+  |-- app/actions/ (server actions)    |-- tools/everyskill.ts (unified tool)
+  |-- lib/ (search, benchmark, etc.)   |-- tools/search.ts, list.ts, etc.
+  |-- app/api/cron/ (3 cron routes)    |-- auth.ts (API key resolver)
+  |                                    |
+  +------------- both import ----------+
+                    |
+            packages/db (Drizzle ORM 0.42.0)
+              |-- schema/ (25+ tables, all with tenant_id + RLS)
+              |-- services/ (30+ service files)
+              |-- lib/visibility.ts (buildVisibilityFilter + visibilitySQL)
+              |-- client.ts (postgres-js, DEFAULT_TENANT_ID)
+              |-- migrations/ (37 migrations, custom runner)
+                    |
+            PostgreSQL 16 + pgvector
+              |-- HNSW index on skill_embeddings.embedding
+              |-- GIN index on skills.search_vector (tsvector)
+              |-- RLS policies on all tables
 ```
 
-### Key Tables for Integration
-
-| Table | Relevant Fields | Integration Point |
-|-------|----------------|-------------------|
-| `usage_events` | skillId, userId, toolName, metadata (JSONB), createdAt | Extend metadata for token counts, quality signals |
-| `skills` | id, content, forkedFromId, forkedAtContentHash, totalUses, averageRating | Target of feedback and training data |
-| `skill_versions` | skillId, version, contentUrl, contentHash, metadata (JSONB) | Version-pinned training examples |
-| `ratings` | skillId, userId, rating (1-5), comment, hoursSavedEstimate | Existing quality signal, extend with structured feedback |
-| `skill_reviews` | skillId, categories (JSONB), modelName | AI review scores per model |
-
----
-
-## Recommended Architecture
-
-### High-Level Data Flow (New Components in Bold)
+### Current Search Pipeline
 
 ```
-User uses skill -> PostToolUse hook fires
+User query
     |
     v
-curl POST /api/track (EXTENDED payload: token_count, response_quality)
-    |
+apps/web/app/actions/discover.ts
+    |-- auth() session check
+    |-- generateEmbedding() via Ollama (nomic-embed-text, 768 dims)
+    |-- hybridSearchSkills() [packages/db/src/services/hybrid-search.ts]
+    |     |-- CTE: full_text (tsvector + websearch_to_tsquery)
+    |     |-- CTE: semantic (pgvector cosine distance)
+    |     |-- FULL OUTER JOIN + RRF (k=60)
+    |     |-- visibilitySQL(userId) in both CTEs
+    |-- applyPreferenceBoost() (category preference * 1.3)
+    |-- logSearchQuery() (fire-and-forget)
     v
-/api/track route (extended Zod schema)
-    |
-    +--> insertTrackingEvent()           [existing: usage_events]
-    +--> insertTokenMeasurement()        [NEW: token_measurements table]
-    |
+DiscoveryResult[] (top N with matchRationale)
+```
+
+### Current Benchmark Pipeline
+
+```
+Server action: triggerBenchmark()
+    |-- auth + admin/author check
+    |-- fetch skill content + training examples
+    |-- runBenchmark() [apps/web/lib/benchmark-runner.ts]
+    |     |-- createBenchmarkRun() in DB
+    |     |-- for each test case (sequential):
+    |     |     for each model (parallel):
+    |     |       Anthropic API call -> measure tokens/latency/cost
+    |     |       judgeQuality() via Claude Sonnet 4.5 (blinded)
+    |     |       insertBenchmarkResult()
+    |     |-- completeBenchmarkRun() with summary stats
     v
-User provides feedback via MCP or Web UI
-    |
-    +--> [MCP] everyskill action:"feedback" -> POST /api/feedback
-    +--> [Web] Rating form with structured fields -> server action
-    |
-    v
-insertFeedback()                         [NEW: skill_feedback table]
-    |
-    +--> if suggestion: create suggestion record
-    +--> if training_example: store input/output pair
-    |
-    v
-Author reviews suggestions on skill detail page
-    |
-    +--> Approve: fork or merge suggestion -> existing fork system
-    +--> Reject: mark as rejected with reason
-    |
-    v
-Admin runs benchmark from dashboard
-    |
-    v
-benchmarkSkill()                         [NEW: benchmark_runs + benchmark_results]
-    |
-    +--> For each LLM model: execute skill, measure tokens, score output
-    +--> Store results with model, version, cost, quality scores
-    |
-    v
-Benchmark dashboard shows cross-LLM comparison
+Synchronous — blocks server action until complete
+Only Anthropic models (BENCHMARK_MODELS = [sonnet-4.5, haiku-4.5])
+```
+
+### Current Visibility Model
+
+```
+skills.visibility: text, values = "tenant" | "personal"
+
+buildVisibilityFilter(userId?):  Drizzle SQL for query-builder queries
+visibilitySQL(userId?):          Raw SQL template for template-string queries
+
+Used in 15+ locations:
+  packages/db/src/services/: hybrid-search, semantic-search, search-skills, skill-forks
+  apps/web/lib/: search-skills, similar-skills, trending, leaderboard, portfolio-queries
+  apps/mcp/src/tools/: list.ts
+  + raw SQL queries with hardcoded visibility = 'tenant' in trending, leaderboard, getAvailableTags
+```
+
+### Cron Infrastructure
+
+```
+apps/web/app/api/cron/
+  |-- integrity-check/route.ts (CRON_SECRET bearer auth)
+  |-- daily-digest/route.ts
+  |-- weekly-digest/route.ts
+
+Pattern: GET handler, Bearer token auth via CRON_SECRET env var
+Triggered by: external cron (systemd timer or similar)
 ```
 
 ---
 
-## New Database Tables
+## Priority 1: Community Detection (GraphRAG)
 
-### 1. `skill_feedback` - User Feedback Collection
+### Decision: PostgreSQL Adjacency List, NOT a Graph DB
 
-Captures structured feedback from both MCP and web UI. Replaces the need for a separate "suggestions" table by using `feedback_type` discriminator.
+**Rationale:** The skill graph is small (hundreds to low thousands of nodes per tenant, not millions). PostgreSQL with adjacency tables handles this scale trivially. Neo4j adds operational complexity (separate service, separate connection pool, separate backup strategy) for zero benefit at this scale. Research confirms PostgreSQL outperforms Neo4j for small graphs.
+
+**Confidence:** HIGH -- peer-reviewed research and community consensus support PostgreSQL for graphs under 100K nodes.
+
+### New Schema: skill_graph_edges + skill_communities
+
+```
+skill_graph_edges
+  |-- id: text PK
+  |-- tenant_id: text FK -> tenants (NOT NULL)
+  |-- source_skill_id: text FK -> skills
+  |-- target_skill_id: text FK -> skills
+  |-- edge_type: text ("similar", "co_used", "forked_from", "same_author")
+  |-- weight: numeric (0.0 - 1.0)
+  |-- created_at: timestamp
+  |-- updated_at: timestamp
+  Indexes: (tenant_id), (source_skill_id), (target_skill_id)
+  Unique: (tenant_id, source_skill_id, target_skill_id, edge_type)
+  RLS: tenant_id = current_setting('app.current_tenant_id')
+
+skill_communities
+  |-- id: text PK
+  |-- tenant_id: text FK -> tenants
+  |-- community_id: integer (Leiden cluster assignment)
+  |-- level: integer (0 = leaf, 1+ = hierarchy)
+  |-- label: text (AI-generated community label)
+  |-- summary: text (AI-generated community summary)
+  |-- skill_ids: text[] (denormalized for fast lookup)
+  |-- member_count: integer
+  |-- computed_at: timestamp
+  |-- metadata: jsonb (modularity score, algorithm params)
+  Indexes: (tenant_id), (community_id, level)
+  RLS: standard tenant isolation
+
+skill_community_memberships
+  |-- skill_id: text FK -> skills
+  |-- tenant_id: text FK -> tenants
+  |-- community_id: text FK -> skill_communities
+  |-- level: integer
+  Unique: (skill_id, level)
+  RLS: standard tenant isolation
+```
+
+### Decision: Leiden Algorithm via Node.js Native Implementation
+
+**Rationale:** A Python sidecar adds deployment complexity (separate process, IPC, health monitoring). WASM adds build complexity. The Leiden algorithm is mathematically straightforward — a TypeScript implementation exists on GitHub (esclear/louvain-leiden). For the expected graph size (<10K nodes), a pure JS implementation runs in milliseconds. If performance becomes a problem later, a WASM Leiden binary can be dropped in without architecture changes.
+
+**Implementation approach:**
+1. Vendor or npm-install a Leiden implementation (e.g., `louvain-leiden` package or similar)
+2. Build the graph adjacency matrix from `skill_graph_edges` in memory
+3. Run Leiden to get community assignments
+4. Write results to `skill_communities` + `skill_community_memberships`
+5. Generate community labels/summaries via Anthropic API (one call per community)
+
+**Confidence:** MEDIUM -- the `louvain-leiden` npm package exists but needs version/API verification at implementation time.
+
+### Edge Construction Logic (New Service)
 
 ```typescript
-// packages/db/src/schema/skill-feedback.ts
-export const skillFeedback = pgTable(
-  "skill_feedback",
-  {
-    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    tenantId: text("tenant_id").notNull().references(() => tenants.id),
-    skillId: text("skill_id").notNull().references(() => skills.id, { onDelete: "cascade" }),
-    skillVersionId: text("skill_version_id").references(() => skillVersions.id), // pin to version
-    userId: text("user_id").references(() => users.id), // nullable for anonymous MCP feedback
-    usageEventId: text("usage_event_id"), // FK to usage_events.id - links feedback to specific use
+// packages/db/src/services/graph-edges.ts
 
-    // Feedback type discriminator
-    feedbackType: text("feedback_type").notNull(),
-    // "thumbs_up" | "thumbs_down" | "suggestion" | "training_example" | "bug_report"
+// Edge types and their weight derivation:
+// 1. "similar" — cosine similarity from skill_embeddings > 0.7 threshold
+//    Weight = similarity score (0.7-1.0)
+// 2. "co_used" — users who used skill A also used skill B (within 7 days)
+//    Weight = co-occurrence count / max(uses_A, uses_B)
+// 3. "forked_from" — direct fork relationship
+//    Weight = 1.0 (strongest signal)
+// 4. "same_author" — shared authorship
+//    Weight = 0.3 (weak signal)
 
-    // Core feedback
-    sentiment: integer("sentiment"), // -1 (bad), 0 (neutral), 1 (good) -- simple signal
-    comment: text("comment"), // free-text feedback
-
-    // Suggestion-specific (when feedbackType = "suggestion")
-    suggestedContent: text("suggested_content"), // proposed skill content change
-    suggestedDiff: text("suggested_diff"), // diff format for review UI
-
-    // Training example (when feedbackType = "training_example")
-    exampleInput: text("example_input"), // what was provided to the skill
-    exampleOutput: text("example_output"), // what the skill produced (actual)
-    expectedOutput: text("expected_output"), // what the user expected (desired)
-
-    // Quality scoring for the specific usage
-    qualityScore: integer("quality_score"), // 1-10, more granular than thumbs
-
-    // Moderation
-    status: text("status").notNull().default("pending"),
-    // "pending" | "approved" | "rejected" | "merged"
-    reviewedBy: text("reviewed_by").references(() => users.id),
-    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
-    reviewNotes: text("review_notes"),
-
-    // Source tracking
-    source: text("source").notNull().default("web"), // "web" | "mcp" | "api"
-
-    createdAt: timestamp("created_at", { withTimezone: true, precision: 3 }).notNull().defaultNow(),
-  },
-  (table) => [
-    index("skill_feedback_skill_id_idx").on(table.skillId),
-    index("skill_feedback_user_id_idx").on(table.userId),
-    index("skill_feedback_tenant_id_idx").on(table.tenantId),
-    index("skill_feedback_type_idx").on(table.feedbackType),
-    index("skill_feedback_status_idx").on(table.status),
-    pgPolicy("tenant_isolation", {
-      as: "restrictive",
-      for: "all",
-      using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-      withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-    }),
-  ]
-);
+async function rebuildGraphEdges(tenantId: string): Promise<void>
 ```
 
-**Design rationale:** Single table with discriminator rather than 3 separate tables because:
-- All feedback shares the same lifecycle (pending -> reviewed -> approved/rejected)
-- All feedback is linked to the same entities (skill, user, version, usage_event)
-- Query patterns are similar ("show me all feedback for skill X")
-- The discriminator fields (suggestedContent, exampleInput, etc.) are nullable TEXT columns -- cheap in PostgreSQL
+### Cron Job Location
 
-### 2. `token_measurements` - Token Usage Tracking
+```
+apps/web/app/api/cron/community-detection/route.ts
 
-Separated from `usage_events` because token data has different write patterns (may arrive asynchronously, may be updated) and different query patterns (aggregation by model, cost calculation).
-
-```typescript
-// packages/db/src/schema/token-measurements.ts
-export const tokenMeasurements = pgTable(
-  "token_measurements",
-  {
-    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    tenantId: text("tenant_id").notNull().references(() => tenants.id),
-    skillId: text("skill_id").notNull().references(() => skills.id, { onDelete: "cascade" }),
-    usageEventId: text("usage_event_id"), // links to usage_events.id
-    userId: text("user_id").references(() => users.id),
-
-    // Token counts
-    inputTokens: integer("input_tokens"),
-    outputTokens: integer("output_tokens"),
-    totalTokens: integer("total_tokens"),
-
-    // Model identification
-    modelName: text("model_name").notNull(), // e.g., "claude-opus-4-6"
-    modelProvider: text("model_provider").notNull().default("anthropic"), // "anthropic" | "openai" | "google" | "meta"
-
-    // Cost estimation (stored as microcents for precision: $0.01 = 1000 microcents)
-    estimatedCostMicrocents: integer("estimated_cost_microcents"),
-
-    // Timing
-    latencyMs: integer("latency_ms"), // round-trip latency in milliseconds
-
-    // Source
-    source: text("source").notNull().default("hook"), // "hook" | "benchmark" | "manual"
-
-    createdAt: timestamp("created_at", { withTimezone: true, precision: 3 }).notNull().defaultNow(),
-  },
-  (table) => [
-    index("token_measurements_skill_id_idx").on(table.skillId),
-    index("token_measurements_model_idx").on(table.modelName),
-    index("token_measurements_tenant_id_idx").on(table.tenantId),
-    index("token_measurements_created_at_idx").on(table.createdAt),
-    pgPolicy("tenant_isolation", {
-      as: "restrictive",
-      for: "all",
-      using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-      withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-    }),
-  ]
-);
+Pattern: follows existing cron convention (GET handler, Bearer token auth)
+Frequency: daily (communities change slowly, no need for real-time)
+Process:
+  1. rebuildGraphEdges(tenantId) — query DB for similarity/co-use/fork/author edges
+  2. Build in-memory adjacency list from edges
+  3. Run Leiden algorithm
+  4. Write community assignments to skill_communities
+  5. Generate AI summaries for new/changed communities
+  6. Log to audit table
 ```
 
-**Design rationale:** Separate table (not extending usage_events.metadata JSONB) because:
-- Token data is structured and queryable (AVG, SUM, GROUP BY model)
-- JSONB queries for aggregation are slow compared to indexed integer columns
-- Cost estimation requires arithmetic on typed columns
-- Different retention policy possible (keep token data longer than raw events)
+### Integration Points
 
-### 3. `benchmark_runs` + `benchmark_results` - Cross-LLM Benchmarking
+| Existing Component | Change | Scope |
+|---|---|---|
+| `apps/web/app/actions/discover.ts` | Add community context to search results | MODIFY |
+| `packages/db/src/services/hybrid-search.ts` | Add optional community boost to RRF scoring | MODIFY |
+| `apps/web/lib/similar-skills.ts` | Use community membership for "related skills" | MODIFY |
+| `apps/mcp/src/tools/recommend.ts` | Include community context in recommendations | MODIFY |
+| `packages/db/src/schema/index.ts` | Export new schema tables | MODIFY |
+| `packages/db/src/services/index.ts` | Export new services | MODIFY |
 
-Two tables: `benchmark_runs` for the run metadata, `benchmark_results` for per-test-case results within a run.
+### New Components
 
-```typescript
-// packages/db/src/schema/benchmark-runs.ts
-export const benchmarkRuns = pgTable(
-  "benchmark_runs",
-  {
-    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    tenantId: text("tenant_id").notNull().references(() => tenants.id),
-    skillId: text("skill_id").notNull().references(() => skills.id, { onDelete: "cascade" }),
-    skillVersionId: text("skill_version_id").references(() => skillVersions.id), // pin to version
+| Component | Location | Purpose |
+|---|---|---|
+| `packages/db/src/schema/skill-graph-edges.ts` | Schema | Edge table definition |
+| `packages/db/src/schema/skill-communities.ts` | Schema | Community table definition |
+| `packages/db/src/services/graph-edges.ts` | Service | Edge construction and CRUD |
+| `packages/db/src/services/community-detection.ts` | Service | Leiden wrapper + community CRUD |
+| `apps/web/app/api/cron/community-detection/route.ts` | API | Cron endpoint |
+| `apps/web/lib/leiden.ts` | Library | Leiden algorithm implementation/wrapper |
 
-    // Run metadata
-    triggeredBy: text("triggered_by").notNull().references(() => users.id),
-    status: text("status").notNull().default("pending"),
-    // "pending" | "running" | "completed" | "failed"
+### Data Flow: Community Detection
 
-    // Models tested in this run
-    models: text("models").array().notNull(), // ["claude-opus-4-6", "gpt-4o", "gemini-2.0-flash"]
-
-    // Aggregate results (denormalized for dashboard performance)
-    bestModel: text("best_model"), // model with highest quality score
-    bestQualityScore: integer("best_quality_score"), // 0-100
-    cheapestModel: text("cheapest_model"), // model with lowest cost
-    cheapestCostMicrocents: integer("cheapest_cost_microcents"),
-
-    // Timing
-    startedAt: timestamp("started_at", { withTimezone: true }),
-    completedAt: timestamp("completed_at", { withTimezone: true }),
-
-    createdAt: timestamp("created_at", { withTimezone: true, precision: 3 }).notNull().defaultNow(),
-  },
-  (table) => [
-    index("benchmark_runs_skill_id_idx").on(table.skillId),
-    index("benchmark_runs_tenant_id_idx").on(table.tenantId),
-    index("benchmark_runs_status_idx").on(table.status),
-    pgPolicy("tenant_isolation", {
-      as: "restrictive",
-      for: "all",
-      using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-      withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-    }),
-  ]
-);
-
-export const benchmarkResults = pgTable(
-  "benchmark_results",
-  {
-    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    tenantId: text("tenant_id").notNull().references(() => tenants.id),
-    benchmarkRunId: text("benchmark_run_id")
-      .notNull()
-      .references(() => benchmarkRuns.id, { onDelete: "cascade" }),
-
-    // What was tested
-    modelName: text("model_name").notNull(),
-    modelProvider: text("model_provider").notNull(),
-    testCaseIndex: integer("test_case_index").notNull(), // 0-based index within the run
-
-    // Input/Output
-    inputUsed: text("input_used"), // the test input that was provided
-    outputProduced: text("output_produced"), // what the model returned
-    expectedOutput: text("expected_output"), // from training_example if available
-
-    // Measurements
-    inputTokens: integer("input_tokens"),
-    outputTokens: integer("output_tokens"),
-    totalTokens: integer("total_tokens"),
-    latencyMs: integer("latency_ms"),
-    estimatedCostMicrocents: integer("estimated_cost_microcents"),
-
-    // Quality assessment
-    qualityScore: integer("quality_score"), // 0-100, AI-judged or computed
-    qualityNotes: text("quality_notes"), // AI explanation of score
-    matchesExpected: boolean("matches_expected"), // if expected_output exists, does it match?
-
-    // Error handling
-    errorMessage: text("error_message"), // if model call failed
-
-    createdAt: timestamp("created_at", { withTimezone: true, precision: 3 }).notNull().defaultNow(),
-  },
-  (table) => [
-    index("benchmark_results_run_id_idx").on(table.benchmarkRunId),
-    index("benchmark_results_model_idx").on(table.modelName),
-    index("benchmark_results_tenant_id_idx").on(table.tenantId),
-    pgPolicy("tenant_isolation", {
-      as: "restrictive",
-      for: "all",
-      using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-      withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
-    }),
-  ]
-);
 ```
-
-**Design rationale:** Two tables (run + results) rather than one because:
-- A single benchmark run tests multiple models against multiple test cases = N*M results
-- Run-level metadata (who triggered, aggregate winner) is separate from per-result data
-- Cascade delete: deleting a run deletes all its results
-- Dashboard queries aggregate at run level (latest run per skill), drill-down at result level
+Cron trigger (daily)
+    |
+    v
+community-detection/route.ts
+    |-- Auth: CRON_SECRET bearer token
+    |
+    v
+rebuildGraphEdges(tenantId)
+    |-- Query skill_embeddings for all pairs > 0.7 similarity
+    |-- Query usage_events for co-usage patterns (7-day window)
+    |-- Query skills.forkedFromId for fork edges
+    |-- Query skills.authorId for same-author edges
+    |-- UPSERT into skill_graph_edges
+    |
+    v
+runCommunityDetection(tenantId)
+    |-- SELECT all edges from skill_graph_edges
+    |-- Build adjacency list in memory
+    |-- Run Leiden algorithm (resolution parameter from site_settings or default)
+    |-- Diff with existing communities
+    |-- UPSERT skill_communities + skill_community_memberships
+    |-- For new/changed communities:
+    |     Generate label + summary via Anthropic API
+    |
+    v
+Log to audit_logs (community_detection.completed)
+```
 
 ---
 
-## Modified Existing Components
+## Priority 2: Adaptive Query Routing
 
-### 1. Extend `/api/track` Payload (Backward Compatible)
+### Decision: Rule-Based Classifier in the Hybrid Search Service
 
-The tracking endpoint accepts new optional fields without breaking existing PostToolUse hooks.
+**Rationale:** ML classifiers require training data that doesn't exist yet. Rule-based routing is deterministic, testable, and sufficient for the query patterns in this domain. The classifier should live in `packages/db/src/services/` (not middleware, not server action) because it's a pure function that transforms a query into a search strategy, and both the web app and MCP server need it.
 
-```typescript
-// apps/web/app/api/track/route.ts — EXTENDED schema
-const trackingPayloadSchema = z.object({
-  // Existing (required)
-  skill_id: z.string().min(1, "skill_id required"),
-  tool_name: z.string().min(1).max(200),
-  ts: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid timestamp"),
+**Why not middleware:** Middleware runs before auth, before the request body is parsed. Query routing needs the query text and user context.
 
-  // Existing (optional)
-  hook_event: z.string().optional(),
-  tool_input_snippet: z.string().max(1000).optional(),
-  tool_output_snippet: z.string().max(1000).optional(),
+**Why not server action:** Server actions are Next.js-specific. The MCP server needs the same routing logic.
 
-  // NEW optional fields (backward compatible — old hooks omit these)
-  token_count: z.object({
-    input: z.number().int().nonnegative().optional(),
-    output: z.number().int().nonnegative().optional(),
-    total: z.number().int().nonnegative().optional(),
-  }).optional(),
-  model_name: z.string().max(100).optional(),
-  model_provider: z.string().max(50).optional(),
-  latency_ms: z.number().int().nonnegative().optional(),
-  response_quality: z.number().int().min(-1).max(1).optional(), // -1, 0, 1
-});
-```
+**Confidence:** HIGH -- rule-based classification is standard practice for search systems with <10 query archetypes.
 
-**Critical constraint:** Existing deployed PostToolUse hooks in user skill files are bash scripts that send a fixed payload. They cannot be updated remotely. New fields are only populated by:
-1. Updated hooks deployed via new skill installs
-2. The web UI feedback form
-3. The MCP `feedback` action
-4. The benchmarking system
-
-### 2. Extend MCP `everyskill` Tool with `feedback` Action
-
-Add a new action to the existing unified tool pattern:
+### Query Classification Taxonomy
 
 ```typescript
-// Add to ACTIONS array in apps/mcp/src/tools/everyskill.ts
-const ACTIONS = [
-  // ... existing actions
-  "feedback",    // NEW: submit feedback for a skill
-] as const;
+// packages/db/src/services/query-router.ts
 
-// New input fields for the everyskill tool schema
-feedbackType: z.enum(["thumbs_up", "thumbs_down", "suggestion", "training_example", "bug_report"])
-  .optional()
-  .describe("Feedback type (required for: feedback)"),
-feedbackComment: z.string().max(2000).optional()
-  .describe("Feedback comment or suggestion text (optional for: feedback)"),
-exampleInput: z.string().max(5000).optional()
-  .describe("Training example: what was provided to the skill (optional for: feedback)"),
-exampleOutput: z.string().max(5000).optional()
-  .describe("Training example: what the skill produced (optional for: feedback)"),
-expectedOutput: z.string().max(5000).optional()
-  .describe("Training example: what was expected (optional for: feedback)"),
-```
+type QueryIntent =
+  | "keyword_exact"     // "email-parser" — exact slug/name match
+  | "keyword_broad"     // "email" — broad keyword
+  | "semantic_question" // "how do I process invoices?" — natural language
+  | "category_browse"   // "show me productivity skills" — category filter
+  | "similar_to"        // "skills like X" — similarity search
+  | "community_explore" // "what clusters of skills exist?" — community query
 
-**Design rationale:** Adding to the existing unified tool rather than a separate `everyskill_feedback` tool because:
-- Consistent with the STRAP action router pattern already in use
-- Users/agents already know to invoke `everyskill` for all operations
-- Reduces tool proliferation in the MCP client
-
-### 3. Denormalized Fields on `skills` Table
-
-Add to the existing skills table for dashboard performance:
-
-```sql
--- Migration: add feedback and benchmark aggregate columns to skills
-ALTER TABLE skills ADD COLUMN total_feedback integer NOT NULL DEFAULT 0;
-ALTER TABLE skills ADD COLUMN positive_feedback_pct integer; -- 0-100
-ALTER TABLE skills ADD COLUMN training_example_count integer NOT NULL DEFAULT 0;
-ALTER TABLE skills ADD COLUMN latest_benchmark_run_id text;
-ALTER TABLE skills ADD COLUMN avg_token_cost_microcents integer;
-```
-
-These follow the existing pattern of `totalUses` and `averageRating` as denormalized aggregates.
-
----
-
-## Component Boundaries
-
-### New Service Layer
-
-| Service | File | Responsibility | Dependencies |
-|---------|------|---------------|--------------|
-| `feedback.ts` | `packages/db/src/services/feedback.ts` | Insert/query feedback, approve/reject, merge suggestions | `skill_feedback` table, fork system |
-| `token-tracking.ts` | `packages/db/src/services/token-tracking.ts` | Insert token measurements, aggregate by model | `token_measurements` table |
-| `benchmarking.ts` | `packages/db/src/services/benchmarking.ts` | Create/run/complete benchmark runs, score results | `benchmark_runs`, `benchmark_results`, AI SDKs |
-| `benchmark-queries.ts` | `apps/web/lib/benchmark-queries.ts` | Dashboard queries for benchmark comparison | `benchmark_runs`, `benchmark_results` |
-| `feedback-queries.ts` | `apps/web/lib/feedback-queries.ts` | Dashboard queries for feedback analytics | `skill_feedback` |
-
-### New Server Actions
-
-| Action | File | Purpose |
-|--------|------|---------|
-| `submit-feedback.ts` | `apps/web/app/actions/submit-feedback.ts` | Web UI feedback submission |
-| `review-feedback.ts` | `apps/web/app/actions/review-feedback.ts` | Author reviews pending feedback |
-| `merge-suggestion.ts` | `apps/web/app/actions/merge-suggestion.ts` | Author merges a suggestion into skill |
-| `run-benchmark.ts` | `apps/web/app/actions/run-benchmark.ts` | Trigger benchmark run |
-| `get-benchmark-results.ts` | `apps/web/app/actions/get-benchmark-results.ts` | Fetch benchmark data for dashboard |
-
-### New API Routes
-
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/feedback` | POST | MCP feedback submission (Bearer auth, same as /api/track) |
-
-**Design decision:** Feedback from MCP goes through a separate `/api/feedback` endpoint rather than extending `/api/track` because:
-- `/api/track` is fire-and-forget, 200-only — feedback needs structured validation and response
-- Feedback has different rate limiting needs (lower limit per skill per user)
-- The payload structure is fundamentally different (not a tracking event)
-
-### New Web Pages
-
-| Route | Purpose | Auth |
-|-------|---------|------|
-| `/skills/[slug]/feedback` | View/submit feedback for a skill | User |
-| `/skills/[slug]/benchmark` | View benchmark results for a skill | User |
-| `/admin/benchmarks` | Run benchmarks, view cross-skill comparison | Admin |
-| `/leverage/benchmarks` | Org-wide benchmark dashboard | Admin |
-
----
-
-## Suggestion-to-Fork Pipeline
-
-This is the critical integration between the new feedback system and the existing fork system.
-
-### Flow
-
-```
-1. User submits feedback with feedbackType = "suggestion"
-   and suggestedContent (proposed modified skill content)
-       |
-       v
-2. skill_feedback row created with status = "pending"
-       |
-       v
-3. Skill author sees pending suggestions on skill detail page
-   (new tab/section alongside existing ratings, similar skills)
-       |
-       v
-4a. Author APPROVES suggestion:
-    |
-    +-- If author is skill owner:
-    |   - Create new skill_version with suggested content
-    |   - Update skills.publishedVersionId
-    |   - Update skills.content (still denormalized)
-    |   - Mark feedback status = "merged"
-    |   - Credit the suggester (notification)
-    |
-    +-- If suggestion requires review (large diff):
-        - Create fork from suggestion via existing forkSkill()
-        - Set fork.forkedFromId = original skill
-        - Mark feedback status = "merged" with link to fork
-        |
-        v
-4b. Author REJECTS suggestion:
-    - Mark feedback status = "rejected"
-    - Add reviewNotes with reason
-    - Notify suggester (optional)
-```
-
-### Integration with Existing Fork System
-
-The existing `forkSkill()` server action (in `apps/web/app/actions/fork-skill.ts`) already:
-- Creates a new skill with `forkedFromId` pointing to parent
-- Computes `forkedAtContentHash` for drift detection
-- Creates a `skill_versions` record
-- Generates embeddings for the fork
-- Redirects to the new fork
-
-The suggestion merge can reuse this by:
-1. Programmatically creating a fork with the suggested content (not the parent's content)
-2. Setting the fork's `authorId` to the original author (not the suggester)
-3. Attributing the suggester via the `skill_feedback` record linkage
-
-**Alternative (simpler, recommended for v1):** For owner-approved suggestions, just create a new `skill_version` directly. No fork needed. The fork path is only for when the suggestion creates a substantially different skill variant.
-
----
-
-## Data Flow: MCP Hook to Benchmarking Dashboard
-
-### Complete Data Path
-
-```
-[MCP Client]
-    |
-    | PostToolUse hook fires (bash)
-    v
-[/api/track]  <-- extended payload with optional token_count, model_name
-    |
-    | 1. Insert usage_event (existing)
-    | 2. If token_count present: insert token_measurement (new)
-    | 3. incrementSkillUses() (existing)
-    v
-[usage_events + token_measurements in PostgreSQL]
-    |
-    v
-[Leverage Dashboard]  <-- existing queries extended
-    |
-    +-- Skills tab: now shows avg tokens, avg cost per skill
-    +-- New "Cost" column in skill leaderboard
-    +-- New "Token Efficiency" metric
-    |
-    v
-[Benchmark Dashboard]  <-- new pages
-    |
-    | Admin triggers benchmark run for a skill
-    v
-[run-benchmark server action]
-    |
-    | 1. Create benchmark_runs row (status: "pending")
-    | 2. Fetch training examples from skill_feedback
-    | 3. For each model in run.models:
-    |    a. Call model API with skill prompt + test input
-    |    b. Measure tokens, latency, cost
-    |    c. Score quality (AI-judged against expected output)
-    |    d. Insert benchmark_results row
-    | 4. Update benchmark_runs (status: "completed", aggregate fields)
-    | 5. Update skills.latest_benchmark_run_id
-    v
-[benchmark_runs + benchmark_results in PostgreSQL]
-    |
-    v
-[Benchmark Dashboard renders via Recharts]
-    +-- Bar chart: token count by model
-    +-- Bar chart: cost by model
-    +-- Bar chart: quality score by model
-    +-- Table: detailed results per test case
-    +-- Time series: benchmark history (quality/cost over time)
-```
-
-### Token Measurement Sources
-
-| Source | How It Gets Data | Reliability |
-|--------|-----------------|-------------|
-| PostToolUse hook (enhanced) | Bash script extracts token info from Claude response metadata | LOW -- Claude CLI doesn't expose token counts in PostToolUse hook context |
-| MCP tool direct | `everyskill` tool handler measures its own API calls | MEDIUM -- only for MCP-mediated calls |
-| Benchmark runner | Direct API calls with response metadata | HIGH -- controlled environment |
-| Web UI self-report | User enters estimated tokens | LOW -- manual |
-
-**Important finding:** The PostToolUse bash hook does NOT have access to token counts from the Claude conversation. The `INPUT` variable in the hook receives the tool call result, not conversation-level metadata. Token measurement from hooks is therefore limited to what we can infer or estimate. The primary source of accurate token data will be the benchmark system and direct MCP API calls.
-
----
-
-## Patterns to Follow
-
-### Pattern 1: Discriminated Union Table (skill_feedback)
-
-**What:** Single table with `feedbackType` discriminator instead of separate tables per feedback type.
-**When:** Multiple entity types share the same lifecycle, relations, and query patterns.
-**Why:** Matches the existing pattern of `usage_events.metadata` JSONB for flexible data, but with typed columns for the structured parts.
-
-### Pattern 2: Denormalized Aggregates (skills table)
-
-**What:** Store computed totals on the parent entity for O(1) dashboard reads.
-**When:** Aggregation queries would otherwise require expensive JOINs on every page load.
-**Why:** Matches existing `skills.totalUses` and `skills.averageRating` patterns. Update via service functions like `incrementSkillUses()`.
-
-```typescript
-// Example: update feedback aggregates
-export async function updateFeedbackAggregates(skillId: string): Promise<void> {
-  const result = await db.execute(sql`
-    SELECT
-      COUNT(*)::int AS total,
-      ROUND(100.0 * COUNT(*) FILTER (WHERE sentiment = 1) / NULLIF(COUNT(*), 0))::int AS positive_pct,
-      COUNT(*) FILTER (WHERE feedback_type = 'training_example')::int AS training_count
-    FROM skill_feedback
-    WHERE skill_id = ${skillId}
-  `);
-  // Update skills table with aggregates
+interface QueryRoute {
+  intent: QueryIntent;
+  strategy: "keyword_only" | "semantic_only" | "hybrid" | "community";
+  weights: { keyword: number; semantic: number; community: number };
+  confidence: number;
 }
 ```
 
-### Pattern 3: Fire-and-Forget Tracking, Validated Feedback
-
-**What:** Token measurements follow the fire-and-forget pattern of usage tracking (never fail the parent operation). Feedback submissions are validated and return structured responses.
-**Why:** Matches the existing separation: `insertTrackingEvent()` wraps all errors in try/catch and logs, while server actions like `forkSkill()` return error states for the UI.
-
-### Pattern 4: Cascade Delete with Audit Preservation
-
-**What:** New tables use `onDelete: "cascade"` from `skills` (deleting a skill deletes its feedback, benchmarks). But benchmark data also lives in the immutable `review_decisions`-style audit pattern.
-**Why:** Feedback is per-skill data that becomes meaningless without the skill. Benchmark runs are per-skill experiments. This matches `ratings`, `skill_versions`, `skill_reviews` which all cascade from skills.
-
----
-
-## Anti-Patterns to Avoid
-
-### Anti-Pattern 1: Storing Token Data in usage_events.metadata JSONB
-
-**What:** Putting `{ inputTokens: 100, outputTokens: 200, modelName: "claude-opus-4-6" }` in the existing metadata column.
-**Why bad:**
-- Cannot index JSONB fields efficiently for aggregation queries
-- `SELECT AVG((metadata->>'inputTokens')::int)` is slow on large datasets
-- No schema validation on JSONB contents
-- Mixes telemetry data with tracking metadata (different query patterns, retention needs)
-**Instead:** Use the dedicated `token_measurements` table with indexed integer columns.
-
-### Anti-Pattern 2: Blocking PostToolUse Hooks for Feedback
-
-**What:** Making the bash hook wait for user feedback before returning.
-**Why bad:** PostToolUse hooks must be fast and non-blocking. The hook runs after every tool call. Blocking it for user input would degrade the Claude experience.
-**Instead:** Collect feedback asynchronously — either via a separate MCP action (`everyskill action:feedback`) invoked naturally in conversation, or via the web UI after the fact.
-
-### Anti-Pattern 3: Separate Tables Per Feedback Type
-
-**What:** `skill_suggestions`, `skill_bug_reports`, `skill_training_examples` as separate tables.
-**Why bad:**
-- All three share the same relations (skill, user, version, usage_event)
-- All three follow the same lifecycle (pending -> reviewed -> merged/rejected)
-- Dashboard queries need "all feedback for skill X" which requires UNION across tables
-- More tables = more migrations, more relations, more service functions
-**Instead:** Single `skill_feedback` table with `feedbackType` discriminator.
-
-### Anti-Pattern 4: Running Benchmarks Synchronously in Request/Response
-
-**What:** Starting a benchmark run and waiting for all model API calls to complete in a single server action.
-**Why bad:** A benchmark with 3 models x 5 test cases = 15 API calls. At ~2-5 seconds each, that is 30-75 seconds. Server action timeout will kill it.
-**Instead:** Create the benchmark run record, then process asynchronously. Options:
-1. **Phase 1 (simple):** Run in background via `Promise` detached from the request, update status when complete. Use polling from the UI.
-2. **Phase 2 (robust):** Use a job queue (pg-boss or BullMQ) for reliable processing with retries.
-
----
-
-## Scalability Considerations
-
-| Concern | At 100 users | At 10K users | At 1M users |
-|---------|--------------|--------------|-------------|
-| `skill_feedback` volume | ~500 rows/month | ~50K rows/month | Partition by tenant_id |
-| `token_measurements` volume | ~2K rows/month | ~200K rows/month | Partition by created_at (monthly) |
-| `benchmark_runs` volume | ~50 runs/month | ~500 runs/month | Negligible |
-| Benchmark execution time | Inline OK | Job queue needed | Distributed workers |
-| Dashboard query perf | Raw SQL fine | Denormalized aggregates essential | Materialized views |
-
-At current scale (single-tenant, <100 users), all new tables can use the same patterns as existing tables. No partitioning or materialized views needed yet.
-
----
-
-## Migration Strategy
-
-### New Migrations (Sequential)
+### Routing Rules
 
 ```
-0030_create_skill_feedback.sql
-0031_create_token_measurements.sql
-0032_create_benchmark_tables.sql
-0033_add_feedback_aggregates_to_skills.sql
+1. Contains quoted string → keyword_exact, strategy: keyword_only
+2. Starts with "like " or "similar to " → similar_to, strategy: semantic_only
+3. Word count >= 5 or contains "?" → semantic_question, strategy: hybrid (semantic heavy)
+4. Matches category name → category_browse, strategy: keyword_only with category filter
+5. Contains "cluster", "community", "group" → community_explore, strategy: community
+6. Default (1-4 words, no question mark) → keyword_broad, strategy: hybrid (balanced)
 ```
 
-Each migration follows the existing pattern in `packages/db/src/migrations/`:
-- Plain SQL file
-- Tracked via custom runner in `packages/db/src/migrate.ts` (NOT drizzle-kit)
-- Applied via `pnpm db:migrate`
+### Integration: Replacing Fixed Search Strategy
 
-### Schema Registration
+Currently, `discover.ts` always tries hybrid search, falls back to keyword. The new flow:
 
-Each new schema file must be:
-1. Created in `packages/db/src/schema/`
-2. Exported from `packages/db/src/schema/index.ts`
-3. Relations defined in `packages/db/src/relations/index.ts`
-4. Types exported for service layer use
+```
+User query
+    |
+    v
+classifyQuery(query) → QueryRoute
+    |
+    v
+switch (route.strategy):
+  "keyword_only"  → keywordSearchSkills()
+  "semantic_only"  → semanticSearchSkills()
+  "hybrid"         → hybridSearchSkills() with weighted RRF
+  "community"      → communitySearch() [NEW]
+    |
+    v
+Apply preference boost (unchanged)
+    |
+    v
+Log search with route metadata (enhanced searchQueries row)
+```
+
+### Schema Change: searchQueries Enhancement
+
+```sql
+ALTER TABLE search_queries
+  ADD COLUMN query_intent text,         -- classified intent
+  ADD COLUMN search_strategy text,      -- strategy used
+  ADD COLUMN route_confidence numeric;  -- classifier confidence
+```
+
+### Modified Components
+
+| Component | Change |
+|---|---|
+| `packages/db/src/services/hybrid-search.ts` | Accept weight parameters for RRF tuning |
+| `apps/web/app/actions/discover.ts` | Use query router instead of fixed strategy |
+| `apps/mcp/src/tools/search.ts` | Use query router for MCP search |
+| `apps/mcp/src/tools/recommend.ts` | Use query router for MCP recommend |
+| `packages/db/src/schema/search-queries.ts` | Add intent/strategy/confidence columns |
+
+### New Components
+
+| Component | Location | Purpose |
+|---|---|---|
+| `packages/db/src/services/query-router.ts` | Service | Query classification + strategy selection |
+| `packages/db/src/services/community-search.ts` | Service | Community-aware search |
+
+---
+
+## Priority 3: Temporal Version Tracking
+
+### Decision: Application-Time Columns on skillVersions, NOT Bi-Temporal
+
+**Rationale:** Full bi-temporal (4 columns: valid_from, valid_to, transaction_from, transaction_to) is overkill. The existing `skillVersions` table already tracks system time via `createdAt`. What's needed is *application time* — when a version was the "active" published version. This requires 2 new columns, not 4.
+
+The `skillVersions` table is already immutable (wiki-style), so transaction time is inherently captured by the append-only pattern + `createdAt`.
+
+**Confidence:** HIGH -- this aligns with the SQL:2011 application-time pattern on PostgreSQL 17.
+
+### Schema Change
+
+```sql
+-- Add to skill_versions table
+ALTER TABLE skill_versions
+  ADD COLUMN valid_from timestamptz,     -- when this version became published
+  ADD COLUMN valid_to   timestamptz;     -- when it was superseded (NULL = current)
+
+-- Index for temporal range queries
+CREATE INDEX skill_versions_temporal_idx
+  ON skill_versions (skill_id, valid_from, valid_to);
+
+-- Backfill existing data:
+-- For each skill, order versions by `version` number.
+-- Set valid_from = created_at of this version
+-- Set valid_to = created_at of the NEXT version (NULL for latest)
+```
+
+### Migration Strategy for Existing Data
+
+```sql
+-- Migration: 0038_add_temporal_columns.sql
+
+-- Step 1: Add nullable columns
+ALTER TABLE skill_versions
+  ADD COLUMN valid_from timestamptz,
+  ADD COLUMN valid_to   timestamptz;
+
+-- Step 2: Backfill using window function
+WITH ordered AS (
+  SELECT
+    id,
+    skill_id,
+    created_at,
+    LEAD(created_at) OVER (PARTITION BY skill_id ORDER BY version) AS next_created_at
+  FROM skill_versions
+)
+UPDATE skill_versions sv
+SET
+  valid_from = o.created_at,
+  valid_to   = o.next_created_at
+FROM ordered o
+WHERE sv.id = o.id;
+
+-- Step 3: Create index
+CREATE INDEX skill_versions_temporal_idx
+  ON skill_versions (skill_id, valid_from, valid_to);
+```
+
+**Why NOT make valid_from NOT NULL immediately:** The backfill runs in the same migration, so all rows will have values. But keeping it nullable initially allows the migration to succeed on any edge cases. A follow-up migration can add NOT NULL after verification.
+
+### Impact on Existing Queries
+
+The existing `skillVersions` queries in the codebase are minimal:
+- `benchmarkRuns.skillVersionId` (optional FK, no temporal query)
+- Version creation in skill publish flow
+- No existing code queries skillVersions by time range
+
+**Breaking change risk: NONE.** The new columns are nullable, existing queries don't reference them, and the backfill is additive.
+
+### New Service Functions
+
+```typescript
+// packages/db/src/services/skill-versions.ts (new or extend existing)
+
+// Get the version that was active at a specific point in time
+async function getVersionAt(skillId: string, timestamp: Date): Promise<SkillVersion | null>
+
+// Get version history with temporal ranges
+async function getVersionTimeline(skillId: string): Promise<VersionTimelineEntry[]>
+
+// Called when a new version is published — sets valid_to on previous, valid_from on new
+async function activateVersion(skillId: string, newVersionId: string): Promise<void>
+
+// Diff between two temporal points
+async function diffVersionsAt(skillId: string, t1: Date, t2: Date): Promise<VersionDiff>
+```
+
+### Modified Components
+
+| Component | Change |
+|---|---|
+| `packages/db/src/schema/skill-versions.ts` | Add valid_from, valid_to columns |
+| Skill publish flow (server action) | Call activateVersion() when publishing |
+
+### New Components
+
+| Component | Location | Purpose |
+|---|---|---|
+| `packages/db/src/services/skill-versions.ts` | Service | Temporal query functions |
+| `0038_add_temporal_columns.sql` | Migration | Schema + backfill |
+
+---
+
+## Priority 4: Extended Visibility
+
+### Decision: Add "public" and "unlisted" to the Existing Text Column
+
+**Rationale:** The current visibility column is `text` (not an enum), so adding new values requires zero DDL changes to the column type. The challenge is updating the 15+ query locations that filter on visibility.
+
+New visibility levels:
+- **"public"** — visible to all tenants (cross-tenant discovery). For a future marketplace.
+- **"unlisted"** — accessible via direct URL/slug, but excluded from search results and listings.
+- **"tenant"** — visible to all users in the same tenant (existing, unchanged).
+- **"personal"** — visible only to the author (existing, unchanged).
+
+**Confidence:** HIGH -- no schema DDL needed, purely application-level change.
+
+### Visibility Hierarchy
+
+```
+public > tenant > unlisted > personal
+
+public:    anyone can search and find it
+tenant:    only users in the same tenant can search and find it
+unlisted:  anyone with the slug can view it, but it doesn't appear in search/browse
+personal:  only the author can see it
+```
+
+### Centralized Filter Update Strategy
+
+The key insight: `buildVisibilityFilter()` and `visibilitySQL()` in `packages/db/src/lib/visibility.ts` are the centralized choke point for 10+ of the 15 query locations. Updating these two functions handles the majority of cases.
+
+**However,** 5+ locations use hardcoded `visibility = 'tenant'` in raw SQL (trending, leaderboard, getAvailableTags, portfolio ranking, contribution ranking). These must be updated individually.
+
+### Updated visibility.ts
+
+```typescript
+// packages/db/src/lib/visibility.ts
+
+// Context determines what "visible" means:
+// - "search" context: public + tenant + own personal (excludes unlisted)
+// - "access" context: public + tenant + unlisted + own personal (direct URL access)
+
+type VisibilityContext = "search" | "access";
+
+export function buildVisibilityFilter(userId?: string, context: VisibilityContext = "search"): SQL {
+  if (context === "access") {
+    // Direct access: everything except other users' personal skills
+    if (!userId) {
+      return or(
+        eq(skills.visibility, "public"),
+        eq(skills.visibility, "tenant"),
+        eq(skills.visibility, "unlisted")
+      )!;
+    }
+    return or(
+      eq(skills.visibility, "public"),
+      eq(skills.visibility, "tenant"),
+      eq(skills.visibility, "unlisted"),
+      and(eq(skills.visibility, "personal"), eq(skills.authorId, userId))
+    )!;
+  }
+
+  // Search context: excludes unlisted
+  if (!userId) {
+    return or(
+      eq(skills.visibility, "public"),
+      eq(skills.visibility, "tenant")
+    )!;
+  }
+  return or(
+    eq(skills.visibility, "public"),
+    eq(skills.visibility, "tenant"),
+    and(eq(skills.visibility, "personal"), eq(skills.authorId, userId))
+  )!;
+}
+
+export function visibilitySQL(userId?: string, context: VisibilityContext = "search"): SQL {
+  if (context === "access") {
+    if (!userId) {
+      return sql`visibility IN ('public', 'tenant', 'unlisted')`;
+    }
+    return sql`(visibility IN ('public', 'tenant', 'unlisted') OR (visibility = 'personal' AND author_id = ${userId}))`;
+  }
+
+  if (!userId) {
+    return sql`visibility IN ('public', 'tenant')`;
+  }
+  return sql`(visibility IN ('public', 'tenant') OR (visibility = 'personal' AND author_id = ${userId}))`;
+}
+```
+
+### Audit of All 15+ Visibility Query Locations
+
+| File | Current Filter | Change Required |
+|---|---|---|
+| `packages/db/src/lib/visibility.ts` | Central functions | UPDATE (add public + unlisted support) |
+| `packages/db/src/services/hybrid-search.ts` | `visibilitySQL(userId)` | NONE (uses centralized function) |
+| `packages/db/src/services/semantic-search.ts` | `buildVisibilityFilter(userId)` | NONE |
+| `packages/db/src/services/search-skills.ts` | `buildVisibilityFilter(userId)` | NONE |
+| `packages/db/src/services/skill-forks.ts` | `buildVisibilityFilter(userId)` | NONE |
+| `apps/web/lib/search-skills.ts` | `buildVisibilityFilter` + `visibilitySQL` | NONE |
+| `apps/web/lib/similar-skills.ts` | `buildVisibilityFilter` + `visibilitySQL` | NONE |
+| `apps/mcp/src/tools/list.ts` | `buildVisibilityFilter(userId)` | NONE |
+| `apps/web/lib/trending.ts` | HARDCODED `visibility = 'tenant'` | UPDATE to `visibility IN ('public', 'tenant')` |
+| `apps/web/lib/leaderboard.ts` | HARDCODED `visibility = 'tenant'` | UPDATE to `visibility IN ('public', 'tenant')` |
+| `apps/web/lib/search-skills.ts` (getAvailableTags) | HARDCODED `visibility = 'tenant'` | UPDATE |
+| `apps/web/lib/portfolio-queries.ts` (ranking) | HARDCODED `visibility = 'tenant'` | UPDATE |
+| `apps/web/lib/portfolio-queries.ts` (stats) | Filter `WHERE visibility = 'personal'` and `= 'tenant'` | UPDATE to include public |
+| `apps/mcp/src/tools/everyskill.ts` | `visibility: z.enum(["tenant", "personal"])` | UPDATE enum to include "public", "unlisted" |
+| Skill detail page (direct access) | Must allow unlisted access | UPDATE to use "access" context |
+
+### Schema Changes
+
+```sql
+-- No DDL change needed for the column (it's already text type)
+-- But we need a CHECK constraint for data integrity:
+
+ALTER TABLE skills
+  ADD CONSTRAINT skills_visibility_check
+  CHECK (visibility IN ('public', 'tenant', 'unlisted', 'personal'));
+```
+
+### Migration Strategy
+
+```sql
+-- Migration: 0039_extend_visibility.sql
+
+-- Step 1: Add CHECK constraint
+ALTER TABLE skills
+  ADD CONSTRAINT skills_visibility_check
+  CHECK (visibility IN ('public', 'tenant', 'unlisted', 'personal'));
+
+-- No data backfill needed — existing rows are all 'tenant' or 'personal'
+```
+
+### Modified Components
+
+| Component | Change |
+|---|---|
+| `packages/db/src/lib/visibility.ts` | Add context parameter, public/unlisted support |
+| `apps/web/lib/trending.ts` | Update hardcoded filter |
+| `apps/web/lib/leaderboard.ts` | Update hardcoded filter |
+| `apps/web/lib/search-skills.ts` | Update getAvailableTags hardcoded filter |
+| `apps/web/lib/portfolio-queries.ts` | Update hardcoded filters (2 locations) |
+| `apps/mcp/src/tools/everyskill.ts` | Update Zod enum for visibility |
+| Skill detail page server component | Use "access" context for direct view |
+
+### New Components
+
+None. This is entirely modifications to existing code.
+
+---
+
+## Priority 5: Multi-Model Benchmarking
+
+### Decision: Provider Abstraction Layer + Background Execution
+
+**Two problems to solve:**
+1. Adding OpenAI/Google SDKs without bloating the main bundle
+2. Making benchmark execution non-blocking
+
+### SDK Architecture: Provider Abstraction in packages/db
+
+**Why NOT Vercel AI SDK:** The project already has a direct `@anthropic-ai/sdk` dependency and custom pricing logic. Vercel AI SDK is opinionated about streaming UI patterns and adds ~200KB+ of framework code. A thin provider abstraction is simpler and keeps the existing pricing/measurement infrastructure intact.
+
+**Why NOT direct SDKs in apps/web:** The benchmark runner imports from `@anthropic-ai/sdk` which is server-only. Adding `openai` and `@google/genai` packages to apps/web bloats the dependency tree. Instead, place the provider abstraction in a new package or in `packages/db/src/services/`.
+
+**Confidence:** HIGH for the abstraction pattern. MEDIUM for specific SDK APIs (verify at implementation time).
+
+### Provider Abstraction Design
+
+```typescript
+// packages/db/src/services/llm-providers.ts (or new packages/llm/)
+
+interface LLMProvider {
+  name: string; // "anthropic" | "openai" | "google"
+  chat(params: {
+    model: string;
+    messages: { role: "user" | "assistant" | "system"; content: string }[];
+    maxTokens: number;
+  }): Promise<{
+    text: string;
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+    latencyMs: number;
+  }>;
+}
+
+// Factory function — only imports the SDK that's needed
+function getProvider(name: "anthropic" | "openai" | "google"): LLMProvider {
+  switch (name) {
+    case "anthropic": return new AnthropicProvider();
+    case "openai":    return new OpenAIProvider();
+    case "google":    return new GoogleProvider();
+  }
+}
+```
+
+### Dynamic Import for Tree-Shaking
+
+```typescript
+// Each provider uses dynamic import to avoid loading all SDKs at startup
+
+class OpenAIProvider implements LLMProvider {
+  name = "openai";
+  async chat(params) {
+    const { OpenAI } = await import("openai");
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    // ... implementation
+  }
+}
+
+class GoogleProvider implements LLMProvider {
+  name = "google";
+  async chat(params) {
+    const { GoogleGenAI } = await import("@google/genai");
+    const client = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY });
+    // ... implementation
+  }
+}
+```
+
+### Extended Pricing Table
+
+```typescript
+// packages/db/src/services/pricing.ts — extend existing
+
+export const MODEL_PRICING: Record<string, ModelPricing & { provider: string }> = {
+  // Existing Anthropic models (keep all existing entries)
+  ...ANTHROPIC_PRICING_ENTRIES,
+
+  // OpenAI models
+  "gpt-4o":       { provider: "openai", input: 0.25, output: 1.0 },
+  "gpt-4o-mini":  { provider: "openai", input: 0.015, output: 0.06 },
+  "gpt-4.1":      { provider: "openai", input: 0.2, output: 0.8 },
+  "gpt-4.1-mini": { provider: "openai", input: 0.04, output: 0.16 },
+
+  // Google models
+  "gemini-2.5-flash": { provider: "google", input: 0.015, output: 0.06 },
+  "gemini-2.5-pro":   { provider: "google", input: 0.125, output: 0.5 },
+};
+```
+
+### Background Execution: Cron Polling Pattern
+
+**Why NOT Inngest/Trigger.dev:** The project is self-hosted on a Hetzner VPS, not Vercel. Adding a third-party job queue service adds cost, external dependency, and deployment complexity. The existing cron pattern works.
+
+**Why NOT Bull/Redis:** No Redis instance in the current stack. Adding one for a single use case is overhead.
+
+**Pattern: Fire-and-forget with DB-based status tracking.** The existing `benchmarkRuns` table already has a `status` column ("pending" | "running" | "completed" | "failed"). This is already a job status tracker.
+
+```
+Trigger:
+  Server action sets benchmarkRuns.status = "pending"
+  Returns immediately with runId
+
+Execution:
+  New cron endpoint: /api/cron/benchmark-runner
+  Polls for benchmarkRuns WHERE status = "pending"
+  Picks up one at a time, sets to "running", executes, sets to "completed"/"failed"
+
+Monitoring:
+  Client polls GET /api/benchmark/[runId]/status for progress
+  (or use existing revalidation on skill detail page)
+```
+
+### Modified benchmark-runner.ts
+
+```typescript
+// apps/web/lib/benchmark-runner.ts — refactored
+
+// Change 1: Use provider abstraction instead of direct Anthropic import
+// Change 2: Accept model list with provider metadata
+// Change 3: Keep judge as Anthropic-only (quality consistent with known model)
+
+const DEFAULT_BENCHMARK_MODELS = [
+  { model: "claude-sonnet-4-5", provider: "anthropic" },
+  { model: "claude-haiku-4-5", provider: "anthropic" },
+  { model: "gpt-4o-mini", provider: "openai" },
+  { model: "gemini-2.5-flash", provider: "google" },
+];
+```
+
+### New Dependencies
+
+```json
+// apps/web/package.json — add:
+"openai": "^5.x",
+"@google/genai": "^1.x"
+
+// NOTE: Dynamic imports ensure these are only loaded when
+// a benchmark actually uses that provider. They won't
+// affect page load or client bundle size.
+```
+
+### Integration Points
+
+| Component | Change |
+|---|---|
+| `apps/web/lib/benchmark-runner.ts` | Refactor to use provider abstraction |
+| `packages/db/src/services/pricing.ts` | Add multi-provider pricing table |
+| `packages/db/src/schema/benchmark-runs.ts` | Already has `models: text[]` — no change |
+| `packages/db/src/schema/benchmark-results.ts` | Already has `modelProvider: text` — no change |
+| `apps/web/app/actions/benchmark.ts` | Return immediately, don't await runBenchmark |
+| Benchmark UI component | Add model selection + progress indicator |
+
+### New Components
+
+| Component | Location | Purpose |
+|---|---|---|
+| `packages/db/src/services/llm-providers.ts` | Service | Provider abstraction layer |
+| `apps/web/app/api/cron/benchmark-runner/route.ts` | API | Background benchmark execution |
+| `apps/web/app/api/benchmark/[runId]/status/route.ts` | API | Benchmark progress polling |
+
+---
+
+## Suggested Build Order
+
+The priorities have clear dependency relationships:
+
+```
+                    +--> [P4: Visibility] (independent)
+                    |
+[P3: Temporal] -----+
+(no deps)           |
+                    +--> [P1: Communities] (needs graph infra)
+                              |
+                              v
+                    [P2: Query Routing] (needs communities for community_explore intent)
+                              |
+                              v
+                    [P5: Multi-Model] (independent, but benefits from routing)
+```
+
+### Recommended Phase Structure
+
+**Phase 1: Temporal + Visibility (parallel, no dependencies)**
+
+These two can be built simultaneously because they touch different parts of the codebase.
+
+- **P3 Temporal:** Schema migration + backfill + service functions + publish flow integration. Low risk, additive change, no breaking queries.
+- **P4 Visibility:** Update visibility.ts central functions + audit all 15 hardcoded locations + MCP enum update + CHECK constraint. Medium risk due to breadth of changes, but each change is small.
+
+**Phase 2: Community Detection**
+
+Depends on: nothing technically, but benefits from temporal being done first (community detection can use version timeline data for edge weighting).
+
+- Schema: skill_graph_edges + skill_communities + skill_community_memberships
+- Services: graph-edges.ts + community-detection.ts + leiden.ts
+- Cron: community-detection route
+- Integration: similar-skills community boost
+
+**Phase 3: Query Routing**
+
+Depends on: Community detection (for the "community_explore" intent).
+
+- Service: query-router.ts
+- Integration: discover.ts + MCP search/recommend
+- Schema: searchQueries enhancement
+- Analytics: route effectiveness tracking
+
+**Phase 4: Multi-Model Benchmarking**
+
+Technically independent but benefits from query routing being done (can measure search quality improvement).
+
+- Provider abstraction: llm-providers.ts
+- Pricing extension
+- Background execution: cron runner + status API
+- UI: model selection + progress
+- New dependencies: openai, @google/genai
+
+### Phase Ordering Rationale
+
+1. **Temporal + Visibility first** because they are schema-level foundations that other features build on. Temporal tracking informs community edge weighting (version history = usage patterns). Extended visibility is used by community detection queries.
+
+2. **Community Detection second** because query routing depends on communities existing to route to.
+
+3. **Query Routing third** because it's the integration layer that ties communities into the search pipeline.
+
+4. **Multi-Model last** because it's the most self-contained feature and has the most external dependencies (API keys, new npm packages). Testing requires real API calls to OpenAI and Google, which makes it the most expensive to iterate on.
+
+---
+
+## Cross-Cutting Concerns
+
+### Migration Sequencing
+
+```
+0038_add_temporal_columns.sql     (Phase 1)
+0039_extend_visibility.sql        (Phase 1)
+0040_create_graph_tables.sql      (Phase 2)
+0041_add_community_tables.sql     (Phase 2)
+0042_add_search_query_routing.sql (Phase 3)
+```
+
+All migrations are additive (ADD COLUMN, CREATE TABLE, ADD CONSTRAINT). None modify existing column types or drop columns. This means they can be applied to production without downtime.
+
+### RLS Policy Template
+
+All new tables follow the existing pattern:
+
+```typescript
+pgPolicy("tenant_isolation", {
+  as: "restrictive",
+  for: "all",
+  using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+  withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+})
+```
+
+### Multi-Tenant Considerations
+
+- All new tables include `tenant_id NOT NULL FK to tenants`
+- Community detection runs per-tenant (each tenant gets its own graph)
+- Query routing is tenant-agnostic (rules don't depend on tenant data)
+- Visibility "public" crosses tenant boundaries — this is intentional for future marketplace, but requires careful handling in RLS (public skills bypass tenant isolation for reads)
+
+### Public Visibility and RLS
+
+**Critical design consideration:** Current RLS policies enforce `tenant_id = current_setting('app.current_tenant_id')`. Public skills need to be readable across tenants. Options:
+
+1. **Separate RLS policy for public visibility** (recommended):
+   ```sql
+   CREATE POLICY public_read ON skills
+     FOR SELECT
+     USING (visibility = 'public' OR tenant_id = current_setting('app.current_tenant_id', true));
+   ```
+
+2. **Application-level bypass:** Query public skills without setting tenant context. Risky, breaks the security model.
+
+**Recommendation:** Option 1. Add a permissive policy alongside the existing restrictive one. The restrictive policy remains for writes; the permissive policy allows cross-tenant reads of public skills only.
+
+---
+
+## Component Inventory Summary
+
+### New Schema Files (5)
+
+| File | Tables | Migration |
+|---|---|---|
+| `packages/db/src/schema/skill-graph-edges.ts` | skill_graph_edges | 0040 |
+| `packages/db/src/schema/skill-communities.ts` | skill_communities | 0041 |
+| `packages/db/src/schema/skill-community-memberships.ts` | skill_community_memberships | 0041 |
+| skill-versions.ts (modify) | +valid_from, +valid_to | 0038 |
+| search-queries.ts (modify) | +query_intent, +search_strategy, +route_confidence | 0042 |
+
+### New Service Files (6)
+
+| File | Purpose |
+|---|---|
+| `packages/db/src/services/graph-edges.ts` | Edge construction and CRUD |
+| `packages/db/src/services/community-detection.ts` | Leiden wrapper + community CRUD |
+| `packages/db/src/services/community-search.ts` | Community-aware search queries |
+| `packages/db/src/services/query-router.ts` | Query classification + strategy |
+| `packages/db/src/services/llm-providers.ts` | Multi-provider abstraction |
+| `packages/db/src/services/skill-versions.ts` | Temporal query functions |
+
+### New API Routes (3)
+
+| Route | Purpose |
+|---|---|
+| `apps/web/app/api/cron/community-detection/route.ts` | Daily community rebuild |
+| `apps/web/app/api/cron/benchmark-runner/route.ts` | Background benchmark execution |
+| `apps/web/app/api/benchmark/[runId]/status/route.ts` | Benchmark progress polling |
+
+### New Library Files (1)
+
+| File | Purpose |
+|---|---|
+| `apps/web/lib/leiden.ts` | Leiden algorithm implementation/wrapper |
+
+### Modified Files (15+)
+
+| File | Change Scope |
+|---|---|
+| `packages/db/src/lib/visibility.ts` | Major: add context param + 2 new levels |
+| `packages/db/src/services/hybrid-search.ts` | Minor: accept weight params |
+| `packages/db/src/services/pricing.ts` | Medium: add multi-provider pricing |
+| `packages/db/src/schema/skill-versions.ts` | Minor: add 2 columns |
+| `packages/db/src/schema/search-queries.ts` | Minor: add 3 columns |
+| `packages/db/src/schema/index.ts` | Minor: export new schemas |
+| `packages/db/src/services/index.ts` | Minor: export new services |
+| `apps/web/app/actions/discover.ts` | Medium: use query router |
+| `apps/web/app/actions/benchmark.ts` | Medium: async execution |
+| `apps/web/lib/benchmark-runner.ts` | Major: provider abstraction |
+| `apps/web/lib/trending.ts` | Minor: update hardcoded visibility |
+| `apps/web/lib/leaderboard.ts` | Minor: update hardcoded visibility |
+| `apps/web/lib/search-skills.ts` | Minor: update hardcoded visibility |
+| `apps/web/lib/similar-skills.ts` | Medium: add community context |
+| `apps/web/lib/portfolio-queries.ts` | Minor: update hardcoded visibility |
+| `apps/mcp/src/tools/everyskill.ts` | Minor: update visibility enum |
+| `apps/mcp/src/tools/search.ts` | Minor: use query router |
+| `apps/mcp/src/tools/recommend.ts` | Minor: use query router |
+
+### New npm Dependencies (3)
+
+| Package | Purpose | Phase |
+|---|---|---|
+| `louvain-leiden` (or vendor) | Community detection algorithm | Phase 2 |
+| `openai` | OpenAI API client | Phase 4 |
+| `@google/genai` | Google AI API client | Phase 4 |
 
 ---
 
 ## Sources
 
-All findings derived from direct codebase analysis:
-- `packages/db/src/schema/*.ts` — existing table definitions
-- `apps/web/app/api/track/route.ts` — tracking endpoint
-- `apps/mcp/src/tracking/events.ts` — MCP-side tracking
-- `apps/mcp/src/tools/deploy.ts` — PostToolUse hook generation
-- `apps/mcp/src/tools/everyskill.ts` — unified tool pattern
-- `apps/web/app/actions/fork-skill.ts` — fork system
-- `apps/web/lib/analytics-queries.ts` — dashboard query patterns
-- `apps/web/lib/my-leverage.ts` — leverage metrics
-- `packages/db/src/services/skill-metrics.ts` — denormalized aggregate pattern
-- `packages/db/src/services/usage-tracking.ts` — tracking service pattern
-- `research/v3_milestone_ideas.txt` — product requirements from stakeholder
+- [PostgreSQL vs Neo4j for small graphs](https://medium.com/self-study-notes/exploring-graph-database-capabilities-neo4j-vs-postgresql-105c9e85bb5d)
+- [Leiden algorithm implementations on GitHub](https://github.com/topics/leiden-algorithm)
+- [esclear/louvain-leiden TypeScript implementation](https://github.com/esclear/louvain-leiden)
+- [GraphRAG and PostgreSQL integration](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/graphrag-and-postgresql-integration-in-docker-with-cypher-query-and-ai-agents/4420623)
+- [Bi-temporal PostgreSQL patterns](https://hdombrovskaya.wordpress.com/2024/05/05/3937/)
+- [PostgreSQL 17 temporal extensions](https://wiki.postgresql.org/wiki/Temporal_Extensions)
+- [SQL:2011 temporal support in PostgreSQL](https://wiki.postgresql.org/wiki/SQL2011Temporal)
+- [Vercel AI SDK provider model](https://ai-sdk.dev/docs/introduction)
+- [OpenAI Node.js SDK](https://github.com/openai/openai-node)
+- [@google/genai migration from deprecated @google/generative-ai](https://ai.google.dev/gemini-api/docs/migrate)
+- [Next.js background jobs patterns](https://github.com/vercel/next.js/discussions/33989)
+- [Inngest background job pattern](https://www.inngest.com/blog/run-nextjs-functions-in-the-background)
+- [Leiden algorithm paper (Traag et al.)](https://arxiv.org/abs/1810.08473)

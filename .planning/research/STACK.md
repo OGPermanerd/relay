@@ -1,25 +1,8 @@
-# Technology Stack: Feedback Loop, Training Data & Benchmarking
+# Technology Stack: v7.0 Algorithm & Architecture Rewrite
 
-**Project:** EverySkill - AI Independence & Feedback Loop
-**Researched:** 2026-02-15
+**Project:** EverySkill - GraphRAG, Adaptive Routing, Temporal Tracking, Extended Visibility, Multi-Model Benchmarking
+**Researched:** 2026-02-16
 **Overall confidence:** HIGH
-**Scope:** Stack additions for feedback loop, training data, token measurement, and benchmarking features. Existing stack unchanged (Next.js 16.1.6, PostgreSQL + pgvector, Drizzle ORM 0.42.0, Auth.js v5, MCP SDK, Anthropic SDK, Recharts 3.7.0).
-
----
-
-## Executive Summary
-
-This milestone requires minimal new npm dependencies. Every core capability is achievable with the existing stack. The Anthropic SDK already provides token counting via `response.usage`. Recharts handles all visualization needs. Drizzle ORM supports the new table definitions including JSONB typed columns. The only new dependencies are OpenAI and Google AI SDKs for cross-LLM benchmarking -- and those are optional (benchmarking can start with Anthropic-only).
-
-Key technical findings:
-
-1. **Token counting** is built into every Anthropic API response via `response.usage` (`input_tokens`, `output_tokens`). The existing `@anthropic-ai/sdk` already returns this -- we just need to capture it. For pre-flight estimation, `client.messages.countTokens()` is free and available.
-
-2. **PostToolUse hook payload** provides `tool_name`, `tool_input`, `tool_response`, `session_id`, and `tool_use_id` via stdin JSON. The existing hook in `deploy.ts` already extracts `tool_name` -- extending it for richer data capture is a configuration change.
-
-3. **Cost calculation** uses a static pricing table (model -> $/MTok) applied to token counts. The Anthropic Usage/Cost API requires Admin API keys and provides org-level aggregates only -- not suitable for per-skill tracking.
-
-4. **Cross-LLM benchmarking** requires OpenAI and Google AI SDKs. These are lightweight, well-maintained, and only used server-side. No client bundle impact.
 
 ---
 
@@ -31,145 +14,106 @@ Key technical findings:
 |------------|---------|---------|--------|
 | Next.js | 16.1.6 | App framework, server actions, API routes | Already installed |
 | Drizzle ORM | 0.42.0 | Database ORM with pgPolicy support | Already installed |
-| PostgreSQL | 15+ | Database with pgvector, RLS | Already running |
+| PostgreSQL | 16 | Database with pgvector, RLS, range types | Already running |
 | Zod | 3.25+ | Schema validation | Already installed |
 | Recharts | 3.7.0 | Dashboard charts | Already installed |
+| TypeScript | 5.7+ | Type safety | Already installed |
+| Anthropic SDK | 0.72.1 | AI reviews, benchmarking judge, community labels | Already installed |
 
-### AI & Token Measurement (EXTEND)
+### NEW: Community Detection
 
 | Technology | Version | Purpose | Why |
 |------------|---------|---------|-----|
-| @anthropic-ai/sdk | 0.72+ | Claude API calls + `response.usage` token counting | Already installed; `response.usage` provides per-request token counts |
-| openai | New dep | GPT model API calls for cross-LLM benchmarking | Official SDK, lightweight, needed for multi-model comparison |
-| @google/generative-ai | New dep | Gemini model API calls for cross-LLM benchmarking | Official SDK, needed for multi-model comparison |
+| louvain-leiden (or vendor) | TBD | Leiden community detection algorithm | TypeScript implementation exists on GitHub (esclear/louvain-leiden). For graphs under 10K nodes, pure JS runs in milliseconds. No Python sidecar needed |
 
-### Supporting Libraries (MINIMAL NEW)
+**Note:** The exact npm package needs verification at implementation time. Alternatives include vendoring the algorithm (~300 lines) or using graphology-communities-louvain (Louvain with resolution tuning, which achieves equivalent results at this scale).
 
-| Library | Purpose | Why This One |
-|---------|---------|-------------|
-| diff | Text diffs for suggestion review UI | Standard diff library, used for showing suggested content changes vs original |
+### NEW: Multi-Model AI SDKs
+
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| openai | ^5.x | OpenAI API client for GPT models in benchmarks | Official SDK, dynamic-imported only when benchmarking uses OpenAI models |
+| @google/genai | ^1.x | Google AI API client for Gemini models in benchmarks | New official SDK (replaces deprecated @google/generative-ai). Dynamic-imported only when benchmarking uses Google models |
+
+### Database (NO CHANGES)
+
+| Technology | Version | Purpose | Status |
+|------------|---------|---------|--------|
+| PostgreSQL | 16 | Primary database | Already running |
+| pgvector | (installed) | Vector similarity search | Already enabled |
+| RLS policies | (enabled) | Tenant isolation | Already configured on all tables |
 
 ### Infrastructure (NO CHANGES)
 
-| Technology | Version | Purpose | Why No Change |
-|------------|---------|---------|---------------|
-| @modelcontextprotocol/sdk | 1.26+ | MCP server with PostToolUse hooks | Already configured in skill frontmatter |
-| Node.js crypto (built-in) | - | HMAC signing for hook callbacks | Already used in `apps/web/lib/hmac.ts` |
+| Technology | Purpose | Status |
+|------------|---------|--------|
+| Ollama | Local embeddings (nomic-embed-text, 768 dims) | Already running |
+| PM2 | Process management (prod/staging) | Already configured |
+| Caddy | Reverse proxy with TLS | Already configured |
+| Docker Compose | PostgreSQL container | Already running |
+
+### Supporting Libraries (NO NEW DEPS)
+
+| Library | Version | Purpose | Status |
+|---------|---------|---------|--------|
+| diff | 8.0.3 | Text diffs for version comparison | Already installed |
+| drizzle-orm | 0.42.0 | ORM with pgPolicy support | Already installed |
+| @modelcontextprotocol/sdk | 1.26+ | MCP server | Already installed |
 
 ---
 
 ## Alternatives Considered
 
+### Community Detection
+
 | Category | Recommended | Alternative | Why Not |
 |----------|-------------|-------------|---------|
-| Token counting | `response.usage` from SDK | `@anthropic-ai/tokenizer` npm | v0.0.4, 3 years stale, inaccurate for Claude 3+ |
-| Token estimation | `client.messages.countTokens()` | tiktoken (OpenAI) | Different tokenizer, approximate only, extra dependency |
-| Cost tracking | Static pricing table | Anthropic Usage/Cost API | Requires admin key, org-level only, 5-min delay |
-| Multi-model SDK | Individual SDKs per provider | LangChain / LiteLLM | Heavy abstraction for 3 simple API calls. Direct SDKs give full control |
-| Job queue (benchmarks) | Detached Promise + polling | pg-boss / BullMQ | Overkill at current scale. Add later if benchmark volume justifies |
-| Analytics aggregation | Cron + PostgreSQL | TimescaleDB / ClickHouse | Premature, volume is low, PostgreSQL handles aggregation fine |
-| Feedback collection | Custom table + routes | Sentry / PostHog | Product analytics tools, not skill-specific feedback |
-| Training data storage | PostgreSQL JSONB | MongoDB / DynamoDB | Already have PostgreSQL, JSONB is sufficient |
-| Benchmarking visualization | Recharts (existing) | Grafana / Chart.js / D3 | Recharts already handles all chart types needed |
-| LLM evaluation | Simple AI-judged scoring | promptfoo / langsmith | Adds operational complexity and vendor lock-in for features buildable in ~50 lines |
+| Graph storage | PG adjacency list | Neo4j | Massive operational overhead for <10K node graphs. Research confirms PG outperforms Neo4j at this scale |
+| Graph storage | PG adjacency list | Apache AGE (PG extension) | Adds Cypher query language. Overkill -- we load into memory for analysis, PG just stores edges |
+| Community detection | Leiden (JS/vendored) | Python sidecar (leidenalg) | Deployment complexity, IPC overhead, separate process health monitoring |
+| Community detection | Leiden (JS/vendored) | Louvain (graphology) | Louvain with resolution tuning is viable but Leiden guarantees well-connected communities. At our scale the difference is minor but Leiden is the more correct algorithm |
+| Community detection | Leiden (JS/vendored) | WASM Leiden binary | Build complexity for marginal performance gain on small graphs |
 
----
+### Multi-Model Benchmarking
 
-## Token Counting Implementation
+| Category | Recommended | Alternative | Why Not |
+|----------|-------------|-------------|---------|
+| Multi-model SDK | Direct SDKs + abstraction | Vercel AI SDK | Project already has direct @anthropic-ai/sdk with custom pricing logic. AI SDK adds ~200KB+ framework code for features we don't use (streaming UI, RSC integration). A thin provider abstraction is simpler |
+| Multi-model SDK | Direct SDKs + abstraction | LangChain.js | 50+ package ecosystem for what we need from 2 SDK packages. Heavy abstraction without value |
+| Multi-model SDK | Direct SDKs + abstraction | LiteLLM | Python-only. Would require sidecar |
+| Background jobs | DB-based cron polling | Inngest | Self-hosted VPS, not Vercel. External dependency for a single use case |
+| Background jobs | DB-based cron polling | Bull + Redis | No Redis in current stack. Adding Redis for one feature is overhead |
+| Background jobs | DB-based cron polling | Trigger.dev | External SaaS dependency. The existing cron pattern is sufficient |
 
-### Per-Request (Actual)
+### Temporal Tracking
 
-Every `client.messages.create()` call returns `response.usage`:
+| Category | Recommended | Alternative | Why Not |
+|----------|-------------|-------------|---------|
+| Temporal model | Application-time columns (valid_from/valid_to) | Full bi-temporal (4 columns) | Overkill. System time already captured by immutable append-only skillVersions + createdAt |
+| Temporal model | Application-time columns | SCD Type 2 (flag columns) | Doesn't capture validity periods. Two timestamp columns are cleaner and support range queries |
+| Column type | timestamptz (nullable) | tstzrange | Range types need custom Drizzle column types and are harder to work with. Two nullable timestamps are simpler and sufficient for our queries |
 
-```typescript
-const response = await client.messages.create({
-  model: "claude-sonnet-4-5-20250929",
-  max_tokens: 2048,
-  messages: [{ role: "user", content: "..." }],
-});
+### Visibility Extension
 
-// response.usage = {
-//   input_tokens: 150,
-//   output_tokens: 423,
-//   cache_creation_input_tokens: 0,
-//   cache_read_input_tokens: 0,
-// }
-```
-
-**Current gap:** `apps/web/lib/ai-review.ts` and `apps/web/lib/skill-recommendations.ts` call `client.messages.create()` but discard `response.usage`. Fix: wrap to extract and store.
-
-### Pre-Flight (Estimate)
-
-```typescript
-const estimate = await client.messages.countTokens({
-  model: "claude-sonnet-4-5-20250929",
-  messages: [{ role: "user", content: "..." }],
-});
-// { input_tokens: 14 }
-```
-
-Free (no charges), rate-limited (100-8000 RPM by tier).
-
-**Do NOT use `@anthropic-ai/tokenizer`:** v0.0.4, published 3+ years ago, explicitly inaccurate for Claude 3+ models.
-
----
-
-## Cost Calculation
-
-Static pricing table applied to token counts. Updated at deploy time (pricing changes are infrequent).
-
-```typescript
-// apps/web/lib/anthropic-pricing.ts
-export const MODEL_PRICING: Record<string, { inputPerMTok: number; outputPerMTok: number }> = {
-  "claude-haiku-4-5":    { inputPerMTok: 1.00,  outputPerMTok: 5.00 },
-  "claude-sonnet-4-5":   { inputPerMTok: 3.00,  outputPerMTok: 15.00 },
-  "claude-opus-4-6":     { inputPerMTok: 5.00,  outputPerMTok: 25.00 },
-  // OpenAI and Google pricing added when benchmarking those models
-};
-
-export function estimateCostMicrocents(
-  model: string, inputTokens: number, outputTokens: number
-): number {
-  const pricing = MODEL_PRICING[model];
-  if (!pricing) return 0;
-  const costUsd = (inputTokens / 1_000_000) * pricing.inputPerMTok
-                + (outputTokens / 1_000_000) * pricing.outputPerMTok;
-  return Math.round(costUsd * 100 * 1000); // convert to microcents
-}
-```
-
-**Why NOT Anthropic Usage/Cost API:** Requires Admin API key (`sk-ant-admin...`), provides org-level aggregates only, 5-min delay, cannot attribute cost to specific skills.
-
----
-
-## PostToolUse Hook Payload (Verified)
-
-The PostToolUse hook receives this JSON on stdin:
-
-```json
-{
-  "session_id": "abc123",
-  "hook_event_name": "PostToolUse",
-  "tool_name": "Write",
-  "tool_input": { "file_path": "/path/to/file.txt", "content": "..." },
-  "tool_response": { "filePath": "/path/to/file.txt", "success": true },
-  "tool_use_id": "toolu_01ABC123..."
-}
-```
-
-**Key fields for training data:** `tool_input` and `tool_response` provide input/output pairs. `session_id` groups events. `tool_use_id` enables deduplication.
-
-**Important limitation:** The hook does NOT receive conversation-level token counts. Token measurement from hooks is limited to what we can infer. Primary token data comes from benchmark runs and direct MCP API calls.
+| Category | Recommended | Alternative | Why Not |
+|----------|-------------|-------------|---------|
+| Visibility column | Keep as text, add CHECK constraint | Migrate to PG enum | Enum changes require ALTER TYPE which is disruptive. Text + CHECK is simpler and equally type-safe |
+| RLS for public | Permissive read policy | Application-level bypass | Application bypass breaks the security model. A permissive RLS policy is the PostgreSQL-native approach |
 
 ---
 
 ## Environment Variables (New)
 
 ```env
-# apps/web/.env.local
-OPENAI_API_KEY=sk-...           # For GPT benchmarks (optional)
-GOOGLE_AI_API_KEY=AIza...       # For Gemini benchmarks (optional)
-# ANTHROPIC_API_KEY already exists
+# apps/web/.env.local (all optional -- only needed for multi-model benchmarking)
+
+OPENAI_API_KEY=sk-...           # For GPT model benchmarks
+GOOGLE_AI_API_KEY=AIza...       # For Gemini model benchmarks
+
+# Existing (unchanged):
+# ANTHROPIC_API_KEY — already configured
+# DATABASE_URL — already configured
+# CRON_SECRET — already configured (used by new cron routes)
 ```
 
 ---
@@ -177,26 +121,60 @@ GOOGLE_AI_API_KEY=AIza...       # For Gemini benchmarks (optional)
 ## Installation
 
 ```bash
-# New dependencies (optional -- only needed for cross-LLM benchmarking)
-cd apps/web && pnpm add openai @google/generative-ai diff
-cd apps/web && pnpm add -D @types/diff
+# Multi-model AI SDKs (only needed for multi-model benchmarking, Phase 4)
+cd /home/dev/projects/relay/apps/web && pnpm add openai @google/genai
 
-# Schema changes
-pnpm db:migrate
+# Community detection (Phase 2 -- exact package TBD, may vendor instead)
+# cd /home/dev/projects/relay/apps/web && pnpm add louvain-leiden
+
+# No other new dependencies needed
+# No new database extensions needed (pgvector and btree_gist already available)
 ```
+
+**Dev dependencies:** None new. Existing vitest + playwright handle testing.
+
+---
+
+## What NOT to Add
+
+| Tempting Addition | Why Skip |
+|-------------------|----------|
+| Neo4j / Memgraph | Graph DB for <10K nodes is massive overkill. PG adjacency list + in-memory algorithm covers our needs |
+| Python sidecar | Deployment complexity, IPC overhead, resource management. Only consider if skill count exceeds 100K per tenant |
+| Vercel AI SDK | Already have direct Anthropic SDK with custom pricing. Adding AI SDK framework code for 2 additional providers is worse than a thin abstraction |
+| LangChain.js | 50+ package ecosystem for what we need from 2 SDK packages |
+| Redis | No Redis in current stack. DB-based job tracking is sufficient for benchmark background execution |
+| Inngest / Trigger.dev | External SaaS for a self-hosted project. The existing cron pattern works |
+| TimescaleDB | Temporal needs are metadata snapshots, not time-series telemetry |
+| Apache AGE | Cypher on PG is interesting but overkill -- we load into JS for analysis |
+| graphology suite | 6+ packages for what could be a vendored ~300-line Leiden implementation or one npm package |
+
+---
+
+## Package Summary
+
+| Package | New/Update | Server-Only | Phase |
+|---------|------------|-------------|-------|
+| openai | NEW | Yes (dynamic import) | Phase 4 |
+| @google/genai | NEW | Yes (dynamic import) | Phase 4 |
+| louvain-leiden (or vendor) | NEW | Yes | Phase 2 |
+
+**Total new JS deps:** 2-3 packages (all server-only, no client bundle impact due to dynamic imports)
+**New PG extensions:** 0
+**New infrastructure services:** 0
 
 ---
 
 ## Sources
 
 ### HIGH Confidence
-- Anthropic Token Counting API -- `client.messages.countTokens()`, free, all active models
-- Anthropic Pricing -- per-model $/MTok verified from docs
-- Existing codebase (read directly): `apps/mcp/src/tools/deploy.ts`, `apps/web/app/api/track/route.ts`, `apps/web/lib/ai-review.ts`
+- [OpenAI Node.js SDK](https://github.com/openai/openai-node) -- official, actively maintained
+- [@google/genai migration docs](https://ai.google.dev/gemini-api/docs/migrate) -- replacement for deprecated @google/generative-ai
+- [PostgreSQL vs Neo4j for small graphs](https://medium.com/self-study-notes/exploring-graph-database-capabilities-neo4j-vs-postgresql-105c9e85bb5d) -- PG outperforms for <100K nodes
+- [Leiden algorithm paper](https://arxiv.org/abs/1810.08473) -- algorithm specification
+- Existing codebase: `benchmark-runner.ts`, `hybrid-search.ts`, `visibility.ts`, `pricing.ts`, `ollama.ts`
 
 ### MEDIUM Confidence
-- Anthropic Messages API -- `response.usage` object structure (verified via SDK types)
-- PostToolUse hook input schema (verified from Claude Code hooks documentation)
-
-### LOW Confidence
-- OpenAI and Google AI SDK integration patterns -- standard but not verified against latest versions
+- [esclear/louvain-leiden](https://github.com/esclear/louvain-leiden) -- TypeScript Leiden implementation exists but needs API verification
+- @google/genai exact API surface for token counting -- recently renamed package, verify at implementation time
+- Dynamic import pattern for tree-shaking -- standard Node.js pattern but verify Next.js handles it correctly in server actions
