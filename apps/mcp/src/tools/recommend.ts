@@ -1,8 +1,11 @@
 import { semanticSearchSkills } from "@everyskill/db/services/semantic-search";
 import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
+import { getOrCreateUserPreferences } from "@everyskill/db/services/user-preferences";
 import { generateEmbedding, OLLAMA_DEFAULTS } from "../lib/ollama.js";
 import { trackUsage } from "../tracking/events.js";
 import { getTenantId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
+
+const PREFERENCE_BOOST = 1.3;
 
 export async function handleRecommendSkills({
   query,
@@ -58,6 +61,41 @@ export async function handleRecommendSkills({
       userId,
     });
     searchMethod = "text";
+  }
+
+  // Apply preference boost for authenticated users
+  if (userId && tenantId) {
+    try {
+      const prefs = await getOrCreateUserPreferences(userId, tenantId);
+      const preferred: string[] = prefs?.preferredCategories ?? [];
+      if (preferred.length > 0) {
+        if (searchMethod === "semantic") {
+          // Multiply similarity score for preferred categories, then re-sort
+          results = results.map((r) => ({
+            ...r,
+            similarity:
+              preferred.includes(r.category) && r.similarity
+                ? r.similarity * PREFERENCE_BOOST
+                : r.similarity,
+          }));
+          results.sort((a, b) => (b.similarity ?? 0) - (a.similarity ?? 0));
+        } else {
+          // Text fallback: stable reranking (same as search.ts)
+          const tagged = results.map((r) => ({
+            ...r,
+            isBoosted: preferred.includes(r.category),
+          }));
+          tagged.sort((a, b) => {
+            if (a.isBoosted && !b.isBoosted) return -1;
+            if (!a.isBoosted && b.isBoosted) return 1;
+            return 0;
+          });
+          results = tagged;
+        }
+      }
+    } catch {
+      // Preference failure must not break recommend
+    }
   }
 
   if (!userId && !skipNudge) {
