@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 69 of 75 (Extended Visibility)
-Plan: 1 of 3 in current phase
+Plan: 3 of 3 in current phase (plan 02 still pending)
 Status: In progress
-Last activity: 2026-02-16 — Completed 69-01-PLAN.md (visibility foundation)
+Last activity: 2026-02-16 — Completed 69-03-PLAN.md (UI visibility controls)
 
-Progress: [███░░░░░░░░░░░░░░░░░░░░░░░░░░░] 1/3
+Progress: [████████████████████░░░░░░░░░░] 2/3
 
 ## Milestones
 
@@ -34,12 +34,12 @@ Progress: [███░░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 247
+- Total plans completed: 248
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.4 hours
 
 **Cumulative:**
-- 247 plans across 68 phases and 11 milestones
+- 248 plans across 68 phases and 11 milestones
 - ~64,000 LOC TypeScript across 469 files
 - 17 days total development time
 
@@ -60,6 +60,8 @@ Phase 69 decisions:
 - CHECK constraint (not enum) for 4 visibility values -- easy to extend without migration
 - RLS cross-tenant reads for global_approved via OR in USING clause, writes restricted to own tenant
 - Vitest added to @everyskill/db as first test framework for that package
+- Server-side admin resolution via auth() + isAdmin() passed as boolean prop to client components
+- VisibilityBadge color scheme: Global=purple, Company=blue, Portable=green, Private=gray
 
 ### Pending Todos
 
@@ -77,10 +79,10 @@ Phase 69 decisions:
 
 ### Blockers/Concerns
 
-None. Phase 69 plan 01 complete, ready for plans 02-03.
+None. Phase 69 plans 01 and 03 complete, plan 02 still pending.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 69-01 (visibility foundation), ready for 69-02
+Stopped at: Completed 69-03 (UI visibility controls), plan 02 still pending
 Resume file: .planning/phases/69-extended-visibility/69-02-PLAN.md
