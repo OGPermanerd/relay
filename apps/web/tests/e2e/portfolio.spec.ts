@@ -35,4 +35,32 @@ test.describe("Portfolio Page", () => {
     // Skills list section should be visible
     await expect(page.getByText("Your Skills")).toBeVisible();
   });
+
+  test("should display impact timeline section", async ({ page }) => {
+    await page.goto("/portfolio");
+
+    // Timeline renders either the chart with heading or the empty state
+    const heading = page.getByText("Skills Impact Timeline");
+    const emptyState = page.getByText("No impact data yet");
+    await expect(heading.or(emptyState)).toBeVisible();
+  });
+
+  test("should display impact calculator section", async ({ page }) => {
+    await page.goto("/portfolio");
+
+    // Calculator renders either stat labels or empty state
+    const heading = page.getByText("Impact Calculator");
+    const emptyState = page.getByText("No contributions yet");
+    const isPopulated = await heading.isVisible().catch(() => false);
+
+    if (isPopulated) {
+      await expect(page.getByText("Total Hours Saved")).toBeVisible();
+      await expect(page.getByText("Estimated Value Added")).toBeVisible();
+      await expect(page.getByText("Skills Created")).toBeVisible();
+      await expect(page.getByText("Skills Forked")).toBeVisible();
+      await expect(page.getByText("Suggestions Implemented")).toBeVisible();
+    } else {
+      await expect(emptyState).toBeVisible();
+    }
+  });
 });
