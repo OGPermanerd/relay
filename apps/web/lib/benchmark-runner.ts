@@ -39,6 +39,10 @@ interface JudgeOutput {
   qualityScore: number;
   qualityNotes: string;
   matchesExpected: boolean;
+  faithfulnessScore: number; // 0-100
+  relevancyScore: number; // 0-100
+  precisionScore: number; // 0-100
+  recallScore: number; // 0-100
 }
 
 // ---------------------------------------------------------------------------
@@ -72,17 +76,31 @@ const JUDGE_JSON_SCHEMA = {
     qualityScore: { type: "number" as const },
     qualityNotes: { type: "string" as const },
     matchesExpected: { type: "boolean" as const },
+    faithfulnessScore: { type: "number" as const },
+    relevancyScore: { type: "number" as const },
+    precisionScore: { type: "number" as const },
+    recallScore: { type: "number" as const },
   },
-  required: ["qualityScore", "qualityNotes", "matchesExpected"],
+  required: [
+    "qualityScore",
+    "qualityNotes",
+    "matchesExpected",
+    "faithfulnessScore",
+    "relevancyScore",
+    "precisionScore",
+    "recallScore",
+  ],
   additionalProperties: false,
 };
 
 /**
  * Judge the quality of a model output using a blinded evaluation.
  * The judge does NOT know which model produced the output (anti-bias per BENCH-07).
+ * Scores 5 dimensions: overall quality + 4 RAGAS dimensions (faithfulness, relevancy, precision, recall).
  */
 async function judgeQuality(
   client: Anthropic,
+  skillContent: string,
   output: string,
   expectedOutput: string | null,
   testInput: string
@@ -91,21 +109,44 @@ async function judgeQuality(
     ? `\n\n<expected_output>\n${expectedOutput}\n</expected_output>`
     : "\n\nNo expected output is provided. Judge based on helpfulness, correctness, and completeness alone.";
 
-  const userPrompt = `Evaluate the following output produced for the given input.
+  const userPrompt = `Evaluate the following output produced by an AI skill.
 
-<input>\n${testInput}\n</input>
+<skill_instructions>
+${skillContent}
+</skill_instructions>
 
-<output>\n${output}\n</output>${expectedSection}
+<input>
+${testInput}
+</input>
 
-Score the output on a 0-100 scale. Focus on correctness, completeness, and usefulness.`;
+<output>
+${output}
+</output>${expectedSection}
+
+Score the output on FIVE dimensions (0-100 each). Each dimension MUST be scored independently.
+
+1. OVERALL QUALITY (qualityScore): Holistic assessment of correctness, completeness, and usefulness.
+
+2. FAITHFULNESS (faithfulnessScore): Does the output follow the skill instructions without hallucinating, deviating, or adding unsupported claims? 100 = perfectly faithful to instructions. 0 = completely ignores or contradicts instructions.
+
+3. RELEVANCY (relevancyScore): Is the output relevant to the specific input provided? 100 = directly and completely addresses the input. 0 = output has nothing to do with the input.
+
+4. PRECISION (precisionScore): Did the model use the skill instructions effectively? 100 = every part of the skill was leveraged appropriately. 0 = skill instructions were completely ignored.
+
+5. RECALL (recallScore): Does the output address ALL aspects of the input? 100 = every aspect of the input is covered. 0 = major aspects of the input were missed.
+
+Example of valid divergent scoring:
+- An output that perfectly follows instructions (faithfulness=95) but only addresses half the input (recall=50)
+- An output that covers everything in the input (recall=90) but ignores the skill format requirements (precision=40)
+- A thorough, relevant response (relevancy=90, recall=85) that adds claims not in the skill instructions (faithfulness=55)`;
 
   const response = await client.messages.create({
     model: JUDGE_MODEL,
-    max_tokens: 512,
+    max_tokens: 1024,
     system:
-      "You are an impartial quality evaluator. Score the output on a 0-100 scale. " +
-      "Do not factor in writing style preferences. Focus on correctness, completeness, " +
-      "and usefulness relative to the input and expected output.",
+      "You are an impartial quality evaluator for AI skill outputs. Score the output on 5 dimensions (0-100 each). " +
+      "Each dimension MUST be scored independently -- it is expected and correct for scores to differ by 20+ points. " +
+      "Do not anchor one score on another.",
     messages: [{ role: "user", content: userPrompt }],
     output_config: {
       format: { type: "json_schema", schema: JUDGE_JSON_SCHEMA },
@@ -114,7 +155,15 @@ Score the output on a 0-100 scale. Focus on correctness, completeness, and usefu
 
   const textBlock = response.content.find((block) => block.type === "text");
   if (!textBlock || textBlock.type !== "text") {
-    return { qualityScore: 0, qualityNotes: "No judge response", matchesExpected: false };
+    return {
+      qualityScore: 0,
+      qualityNotes: "No judge response",
+      matchesExpected: false,
+      faithfulnessScore: 0,
+      relevancyScore: 0,
+      precisionScore: 0,
+      recallScore: 0,
+    };
   }
 
   try {
@@ -124,6 +173,10 @@ Score the output on a 0-100 scale. Focus on correctness, completeness, and usefu
       qualityScore: 0,
       qualityNotes: "Failed to parse judge output",
       matchesExpected: false,
+      faithfulnessScore: 0,
+      relevancyScore: 0,
+      precisionScore: 0,
+      recallScore: 0,
     };
   }
 }
@@ -232,6 +285,7 @@ export async function runBenchmark(params: RunBenchmarkParams): Promise<RunBench
         try {
           judge = await judgeQuality(
             client,
+            params.skillContent,
             result.outputText,
             testCase.expectedOutput,
             testCase.input
@@ -241,6 +295,10 @@ export async function runBenchmark(params: RunBenchmarkParams): Promise<RunBench
             qualityScore: 0,
             qualityNotes: "Judge evaluation failed",
             matchesExpected: false,
+            faithfulnessScore: 0,
+            relevancyScore: 0,
+            precisionScore: 0,
+            recallScore: 0,
           };
         }
 
@@ -261,6 +319,10 @@ export async function runBenchmark(params: RunBenchmarkParams): Promise<RunBench
           qualityScore: judge.qualityScore,
           qualityNotes: judge.qualityNotes,
           matchesExpected: judge.matchesExpected,
+          faithfulnessScore: judge.faithfulnessScore,
+          relevancyScore: judge.relevancyScore,
+          precisionScore: judge.precisionScore,
+          recallScore: judge.recallScore,
         });
 
         // Track for summary
