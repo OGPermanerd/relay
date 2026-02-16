@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 65 of 68 (Individual Skills Portfolio)
-Plan: 1 of TBD in current phase
+Plan: 2 of TBD in current phase
 Status: In progress
-Last activity: 2026-02-16 -- Completed 65-01-PLAN.md (portfolio data layer + nav link)
+Last activity: 2026-02-16 -- Completed 65-02-PLAN.md (portfolio page UI + E2E tests)
 
-Progress: [############################..] 91% (237 plans across 65 phases, 10 milestones)
+Progress: [############################..] 91% (238 plans across 65 phases, 10 milestones)
 
 ## Milestones
 
@@ -33,12 +33,12 @@ Progress: [############################..] 91% (237 plans across 65 phases, 10 m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 237
+- Total plans completed: 238
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~11.9 hours
 
 **Cumulative:**
-- 237 plans across 65 phases and 10 milestones
+- 238 plans across 65 phases and 10 milestones
 - ~50,000 LOC TypeScript across 386 files
 - 16 days total development time
 
@@ -70,6 +70,8 @@ v6.0 decisions:
 - Portfolio queries use FILTER (WHERE) conditional aggregation for single-pass visibility breakdown
 - Contribution ranking uses only tenant-visible skills (visibility='tenant'), matching leaderboard
 - Rank labels: percentile-based for teams >20, ordinal for teams <=20
+- Portfolio page: border-l-4 accent cards (green portable, blue company) for IP ownership breakdown
+- Portfolio ranking subtitle: percentile context for large teams, ordinal context for small teams
 
 ### Pending Todos
 
@@ -84,5 +86,5 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Phase 65 Plan 01 complete -- portfolio data layer + nav link. Ready for Plan 02 (portfolio page).
-Resume file: .planning/phases/65-individual-skills-portfolio/65-01-SUMMARY.md
+Stopped at: Phase 65 Plan 02 complete -- portfolio page UI + E2E tests. Ready for Plan 03 if planned.
+Resume file: .planning/phases/65-individual-skills-portfolio/65-02-SUMMARY.md
