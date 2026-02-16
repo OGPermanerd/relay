@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- Phase 64 (IP Valuation & Export)
+**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- Phase 65 (Individual Skills Portfolio)
 
 ## Current Position
 
 Phase: 64 of 68 (IP Valuation & Export)
 Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-16 -- Completed 64-02-PLAN.md (IP valuation UI + export)
+Status: Phase verified — all 4/4 must-haves passed
+Last activity: 2026-02-16 -- Phase 64 verified and complete. Company IP dashboard track (62-64) done.
 
 Progress: [############################..] 91% (236 plans across 64 phases, 10 milestones)
 
@@ -28,7 +28,7 @@ Progress: [############################..] 91% (236 plans across 64 phases, 10 m
 - v3.0 AI Discovery & Workflow Intelligence - 21 plans - shipped 2026-02-13
 - v4.0 Gmail Workflow Diagnostic - 17 plans - shipped 2026-02-14
 - v5.0 Feedback, Training & Benchmarking - 18 plans - shipped 2026-02-15
-- v6.0 IP Dashboard & Skills Portfolio - 7 phases, 4/TBD plans - in progress
+- v6.0 IP Dashboard & Skills Portfolio - 7 phases, 6/TBD plans - in progress
 
 ## Performance Metrics
 
@@ -81,5 +81,5 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Phase 64 complete (IP Valuation & Export) -- both plans shipped
-Resume file: .planning/phases/64-ip-valuation-export/64-02-SUMMARY.md
+Stopped at: Phase 64 verified -- Company IP dashboard track complete (62-64). Ready for Phase 65 (Individual Skills Portfolio).
+Resume file: .planning/phases/64-ip-valuation-export/64-VERIFICATION.md

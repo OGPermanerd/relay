@@ -197,7 +197,7 @@ Total: 18 plans completed. 7 phases, 12 requirements.
 
 - [x] **Phase 62: Company IP Dashboard Core** - Hero KPIs and org-wide quality trend charts on a new IP dashboard page (completed 2026-02-15)
 - [x] **Phase 63: IP Risk Analysis** - Key person dependency detection and IP concentration risk visualization (completed 2026-02-16)
-- [ ] **Phase 64: IP Valuation & Export** - Replacement cost estimation and PDF/CSV IP report for board presentations
+- [x] **Phase 64: IP Valuation & Export** - Replacement cost estimation and PDF/CSV IP report for board presentations (completed 2026-02-16)
 - [ ] **Phase 65: Individual Skills Portfolio** - Personal portfolio page with contribution stats and portable vs company IP breakdown
 - [ ] **Phase 66: Impact Measurement** - Skills impact timeline and value-added calculator for individuals
 - [ ] **Phase 67: Skills Resume** - Shareable formatted summary of skills and impact for job applications
@@ -243,8 +243,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 64-01-PLAN.md — Replacement cost formula, SQL query, and server action (data layer)
-- [ ] 64-02-PLAN.md — Hero stat, valuation table, PDF/CSV export buttons (UI layer)
+- [x] 64-01-PLAN.md — Replacement cost formula, SQL query, and server action (data layer)
+- [x] 64-02-PLAN.md — Hero stat, valuation table, PDF/CSV export buttons (UI layer)
 
 #### Phase 65: Individual Skills Portfolio
 **Goal**: Users can view their personal skills portfolio showing what they've built, how much impact it's had, and which skills are portable vs company-owned
