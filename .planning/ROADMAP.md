@@ -303,7 +303,11 @@ Plans:
   2. Short keyword queries (1-2 words matching skill names) skip embedding generation and return results measurably faster than the current always-hybrid path
   3. Each search query's classified route type is logged in the search_queries table and visible in the search analytics dashboard
   4. A keyword search returning zero results automatically falls back to hybrid search, and the user sees results from the fallback without any manual intervention
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 74-01-PLAN.md -- Schema migration + query classifier + search router foundation
+- [ ] 74-02-PLAN.md -- Wire routing into discover, quick search, and skills page entry points
+- [ ] 74-03-PLAN.md -- Route type breakdown in admin search analytics dashboard
 
 ### Phase 75: RAGAS Benchmarking
 **Goal**: Benchmark results provide 4-dimension quality insight (faithfulness, relevancy, precision, recall) alongside the existing overall score
@@ -341,7 +345,7 @@ Recommended sequencing: 69 -> 70 -> 71 -> 72 -> 73 -> 74 -> 75 (serial for focus
 | 71. Temporal Tracking | v7.0 | 3/3 | Complete | 2026-02-16 |
 | 72. Community Detection | v7.0 | 2/2 | Complete | 2026-02-16 |
 | 73. Community Discovery UI | v7.0 | 2/2 | Complete | 2026-02-16 |
-| 74. Adaptive Query Routing | v7.0 | 0/TBD | Not started | - |
+| 74. Adaptive Query Routing | v7.0 | 0/3 | Not started | - |
 | 75. RAGAS Benchmarking | v7.0 | 0/TBD | Not started | - |
 
 **Total: 262 plans completed across 73 phases and 11 milestones. 2 phases remaining for v7.0.**
