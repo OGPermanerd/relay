@@ -1,5 +1,5 @@
 import { db, skills, users } from "@everyskill/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 
 export interface CompanyApprovedSkill {
   id: string;
@@ -31,7 +31,7 @@ export async function getCompanyApprovedSkills(limit = 6): Promise<CompanyApprov
       and(
         eq(skills.companyApproved, true),
         eq(skills.status, "published"),
-        eq(skills.visibility, "tenant")
+        inArray(skills.visibility, ["global_approved", "tenant"])
       )
     )
     .orderBy(desc(skills.approvedAt))

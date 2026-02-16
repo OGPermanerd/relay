@@ -1,6 +1,6 @@
 import { db } from "@everyskill/db";
 import { skills, users, ratings } from "@everyskill/db/schema";
-import { sql, eq, isNotNull, and } from "drizzle-orm";
+import { sql, eq, isNotNull, and, inArray } from "drizzle-orm";
 
 export interface PlatformStats {
   totalContributors: number;
@@ -46,7 +46,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
         and(
           isNotNull(skills.publishedVersionId),
           eq(skills.status, "published"),
-          eq(skills.visibility, "tenant")
+          inArray(skills.visibility, ["global_approved", "tenant"])
         )
       ),
 
@@ -61,7 +61,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
         and(
           isNotNull(skills.publishedVersionId),
           eq(skills.status, "published"),
-          eq(skills.visibility, "tenant")
+          inArray(skills.visibility, ["global_approved", "tenant"])
         )
       ),
 

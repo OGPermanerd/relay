@@ -299,7 +299,7 @@ export async function getAvailableTags(): Promise<string[]> {
   // Use unnest to flatten arrays, then select distinct
   // Only include tags from tenant-visible skills (personal skills excluded from tag aggregation)
   const result = await db.execute(
-    sql`SELECT DISTINCT unnest(tags) as tag FROM skills WHERE tags IS NOT NULL AND status = 'published' AND visibility = 'tenant' ORDER BY tag`
+    sql`SELECT DISTINCT unnest(tags) as tag FROM skills WHERE tags IS NOT NULL AND status = 'published' AND visibility IN ('global_approved', 'tenant') ORDER BY tag`
   );
 
   // db.execute returns RowList which is array-like, cast to array for mapping

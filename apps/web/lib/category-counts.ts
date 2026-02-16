@@ -1,6 +1,6 @@
 import { db } from "@everyskill/db";
 import { skills } from "@everyskill/db/schema";
-import { sql, eq, isNotNull, and } from "drizzle-orm";
+import { sql, eq, isNotNull, and, inArray } from "drizzle-orm";
 
 /**
  * Get per-category counts of published skills.
@@ -23,7 +23,7 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
       and(
         isNotNull(skills.publishedVersionId),
         eq(skills.status, "published"),
-        eq(skills.visibility, "tenant")
+        inArray(skills.visibility, ["global_approved", "tenant"])
       )
     )
     .groupBy(skills.category);

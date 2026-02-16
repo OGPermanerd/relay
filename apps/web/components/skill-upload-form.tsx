@@ -10,7 +10,7 @@ import type { SimilarSkillResult } from "@/lib/similar-skills";
 
 const initialState: SkillFormState = {};
 
-export function SkillUploadForm() {
+export function SkillUploadForm({ isAdmin = false }: { isAdmin?: boolean }) {
   const [state, formAction, isPending] = useActionState(checkAndCreateSkill, initialState);
 
   const [showWarning, setShowWarning] = useState(false);
@@ -197,7 +197,7 @@ export function SkillUploadForm() {
           {/* Visibility field */}
           <fieldset>
             <legend className="block text-sm font-medium text-gray-700">Visibility</legend>
-            <div className="mt-2 flex gap-6">
+            <div className="mt-2 flex flex-wrap gap-6">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
@@ -209,8 +209,8 @@ export function SkillUploadForm() {
                   className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-900">Team</span>
-                  <p className="text-xs text-gray-500">Everyone in your org can see this</p>
+                  <span className="text-sm font-medium text-gray-700">Team</span>
+                  <p className="text-xs text-gray-500">Visible to everyone in your organization</p>
                 </div>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -224,10 +224,48 @@ export function SkillUploadForm() {
                   className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-900">Personal</span>
-                  <p className="text-xs text-gray-500">Only you can see this</p>
+                  <span className="text-sm font-medium text-gray-700">Personal</span>
+                  <p className="text-xs text-gray-500">
+                    Only you can see it, appears in your portfolio
+                  </p>
                 </div>
               </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="visibility"
+                  value="private"
+                  checked={fields.visibility === "private"}
+                  onChange={(e) => setField("visibility", e.target.value)}
+                  disabled={isPending}
+                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-700">Private</span>
+                  <p className="text-xs text-gray-500">
+                    Hidden from all views, only you can access directly
+                  </p>
+                </div>
+              </label>
+              {isAdmin && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="global_approved"
+                    checked={fields.visibility === "global_approved"}
+                    onChange={(e) => setField("visibility", e.target.value)}
+                    disabled={isPending}
+                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">Global</span>
+                    <p className="text-xs text-gray-500">
+                      Visible across all organizations (admin only)
+                    </p>
+                  </div>
+                </label>
+              )}
             </div>
           </fieldset>
 

@@ -1,6 +1,11 @@
 import { SkillUploadForm } from "@/components/skill-upload-form";
+import { auth } from "@/auth";
+import { isAdmin } from "@/lib/admin";
 
-export default function NewSkillPage() {
+export default async function NewSkillPage() {
+  const session = await auth();
+  const admin = isAdmin(session);
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900">Share a New Skill</h1>
@@ -8,7 +13,7 @@ export default function NewSkillPage() {
         Contribute to the skill marketplace by sharing your expertise.
       </p>
       <div className="mt-8">
-        <SkillUploadForm />
+        <SkillUploadForm isAdmin={admin} />
       </div>
     </div>
   );

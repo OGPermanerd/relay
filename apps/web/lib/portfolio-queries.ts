@@ -53,7 +53,7 @@ export interface ContributionRanking {
  * - totalHoursSaved: Sum of (total_uses * COALESCE(hours_saved, 1))
  * - avgRating: Average rating / 100, formatted "4.5" (stored as integer * 100)
  * - portableSkills/portableHoursSaved: Same metrics for visibility = 'personal'
- * - companySkills/companyHoursSaved: Same metrics for visibility = 'tenant'
+ * - companySkills/companyHoursSaved: Same metrics for visibility IN ('global_approved', 'tenant')
  *
  * @param userId The author whose portfolio stats to retrieve
  */
@@ -79,8 +79,8 @@ export async function getPortfolioStats(userId: string): Promise<PortfolioStats>
       AVG(average_rating) AS avg_rating_raw,
       COUNT(*) FILTER (WHERE visibility = 'personal')::integer AS portable_skills,
       COALESCE(SUM(total_uses * COALESCE(hours_saved, 1)) FILTER (WHERE visibility = 'personal'), 0)::double precision AS portable_hours_saved,
-      COUNT(*) FILTER (WHERE visibility = 'tenant')::integer AS company_skills,
-      COALESCE(SUM(total_uses * COALESCE(hours_saved, 1)) FILTER (WHERE visibility = 'tenant'), 0)::double precision AS company_hours_saved
+      COUNT(*) FILTER (WHERE visibility IN ('global_approved', 'tenant'))::integer AS company_skills,
+      COALESCE(SUM(total_uses * COALESCE(hours_saved, 1)) FILTER (WHERE visibility IN ('global_approved', 'tenant')), 0)::double precision AS company_hours_saved
     FROM skills
     WHERE author_id = ${userId}
       AND published_version_id IS NOT NULL
@@ -165,7 +165,7 @@ export async function getPortfolioSkills(userId: string): Promise<PortfolioSkill
  * Get user's contribution ranking within their tenant
  *
  * Uses CTEs with RANK() and PERCENT_RANK() window functions.
- * Only counts tenant-visible skills (visibility = 'tenant') for ranking,
+ * Only counts org-visible skills (visibility IN 'global_approved', 'tenant') for ranking,
  * matching leaderboard behavior where personal skills are private.
  *
  * Label logic:
@@ -194,7 +194,7 @@ export async function getContributionRanking(
       WHERE s.tenant_id = ${tenantId}
         AND s.published_version_id IS NOT NULL
         AND s.status = 'published'
-        AND s.visibility = 'tenant'
+        AND s.visibility IN ('global_approved', 'tenant')
       GROUP BY s.author_id
     ),
     ranked AS (
@@ -227,7 +227,7 @@ export async function getContributionRanking(
       WHERE tenant_id = ${tenantId}
         AND published_version_id IS NOT NULL
         AND status = 'published'
-        AND visibility = 'tenant'
+        AND visibility IN ('global_approved', 'tenant')
     `);
     const countRows = countResult as unknown as Record<string, unknown>[];
     const total = Number(countRows[0]?.total ?? 0);

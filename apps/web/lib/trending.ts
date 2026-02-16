@@ -52,7 +52,7 @@ export async function getTrendingSkills(limit: number = 10): Promise<TrendingSki
       WHERE ue.created_at >= NOW() - INTERVAL '7 days'
         AND s.published_version_id IS NOT NULL
         AND s.status = 'published'
-        AND s.visibility = 'tenant'
+        AND s.visibility IN ('global_approved', 'tenant')
       GROUP BY ue.skill_id
       HAVING COUNT(*) >= 3
     )
