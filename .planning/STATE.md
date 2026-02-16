@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 
 ## Current Position
 
-Phase: 70 of 75 (MCP Preference Sync)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-16 — Completed 70-02-PLAN.md (MCP preference integration)
+Phase: 71 of 75 (Temporal Tracking)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 71-01-PLAN.md (user_skill_views data layer)
 
-Progress: [████████░░░░░░░░░░░░░░░░░░░░░░] 2/7 phases
+Progress: [██████████░░░░░░░░░░░░░░░░░░░░] 3/7 phases
 
 ## Milestones
 
@@ -34,12 +34,12 @@ Progress: [████████░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 251
+- Total plans completed: 252
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.5 hours
 
 **Cumulative:**
-- 251 plans across 70 phases and 11 milestones
+- 252 plans across 71 phases and 11 milestones
 - ~64,000 LOC TypeScript across 470 files
 - 17 days total development time
 
@@ -73,6 +73,12 @@ Phase 70 decisions:
 - All preference loading wrapped in try/catch — failures never break core MCP tools
 - List tool always applies orderBy (desc hoursSaved default) for deterministic ordering
 
+Phase 71 decisions:
+- UPSERT targets unique (tenant_id, user_id, skill_id) composite index for conflict resolution
+- getUserViewsForSkills returns Map<string, UserSkillView> for O(1) badge lookups per skill
+- getWhatsNewForUser uses 30-day rolling window with published-only filter via INNER JOIN
+- countFeedbackSince uses gt() on createdAt for precise post-view change detection
+
 ### Pending Todos
 
 - Skill visibility: expose all 4 levels in upload form (addressed by Phase 69)
@@ -89,10 +95,10 @@ Phase 70 decisions:
 
 ### Blockers/Concerns
 
-None. Phase 70 complete (both plans done). Ready for Phase 71.
+None. Phase 71 plan 01 complete. Ready for 71-02 (Updated badges) and 71-03 (What's New page).
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed Phase 70 (all 2 plans), ready for Phase 71
-Resume file: .planning/phases/71-*/71-01-PLAN.md
+Stopped at: Completed 71-01-PLAN.md (user_skill_views data layer), ready for 71-02
+Resume file: .planning/phases/71-temporal-tracking/71-02-PLAN.md
