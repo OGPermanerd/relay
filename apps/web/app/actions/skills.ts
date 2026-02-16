@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { generateUniqueSlug } from "@/lib/slug";
+import { isAdmin } from "@/lib/admin";
 import { hashContent } from "@/lib/content-hash";
 import { generateSkillEmbedding } from "@/lib/embedding-generator";
 import { generateSkillReview, generateSkillSummary, REVIEW_MODEL } from "@/lib/ai-review";
@@ -44,7 +45,7 @@ const createSkillSchema = z.object({
     .max(1000, "Hours saved must be 1000 or less")
     .default(1),
   content: z.string().min(1, "Content is required"),
-  visibility: z.enum(["tenant", "personal"]).default("tenant"),
+  visibility: z.enum(["global_approved", "tenant", "personal", "private"]).default("tenant"),
   loomUrl: z
     .string()
     .url("Must be a valid URL")
@@ -148,6 +149,11 @@ export async function checkAndCreateSkill(
 
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
+  }
+
+  // Admin gate: only admins can set global_approved visibility
+  if (parsed.data.visibility === "global_approved" && !isAdmin(session)) {
+    return { errors: { visibility: ["Only admins can set global visibility"] } };
   }
 
   // Read optional variation-of link (from "Create as Variation" flow)
@@ -355,6 +361,12 @@ export async function createSkill(
       errors: parsed.error.flatten().fieldErrors,
     };
   }
+
+  // Admin gate: only admins can set global_approved visibility
+  if (parsed.data.visibility === "global_approved" && !isAdmin(session)) {
+    return { errors: { visibility: ["Only admins can set global visibility"] } };
+  }
+
   const {
     name,
     description,

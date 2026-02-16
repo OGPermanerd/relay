@@ -57,8 +57,23 @@ export async function handleUpdateSkill({
   skillId: string;
   content: string;
   description?: string;
-  visibility?: "tenant" | "personal";
+  visibility?: "global_approved" | "tenant" | "personal" | "private";
 }) {
+  // Reject global_approved — MCP has no role info to verify admin status
+  if (visibility === "global_approved") {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({
+            error: "MCP cannot set global_approved visibility (requires admin role)",
+          }),
+        },
+      ],
+      isError: true,
+    };
+  }
+
   if (!db) {
     return {
       content: [

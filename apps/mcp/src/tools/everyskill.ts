@@ -109,9 +109,11 @@ const EverySkillInputSchema = {
     .optional()
     .describe("Estimated hours saved per use (required for: create)"),
   visibility: z
-    .enum(["tenant", "personal"])
+    .enum(["global_approved", "tenant", "personal", "private"])
     .optional()
-    .describe("Skill visibility (optional for: create, update)"),
+    .describe(
+      "Skill visibility: global_approved (cross-tenant, admin only), tenant (team), personal (author portfolio), private (hidden)"
+    ),
   filePath: z.string().optional().describe("Custom local file path (optional for: check_status)"),
   feedbackType: z
     .enum(["thumbs_up", "thumbs_down"])
@@ -131,7 +133,7 @@ export type EverySkillArgs = {
   content?: string;
   tags?: string[];
   hoursSaved?: number;
-  visibility?: "tenant" | "personal";
+  visibility?: "global_approved" | "tenant" | "personal" | "private";
   filePath?: string;
   feedbackType?: "thumbs_up" | "thumbs_down";
   comment?: string;

@@ -107,7 +107,7 @@ export async function handleCreateSkill({
   tags?: string[];
   hoursSaved: number;
   userId?: string;
-  visibility?: "tenant" | "personal";
+  visibility?: "global_approved" | "tenant" | "personal" | "private";
 }) {
   if (!db) {
     return {
@@ -143,6 +143,21 @@ export async function handleCreateSkill({
           text: JSON.stringify({
             error: "Tenant not resolved",
             message: "API key does not have a tenant association. Please re-generate your API key.",
+          }),
+        },
+      ],
+      isError: true,
+    };
+  }
+
+  // Reject global_approved — MCP has no role info to verify admin status
+  if (visibility === "global_approved") {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify({
+            error: "MCP cannot set global_approved visibility (requires admin role)",
           }),
         },
       ],

@@ -181,9 +181,11 @@ server.registerTool(
         .default(1)
         .describe("Estimated hours saved per use (default: 1)"),
       visibility: z
-        .enum(["tenant", "personal"])
+        .enum(["global_approved", "tenant", "personal", "private"])
         .optional()
-        .describe("Skill visibility: 'tenant' (default, visible to org) or 'personal' (only you)"),
+        .describe(
+          "Skill visibility: global_approved (cross-tenant, admin only), tenant (team), personal (author portfolio), private (hidden)"
+        ),
     },
   },
   async ({ name, description, category, content, tags, hoursSaved, visibility }) =>
@@ -217,9 +219,11 @@ server.registerTool(
         .optional()
         .describe("Updated description (optional, keeps existing if omitted)"),
       visibility: z
-        .enum(["tenant", "personal"])
+        .enum(["global_approved", "tenant", "personal", "private"])
         .optional()
-        .describe("Skill visibility (optional, only applies when you are the author)"),
+        .describe(
+          "Skill visibility: global_approved (cross-tenant, admin only), tenant (team), personal (author portfolio), private (hidden)"
+        ),
     },
   },
   async ({ skillId, content, description, visibility }) =>
