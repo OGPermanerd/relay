@@ -240,7 +240,11 @@ Plans:
   2. Admin sees a total estimated IP value for the organization (sum of all skill replacement costs) as a hero stat on the IP dashboard
   3. Admin can export a PDF IP Report containing: executive summary, total IP value, top skills by value, risk assessment, quality trends, and contributor highlights
   4. Admin can export a CSV of all skill-level IP data (name, author, uses, hours saved, replacement cost, risk level) for spreadsheet analysis
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 64-01-PLAN.md — Replacement cost formula, SQL query, and server action (data layer)
+- [ ] 64-02-PLAN.md — Hero stat, valuation table, PDF/CSV export buttons (UI layer)
 
 #### Phase 65: Individual Skills Portfolio
 **Goal**: Users can view their personal skills portfolio showing what they've built, how much impact it's had, and which skills are portable vs company-owned
