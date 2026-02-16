@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 72 of 75 (Community Detection)
-Plan: 0 of TBD in current phase
-Status: Not started
-Last activity: 2026-02-16 — Completed Phase 71 (Temporal Tracking) — all 3 plans
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 72-01-PLAN.md (Skill Communities Schema)
 
 Progress: [████████████████░░░░░░░░░░░░░░] 4/7 phases
 
@@ -34,12 +34,12 @@ Progress: [████████████████░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 258
+- Total plans completed: 259
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.5 hours
 
 **Cumulative:**
-- 258 plans across 71 phases and 11 milestones
+- 259 plans across 72 phases and 11 milestones
 - ~64,000 LOC TypeScript across 470 files
 - 17 days total development time
 
@@ -84,6 +84,12 @@ Phase 71 decisions:
 - Pass updatedSkillIds as string[] across RSC boundary (Set not serializable), reconstruct with useMemo
 - WhatsNewFeed returns null when empty (hidden, not empty state)
 
+Phase 72 decisions (plan 01):
+- REAL type for modularity (not NUMERIC) — sufficient precision for 0.0-1.0 quality score
+- run_id TEXT column (nullable) for correlating detection batches across tenants
+- Composite index on (tenant_id, community_id) for cluster membership queries
+- UNIQUE on (tenant_id, skill_id) enables UPSERT on re-detection
+
 ### Pending Todos
 
 - Skill visibility: expose all 4 levels in upload form (addressed by Phase 69)
@@ -100,10 +106,10 @@ Phase 71 decisions:
 
 ### Blockers/Concerns
 
-None. Phase 71 complete (all 3 plans). Ready for Phase 72 (Similarity Graph).
+None. Phase 72 plan 01 complete. Ready for plan 02 (community detection service).
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed Phase 71 (Temporal Tracking) — all 3 plans done
-Resume file: .planning/phases/72-similarity-graph/
+Stopped at: Completed 72-01-PLAN.md (Skill Communities Schema)
+Resume file: .planning/phases/72-community-detection/72-02-PLAN.md
