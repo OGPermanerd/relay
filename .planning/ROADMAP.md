@@ -234,7 +234,11 @@ Total: 15 plans completed. 7 phases, 12 requirements.
   3. Only users with admin role can set or change a skill's visibility to global_approved
   4. Trending, leaderboard, portfolio, and all other aggregate views correctly include/exclude skills based on the new visibility levels (no silent disappearances, no inappropriate inclusions)
   5. All existing skills with "tenant" or "personal" visibility continue to behave identically to before the change
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 69-01-PLAN.md -- Visibility foundation: helpers, schema, migration, unit tests
+- [ ] 69-02-PLAN.md -- Inline query updates + validation schemas + admin gate
+- [ ] 69-03-PLAN.md -- UI: upload form visibility options + VisibilityBadge
 
 ### Phase 70: MCP Preference Sync
 **Goal**: Users' search preferences flow bidirectionally between the web UI and MCP tools
@@ -319,7 +323,7 @@ Recommended sequencing: 69 -> 70 -> 71 -> 72 -> 73 -> 74 -> 75 (serial for focus
 | 49-54 | v4.0 | 17/17 | Complete | 2026-02-14 |
 | 55-61 | v5.0 | 18/18 | Complete | 2026-02-15 |
 | 62-68 | v6.0 | 15/15 | Complete | 2026-02-16 |
-| 69. Extended Visibility | v7.0 | 0/TBD | Not started | - |
+| 69. Extended Visibility | v7.0 | 0/3 | Planning complete | - |
 | 70. MCP Preference Sync | v7.0 | 0/TBD | Not started | - |
 | 71. Temporal Tracking | v7.0 | 0/TBD | Not started | - |
 | 72. Community Detection | v7.0 | 0/TBD | Not started | - |
