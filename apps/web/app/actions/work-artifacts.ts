@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@everyskill/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
+import Anthropic from "@anthropic-ai/sdk";
 
 // =============================================================================
 // Validation Schemas
@@ -28,6 +29,124 @@ const updateArtifactSchema = z.object({
   artifactDate: z.string().min(1).optional(),
   estimatedHoursSaved: z.coerce.number().min(0).max(10000).optional(),
 });
+
+// =============================================================================
+// AI Artifact Analysis (fire-and-forget, not a server action)
+// =============================================================================
+
+const ArtifactAnalysisSchema = z.object({
+  skillIds: z.array(z.string()).max(5),
+});
+
+const ARTIFACT_ANALYSIS_SCHEMA = {
+  type: "object" as const,
+  properties: {
+    skillIds: {
+      type: "array" as const,
+      items: { type: "string" as const },
+      maxItems: 5,
+    },
+  },
+  required: ["skillIds"],
+  additionalProperties: false,
+};
+
+/**
+ * Analyze artifact text against the skill catalog using Claude Haiku.
+ * Runs asynchronously after artifact creation — errors are swallowed.
+ */
+async function analyzeArtifactForSkills(
+  artifactId: string,
+  extractedText: string,
+  tenantId: string
+): Promise<void> {
+  try {
+    if (!db) return;
+
+    // 1. Fetch published skills in the tenant's catalog
+    const catalogRows = await db.execute(sql`
+      SELECT id, name, description, category
+      FROM skills
+      WHERE tenant_id = ${tenantId}
+        AND status = 'published'
+        AND published_version_id IS NOT NULL
+    `);
+    const catalog = catalogRows as unknown as Array<{
+      id: string;
+      name: string;
+      description: string;
+      category: string;
+    }>;
+
+    if (catalog.length === 0) return;
+
+    // 2. Build catalog string for prompt
+    const catalogStr = catalog
+      .map((s) => `${s.id} | ${s.name} | ${s.description?.slice(0, 150) ?? ""}`)
+      .join("\n");
+
+    // 3. Truncate artifact text for cost control
+    const truncatedText = extractedText.slice(0, 2000);
+
+    // 4. Call Claude Haiku for structured skill matching
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error("[artifact-analysis] ANTHROPIC_API_KEY not set");
+      return;
+    }
+
+    const client = new Anthropic({ apiKey });
+
+    const response = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 1024,
+      system:
+        "You analyze work artifacts and match them to a skill catalog. " +
+        "Given historical work artifact text, identify which skills from the catalog are most relevant. " +
+        "Return up to 5 skill IDs that best match the artifact content. " +
+        "Only return IDs that appear in the provided catalog.",
+      messages: [
+        {
+          role: "user",
+          content:
+            `Skill Catalog:\n${catalogStr}\n\n` +
+            `Work Artifact Text:\n${truncatedText}\n\n` +
+            "Return the skill IDs from the catalog that are most relevant to this artifact.",
+        },
+      ],
+      output_config: {
+        format: { type: "json_schema", schema: ARTIFACT_ANALYSIS_SCHEMA },
+      },
+    });
+
+    // 5. Parse and validate response
+    const textBlock = response.content.find((block) => block.type === "text");
+    if (!textBlock || textBlock.type !== "text") return;
+
+    const parsed = ArtifactAnalysisSchema.parse(JSON.parse(textBlock.text));
+
+    // 6. Filter to only IDs that exist in the catalog (prevent hallucinated IDs)
+    const validIds = new Set(catalog.map((s) => s.id));
+    const filteredIds = parsed.skillIds.filter((id) => validIds.has(id));
+
+    if (filteredIds.length === 0) return;
+
+    // 7. Update the artifact with suggested skill IDs
+    const idArray = `{${filteredIds.map((id) => `"${id}"`).join(",")}}`;
+    await db.execute(sql`
+      UPDATE work_artifacts
+      SET suggested_skill_ids = ${sql.raw(`'${idArray}'`)}::text[],
+          updated_at = NOW()
+      WHERE id = ${artifactId}
+    `);
+
+    console.log(
+      `[artifact-analysis] Matched artifact ${artifactId} to ${filteredIds.length} skills`
+    );
+  } catch (err) {
+    console.error("[artifact-analysis] Failed:", err);
+  }
+}
 
 // =============================================================================
 // Create Work Artifact
@@ -105,6 +224,13 @@ export async function createWorkArtifact(
       ${data.estimatedHoursSaved ?? null}
     )
   `);
+
+  // Fire-and-forget: analyze artifact text for skill suggestions
+  if (data.extractedText) {
+    analyzeArtifactForSkills(id, data.extractedText, tenantId).catch((err) =>
+      console.error("[artifact-analysis] Failed:", err)
+    );
+  }
 
   return { success: true, id };
 }
