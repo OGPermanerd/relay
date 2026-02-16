@@ -14,6 +14,7 @@ import { handleSubmitForReview } from "./submit-for-review.js";
 import { handleCheckReviewStatus } from "./check-review-status.js";
 import { handleCheckSkillStatus } from "./check-skill-status.js";
 import { handleFeedback } from "./feedback.js";
+import { handleGetPreferences, handleSetPreferences } from "./preferences.js";
 
 // ---------------------------------------------------------------------------
 // Unified everyskill tool — single tool with action discriminator
@@ -33,6 +34,8 @@ const ACTIONS = [
   "check_review",
   "check_status",
   "feedback",
+  "get_preferences",
+  "set_preferences",
 ] as const;
 
 type Action = (typeof ACTIONS)[number];
@@ -75,7 +78,7 @@ const EverySkillInputSchema = {
   action: z
     .enum(ACTIONS)
     .describe(
-      "Action to perform: search, list, recommend, describe, install, guide, create, update, review, submit_review, check_review, check_status, feedback"
+      "Action to perform: search, list, recommend, describe, install, guide, create, update, review, submit_review, check_review, check_status, feedback, get_preferences, set_preferences"
     ),
   query: z.string().optional().describe("Search query (required for: search, recommend)"),
   category: z
@@ -120,6 +123,14 @@ const EverySkillInputSchema = {
     .optional()
     .describe("Feedback type (required for: feedback)"),
   comment: z.string().optional().describe("Optional feedback comment (used by: feedback)"),
+  preferredCategories: z
+    .array(z.enum(["productivity", "wiring", "doc-production", "data-viz", "code"]))
+    .optional()
+    .describe("Preferred skill categories (used by: set_preferences)"),
+  defaultSort: z
+    .enum(["uses", "quality", "rating", "days_saved"])
+    .optional()
+    .describe("Default sort order (used by: set_preferences)"),
 };
 
 export type EverySkillArgs = {
@@ -137,6 +148,8 @@ export type EverySkillArgs = {
   filePath?: string;
   feedbackType?: "thumbs_up" | "thumbs_down";
   comment?: string;
+  preferredCategories?: ("productivity" | "wiring" | "doc-production" | "data-viz" | "code")[];
+  defaultSort?: "uses" | "quality" | "rating" | "days_saved";
 };
 
 // ---------------------------------------------------------------------------
@@ -257,6 +270,18 @@ export async function routeEveryskillAction(args: EverySkillArgs) {
       });
     }
 
+    case "get_preferences": {
+      return handleGetPreferences({ userId });
+    }
+
+    case "set_preferences": {
+      return handleSetPreferences({
+        userId,
+        preferredCategories: args.preferredCategories,
+        defaultSort: args.defaultSort,
+      });
+    }
+
     default: {
       const _exhaustive: never = action;
       return {
@@ -286,7 +311,8 @@ server.registerTool(
       "Actions: search (keyword search), list (browse all), recommend (AI-powered discovery), describe (full " +
       "details + reviews), install (deploy to local env), guide (usage instructions), create (publish new skill), " +
       "update (push changes), review (AI quality review), submit_review (full review pipeline), check_review " +
-      "(pipeline status), check_status (local vs published diff), feedback (thumbs up/down on a skill).",
+      "(pipeline status), check_status (local vs published diff), feedback (thumbs up/down on a skill), " +
+      "get_preferences (read user preferences), set_preferences (update preferred categories and sort order).",
     inputSchema: EverySkillInputSchema,
   },
   async (args) => routeEveryskillAction(args as unknown as EverySkillArgs)
