@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v7.0 Algorithm & Architecture Rewrite — Phase 73 (Community Discovery UI)
+**Current focus:** v7.0 Algorithm & Architecture Rewrite — Phase 74 (Adaptive Query Routing)
 
 ## Current Position
 
-Phase: 73 of 75 (Community Discovery UI)
-Plan: 2 of TBD in current phase
-Status: In progress
-Last activity: 2026-02-16 — Completed 73-02-PLAN.md (community browse & detail pages)
+Phase: 74 of 75 (Adaptive Query Routing)
+Plan: 0 of TBD in current phase
+Status: Not started
+Last activity: 2026-02-16 — Completed Phase 73 (Community Discovery UI) — all 2 plans
 
-Progress: [██████████████████░░░░░░░░░░░░] 5/7 phases
+Progress: [████████████████████████░░░░░░] 6/7 phases
 
 ## Milestones
 
