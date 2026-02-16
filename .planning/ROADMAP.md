@@ -196,7 +196,7 @@ Total: 18 plans completed. 7 phases, 12 requirements.
 - Decimal phases (62.1, 62.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 62: Company IP Dashboard Core** - Hero KPIs and org-wide quality trend charts on a new IP dashboard page (completed 2026-02-15)
-- [ ] **Phase 63: IP Risk Analysis** - Key person dependency detection and IP concentration risk visualization
+- [x] **Phase 63: IP Risk Analysis** - Key person dependency detection and IP concentration risk visualization (completed 2026-02-16)
 - [ ] **Phase 64: IP Valuation & Export** - Replacement cost estimation and PDF/CSV IP report for board presentations
 - [ ] **Phase 65: Individual Skills Portfolio** - Personal portfolio page with contribution stats and portable vs company IP breakdown
 - [ ] **Phase 66: Impact Measurement** - Skills impact timeline and value-added calculator for individuals
@@ -228,8 +228,8 @@ Plans:
   4. Risk alerts surface proactively on the IP dashboard (not hidden behind a click) with amber/red severity indicators
 **Plans:** 2 plans
 Plans:
-- [ ] 63-01-PLAN.md — Risk query functions, server action, and sort hook (data layer)
-- [ ] 63-02-PLAN.md — IP Risk Section component and page wiring (UI layer)
+- [x] 63-01-PLAN.md — Risk query functions, server action, and sort hook (data layer)
+- [x] 63-02-PLAN.md — IP Risk Section component and page wiring (UI layer)
 
 #### Phase 64: IP Valuation & Export
 **Goal**: Admins can see estimated replacement cost for high-value skills and export a complete IP report for board presentations
