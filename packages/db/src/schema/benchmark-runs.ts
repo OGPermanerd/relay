@@ -80,6 +80,10 @@ export const benchmarkResults = pgTable(
     estimatedCostMicrocents: integer("estimated_cost_microcents"),
     qualityScore: integer("quality_score"), // 0-100
     qualityNotes: text("quality_notes"),
+    faithfulnessScore: integer("faithfulness_score"), // 0-100, RAGAS faithfulness
+    relevancyScore: integer("relevancy_score"), // 0-100, RAGAS answer relevancy
+    precisionScore: integer("precision_score"), // 0-100, RAGAS context precision
+    recallScore: integer("recall_score"), // 0-100, RAGAS context recall
     matchesExpected: boolean("matches_expected"),
     errorMessage: text("error_message"),
     createdAt: timestamp("created_at", { withTimezone: true, precision: 3 }).notNull().defaultNow(),
