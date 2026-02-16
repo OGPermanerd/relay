@@ -319,7 +319,10 @@ Plans:
   3. A per-dimension model comparison table shows each model's dimension scores side-by-side (e.g., "Sonnet: faithfulness 92, relevancy 88; Haiku: faithfulness 78, relevancy 75")
   4. The skill's benchmark summary view shows aggregate dimension scores across all benchmark runs for that skill
   5. Existing benchmark results with only an overall quality score continue to display correctly without errors or missing data
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 75-01-PLAN.md -- Schema migration + judge prompt extension for 4-dimension scoring
+- [ ] 75-02-PLAN.md -- Query layer + radar chart + dimension comparison UI
 
 ## Progress
 
@@ -346,7 +349,7 @@ Recommended sequencing: 69 -> 70 -> 71 -> 72 -> 73 -> 74 -> 75 (serial for focus
 | 72. Community Detection | v7.0 | 2/2 | Complete | 2026-02-16 |
 | 73. Community Discovery UI | v7.0 | 2/2 | Complete | 2026-02-16 |
 | 74. Adaptive Query Routing | v7.0 | 3/3 | Complete | 2026-02-16 |
-| 75. RAGAS Benchmarking | v7.0 | 0/TBD | Not started | - |
+| 75. RAGAS Benchmarking | v7.0 | 0/2 | Not started | - |
 
 **Total: 265 plans completed across 74 phases and 11 milestones. 1 phase remaining for v7.0.**
 
