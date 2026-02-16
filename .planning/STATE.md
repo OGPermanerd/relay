@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 75 of 75 (RAGAS Benchmarking)
-Plan: 1 of TBD in current phase
+Plan: 2 of TBD in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 75-01-PLAN.md (RAGAS Dimension Scoring)
+Last activity: 2026-02-16 — Completed 75-02-PLAN.md (Dimension Visualization)
 
-Progress: [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 1/TBD plans in Phase 75
+Progress: [██░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 2/TBD plans in Phase 75
 
 ## Milestones
 
@@ -34,12 +34,12 @@ Progress: [█░░░░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 266
+- Total plans completed: 267
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.5 hours
 
 **Cumulative:**
-- 266 plans across 75 phases and 11 milestones
+- 267 plans across 75 phases and 11 milestones
 - ~64,000 LOC TypeScript across 470+ files
 - 17 days total development time
 
@@ -130,6 +130,12 @@ Phase 75 decisions (plan 01):
 - Divergent scoring examples in prompt to mitigate score clustering (RAGAS Pitfall 1)
 - qualityScore remains the judge's holistic score -- NOT recalculated from dimensions
 
+Phase 75 decisions (plan 02):
+- COALESCE to 0 for per-run model comparison; NULL filter for skill aggregates (cross-run correctness)
+- Radar chart requires 2+ models to render (single-model radar meaningless)
+- Em dash for 0-value dimension cells to distinguish "not scored" from "scored 0"
+- Parallel fetch for modelComparison + dimensionAggregates via Promise.all
+
 ### Pending Todos
 
 - Skill visibility: expose all 4 levels in upload form (addressed by Phase 69)
@@ -146,10 +152,10 @@ Phase 75 decisions (plan 01):
 
 ### Blockers/Concerns
 
-None. Phase 75 plan 01 complete. Ready for remaining Phase 75 plans.
+None. Phase 75 plans 01-02 complete. Ready for remaining Phase 75 plans.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 75-01-PLAN.md (RAGAS Dimension Scoring)
-Resume file: .planning/phases/75-ragas-benchmarking/75-01-SUMMARY.md
+Stopped at: Completed 75-02-PLAN.md (Dimension Visualization)
+Resume file: .planning/phases/75-ragas-benchmarking/75-02-SUMMARY.md
