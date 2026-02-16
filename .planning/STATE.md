@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** Planning next milestone
+**Current focus:** v7.0 Algorithm & Architecture Rewrite — defining requirements
 
 ## Current Position
 
-Phase: 68 of 68 (completed)
-Plan: N/A
-Status: v6.0 milestone complete — ready for next milestone
-Last activity: 2026-02-16 — v6.0 milestone archived
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements for v7.0
+Last activity: 2026-02-16 — Milestone v7.0 started
 
-Progress: [##############################] 100% (246 plans across 68 phases, 11 milestones)
+Progress: [░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 0%
 
 ## Milestones
 
@@ -55,12 +55,17 @@ All prior decisions archived in PROJECT.md Key Decisions table and milestone arc
 - Portfolio PDF download (backlogged)
 - OAuth re-link / user migration tool (backlogged)
 
+### Roadmap Evolution
+
+- v7.0 pivoted from Multi-Signal Intelligence to Algorithm & Architecture Rewrite based on docs/algoresearch.md research
+- Original v7.0 scope (browser history, operator wizard, brain profile) deferred to v8.0+
+
 ### Blockers/Concerns
 
-None. Ready for next milestone.
+None. Ready for v7.0 requirements definition.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: v6.0 milestone complete and archived. Ready for /gsd:new-milestone.
-Resume file: N/A — clean slate for next milestone
+Stopped at: v7.0 milestone started, defining requirements
+Resume file: N/A

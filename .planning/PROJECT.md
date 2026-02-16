@@ -13,6 +13,21 @@ EverySkill is an AI skills platform that turns scattered prompts, workflows, and
 
 Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value — and the IP is protected for both companies and individuals.
 
+## Current Milestone: v7.0 Algorithm & Architecture Rewrite
+
+**Goal:** Implement research-backed algorithmic infrastructure (GraphRAG communities, adaptive query routing, temporal tracking, extended visibility, multi-model benchmarking) to make the "smart skills database" promise real.
+
+**Target features:**
+- GraphRAG-style skill communities with Leiden detection and pre-computed summaries
+- Adaptive query router classifying exact-match / exploratory / diagnostic queries
+- Bi-temporal skill tracking with drift detection and quality regression signals
+- Extended visibility scopes (global_approved, tenant, personal, private) with cross-AI preference sync
+- Multi-model benchmarking (Google, Llama) with RAGAS-style evaluation
+
+**Critical constraint:** Comprehensive unit tests per phase to manage complex interdependencies.
+
+**Research basis:** `docs/algoresearch.md` — synthesis of ~40 papers on RAG, knowledge graphs, adaptive retrieval, community detection.
+
 ## Current State
 
 **v6.0 shipped 2026-02-16** — IP dashboard with risk analysis and valuation, individual skills portfolio with impact measurement, shareable skills resume, pre-LLM history upload.
@@ -265,4 +280,4 @@ Milestones:
 | Client-side file parsing for artifacts | Avoids serializing File objects to server actions; 5MB limit | ✓ Good |
 
 ---
-*Last updated: 2026-02-16 after v6.0 milestone — IP dashboard, skills portfolio, resume, pre-LLM history*
+*Last updated: 2026-02-16 after v7.0 milestone start — Algorithm & Architecture Rewrite*
