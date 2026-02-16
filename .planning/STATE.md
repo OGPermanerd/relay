@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 73 of 75 (Community Discovery UI)
-Plan: 1 of TBD in current phase
+Plan: 2 of TBD in current phase
 Status: In progress
-Last activity: 2026-02-16 — Completed 73-01-PLAN.md (community backend foundation)
+Last activity: 2026-02-16 — Completed 73-02-PLAN.md (community browse & detail pages)
 
 Progress: [██████████████████░░░░░░░░░░░░] 5/7 phases
 
@@ -34,12 +34,12 @@ Progress: [██████████████████░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 261
+- Total plans completed: 262
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.5 hours
 
 **Cumulative:**
-- 261 plans across 73 phases and 11 milestones
+- 262 plans across 73 phases and 11 milestones
 - ~64,000 LOC TypeScript across 470+ files
 - 17 days total development time
 
@@ -104,6 +104,12 @@ Phase 73 decisions (plan 01):
 - pgvector AVG() for centroid similarity in getCommunityDetail -- no JS vector math
 - Per-community try/catch in label generation -- one failure doesn't block others
 
+Phase 73 decisions (plan 02):
+- CommunityCard as full-card Link (click anywhere) matching existing card patterns
+- Detail page uses flex div layout (not HTML table) for responsive mobile support
+- Dashboard limited to 3 communities max with "View all" overflow to /communities
+- Similarity color coding: green >= 80%, yellow >= 60%, gray < 60%
+
 ### Pending Todos
 
 - Skill visibility: expose all 4 levels in upload form (addressed by Phase 69)
@@ -120,10 +126,10 @@ Phase 73 decisions (plan 01):
 
 ### Blockers/Concerns
 
-None. Phase 73 plan 01 complete. Ready for plan 02 (browse/detail pages).
+None. Phase 73 plan 02 complete. Browse and detail pages functional.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 73-01 (Community Backend Foundation)
-Resume file: .planning/phases/73-community-discovery-ui/73-01-SUMMARY.md
+Stopped at: Completed 73-02 (Community Browse & Detail Pages)
+Resume file: .planning/phases/73-community-discovery-ui/73-02-SUMMARY.md
