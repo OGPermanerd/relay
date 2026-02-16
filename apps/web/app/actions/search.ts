@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { searchSkills } from "@/lib/search-skills";
+import { classifyQuery } from "@/lib/query-classifier";
 import { logSearchQuery } from "@everyskill/db";
 
 export interface QuickSearchResult {
@@ -33,8 +34,11 @@ export async function quickSearch(query: string): Promise<QuickSearchResult[]> {
     category: s.category,
   }));
 
-  // Log search query (fire-and-forget)
+  // Classify query for route logging
   const trimmed = query.trim();
+  const classification = classifyQuery(trimmed);
+
+  // Log search query (fire-and-forget)
   logSearchQuery({
     tenantId,
     userId: session?.user?.id ?? null,
@@ -42,6 +46,7 @@ export async function quickSearch(query: string): Promise<QuickSearchResult[]> {
     normalizedQuery: trimmed.toLowerCase(),
     resultCount: mapped.length,
     searchType: "quick",
+    routeType: classification.routeType,
   }).catch(() => {});
 
   return mapped;

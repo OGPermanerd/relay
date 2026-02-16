@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { searchSkills } from "@/lib/search-skills";
 import { getUsageTrends } from "@/lib/usage-trends";
 import { getLeaderboard } from "@/lib/leaderboard";
+import { classifyQuery } from "@/lib/query-classifier";
 import { logSearchQuery, getUserViewsForSkills } from "@everyskill/db";
 import { TwoPanelLayout } from "@/components/two-panel-layout";
 import { SkillsTable } from "@/components/skills-table";
@@ -41,6 +42,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
 
   // Log browse search query (fire-and-forget, only when user actually searched)
   if (query && session?.user?.id && session.user.tenantId) {
+    const routeType = classifyQuery(query).routeType;
     logSearchQuery({
       tenantId: session.user.tenantId,
       userId: session.user.id,
@@ -48,6 +50,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
       normalizedQuery: query.toLowerCase().trim(),
       resultCount: skills.length,
       searchType: "browse",
+      routeType,
     }).catch(() => {});
   }
 
