@@ -123,11 +123,11 @@ Requirements for v7.0 Algorithm & Architecture Rewrite. Each maps to roadmap pha
 | TEMP-02 | Phase 71 | Pending |
 | TEMP-03 | Phase 71 | Pending |
 | TEMP-04 | Phase 71 | Pending |
-| VIS-01 | Phase 69 | Pending |
-| VIS-02 | Phase 69 | Pending |
-| VIS-03 | Phase 69 | Pending |
-| VIS-04 | Phase 69 | Pending |
-| VIS-05 | Phase 69 | Pending |
+| VIS-01 | Phase 69 | Complete |
+| VIS-02 | Phase 69 | Complete |
+| VIS-03 | Phase 69 | Complete |
+| VIS-04 | Phase 69 | Complete |
+| VIS-05 | Phase 69 | Complete |
 | VIS-06 | Phase 70 | Pending |
 | VIS-07 | Phase 70 | Pending |
 | BENCH-01 | Phase 75 | Pending |

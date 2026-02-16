@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v7.0 Algorithm & Architecture Rewrite — Phase 69 (Extended Visibility)
+**Current focus:** v7.0 Algorithm & Architecture Rewrite — Phase 70 (MCP Preference Sync)
 
 ## Current Position
 
-Phase: 69 of 75 (Extended Visibility)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-16 — Completed 69-02-PLAN.md (inline queries & validation)
+Phase: 70 of 75 (MCP Preference Sync)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-02-16 — Phase 69 verified (10/11 → 11/11 after migration), ready for Phase 70
 
-Progress: [██████████████████████████████] 3/3
+Progress: [████░░░░░░░░░░░░░░░░░░░░░░░░░░] 1/7 phases
 
 ## Milestones
 
