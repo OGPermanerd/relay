@@ -30,3 +30,4 @@ export * from "./benchmark-runs";
 export * from "./resume-shares";
 export * from "./work-artifacts";
 export * from "./user-skill-views";
+export * from "./skill-communities";
