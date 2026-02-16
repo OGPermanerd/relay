@@ -15,6 +15,14 @@ muse.everyskill.ai {
     reverse_proxy 10.10.10.21:3001
 }
 
+# Dev
+dev.everyskill.ai {
+    bind 178.156.181.178
+    reverse_proxy 10.10.10.152:2002 {
+        header_up X-Real-IP {remote_host}
+    }
+}
+
 # Staging
 staging.everyskill.ai {
     bind 178.156.181.178
