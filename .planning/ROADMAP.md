@@ -276,7 +276,10 @@ Plans:
   1. Running community detection on a tenant with 20+ published skills produces distinct communities where each community's member skills share thematic similarity (average intra-community cosine similarity > 0.5)
   2. Community assignments are persisted in the database with tenant isolation and can be refreshed via a cron endpoint without affecting live queries
   3. Running detection on a tenant with fewer than 20 published skills or a sparse graph gracefully falls back (no crash, no meaningless single-giant community)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 72-01-PLAN.md -- DB foundation: skill_communities schema, migration, graphology install
+- [ ] 72-02-PLAN.md -- Detection service (KNN + Louvain) + cron endpoint with live verification
 
 ### Phase 73: Community Discovery UI
 **Goal**: Users can browse and explore skill communities to discover related skills they would not have found through search
@@ -333,7 +336,7 @@ Recommended sequencing: 69 -> 70 -> 71 -> 72 -> 73 -> 74 -> 75 (serial for focus
 | 69. Extended Visibility | v7.0 | 3/3 | Complete | 2026-02-16 |
 | 70. MCP Preference Sync | v7.0 | 2/2 | Complete | 2026-02-16 |
 | 71. Temporal Tracking | v7.0 | 3/3 | Complete | 2026-02-16 |
-| 72. Community Detection | v7.0 | 0/TBD | Not started | - |
+| 72. Community Detection | v7.0 | 0/2 | Not started | - |
 | 73. Community Discovery UI | v7.0 | 0/TBD | Not started | - |
 | 74. Adaptive Query Routing | v7.0 | 0/TBD | Not started | - |
 | 75. RAGAS Benchmarking | v7.0 | 0/TBD | Not started | - |
