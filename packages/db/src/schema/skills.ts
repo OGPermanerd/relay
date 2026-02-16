@@ -46,7 +46,7 @@ export const skills = pgTable(
     tags: text("tags").array().default([]),
     status: text("status").notNull().default("published"),
     statusMessage: text("status_message"),
-    visibility: text("visibility").notNull().default("tenant"), // "tenant" or "personal"
+    visibility: text("visibility").notNull().default("tenant"), // "global_approved" | "tenant" | "personal" | "private"
     loomUrl: text("loom_url"), // Optional Loom video demo URL
 
     // Company approval tracking
@@ -96,7 +96,7 @@ export const skills = pgTable(
     pgPolicy("tenant_isolation", {
       as: "restrictive",
       for: "all",
-      using: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
+      using: sql`tenant_id = current_setting('app.current_tenant_id', true) OR visibility = 'global_approved'`,
       withCheck: sql`tenant_id = current_setting('app.current_tenant_id', true)`,
     }),
   ]
