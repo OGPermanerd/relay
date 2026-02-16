@@ -13,6 +13,9 @@ import {
   getLatestBenchmarkRun,
   getModelComparisonStats,
   getCostTrendData,
+  getUserView,
+  getVersionNumber,
+  recordSkillView,
 } from "@everyskill/db/services";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { SkillDetail } from "@/components/skill-detail";
@@ -40,6 +43,8 @@ import { DeleteSkillButton } from "@/components/delete-skill-button";
 import { ForksSection } from "@/components/forks-section";
 import { findSimilarSkillsByName } from "@/lib/similar-skills";
 import { isAdmin } from "@/lib/admin";
+import { detectChanges } from "@/lib/change-detection";
+import { ChangeSummary } from "@/components/change-summary";
 import Link from "next/link";
 
 interface SkillPageProps {
@@ -178,6 +183,29 @@ export default async function SkillPage(props: SkillPageProps) {
     driftStatus = currentBodyHash === skill.forkedAtContentHash ? "current" : "diverged";
   } else if (skill.forkedFromId && !skill.forkedAtContentHash) {
     driftStatus = "unknown";
+  }
+
+  // TEMPORAL TRACKING: Compute changes BEFORE recording view (pitfall TEMP-03)
+  // Step 1: Fetch previous view
+  const previousView = session?.user?.id ? await getUserView(session.user.id, skill.id) : undefined;
+  // Step 2: Get current version number
+  const currentVersion = skill.publishedVersionId
+    ? await getVersionNumber(skill.publishedVersionId)
+    : null;
+  // Step 3: Detect changes (only if user has viewed before)
+  const changes = previousView
+    ? await detectChanges(
+        skill.id,
+        previousView.lastViewedAt,
+        previousView.lastViewedVersion,
+        skill.publishedVersionId
+      )
+    : [];
+  // Step 4: Record the new view (fire-and-forget, AFTER computing changes)
+  if (session?.user?.id && session.user.tenantId) {
+    recordSkillView(session.user.tenantId, session.user.id, skill.id, currentVersion).catch(
+      () => {}
+    );
   }
 
   // Query user's existing rating (if logged in)
@@ -340,6 +368,13 @@ export default async function SkillPage(props: SkillPageProps) {
             costStats={costStats}
             feedbackStats={feedbackStats}
           />
+
+          {/* Change summary since last visit */}
+          {changes.length > 0 && (
+            <div className="mt-4">
+              <ChangeSummary changes={changes} />
+            </div>
+          )}
 
           {/* Install, Fork, and Delete buttons */}
           <div className="mt-4 flex items-center gap-3">
