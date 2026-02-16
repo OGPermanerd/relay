@@ -1,4 +1,5 @@
 import { searchSkillsByQuery } from "@everyskill/db/services/search-skills";
+import { getOrCreateUserPreferences } from "@everyskill/db/services/user-preferences";
 import { trackUsage } from "../tracking/events.js";
 import { getTenantId, shouldNudge, incrementAnonymousCount, getFirstAuthMessage } from "../auth.js";
 
@@ -16,13 +17,35 @@ export async function handleSearchSkills({
   skipNudge?: boolean;
 }) {
   const tenantId = getTenantId();
-  const results = await searchSkillsByQuery({
+  let results = await searchSkillsByQuery({
     query,
     category,
     limit,
     tenantId: tenantId ?? undefined,
     userId,
   });
+
+  // Apply preference-based reranking for authenticated users
+  if (userId && tenantId) {
+    try {
+      const prefs = await getOrCreateUserPreferences(userId, tenantId);
+      const preferred: string[] = prefs?.preferredCategories ?? [];
+      if (preferred.length > 0) {
+        const tagged = results.map((r) => ({
+          ...r,
+          isBoosted: preferred.includes(r.category),
+        }));
+        tagged.sort((a, b) => {
+          if (a.isBoosted && !b.isBoosted) return -1;
+          if (!a.isBoosted && b.isBoosted) return 1;
+          return 0;
+        });
+        results = tagged;
+      }
+    } catch {
+      // Preference failure must not break search
+    }
+  }
 
   if (!userId && !skipNudge) {
     incrementAnonymousCount();
