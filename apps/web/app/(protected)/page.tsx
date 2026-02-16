@@ -19,8 +19,9 @@ import { EmailDiagnosticCard } from "@/components/email-diagnostic-card";
 import { getSiteSettings } from "@everyskill/db/services/site-settings";
 import { getLatestDiagnostic } from "@everyskill/db/services/email-diagnostics";
 import { hasActiveGmailConnection } from "@everyskill/db/services/gmail-tokens";
-import { getWhatsNewForUser } from "@everyskill/db";
+import { getWhatsNewForUser, getCommunities } from "@everyskill/db";
 import { WhatsNewFeed } from "@/components/whats-new-feed";
+import { CommunityCard } from "@/components/community-card";
 
 export default async function HomePage() {
   const session = await auth();
@@ -49,6 +50,7 @@ export default async function HomePage() {
     latestDiagnostic,
     gmailConnected,
     whatsNewItems,
+    communities,
   ] = await Promise.all([
     getPlatformStats(),
     getTrendingSkills(6),
@@ -61,6 +63,7 @@ export default async function HomePage() {
     getLatestDiagnostic(user.id!),
     hasActiveGmailConnection(user.id!),
     getWhatsNewForUser(user.id!),
+    getCommunities(tenantId),
   ]);
 
   const diagnosticEnabled = siteSettings?.gmailDiagnosticEnabled ?? false;
@@ -149,6 +152,23 @@ export default async function HomePage() {
       <div className="mb-8">
         <CategoryTiles counts={categoryCounts} />
       </div>
+
+      {/* Skill Communities */}
+      {communities.length > 0 && (
+        <div className="mb-8">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Skill Communities</h2>
+            <Link href="/communities" className="text-sm text-blue-600 hover:text-blue-800">
+              View all &rarr;
+            </Link>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {communities.slice(0, 3).map((c) => (
+              <CommunityCard key={c.communityId} community={c} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Company Recommended */}
       {companyApproved.length > 0 && (

@@ -111,8 +111,8 @@ test.describe("Home Page", () => {
     await page.goto("/");
 
     // Category tiles should link to /skills?type=X
-    const productivityLink = page.getByRole("link", { name: /Productivity.*skills/i });
+    const productivityLink = page.locator('a[href="/skills?type=productivity"]');
     await expect(productivityLink).toBeVisible();
-    await expect(productivityLink).toHaveAttribute("href", "/skills?type=productivity");
+    await expect(productivityLink).toContainText(/Productivity/i);
   });
 });
