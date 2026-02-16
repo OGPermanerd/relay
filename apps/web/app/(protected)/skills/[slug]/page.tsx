@@ -13,6 +13,7 @@ import {
   getLatestBenchmarkRun,
   getModelComparisonStats,
   getCostTrendData,
+  getSkillDimensionAggregates,
   getUserView,
   getVersionNumber,
   recordSkillView,
@@ -137,10 +138,11 @@ export default async function SkillPage(props: SkillPageProps) {
 
   const pendingSuggestionCount = suggestions.filter((s) => s.status === "pending").length;
 
-  // Fetch model comparison stats only if a benchmark run exists
-  const modelComparison = latestBenchmarkRun
-    ? await getModelComparisonStats(latestBenchmarkRun.id)
-    : [];
+  // Fetch model comparison stats and dimension aggregates
+  const [modelComparison, dimensionAggregates] = await Promise.all([
+    latestBenchmarkRun ? getModelComparisonStats(latestBenchmarkRun.id) : Promise.resolve([]),
+    getSkillDimensionAggregates(skill.id),
+  ]);
 
   // Serialize benchmark run for client component (Date -> ISO string)
   const serializedBenchmarkRun = latestBenchmarkRun
@@ -343,6 +345,7 @@ export default async function SkillPage(props: SkillPageProps) {
               isAuthor={isAuthor}
               latestRun={serializedBenchmarkRun}
               modelComparison={modelComparison}
+              dimensionAggregates={dimensionAggregates}
               costTrendData={costTrendData}
               costStats={costStats}
               feedbackStats={{
