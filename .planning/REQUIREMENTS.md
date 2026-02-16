@@ -90,7 +90,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PORT-03 | Phase 66: Impact Measurement | Done |
 | PORT-04 | Phase 67: Skills Resume | Done |
 | PORT-05 | Phase 66: Impact Measurement | Done |
-| PORT-06 | Phase 68: Pre-LLM History | Pending |
+| PORT-06 | Phase 68: Pre-LLM History | Done |
 
 **Coverage:**
 - v6.0 requirements: 12 total

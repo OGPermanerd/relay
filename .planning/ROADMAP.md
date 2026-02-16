@@ -12,7 +12,7 @@
 - ✅ **v3.0 AI Discovery & Workflow Intelligence** - Phases 40-48 (shipped 2026-02-13)
 - ✅ **v4.0 Gmail Workflow Diagnostic** - Phases 49-54 (shipped 2026-02-14)
 - ✅ **v5.0 Feedback, Training & Benchmarking** - Phases 55-61 (shipped 2026-02-15)
-- **v6.0 IP Dashboard & Skills Portfolio** - Phases 62-68 (in progress)
+- ✅ **v6.0 IP Dashboard & Skills Portfolio** - Phases 62-68 (shipped 2026-02-16)
 
 ## Phases
 
@@ -187,7 +187,7 @@ Total: 18 plans completed. 7 phases, 12 requirements.
 
 </details>
 
-### v6.0 IP Dashboard & Skills Portfolio (In Progress)
+### v6.0 IP Dashboard & Skills Portfolio (SHIPPED 2026-02-16)
 
 **Milestone Goal:** Make the IP stewardship value proposition tangible -- give companies an IP dashboard showing what they've captured and what's at risk, and give individuals a skills portfolio showing their contributions and portable IP.
 
@@ -201,7 +201,7 @@ Total: 18 plans completed. 7 phases, 12 requirements.
 - [x] **Phase 65: Individual Skills Portfolio** - Personal portfolio page with contribution stats and portable vs company IP breakdown (completed 2026-02-16)
 - [x] **Phase 66: Impact Measurement** - Skills impact timeline and value-added calculator for individuals (completed 2026-02-16)
 - [x] **Phase 67: Skills Resume** - Shareable formatted summary of skills and impact for job applications (completed 2026-02-16)
-- [ ] **Phase 68: Pre-LLM History** - Upload historical work artifacts to demonstrate pre-platform impact
+- [x] **Phase 68: Pre-LLM History** - Upload historical work artifacts to demonstrate pre-platform impact (completed 2026-02-16)
 
 #### Phase 62: Company IP Dashboard Core
 **Goal**: Admins can see a company-wide IP dashboard with total skills captured, usage, hours saved, active contributors, and quality trends over time
@@ -299,9 +299,9 @@ Plans:
   4. The system analyzes uploaded artifacts to suggest which existing skills in the catalog are relevant to the user's historical work (informing skill recommendations)
 **Plans:** 3 plans
 Plans:
-- [ ] 68-01-PLAN.md — Schema, migration, server actions, and portfolio query (data layer)
-- [ ] 68-02-PLAN.md — Upload form, artifact list, portfolio integration, and timeline visualization (UI layer)
-- [ ] 68-03-PLAN.md — AI skill analysis and E2E tests (intelligence + verification)
+- [x] 68-01-PLAN.md — Schema, migration, server actions, and portfolio query (data layer)
+- [x] 68-02-PLAN.md — Upload form, artifact list, portfolio integration, and timeline visualization (UI layer)
+- [x] 68-03-PLAN.md — AI skill analysis and E2E tests (intelligence + verification)
 
 #### Dependency Graph
 
@@ -343,9 +343,9 @@ Phases execute respecting dependencies: 62+65 (parallel) -> 63+66+68 (parallel) 
 | 65. Individual Portfolio | v6.0 | 0/TBD | Not started | - |
 | 66. Impact Measurement | v6.0 | 0/2 | Not started | - |
 | 67. Skills Resume | v6.0 | 0/2 | Not started | - |
-| 68. Pre-LLM History | v6.0 | 0/TBD | Not started | - |
+| 68. Pre-LLM History | v6.0 | 3/3 | Complete | 2026-02-16 |
 
-**Total: 230 plans completed across 62 phases and 10 milestones. v6.0: 2 plans, 1/7 phases complete.**
+**Total: 246 plans completed across 68 phases and 11 milestones. v6.0: 12 plans, 7/7 phases complete.**
 
 ---
 *Roadmap created: 2026-01-31*
