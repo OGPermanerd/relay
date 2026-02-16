@@ -20,6 +20,7 @@ export const searchQueries = pgTable(
     normalizedQuery: text("normalized_query").notNull(),
     resultCount: integer("result_count").notNull(),
     searchType: text("search_type").notNull(),
+    routeType: text("route_type").notNull().default("hybrid"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

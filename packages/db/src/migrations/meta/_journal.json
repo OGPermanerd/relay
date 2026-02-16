@@ -43,6 +43,13 @@
       "when": 1770482441002,
       "tag": "0006_create_audit_logs",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771283315000,
+      "tag": "0042_add_route_type",
+      "breakpoints": true
     }
   ]
 }

@@ -76,6 +76,7 @@ export {
   getTopQueries,
   getZeroResultQueries,
   getTrendingQueries,
+  getRouteTypeBreakdown,
   type SearchQueryEntry,
 } from "./search-analytics";
 export {

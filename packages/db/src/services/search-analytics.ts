@@ -9,6 +9,7 @@ export interface SearchQueryEntry {
   normalizedQuery: string;
   resultCount: number;
   searchType: string;
+  routeType?: string;
 }
 
 /**
@@ -19,7 +20,15 @@ export interface SearchQueryEntry {
 export async function logSearchQuery(entry: SearchQueryEntry): Promise<void> {
   if (!db) return;
   try {
-    await db.insert(searchQueries).values(entry);
+    await db.insert(searchQueries).values({
+      tenantId: entry.tenantId,
+      userId: entry.userId,
+      query: entry.query,
+      normalizedQuery: entry.normalizedQuery,
+      resultCount: entry.resultCount,
+      searchType: entry.searchType,
+      ...(entry.routeType ? { routeType: entry.routeType } : {}),
+    });
   } catch (error) {
     console.error("Failed to log search query:", error);
   }
@@ -113,4 +122,23 @@ export async function getTrendingQueries(tenantId: string, since: Date, limit = 
     .groupBy(searchQueries.normalizedQuery)
     .orderBy(desc(sql`count(*)`))
     .limit(limit);
+}
+
+/**
+ * Get search query breakdown by route type within a time range.
+ * Returns count and average result count per route type.
+ */
+export async function getRouteTypeBreakdown(tenantId: string, since: Date) {
+  if (!db) return [];
+
+  return db
+    .select({
+      routeType: searchQueries.routeType,
+      count: sql<number>`count(*)::int`,
+      avgResults: sql<number>`round(avg(${searchQueries.resultCount}))::int`,
+    })
+    .from(searchQueries)
+    .where(and(eq(searchQueries.tenantId, tenantId), gte(searchQueries.createdAt, since)))
+    .groupBy(searchQueries.routeType)
+    .orderBy(desc(sql`count(*)`));
 }
