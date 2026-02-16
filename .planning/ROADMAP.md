@@ -297,7 +297,11 @@ Plans:
   2. Uploaded artifacts are stored with metadata (title, date, category, description) in a new `work_artifacts` table with proper tenant scoping
   3. Uploaded artifacts appear in the user's portfolio timeline alongside platform-created skills, distinguished with a "Pre-platform" badge
   4. The system analyzes uploaded artifacts to suggest which existing skills in the catalog are relevant to the user's historical work (informing skill recommendations)
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 68-01-PLAN.md — Schema, migration, server actions, and portfolio query (data layer)
+- [ ] 68-02-PLAN.md — Upload form, artifact list, portfolio integration, and timeline visualization (UI layer)
+- [ ] 68-03-PLAN.md — AI skill analysis and E2E tests (intelligence + verification)
 
 #### Dependency Graph
 
