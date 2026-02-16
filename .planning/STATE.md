@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- Phase 65 (Individual Skills Portfolio)
+**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- Phase 66 (Impact Measurement)
 
 ## Current Position
 
-Phase: 65 of 68 (Individual Skills Portfolio)
-Plan: 2 of 2 in current phase
-Status: Phase verified — all 9/9 must-haves passed
-Last activity: 2026-02-16 -- Phase 65 verified and complete. Individual Portfolio track started.
+Phase: 66 of 68 (Impact Measurement)
+Plan: 1 of TBD in current phase
+Status: In progress
+Last activity: 2026-02-16 -- Completed 66-01-PLAN.md (impact timeline + calculator queries and components)
 
-Progress: [############################..] 93% (238 plans across 65 phases, 10 milestones)
+Progress: [############################..] 93% (239 plans across 66 phases, 10 milestones)
 
 ## Milestones
 
@@ -33,12 +33,12 @@ Progress: [############################..] 93% (238 plans across 65 phases, 10 m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 238
+- Total plans completed: 239
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~11.9 hours
 
 **Cumulative:**
-- 238 plans across 65 phases and 10 milestones
+- 239 plans across 66 phases and 10 milestones
 - ~50,000 LOC TypeScript across 386 files
 - 16 days total development time
 
@@ -72,6 +72,10 @@ v6.0 decisions:
 - Rank labels: percentile-based for teams >20, ordinal for teams <=20
 - Portfolio page: border-l-4 accent cards (green portable, blue company) for IP ownership breakdown
 - Portfolio ranking subtitle: percentile context for large teams, ordinal context for small teams
+- Impact timeline: UNION ALL combines creations, forks, suggestions with SUM() OVER window function for cumulative hours
+- Impact calculator: FILTER WHERE conditional aggregation for single-pass creation/fork counts
+- Suggestions have 0 hours_impact in timeline but appear as events
+- ComposedChart pattern: Area for continuous series + Scatter for categorical event markers
 
 ### Pending Todos
 
@@ -86,5 +90,5 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Phase 65 verified -- Individual Skills Portfolio complete. Ready for Phase 66 (Impact Measurement).
-Resume file: .planning/phases/65-individual-skills-portfolio/65-VERIFICATION.md
+Stopped at: Phase 66, Plan 01 complete -- impact timeline + calculator queries and components built. Ready for next plan in Phase 66.
+Resume file: .planning/phases/66-impact-measurement/66-01-SUMMARY.md
