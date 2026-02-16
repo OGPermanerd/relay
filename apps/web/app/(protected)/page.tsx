@@ -19,6 +19,8 @@ import { EmailDiagnosticCard } from "@/components/email-diagnostic-card";
 import { getSiteSettings } from "@everyskill/db/services/site-settings";
 import { getLatestDiagnostic } from "@everyskill/db/services/email-diagnostics";
 import { hasActiveGmailConnection } from "@everyskill/db/services/gmail-tokens";
+import { getWhatsNewForUser } from "@everyskill/db";
+import { WhatsNewFeed } from "@/components/whats-new-feed";
 
 export default async function HomePage() {
   const session = await auth();
@@ -46,6 +48,7 @@ export default async function HomePage() {
     siteSettings,
     latestDiagnostic,
     gmailConnected,
+    whatsNewItems,
   ] = await Promise.all([
     getPlatformStats(),
     getTrendingSkills(6),
@@ -57,6 +60,7 @@ export default async function HomePage() {
     getSiteSettings(tenantId),
     getLatestDiagnostic(user.id!),
     hasActiveGmailConnection(user.id!),
+    getWhatsNewForUser(user.id!),
   ]);
 
   const diagnosticEnabled = siteSettings?.gmailDiagnosticEnabled ?? false;
@@ -170,6 +174,13 @@ export default async function HomePage() {
           }}
         />
       </div>
+
+      {/* What's New — recently updated skills the user has viewed before */}
+      {whatsNewItems.length > 0 && (
+        <div className="mb-8">
+          <WhatsNewFeed items={whatsNewItems} />
+        </div>
+      )}
     </div>
   );
 }
