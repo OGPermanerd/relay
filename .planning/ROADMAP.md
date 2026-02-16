@@ -198,7 +198,7 @@ Total: 18 plans completed. 7 phases, 12 requirements.
 - [x] **Phase 62: Company IP Dashboard Core** - Hero KPIs and org-wide quality trend charts on a new IP dashboard page (completed 2026-02-15)
 - [x] **Phase 63: IP Risk Analysis** - Key person dependency detection and IP concentration risk visualization (completed 2026-02-16)
 - [x] **Phase 64: IP Valuation & Export** - Replacement cost estimation and PDF/CSV IP report for board presentations (completed 2026-02-16)
-- [ ] **Phase 65: Individual Skills Portfolio** - Personal portfolio page with contribution stats and portable vs company IP breakdown
+- [x] **Phase 65: Individual Skills Portfolio** - Personal portfolio page with contribution stats and portable vs company IP breakdown (completed 2026-02-16)
 - [ ] **Phase 66: Impact Measurement** - Skills impact timeline and value-added calculator for individuals
 - [ ] **Phase 67: Skills Resume** - Shareable formatted summary of skills and impact for job applications
 - [ ] **Phase 68: Pre-LLM History** - Upload historical work artifacts to demonstrate pre-platform impact
@@ -257,8 +257,8 @@ Plans:
   4. Portfolio stats include comparison context (e.g., "Top 15% of contributors" or "3rd highest impact")
 **Plans:** 2 plans
 Plans:
-- [ ] 65-01-PLAN.md — Data layer: portfolio queries (stats, skills, ranking) + nav link
-- [ ] 65-02-PLAN.md — UI layer: portfolio page, view component, and E2E test
+- [x] 65-01-PLAN.md — Data layer: portfolio queries (stats, skills, ranking) + nav link
+- [x] 65-02-PLAN.md — UI layer: portfolio page, view component, and E2E test
 
 #### Phase 66: Impact Measurement
 **Goal**: Users can see how their contributions have grown over time and quantify the total value they've added to the company

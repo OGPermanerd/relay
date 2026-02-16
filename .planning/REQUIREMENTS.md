@@ -84,8 +84,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | IPDASH-04 | Phase 62: Company IP Dashboard Core | Done |
 | IPDASH-05 | Phase 63: IP Risk Analysis | Done |
 | IPDASH-06 | Phase 64: IP Valuation & Export | Done |
-| PORT-01 | Phase 65: Individual Skills Portfolio | Pending |
-| PORT-02 | Phase 65: Individual Skills Portfolio | Pending |
+| PORT-01 | Phase 65: Individual Skills Portfolio | Done |
+| PORT-02 | Phase 65: Individual Skills Portfolio | Done |
 | PORT-03 | Phase 66: Impact Measurement | Pending |
 | PORT-04 | Phase 67: Skills Resume | Pending |
 | PORT-05 | Phase 66: Impact Measurement | Pending |
