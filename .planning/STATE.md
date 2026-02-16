@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 73 of 75 (Community Discovery UI)
-Plan: 0 of TBD in current phase
-Status: Not started
-Last activity: 2026-02-16 — Completed Phase 72 (Community Detection) — all 2 plans
+Plan: 1 of TBD in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 73-01-PLAN.md (community backend foundation)
 
 Progress: [██████████████████░░░░░░░░░░░░] 5/7 phases
 
@@ -34,13 +34,13 @@ Progress: [██████████████████░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 260
+- Total plans completed: 261
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.5 hours
 
 **Cumulative:**
-- 260 plans across 72 phases and 11 milestones
-- ~64,000 LOC TypeScript across 470 files
+- 261 plans across 73 phases and 11 milestones
+- ~64,000 LOC TypeScript across 470+ files
 - 17 days total development time
 
 ## Accumulated Context
@@ -97,6 +97,13 @@ Phase 72 decisions (plan 02):
 - Console.warn for low-quality partitions (modularity < 0.1) but still persist results
 - CRON_SECRET added to dev env for live testing (gitignored)
 
+Phase 73 decisions (plan 01):
+- TEXT columns for community_label and community_description (not separate metadata table)
+- Claude Haiku (claude-haiku-4-5-20251001) for label generation -- cost-efficient for short outputs
+- Labels generated automatically in cron after detection, not on page load
+- pgvector AVG() for centroid similarity in getCommunityDetail -- no JS vector math
+- Per-community try/catch in label generation -- one failure doesn't block others
+
 ### Pending Todos
 
 - Skill visibility: expose all 4 levels in upload form (addressed by Phase 69)
@@ -113,10 +120,10 @@ Phase 72 decisions (plan 02):
 
 ### Blockers/Concerns
 
-None. Phase 72 complete. Ready for Phase 73 (Community Discovery UI).
+None. Phase 73 plan 01 complete. Ready for plan 02 (browse/detail pages).
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed Phase 72 (Community Detection) — all 2 plans verified
-Resume file: .planning/phases/73-community-discovery-ui/ (not yet created)
+Stopped at: Completed 73-01 (Community Backend Foundation)
+Resume file: .planning/phases/73-community-discovery-ui/73-01-SUMMARY.md
