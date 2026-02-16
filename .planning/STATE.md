@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 68 of 68 (Pre-LLM History)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-16 -- Completed 68-01-PLAN.md (work_artifacts data foundation)
+Last activity: 2026-02-16 -- Completed 68-02-PLAN.md (artifact upload UI and portfolio integration)
 
-Progress: [############################..] 95% (243 plans across 68 phases, 10 milestones)
+Progress: [############################..] 95% (244 plans across 68 phases, 10 milestones)
 
 ## Milestones
 
@@ -33,12 +33,12 @@ Progress: [############################..] 95% (243 plans across 68 phases, 10 m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 243
+- Total plans completed: 244
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~12.0 hours
+- Total execution time: ~12.1 hours
 
 **Cumulative:**
-- 243 plans across 68 phases and 10 milestones
+- 244 plans across 68 phases and 10 milestones
 - ~50,000 LOC TypeScript across 386 files
 - 16 days total development time
 
@@ -86,6 +86,10 @@ v6.0 decisions:
 - Resume UI: search param approach (?include=company) for server-side visibility toggle
 - Shared ResumeView component for both auth and public pages (isPublic prop controls footer)
 - ResumeShareControls uses router.push on toggle to trigger full server re-render
+- Artifact parser: .txt/.md/.json/.eml with 5MB limit, 100K char truncation; other types metadata-only
+- Upload form: client-side file parsing before server action (File objects not sent to server)
+- Pre-Platform Work section placed before Your Skills in portfolio layout
+- Artifact scatter series: amber #d97706 to differentiate from suggestion events #f59e0b
 
 ### Pending Todos
 
@@ -100,5 +104,5 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Phase 68, Plan 1 complete -- work_artifacts data foundation. Plans 02-03 remain (UI components).
-Resume file: .planning/phases/68-pre-llm-history/68-01-SUMMARY.md
+Stopped at: Phase 68, Plan 2 complete -- artifact upload UI and portfolio integration. Plan 03 remains (AI skill linking).
+Resume file: .planning/phases/68-pre-llm-history/68-02-SUMMARY.md
