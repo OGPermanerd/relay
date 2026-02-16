@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- Phase 67 (Skills Resume)
+**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- Phase 68 (Pre-LLM History)
 
 ## Current Position
 
-Phase: 67 of 68 (Skills Resume)
-Plan: 2 of 2 in current phase
-Status: Phase verified — all 16/16 must-haves passed
-Last activity: 2026-02-16 -- Phase 67 verified and complete.
+Phase: 68 of 68 (Pre-LLM History)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-16 -- Completed 68-01-PLAN.md (work_artifacts data foundation)
 
-Progress: [############################..] 94% (242 plans across 67 phases, 10 milestones)
+Progress: [############################..] 95% (243 plans across 68 phases, 10 milestones)
 
 ## Milestones
 
@@ -33,12 +33,12 @@ Progress: [############################..] 94% (242 plans across 67 phases, 10 m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 242
+- Total plans completed: 243
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.0 hours
 
 **Cumulative:**
-- 242 plans across 67 phases and 10 milestones
+- 243 plans across 68 phases and 10 milestones
 - ~50,000 LOC TypeScript across 386 files
 - 16 days total development time
 
@@ -79,6 +79,9 @@ v6.0 decisions:
 - E2E tests for data-dependent sections: heading.or(emptyState) conditional assertion pattern
 - Resume shares: revoke-and-replace pattern (one active share per user)
 - Resume visibility: includeCompanySkills toggle filters personal-only vs all skills
+- work_artifacts: 50-artifact limit per user enforced at server action level
+- work_artifacts: dynamic SET clause via sql.join for partial updates in updateWorkArtifact
+- work_artifacts: suggestedSkillIds as TEXT[] for future AI skill linking
 - Quality tier computed per-skill via calculateQualityScore with total_ratings subquery
 - Resume UI: search param approach (?include=company) for server-side visibility toggle
 - Shared ResumeView component for both auth and public pages (isPublic prop controls footer)
@@ -97,5 +100,5 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Phase 67 verified -- Skills Resume complete. Ready for Phase 68 (Pre-LLM History).
-Resume file: .planning/phases/67-skills-resume/67-VERIFICATION.md
+Stopped at: Phase 68, Plan 1 complete -- work_artifacts data foundation. Plans 02-03 remain (UI components).
+Resume file: .planning/phases/68-pre-llm-history/68-01-SUMMARY.md
