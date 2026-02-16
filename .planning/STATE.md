@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 74 of 75 (Adaptive Query Routing)
-Plan: 0 of TBD in current phase
-Status: Not started
-Last activity: 2026-02-16 — Completed Phase 73 (Community Discovery UI) — all 2 plans
+Plan: 1 of TBD in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 74-01 (Query Classification & Search Routing)
 
 Progress: [████████████████████████░░░░░░] 6/7 phases
 
@@ -34,12 +34,12 @@ Progress: [███████████████████████
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 262
+- Total plans completed: 263
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.5 hours
 
 **Cumulative:**
-- 262 plans across 73 phases and 11 milestones
+- 263 plans across 74 phases and 11 milestones
 - ~64,000 LOC TypeScript across 470+ files
 - 17 days total development time
 
@@ -110,6 +110,13 @@ Phase 73 decisions (plan 02):
 - Dashboard limited to 3 communities max with "View all" overflow to /communities
 - Similarity color coding: green >= 80%, yellow >= 60%, gray < 60%
 
+Phase 74 decisions (plan 01):
+- Pure-function classifier with zero dependencies -- deterministic, testable, no async
+- Centralized embedding generation in router to avoid double-generation on fallback (Pitfall 2)
+- Optional routeType in SearchQueryEntry for backward compatibility with MCP callers
+- Semantic/hybrid routes auto-downgrade to keyword when semanticSimilarityEnabled is false (Pitfall 4)
+- RouteResult<T> carries fellBack flag and classificationReason for analytics transparency
+
 ### Pending Todos
 
 - Skill visibility: expose all 4 levels in upload form (addressed by Phase 69)
@@ -126,10 +133,10 @@ Phase 73 decisions (plan 02):
 
 ### Blockers/Concerns
 
-None. Phase 73 plan 02 complete. Browse and detail pages functional.
+None. Phase 74 plan 01 complete. Query classifier and search router ready for wiring.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 73-02 (Community Browse & Detail Pages)
-Resume file: .planning/phases/73-community-discovery-ui/73-02-SUMMARY.md
+Stopped at: Completed 74-01 (Query Classification & Search Routing)
+Resume file: .planning/phases/74-adaptive-query-routing/74-01-SUMMARY.md
