@@ -128,8 +128,8 @@ Requirements for v7.0 Algorithm & Architecture Rewrite. Each maps to roadmap pha
 | VIS-03 | Phase 69 | Complete |
 | VIS-04 | Phase 69 | Complete |
 | VIS-05 | Phase 69 | Complete |
-| VIS-06 | Phase 70 | Pending |
-| VIS-07 | Phase 70 | Pending |
+| VIS-06 | Phase 70 | Complete |
+| VIS-07 | Phase 70 | Complete |
 | BENCH-01 | Phase 75 | Pending |
 | BENCH-02 | Phase 75 | Pending |
 | BENCH-03 | Phase 75 | Pending |

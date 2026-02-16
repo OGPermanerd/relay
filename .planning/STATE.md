@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-02-16)
 
 **Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v7.0 Algorithm & Architecture Rewrite — Phase 70 (MCP Preference Sync)
+**Current focus:** v7.0 Algorithm & Architecture Rewrite — Phase 71 (Temporal Tracking)
 
 ## Current Position
 
@@ -14,7 +14,7 @@ Plan: 2 of 2 in current phase
 Status: Phase complete
 Last activity: 2026-02-16 — Completed 70-02-PLAN.md (MCP preference integration)
 
-Progress: [████░░░░░░░░░░░░░░░░░░░░░░░░░░] 1/7 phases
+Progress: [████████░░░░░░░░░░░░░░░░░░░░░░] 2/7 phases
 
 ## Milestones
 

@@ -215,7 +215,7 @@ Total: 15 plans completed. 7 phases, 12 requirements.
 - Decimal phases (69.1, 69.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 69: Extended Visibility** - Expand from 2 to 4 visibility levels with cross-tenant RLS and 15+ query site updates (completed 2026-02-16)
-- [ ] **Phase 70: MCP Preference Sync** - MCP tools for reading/writing user preferences with search boost integration
+- [x] **Phase 70: MCP Preference Sync** - MCP tools for reading/writing user preferences with search boost integration (completed 2026-02-16)
 - [ ] **Phase 71: Temporal Tracking** - Track user-skill interactions to surface "what changed since you last looked"
 - [ ] **Phase 72: Community Detection** - Build similarity graph and cluster skills into thematic communities
 - [ ] **Phase 73: Community Discovery UI** - AI-generated community labels, browse page, and detail page
@@ -250,8 +250,8 @@ Plans:
   3. MCP search results for authenticated users are boosted by their preferred categories (matching web discovery behavior)
 **Plans:** 2 plans
 Plans:
-- [ ] 70-01-PLAN.md -- Preference CRUD: get_preferences + set_preferences actions in unified tool
-- [ ] 70-02-PLAN.md -- Search boost: preference reranking in search/recommend + defaultSort in list
+- [x] 70-01-PLAN.md -- Preference CRUD: get_preferences + set_preferences actions in unified tool
+- [x] 70-02-PLAN.md -- Search boost: preference reranking in search/recommend + defaultSort in list
 
 ### Phase 71: Temporal Tracking
 **Goal**: Users can see what changed in skills since they last looked, reducing information overload
@@ -327,14 +327,14 @@ Recommended sequencing: 69 -> 70 -> 71 -> 72 -> 73 -> 74 -> 75 (serial for focus
 | 55-61 | v5.0 | 18/18 | Complete | 2026-02-15 |
 | 62-68 | v6.0 | 15/15 | Complete | 2026-02-16 |
 | 69. Extended Visibility | v7.0 | 3/3 | Complete | 2026-02-16 |
-| 70. MCP Preference Sync | v7.0 | 0/TBD | Not started | - |
+| 70. MCP Preference Sync | v7.0 | 2/2 | Complete | 2026-02-16 |
 | 71. Temporal Tracking | v7.0 | 0/TBD | Not started | - |
 | 72. Community Detection | v7.0 | 0/TBD | Not started | - |
 | 73. Community Discovery UI | v7.0 | 0/TBD | Not started | - |
 | 74. Adaptive Query Routing | v7.0 | 0/TBD | Not started | - |
 | 75. RAGAS Benchmarking | v7.0 | 0/TBD | Not started | - |
 
-**Total: 246 plans completed across 68 phases and 11 milestones. 7 new phases planned for v7.0.**
+**Total: 251 plans completed across 70 phases and 11 milestones. 5 phases remaining for v7.0.**
 
 ---
 *Roadmap created: 2026-01-31*
