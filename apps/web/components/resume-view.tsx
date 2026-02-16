@@ -49,18 +49,34 @@ function QualityBadge({ tier }: { tier: string }) {
 }
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
-  if (visibility === "personal") {
-    return (
-      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-        Portable
-      </span>
-    );
+  switch (visibility) {
+    case "global_approved":
+      return (
+        <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+          Global
+        </span>
+      );
+    case "tenant":
+      return (
+        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+          Company
+        </span>
+      );
+    case "personal":
+      return (
+        <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+          Portable
+        </span>
+      );
+    case "private":
+      return (
+        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+          Private
+        </span>
+      );
+    default:
+      return null;
   }
-  return (
-    <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-      Company
-    </span>
-  );
 }
 
 // ---------------------------------------------------------------------------
