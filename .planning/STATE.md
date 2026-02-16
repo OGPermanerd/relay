@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-15)
 
 **Core value:** Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value.
-**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- Phase 68 (Pre-LLM History)
+**Current focus:** v6.0 IP Dashboard & Skills Portfolio -- COMPLETE
 
 ## Current Position
 
 Phase: 68 of 68 (Pre-LLM History)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-16 -- Completed 68-02-PLAN.md (artifact upload UI and portfolio integration)
+Plan: 3 of 3 in current phase
+Status: Phase complete / v6.0 complete
+Last activity: 2026-02-16 -- Completed 68-03-PLAN.md (AI artifact analysis and E2E tests)
 
-Progress: [############################..] 95% (244 plans across 68 phases, 10 milestones)
+Progress: [##############################] 100% (246 plans across 68 phases, 11 milestones)
 
 ## Milestones
 
@@ -28,19 +28,19 @@ Progress: [############################..] 95% (244 plans across 68 phases, 10 m
 - v3.0 AI Discovery & Workflow Intelligence - 21 plans - shipped 2026-02-13
 - v4.0 Gmail Workflow Diagnostic - 17 plans - shipped 2026-02-14
 - v5.0 Feedback, Training & Benchmarking - 18 plans - shipped 2026-02-15
-- v6.0 IP Dashboard & Skills Portfolio - 7 phases, 12/TBD plans - in progress
+- v6.0 IP Dashboard & Skills Portfolio - 7 phases, 12 plans - shipped 2026-02-16
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 244
+- Total plans completed: 246
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~12.1 hours
+- Total execution time: ~12.3 hours
 
 **Cumulative:**
-- 244 plans across 68 phases and 10 milestones
+- 246 plans across 68 phases and 11 milestones
 - ~50,000 LOC TypeScript across 386 files
-- 16 days total development time
+- 17 days total development time
 
 ## Accumulated Context
 
@@ -90,6 +90,10 @@ v6.0 decisions:
 - Upload form: client-side file parsing before server action (File objects not sent to server)
 - Pre-Platform Work section placed before Your Skills in portfolio layout
 - Artifact scatter series: amber #d97706 to differentiate from suggestion events #f59e0b
+- AI artifact analysis: Claude Haiku with json_schema output_config, 2000 char text truncation
+- Fire-and-forget pattern: analyzeArtifactForSkills .catch() on promise, never blocks user response
+- Hallucinated skill ID prevention: filter AI results against catalog Set before DB write
+- E2E self-cleaning tests: Date.now() in titles for uniqueness, cleanup within each test
 
 ### Pending Todos
 
@@ -99,10 +103,10 @@ See STATE.md from v5.0 for full list. Key items for v6.0:
 
 ### Blockers/Concerns
 
-None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
+None. v6.0 complete.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Phase 68, Plan 2 complete -- artifact upload UI and portfolio integration. Plan 03 remains (AI skill linking).
-Resume file: .planning/phases/68-pre-llm-history/68-02-SUMMARY.md
+Stopped at: Phase 68, Plan 3 complete -- v6.0 milestone shipped. All phases and plans complete.
+Resume file: .planning/phases/68-pre-llm-history/68-03-SUMMARY.md
