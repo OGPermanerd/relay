@@ -34,13 +34,15 @@ export default async function PortfolioPage() {
   ]);
 
   return (
-    <PortfolioView
-      stats={stats}
-      skills={skills}
-      ranking={ranking}
-      timeline={timeline}
-      impactStats={impactStats}
-      artifacts={artifacts}
-    />
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <PortfolioView
+        stats={stats}
+        skills={skills}
+        ranking={ranking}
+        timeline={timeline}
+        impactStats={impactStats}
+        artifacts={artifacts}
+      />
+    </div>
   );
 }
