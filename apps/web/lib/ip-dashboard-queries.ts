@@ -2,6 +2,16 @@ import { db } from "@everyskill/db";
 import { sql } from "drizzle-orm";
 
 // =============================================================================
+// Constants
+// =============================================================================
+
+/** Minimum total_uses for a single-author skill to be considered "high" risk */
+export const HIGH_USAGE_THRESHOLD = 10;
+
+/** Minimum total_uses for a single-author skill to be considered "critical" risk */
+export const CRITICAL_USAGE_THRESHOLD = 50;
+
+// =============================================================================
 // Types
 // =============================================================================
 
@@ -180,4 +190,221 @@ export async function getQualityTrends(
       benchmarkScore: data.benchmarkScore,
     };
   });
+}
+
+// =============================================================================
+// IP Risk Analysis Types
+// =============================================================================
+
+/**
+ * A single at-risk skill alert: single-author, high-usage, no forks
+ */
+export interface AtRiskSkillAlert {
+  skillId: string;
+  skillName: string;
+  category: string;
+  authorId: string;
+  authorName: string | null;
+  totalUses: number;
+  hoursSavedPerUse: number;
+  riskLevel: "critical" | "high";
+}
+
+/**
+ * An employee ranked by IP concentration risk
+ */
+export interface IpRiskEmployee {
+  userId: string;
+  name: string | null;
+  email: string;
+  image: string | null;
+  atRiskSkillCount: number;
+  totalAtRiskUses: number;
+  totalAtRiskHoursSaved: number;
+  highestRiskSeverity: number; // 3=critical, 2=high, 1=medium
+  riskLevel: "critical" | "high" | "medium";
+}
+
+/**
+ * A single at-risk skill for an individual employee drill-down
+ */
+export interface EmployeeAtRiskSkill {
+  skillId: string;
+  skillName: string;
+  slug: string;
+  category: string;
+  totalUses: number;
+  hoursSavedPerUse: number;
+  riskLevel: "critical" | "high";
+}
+
+// =============================================================================
+// IP Risk Analysis Query Functions
+// =============================================================================
+
+/**
+ * Get top at-risk skill alerts for the IP dashboard
+ *
+ * Returns published skills that are single-author, high-usage, and have no
+ * published forks -- representing concentrated IP risk.
+ *
+ * @param tenantId - Tenant ID to filter by
+ * @returns Up to 20 at-risk skill alerts, ordered by total uses descending
+ */
+export async function getAtRiskSkillAlerts(tenantId: string): Promise<AtRiskSkillAlert[]> {
+  if (!db) return [];
+
+  const result = await db.execute(sql`
+    SELECT
+      s.id AS skill_id,
+      s.name AS skill_name,
+      s.category,
+      s.author_id,
+      u.name AS author_name,
+      s.total_uses,
+      COALESCE(s.hours_saved, 1) AS hours_saved_per_use
+    FROM skills s
+    JOIN users u ON u.id = s.author_id
+    WHERE s.tenant_id = ${tenantId}
+      AND s.status = 'published'
+      AND s.author_id IS NOT NULL
+      AND s.total_uses >= ${HIGH_USAGE_THRESHOLD}
+      AND NOT EXISTS (
+        SELECT 1 FROM skills fork
+        WHERE fork.forked_from_id = s.id
+          AND fork.status = 'published'
+          AND fork.tenant_id = ${tenantId}
+      )
+    ORDER BY s.total_uses DESC
+    LIMIT 20
+  `);
+
+  const rows = result as unknown as Record<string, unknown>[];
+  return rows.map((row) => ({
+    skillId: String(row.skill_id),
+    skillName: String(row.skill_name),
+    category: String(row.category),
+    authorId: String(row.author_id),
+    authorName: row.author_name ? String(row.author_name) : null,
+    totalUses: Number(row.total_uses),
+    hoursSavedPerUse: Number(row.hours_saved_per_use),
+    riskLevel:
+      Number(row.total_uses) >= CRITICAL_USAGE_THRESHOLD
+        ? ("critical" as const)
+        : ("high" as const),
+  }));
+}
+
+/**
+ * Get employees ranked by IP concentration risk
+ *
+ * Groups at-risk skills by author and ranks employees by their total
+ * at-risk usage exposure. Uses numeric severity for correct MAX aggregation.
+ *
+ * @param tenantId - Tenant ID to filter by
+ * @returns Employees sorted by total at-risk uses descending
+ */
+export async function getIpRiskEmployees(tenantId: string): Promise<IpRiskEmployee[]> {
+  if (!db) return [];
+
+  const result = await db.execute(sql`
+    SELECT
+      u.id, u.name, u.email, u.image,
+      COUNT(*)::integer AS at_risk_skill_count,
+      SUM(s.total_uses)::integer AS total_at_risk_uses,
+      SUM(COALESCE(s.hours_saved, 1) * s.total_uses)::double precision AS total_at_risk_hours_saved,
+      MAX(CASE
+        WHEN s.total_uses >= ${CRITICAL_USAGE_THRESHOLD} THEN 3
+        WHEN s.total_uses >= ${HIGH_USAGE_THRESHOLD} THEN 2
+        ELSE 1
+      END)::integer AS highest_risk_severity
+    FROM skills s
+    JOIN users u ON u.id = s.author_id
+    WHERE s.tenant_id = ${tenantId}
+      AND s.status = 'published'
+      AND s.author_id IS NOT NULL
+      AND s.total_uses >= ${HIGH_USAGE_THRESHOLD}
+      AND NOT EXISTS (
+        SELECT 1 FROM skills fork
+        WHERE fork.forked_from_id = s.id
+          AND fork.status = 'published'
+          AND fork.tenant_id = ${tenantId}
+      )
+    GROUP BY u.id, u.name, u.email, u.image
+    ORDER BY total_at_risk_uses DESC
+  `);
+
+  const rows = result as unknown as Record<string, unknown>[];
+  return rows.map((row) => {
+    const severity = Number(row.highest_risk_severity);
+    return {
+      userId: String(row.id),
+      name: row.name ? String(row.name) : null,
+      email: String(row.email),
+      image: row.image ? String(row.image) : null,
+      atRiskSkillCount: Number(row.at_risk_skill_count),
+      totalAtRiskUses: Number(row.total_at_risk_uses),
+      totalAtRiskHoursSaved: Number(row.total_at_risk_hours_saved),
+      highestRiskSeverity: severity,
+      riskLevel:
+        severity === 3
+          ? ("critical" as const)
+          : severity === 2
+            ? ("high" as const)
+            : ("medium" as const),
+    };
+  });
+}
+
+/**
+ * Get at-risk skills for a specific employee (drill-down)
+ *
+ * Returns the individual at-risk skills owned by a given user,
+ * for display in the employee drill-down modal.
+ *
+ * @param tenantId - Tenant ID to filter by
+ * @param userId - The user/author to get at-risk skills for
+ * @returns At-risk skills for the given employee, ordered by total uses descending
+ */
+export async function getEmployeeAtRiskSkills(
+  tenantId: string,
+  userId: string
+): Promise<EmployeeAtRiskSkill[]> {
+  if (!db) return [];
+
+  const result = await db.execute(sql`
+    SELECT
+      s.id AS skill_id,
+      s.name AS skill_name,
+      s.slug,
+      s.category,
+      s.total_uses,
+      COALESCE(s.hours_saved, 1) AS hours_saved_per_use
+    FROM skills s
+    WHERE s.tenant_id = ${tenantId}
+      AND s.author_id = ${userId}
+      AND s.status = 'published'
+      AND s.total_uses >= ${HIGH_USAGE_THRESHOLD}
+      AND NOT EXISTS (
+        SELECT 1 FROM skills fork
+        WHERE fork.forked_from_id = s.id
+          AND fork.status = 'published'
+          AND fork.tenant_id = ${tenantId}
+      )
+    ORDER BY s.total_uses DESC
+  `);
+
+  const rows = result as unknown as Record<string, unknown>[];
+  return rows.map((row) => ({
+    skillId: String(row.skill_id),
+    skillName: String(row.skill_name),
+    slug: String(row.slug),
+    category: String(row.category),
+    totalUses: Number(row.total_uses),
+    hoursSavedPerUse: Number(row.hours_saved_per_use),
+    riskLevel:
+      Number(row.total_uses) >= CRITICAL_USAGE_THRESHOLD
+        ? ("critical" as const)
+        : ("high" as const),
+  }));
 }
