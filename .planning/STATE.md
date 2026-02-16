@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 75 of 75 (RAGAS Benchmarking)
-Plan: 0 of TBD in current phase
-Status: Not started
-Last activity: 2026-02-16 — Completed Phase 74 (Adaptive Query Routing) — all 3 plans
+Plan: 1 of TBD in current phase
+Status: In progress
+Last activity: 2026-02-16 — Completed 75-01-PLAN.md (RAGAS Dimension Scoring)
 
-Progress: [██████████████████████████████] 7/7 phases (last phase remaining)
+Progress: [█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 1/TBD plans in Phase 75
 
 ## Milestones
 
@@ -34,12 +34,12 @@ Progress: [███████████████████████
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 265
+- Total plans completed: 266
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.5 hours
 
 **Cumulative:**
-- 265 plans across 74 phases and 11 milestones
+- 266 plans across 75 phases and 11 milestones
 - ~64,000 LOC TypeScript across 470+ files
 - 17 days total development time
 
@@ -123,6 +123,13 @@ Phase 74 decisions (plan 02):
 - Skills page logs routeType for analytics only -- existing sort/filter/quality-tier logic preserved (Pitfall 1)
 - Keyword-to-hybrid fallback in discover wrapped in try/catch for graceful embedding failure handling
 
+Phase 75 decisions (plan 01):
+- Nullable INTEGER columns for RAGAS dimensions (not NOT NULL) -- backward compatible with existing rows
+- Single API call scores all 5 dimensions (not 4 separate calls) -- cost efficient
+- max_tokens increased from 512 to 1024 for richer per-dimension judge output
+- Divergent scoring examples in prompt to mitigate score clustering (RAGAS Pitfall 1)
+- qualityScore remains the judge's holistic score -- NOT recalculated from dimensions
+
 ### Pending Todos
 
 - Skill visibility: expose all 4 levels in upload form (addressed by Phase 69)
@@ -139,10 +146,10 @@ Phase 74 decisions (plan 02):
 
 ### Blockers/Concerns
 
-None. Phase 74 complete. Ready for Phase 75 (RAGAS Benchmarking).
+None. Phase 75 plan 01 complete. Ready for remaining Phase 75 plans.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed Phase 74 (Adaptive Query Routing) — all 3 plans
-Resume file: .planning/phases/74-adaptive-query-routing/74-02-SUMMARY.md
+Stopped at: Completed 75-01-PLAN.md (RAGAS Dimension Scoring)
+Resume file: .planning/phases/75-ragas-benchmarking/75-01-SUMMARY.md
