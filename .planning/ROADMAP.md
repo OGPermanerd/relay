@@ -199,7 +199,7 @@ Total: 18 plans completed. 7 phases, 12 requirements.
 - [x] **Phase 63: IP Risk Analysis** - Key person dependency detection and IP concentration risk visualization (completed 2026-02-16)
 - [x] **Phase 64: IP Valuation & Export** - Replacement cost estimation and PDF/CSV IP report for board presentations (completed 2026-02-16)
 - [x] **Phase 65: Individual Skills Portfolio** - Personal portfolio page with contribution stats and portable vs company IP breakdown (completed 2026-02-16)
-- [ ] **Phase 66: Impact Measurement** - Skills impact timeline and value-added calculator for individuals
+- [x] **Phase 66: Impact Measurement** - Skills impact timeline and value-added calculator for individuals (completed 2026-02-16)
 - [ ] **Phase 67: Skills Resume** - Shareable formatted summary of skills and impact for job applications
 - [ ] **Phase 68: Pre-LLM History** - Upload historical work artifacts to demonstrate pre-platform impact
 
@@ -271,8 +271,8 @@ Plans:
   4. Impact metrics update in real time as the user's skills accumulate more usage
 **Plans:** 2 plans
 Plans:
-- [ ] 66-01-PLAN.md — Data layer + components: timeline/calculator queries and chart/calculator components
-- [ ] 66-02-PLAN.md — Page wiring: integrate into portfolio page and E2E tests
+- [x] 66-01-PLAN.md — Data layer + components: timeline/calculator queries and chart/calculator components
+- [x] 66-02-PLAN.md — Page wiring: integrate into portfolio page and E2E tests
 
 #### Phase 67: Skills Resume
 **Goal**: Users can generate a shareable, formatted summary of their skills and impact suitable for job applications and professional profiles
