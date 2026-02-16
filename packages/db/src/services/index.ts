@@ -141,3 +141,9 @@ export {
   type WhatsNewItem,
 } from "./user-skill-views";
 export { detectCommunities, type CommunityDetectionResult } from "./community-detection";
+export {
+  getCommunities,
+  getCommunityDetail,
+  type CommunityOverview,
+  type CommunityDetail,
+} from "./community-queries";

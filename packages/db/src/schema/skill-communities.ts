@@ -41,6 +41,8 @@ export const skillCommunities = pgTable(
       .notNull()
       .defaultNow(),
     runId: text("run_id"),
+    communityLabel: text("community_label"),
+    communityDescription: text("community_description"),
   },
   (table) => [
     uniqueIndex("skill_communities_tenant_skill_unique").on(table.tenantId, table.skillId),
