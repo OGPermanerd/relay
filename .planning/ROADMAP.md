@@ -219,7 +219,7 @@ Total: 15 plans completed. 7 phases, 12 requirements.
 - [x] **Phase 71: Temporal Tracking** - Track user-skill interactions to surface "what changed since you last looked" (completed 2026-02-16)
 - [x] **Phase 72: Community Detection** - Build similarity graph and cluster skills into thematic communities (completed 2026-02-16)
 - [x] **Phase 73: Community Discovery UI** - AI-generated community labels, browse page, and detail page (completed 2026-02-16)
-- [ ] **Phase 74: Adaptive Query Routing** - Classify search queries and route to optimal retrieval strategy
+- [x] **Phase 74: Adaptive Query Routing** - Classify search queries and route to optimal retrieval strategy (completed 2026-02-16)
 - [ ] **Phase 75: RAGAS Benchmarking** - 4-dimension quality scoring with radar visualization and backward-compatible overall score
 
 ## Phase Details
@@ -305,9 +305,9 @@ Plans:
   4. A keyword search returning zero results automatically falls back to hybrid search, and the user sees results from the fallback without any manual intervention
 **Plans:** 3 plans
 Plans:
-- [ ] 74-01-PLAN.md -- Schema migration + query classifier + search router foundation
-- [ ] 74-02-PLAN.md -- Wire routing into discover, quick search, and skills page entry points
-- [ ] 74-03-PLAN.md -- Route type breakdown in admin search analytics dashboard
+- [x] 74-01-PLAN.md -- Schema migration + query classifier + search router foundation
+- [x] 74-02-PLAN.md -- Wire routing into discover, quick search, and skills page entry points
+- [x] 74-03-PLAN.md -- Route type breakdown in admin search analytics dashboard
 
 ### Phase 75: RAGAS Benchmarking
 **Goal**: Benchmark results provide 4-dimension quality insight (faithfulness, relevancy, precision, recall) alongside the existing overall score
@@ -345,10 +345,10 @@ Recommended sequencing: 69 -> 70 -> 71 -> 72 -> 73 -> 74 -> 75 (serial for focus
 | 71. Temporal Tracking | v7.0 | 3/3 | Complete | 2026-02-16 |
 | 72. Community Detection | v7.0 | 2/2 | Complete | 2026-02-16 |
 | 73. Community Discovery UI | v7.0 | 2/2 | Complete | 2026-02-16 |
-| 74. Adaptive Query Routing | v7.0 | 0/3 | Not started | - |
+| 74. Adaptive Query Routing | v7.0 | 3/3 | Complete | 2026-02-16 |
 | 75. RAGAS Benchmarking | v7.0 | 0/TBD | Not started | - |
 
-**Total: 262 plans completed across 73 phases and 11 milestones. 2 phases remaining for v7.0.**
+**Total: 265 plans completed across 74 phases and 11 milestones. 1 phase remaining for v7.0.**
 
 ---
 *Roadmap created: 2026-01-31*

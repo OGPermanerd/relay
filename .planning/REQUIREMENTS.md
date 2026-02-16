@@ -17,10 +17,10 @@ Requirements for v7.0 Algorithm & Architecture Rewrite. Each maps to roadmap pha
 
 ### Adaptive Query Routing
 
-- [ ] **ROUTE-01**: System classifies search queries as keyword, semantic, hybrid, or browse
-- [ ] **ROUTE-02**: Keyword queries skip embedding generation for faster results
-- [ ] **ROUTE-03**: Query route type is logged in search analytics
-- [ ] **ROUTE-04**: System falls back to hybrid if keyword search returns zero results
+- [x] **ROUTE-01**: System classifies search queries as keyword, semantic, hybrid, or browse
+- [x] **ROUTE-02**: Keyword queries skip embedding generation for faster results
+- [x] **ROUTE-03**: Query route type is logged in search analytics
+- [x] **ROUTE-04**: System falls back to hybrid if keyword search returns zero results
 
 ### Temporal Tracking
 
@@ -115,10 +115,10 @@ Requirements for v7.0 Algorithm & Architecture Rewrite. Each maps to roadmap pha
 | COMM-03 | Phase 73 | Pending |
 | COMM-04 | Phase 73 | Pending |
 | COMM-05 | Phase 72 | Pending |
-| ROUTE-01 | Phase 74 | Pending |
-| ROUTE-02 | Phase 74 | Pending |
-| ROUTE-03 | Phase 74 | Pending |
-| ROUTE-04 | Phase 74 | Pending |
+| ROUTE-01 | Phase 74 | Complete |
+| ROUTE-02 | Phase 74 | Complete |
+| ROUTE-03 | Phase 74 | Complete |
+| ROUTE-04 | Phase 74 | Complete |
 | TEMP-01 | Phase 71 | Pending |
 | TEMP-02 | Phase 71 | Pending |
 | TEMP-03 | Phase 71 | Pending |
