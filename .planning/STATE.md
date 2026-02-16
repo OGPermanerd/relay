@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 71 of 75 (Temporal Tracking)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-16 — Completed 71-02-PLAN.md (view tracking & change summary)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-16 — Completed 71-03-PLAN.md (Updated badges & What's New feed)
 
-Progress: [██████████░░░░░░░░░░░░░░░░░░░░] 3/7 phases
+Progress: [████████████░░░░░░░░░░░░░░░░░░] 4/7 phases
 
 ## Milestones
 
@@ -34,12 +34,12 @@ Progress: [██████████░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 253
+- Total plans completed: 254
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.5 hours
 
 **Cumulative:**
-- 253 plans across 71 phases and 11 milestones
+- 254 plans across 71 phases and 11 milestones
 - ~64,000 LOC TypeScript across 470 files
 - 17 days total development time
 
@@ -81,6 +81,8 @@ Phase 71 decisions:
 - Changes computed BEFORE recording view to preserve comparison baseline (pitfall TEMP-03)
 - View recording is fire-and-forget with .catch(() => {}) — never blocks page render
 - ChangeSummary placed after SkillDetail, before action buttons in skill detail page
+- Pass updatedSkillIds as string[] across RSC boundary (Set not serializable), reconstruct with useMemo
+- WhatsNewFeed returns null when empty (hidden, not empty state)
 
 ### Pending Todos
 
@@ -98,10 +100,10 @@ Phase 71 decisions:
 
 ### Blockers/Concerns
 
-None. Phase 71 plans 01-02 complete. Ready for 71-03 (What's New page).
+None. Phase 71 complete (all 3 plans). Ready for Phase 72 (Similarity Graph).
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 71-02-PLAN.md (view tracking & change summary), ready for 71-03
-Resume file: .planning/phases/71-temporal-tracking/71-03-PLAN.md
+Stopped at: Completed Phase 71 (Temporal Tracking) — all 3 plans done
+Resume file: .planning/phases/72-similarity-graph/
