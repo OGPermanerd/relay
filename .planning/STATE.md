@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-15)
 ## Current Position
 
 Phase: 67 of 68 (Skills Resume)
-Plan: 1 of TBD in current phase
+Plan: 2 of TBD in current phase
 Status: In progress
-Last activity: 2026-02-16 -- Completed 67-01-PLAN.md (data layer)
+Last activity: 2026-02-16 -- Completed 67-02-PLAN.md (resume UI)
 
-Progress: [############################..] 94% (241 plans across 67 phases, 10 milestones)
+Progress: [############################..] 94% (242 plans across 67 phases, 10 milestones)
 
 ## Milestones
 
@@ -33,12 +33,12 @@ Progress: [############################..] 94% (241 plans across 67 phases, 10 m
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 241
+- Total plans completed: 242
 - Average duration: ~5 min (across milestones)
-- Total execution time: ~11.9 hours
+- Total execution time: ~12.0 hours
 
 **Cumulative:**
-- 241 plans across 67 phases and 10 milestones
+- 242 plans across 67 phases and 10 milestones
 - ~50,000 LOC TypeScript across 386 files
 - 16 days total development time
 
@@ -80,6 +80,9 @@ v6.0 decisions:
 - Resume shares: revoke-and-replace pattern (one active share per user)
 - Resume visibility: includeCompanySkills toggle filters personal-only vs all skills
 - Quality tier computed per-skill via calculateQualityScore with total_ratings subquery
+- Resume UI: search param approach (?include=company) for server-side visibility toggle
+- Shared ResumeView component for both auth and public pages (isPublic prop controls footer)
+- ResumeShareControls uses router.push on toggle to trigger full server re-render
 
 ### Pending Todos
 
@@ -94,5 +97,5 @@ None yet. v6.0 is primarily SQL aggregation + new pages on existing data.
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 67-01 (data layer). Ready for 67-02 (resume UI page).
-Resume file: .planning/phases/67-skills-resume/67-01-SUMMARY.md
+Stopped at: Completed 67-02 (resume UI). Resume page, share controls, public page, PDF download, E2E tests all done.
+Resume file: .planning/phases/67-skills-resume/67-02-SUMMARY.md
