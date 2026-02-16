@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { generateEmbedding } from "@/lib/ollama";
+import { classifyQuery, type RouteType } from "@/lib/query-classifier";
 import {
   getSiteSettings,
   hybridSearchSkills,
@@ -98,44 +99,93 @@ export async function discoverSkills(query: string, limit = 3): Promise<Discover
   const tenantId = session.user.tenantId;
   if (!tenantId) return [];
 
-  // 1. Try to get query embedding for semantic search
-  let queryEmbedding: number[] | null = null;
-  try {
-    const settings = await getSiteSettings();
-    if (settings?.semanticSimilarityEnabled) {
-      queryEmbedding = await generateEmbedding(trimmed, {
-        url: settings.ollamaUrl,
-        model: settings.ollamaModel,
-      });
-    }
-  } catch {
-    // Embedding failed -- will fall back to keyword-only
+  // 1. Classify query to determine optimal route
+  const classification = classifyQuery(trimmed);
+  let actualRouteType: RouteType = classification.routeType;
+
+  // Check semantic search availability (Pitfall 4)
+  const settings = await getSiteSettings();
+  const semanticEnabled = settings?.semanticSimilarityEnabled ?? false;
+
+  // Downgrade semantic/hybrid to keyword when embeddings unavailable
+  if (!semanticEnabled && (actualRouteType === "semantic" || actualRouteType === "hybrid")) {
+    actualRouteType = "keyword";
   }
 
-  // 2. Run hybrid or keyword-only search
+  // 2. Route to optimal search backend
+  const fetchLimit = limit + 5; // fetch extra for post-boost reranking
   let rawResults: HybridSearchResult[];
-  if (queryEmbedding) {
-    rawResults = await hybridSearchSkills({
-      query: trimmed,
-      queryEmbedding,
-      userId,
-      limit: limit + 5, // fetch extra for post-boost reranking
-    });
 
-    // If hybrid returned nothing, fall back to keyword
-    if (rawResults.length === 0) {
-      rawResults = await keywordSearchSkills({
-        query: trimmed,
-        userId,
-        limit: limit + 5,
-      });
-    }
-  } else {
+  if (actualRouteType === "keyword") {
+    // ROUTE-02: Keyword queries skip embedding generation
     rawResults = await keywordSearchSkills({
       query: trimmed,
       userId,
-      limit: limit + 5,
+      limit: fetchLimit,
     });
+
+    // ROUTE-04: Zero-result keyword searches fall back to hybrid
+    if (rawResults.length === 0 && semanticEnabled && settings) {
+      try {
+        const embedding = await generateEmbedding(trimmed, {
+          url: settings.ollamaUrl,
+          model: settings.ollamaModel,
+        });
+        if (embedding) {
+          rawResults = await hybridSearchSkills({
+            query: trimmed,
+            queryEmbedding: embedding,
+            userId,
+            limit: fetchLimit,
+          });
+          actualRouteType = "hybrid"; // Track fallback
+        }
+      } catch {
+        // Embedding failed during fallback -- stay with keyword zero results
+      }
+    }
+  } else {
+    // Semantic or hybrid route: generate embedding
+    let queryEmbedding: number[] | null = null;
+    if (settings) {
+      try {
+        queryEmbedding = await generateEmbedding(trimmed, {
+          url: settings.ollamaUrl,
+          model: settings.ollamaModel,
+        });
+      } catch {
+        // Embedding failed -- fall back to keyword
+      }
+    }
+
+    if (queryEmbedding) {
+      // Use hybrid for both semantic and hybrid routes in discover
+      // (hybrid includes keyword + semantic, better coverage for discovery)
+      rawResults = await hybridSearchSkills({
+        query: trimmed,
+        queryEmbedding,
+        userId,
+        limit: fetchLimit,
+      });
+
+      // If hybrid returned nothing, fall back to keyword
+      if (rawResults.length === 0) {
+        rawResults = await keywordSearchSkills({
+          query: trimmed,
+          userId,
+          limit: fetchLimit,
+        });
+        actualRouteType = "keyword"; // Track fallback
+      }
+    } else {
+      // Embedding generation failed -- fall back to keyword
+      rawResults = await keywordSearchSkills({
+        query: trimmed,
+        userId,
+        limit: fetchLimit,
+      });
+      actualRouteType = "keyword"; // Track fallback
+    }
   }
 
   if (rawResults.length === 0) return [];
@@ -167,6 +217,7 @@ export async function discoverSkills(query: string, limit = 3): Promise<Discover
     normalizedQuery: trimmed.toLowerCase(),
     resultCount: finalResults.length,
     searchType: "discover",
+    routeType: actualRouteType,
   }).catch(() => {});
 
   // 6. Return top N
