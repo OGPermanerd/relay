@@ -24,6 +24,7 @@ import {
   resumeShares,
   workArtifacts,
   userSkillViews,
+  skillCommunities,
 } from "../schema";
 
 /**
@@ -75,6 +76,7 @@ export const skillsRelations = relations(skills, ({ one, many }) => ({
   tokenMeasurements: many(tokenMeasurements),
   benchmarkRuns: many(benchmarkRuns),
   views: many(userSkillViews),
+  communities: many(skillCommunities),
 }));
 
 /**
@@ -205,6 +207,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   resumeShares: many(resumeShares),
   workArtifacts: many(workArtifacts),
   userSkillViews: many(userSkillViews),
+  skillCommunities: many(skillCommunities),
 }));
 
 /**
@@ -482,6 +485,22 @@ export const userSkillViewsRelations = relations(userSkillViews, ({ one }) => ({
   }),
   tenant: one(tenants, {
     fields: [userSkillViews.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
+/**
+ * SkillCommunities relations
+ * - skill: many-to-one with skills
+ * - tenant: many-to-one with tenants
+ */
+export const skillCommunitiesRelations = relations(skillCommunities, ({ one }) => ({
+  skill: one(skills, {
+    fields: [skillCommunities.skillId],
+    references: [skills.id],
+  }),
+  tenant: one(tenants, {
+    fields: [skillCommunities.tenantId],
     references: [tenants.id],
   }),
 }));
