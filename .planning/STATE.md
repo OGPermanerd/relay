@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 70 of 75 (MCP Preference Sync)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-16 — Completed 70-01-PLAN.md (MCP preference handlers)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-16 — Completed 70-02-PLAN.md (MCP preference integration)
 
 Progress: [████░░░░░░░░░░░░░░░░░░░░░░░░░░] 1/7 phases
 
@@ -34,12 +34,12 @@ Progress: [████░░░░░░░░░░░░░░░░░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 250
+- Total plans completed: 251
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.5 hours
 
 **Cumulative:**
-- 250 plans across 69 phases and 11 milestones
+- 251 plans across 70 phases and 11 milestones
 - ~64,000 LOC TypeScript across 470 files
 - 17 days total development time
 
@@ -68,6 +68,10 @@ Phase 69 decisions:
 Phase 70 decisions:
 - Read-modify-write pattern for MCP set_preferences to preserve claudeMdWorkflowNotes and trainingDataConsent
 - Auth guard checks both userId AND tenantId before allowing preference access
+- PREFERENCE_BOOST = 1.3 matches web UI discover.ts multiplier for consistency
+- Stable sort for text search preference reranking (preserves relevance within groups)
+- All preference loading wrapped in try/catch — failures never break core MCP tools
+- List tool always applies orderBy (desc hoursSaved default) for deterministic ordering
 
 ### Pending Todos
 
@@ -85,10 +89,10 @@ Phase 70 decisions:
 
 ### Blockers/Concerns
 
-None. Plan 70-01 complete. Ready for 70-02.
+None. Phase 70 complete (both plans done). Ready for Phase 71.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 70-01-PLAN.md, ready for 70-02
-Resume file: .planning/phases/70-mcp-preference-sync/70-02-PLAN.md
+Stopped at: Completed Phase 70 (all 2 plans), ready for Phase 71
+Resume file: .planning/phases/71-*/71-01-PLAN.md
