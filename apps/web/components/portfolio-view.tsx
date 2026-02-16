@@ -53,9 +53,17 @@ export function PortfolioView({
   return (
     <div className="space-y-8">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">My Portfolio</h1>
-        <p className="mt-1 text-sm text-gray-500">{rankingSubtitle}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">My Portfolio</h1>
+          <p className="mt-1 text-sm text-gray-500">{rankingSubtitle}</p>
+        </div>
+        <Link
+          href="/portfolio/resume"
+          className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+        >
+          Skills Resume
+        </Link>
       </div>
 
       {/* Hero Stats Row */}

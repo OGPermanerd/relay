@@ -63,4 +63,31 @@ test.describe("Portfolio Page", () => {
       await expect(emptyState).toBeVisible();
     }
   });
+
+  test("should have Skills Resume link on portfolio page", async ({ page }) => {
+    await page.goto("/portfolio");
+    const resumeLink = page.getByRole("link", { name: /resume/i });
+    await expect(resumeLink).toBeVisible();
+    await expect(resumeLink).toHaveAttribute("href", "/portfolio/resume");
+  });
+
+  test("should load /portfolio/resume page with resume content", async ({ page }) => {
+    await page.goto("/portfolio/resume");
+    // Page should load without error
+    await expect(page.locator("h1")).toContainText("Skills Resume");
+    // Impact stats should be present
+    await expect(page.getByText("Skills Authored")).toBeVisible();
+    await expect(page.getByText("Hours Saved")).toBeVisible();
+    await expect(page.getByText("People Helped")).toBeVisible();
+    // PDF download button should be present
+    await expect(page.getByRole("button", { name: /pdf|download/i })).toBeVisible();
+  });
+
+  test("should display share controls on resume page", async ({ page }) => {
+    await page.goto("/portfolio/resume");
+    // Share controls should be visible (either generate button or existing link)
+    const generateBtn = page.getByRole("button", { name: /generate|share/i });
+    const shareInput = page.locator("input[readonly]");
+    await expect(generateBtn.or(shareInput)).toBeVisible();
+  });
 });
