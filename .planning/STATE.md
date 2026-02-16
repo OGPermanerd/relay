@@ -117,6 +117,12 @@ Phase 74 decisions (plan 01):
 - Semantic/hybrid routes auto-downgrade to keyword when semanticSimilarityEnabled is false (Pitfall 4)
 - RouteResult<T> carries fellBack flag and classificationReason for analytics transparency
 
+Phase 74 decisions (plan 02):
+- Discover action uses classifyQuery directly (not routeSearch) to preserve preference boost and rationale logic
+- Quick search logs routeType but does not change search behavior (already fast with 10-result limit)
+- Skills page logs routeType for analytics only -- existing sort/filter/quality-tier logic preserved (Pitfall 1)
+- Keyword-to-hybrid fallback in discover wrapped in try/catch for graceful embedding failure handling
+
 ### Pending Todos
 
 - Skill visibility: expose all 4 levels in upload form (addressed by Phase 69)
@@ -133,7 +139,7 @@ Phase 74 decisions (plan 01):
 
 ### Blockers/Concerns
 
-None. Phase 74 plans 01 and 03 complete. Query classifier, search router, and admin dashboard cards ready.
+None. Phase 74 plans 01, 02, and 03 complete. Query classifier wired into all search entry points with dashboard cards.
 
 ## Session Continuity
 
