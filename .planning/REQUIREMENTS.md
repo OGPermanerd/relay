@@ -41,11 +41,11 @@ Requirements for v7.0 Algorithm & Architecture Rewrite. Each maps to roadmap pha
 
 ### RAGAS Benchmarking
 
-- [ ] **BENCH-01**: Benchmark judge scores 4 dimensions: faithfulness, relevancy, precision, recall
-- [ ] **BENCH-02**: Benchmark results page shows per-dimension scores with radar chart
-- [ ] **BENCH-03**: Per-dimension model comparison table on benchmark results
-- [ ] **BENCH-04**: Aggregate dimension scores displayed per skill across benchmark runs
-- [ ] **BENCH-05**: Existing overall quality score remains backward-compatible
+- [x] **BENCH-01**: Benchmark judge scores 4 dimensions: faithfulness, relevancy, precision, recall
+- [x] **BENCH-02**: Benchmark results page shows per-dimension scores with radar chart
+- [x] **BENCH-03**: Per-dimension model comparison table on benchmark results
+- [x] **BENCH-04**: Aggregate dimension scores displayed per skill across benchmark runs
+- [x] **BENCH-05**: Existing overall quality score remains backward-compatible
 
 ## v8.0+ Requirements (Deferred Differentiators)
 
@@ -130,11 +130,11 @@ Requirements for v7.0 Algorithm & Architecture Rewrite. Each maps to roadmap pha
 | VIS-05 | Phase 69 | Complete |
 | VIS-06 | Phase 70 | Complete |
 | VIS-07 | Phase 70 | Complete |
-| BENCH-01 | Phase 75 | Pending |
-| BENCH-02 | Phase 75 | Pending |
-| BENCH-03 | Phase 75 | Pending |
-| BENCH-04 | Phase 75 | Pending |
-| BENCH-05 | Phase 75 | Pending |
+| BENCH-01 | Phase 75 | Complete |
+| BENCH-02 | Phase 75 | Complete |
+| BENCH-03 | Phase 75 | Complete |
+| BENCH-04 | Phase 75 | Complete |
+| BENCH-05 | Phase 75 | Complete |
 
 **Coverage:**
 - v7.0 requirements: 25 total
