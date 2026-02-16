@@ -180,7 +180,7 @@ export async function handleDeploySkill({
   // Ensure skill content has PostToolUse hooks for automatic usage tracking
   const contentWithHooks = hasTrackingHooks(skill.content)
     ? skill.content
-    : buildHookFrontmatter(skill.id, skill.name, skill.category, skill.hoursSaved) +
+    : buildHookFrontmatter(skill.id, skill.name, skill.category, skill.hoursSaved ?? 0) +
       stripFrontmatter(skill.content);
 
   // For stdio transport, use hook-enriched content; for HTTP, use original content

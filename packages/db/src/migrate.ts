@@ -55,7 +55,7 @@ async function main() {
       console.log(`Applying ${file}...`);
       await sql.begin(async (tx) => {
         await tx.unsafe(sqlContent);
-        await tx`INSERT INTO _applied_migrations (name) VALUES (${file})`;
+        await (tx as unknown as postgres.Sql)`INSERT INTO _applied_migrations (name) VALUES (${file})`;
       });
       count++;
     }
