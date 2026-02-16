@@ -209,7 +209,7 @@ export function SkillUploadForm({ isAdmin = false }: { isAdmin?: boolean }) {
                   className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-700">Team</span>
+                  <span className="text-sm font-medium text-gray-700">Company</span>
                   <p className="text-xs text-gray-500">Visible to everyone in your organization</p>
                 </div>
               </label>
