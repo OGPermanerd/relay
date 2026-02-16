@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-16)
 ## Current Position
 
 Phase: 69 of 75 (Extended Visibility)
-Plan: 3 of 3 in current phase (plan 02 still pending)
-Status: In progress
-Last activity: 2026-02-16 — Completed 69-03-PLAN.md (UI visibility controls)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-16 — Completed 69-02-PLAN.md (inline queries & validation)
 
-Progress: [████████████████████░░░░░░░░░░] 2/3
+Progress: [██████████████████████████████] 3/3
 
 ## Milestones
 
@@ -34,12 +34,12 @@ Progress: [████████████████████░░░
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 248
+- Total plans completed: 249
 - Average duration: ~5 min (across milestones)
 - Total execution time: ~12.4 hours
 
 **Cumulative:**
-- 248 plans across 68 phases and 11 milestones
+- 249 plans across 68 phases and 11 milestones
 - ~64,000 LOC TypeScript across 469 files
 - 17 days total development time
 
@@ -62,6 +62,8 @@ Phase 69 decisions:
 - Vitest added to @everyskill/db as first test framework for that package
 - Server-side admin resolution via auth() + isAdmin() passed as boolean prop to client components
 - VisibilityBadge color scheme: Global=purple, Company=blue, Portable=green, Private=gray
+- Admin gate in server actions uses isAdmin(session) inline check, not middleware
+- MCP tools reject global_approved at handler level with descriptive error (no role info available)
 
 ### Pending Todos
 
@@ -79,10 +81,10 @@ Phase 69 decisions:
 
 ### Blockers/Concerns
 
-None. Phase 69 plans 01 and 03 complete, plan 02 still pending.
+None. Phase 69 complete (all 3 plans done). Ready for Phase 70.
 
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 69-03 (UI visibility controls), plan 02 still pending
-Resume file: .planning/phases/69-extended-visibility/69-02-PLAN.md
+Stopped at: Completed Phase 69 (all 3 plans), ready for Phase 70
+Resume file: .planning/phases/70-*/70-01-PLAN.md
