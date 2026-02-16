@@ -29,3 +29,4 @@ export * from "./token-measurements";
 export * from "./benchmark-runs";
 export * from "./resume-shares";
 export * from "./work-artifacts";
+export * from "./user-skill-views";

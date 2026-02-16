@@ -23,6 +23,7 @@ import {
   benchmarkResults,
   resumeShares,
   workArtifacts,
+  userSkillViews,
 } from "../schema";
 
 /**
@@ -73,6 +74,7 @@ export const skillsRelations = relations(skills, ({ one, many }) => ({
   feedback: many(skillFeedback),
   tokenMeasurements: many(tokenMeasurements),
   benchmarkRuns: many(benchmarkRuns),
+  views: many(userSkillViews),
 }));
 
 /**
@@ -138,6 +140,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   benchmarkRuns: many(benchmarkRuns),
   resumeShares: many(resumeShares),
   workArtifacts: many(workArtifacts),
+  skillViews: many(userSkillViews),
 }));
 
 /**
@@ -201,6 +204,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   benchmarkResults: many(benchmarkResults),
   resumeShares: many(resumeShares),
   workArtifacts: many(workArtifacts),
+  userSkillViews: many(userSkillViews),
 }));
 
 /**
@@ -460,3 +464,24 @@ export const workArtifactsRelations = relations(workArtifacts, ({ one }) => ({
  * (no FK relations — actorId and tenantId are nullable text fields for flexibility)
  */
 export const auditLogsRelations = relations(auditLogs, () => ({}));
+
+/**
+ * UserSkillViews relations
+ * - user: many-to-one with users
+ * - skill: many-to-one with skills
+ * - tenant: many-to-one with tenants
+ */
+export const userSkillViewsRelations = relations(userSkillViews, ({ one }) => ({
+  user: one(users, {
+    fields: [userSkillViews.userId],
+    references: [users.id],
+  }),
+  skill: one(skills, {
+    fields: [userSkillViews.skillId],
+    references: [skills.id],
+  }),
+  tenant: one(tenants, {
+    fields: [userSkillViews.tenantId],
+    references: [tenants.id],
+  }),
+}));
