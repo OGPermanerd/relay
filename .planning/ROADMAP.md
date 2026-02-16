@@ -248,7 +248,10 @@ Plans:
   1. An authenticated MCP user can call a tool to read their current search preferences (preferred categories, default sort) and get the same values shown in the web UI
   2. An authenticated MCP user can call a tool to update their search preferences, and the changes appear in the web UI on next page load
   3. MCP search results for authenticated users are boosted by their preferred categories (matching web discovery behavior)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 70-01-PLAN.md -- Preference CRUD: get_preferences + set_preferences actions in unified tool
+- [ ] 70-02-PLAN.md -- Search boost: preference reranking in search/recommend + defaultSort in list
 
 ### Phase 71: Temporal Tracking
 **Goal**: Users can see what changed in skills since they last looked, reducing information overload
