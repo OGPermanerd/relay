@@ -9,7 +9,9 @@ import {
   getQualityTrends,
   getIpRiskEmployees,
   getAtRiskSkillAlerts,
+  getSkillValuationData,
 } from "@/lib/ip-dashboard-queries";
+import { computeSkillValuations } from "@/lib/ip-valuation";
 import { getStartDate, type TimeRange } from "@/lib/analytics-queries";
 
 export const metadata = { title: "IP Dashboard | EverySkill" };
@@ -36,12 +38,15 @@ export default async function IpDashboardPage({ searchParams }: IpDashboardPageP
 
   // Hero stats are all-time (no date filter); quality trends use the time range
   // Risk data is also all-time (not date-filtered)
-  const [stats, trendData, riskEmployees, atRiskAlerts] = await Promise.all([
+  const [stats, trendData, riskEmployees, atRiskAlerts, rawSkills] = await Promise.all([
     getIpDashboardStats(tenantId),
     getQualityTrends(tenantId, startDate),
     getIpRiskEmployees(tenantId),
     getAtRiskSkillAlerts(tenantId),
+    getSkillValuationData(tenantId),
   ]);
+  const skills = computeSkillValuations(rawSkills);
+  const totalIpValue = skills.reduce((sum, s) => sum + s.replacementCost, 0);
 
   return (
     <>
@@ -55,6 +60,8 @@ export default async function IpDashboardPage({ searchParams }: IpDashboardPageP
         trendData={trendData}
         riskEmployees={riskEmployees}
         atRiskAlerts={atRiskAlerts}
+        totalIpValue={totalIpValue}
+        skills={skills}
       />
     </>
   );
