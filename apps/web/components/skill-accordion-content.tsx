@@ -70,13 +70,13 @@ export function SkillAccordionContent({
             </div>
           )}
 
-          {/* Loom video thumbnail */}
+          {/* Loom video — autoplays small on hover, click to expand */}
           {skill.loomUrl &&
             (() => {
               const videoId = extractLoomVideoId(skill.loomUrl!);
               return videoId ? (
                 <div className="mt-3" onClick={(e) => e.stopPropagation()}>
-                  <LoomEmbed videoId={videoId} />
+                  <LoomEmbed videoId={videoId} mode="inline" />
                 </div>
               ) : null;
             })()}

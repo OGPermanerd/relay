@@ -6,7 +6,7 @@ interface LoomEmbedProps {
   videoId: string;
   title?: string;
   duration?: number;
-  mode?: "thumbnail" | "full";
+  mode?: "thumbnail" | "full" | "inline";
 }
 
 function formatDuration(seconds: number): string {
@@ -17,6 +17,28 @@ function formatDuration(seconds: number): string {
 
 export function LoomEmbed({ videoId, title, duration, mode = "thumbnail" }: LoomEmbedProps) {
   const [expanded, setExpanded] = useState(mode === "full");
+  const [inlineExpanded, setInlineExpanded] = useState(false);
+
+  // Inline mode: small autoplay iframe, click to expand larger
+  if (mode === "inline") {
+    return (
+      <button
+        onClick={() => setInlineExpanded((v) => !v)}
+        className="block cursor-pointer rounded-lg border border-gray-200 overflow-hidden transition-all duration-200"
+        style={{ width: inlineExpanded ? "100%" : "240px" }}
+        aria-label={inlineExpanded ? "Shrink video" : "Expand video"}
+      >
+        <div className="relative" style={{ paddingBottom: "62.5%" }}>
+          <iframe
+            src={`https://www.loom.com/embed/${videoId}?autoplay=1&hide_owner=true&hide_share=true&hide_title=true`}
+            allow="autoplay; encrypted-media *;"
+            className="absolute inset-0 h-full w-full pointer-events-none"
+            frameBorder="0"
+          />
+        </div>
+      </button>
+    );
+  }
 
   if (expanded) {
     return (
