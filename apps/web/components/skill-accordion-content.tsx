@@ -1,6 +1,8 @@
 "use client";
 
 import { InstallButton } from "./install-button";
+import { LoomEmbed } from "./loom-embed";
+import { extractLoomVideoId } from "@/lib/loom";
 
 interface SkillAccordionContentProps {
   id: string;
@@ -11,6 +13,7 @@ interface SkillAccordionContentProps {
     description: string;
     category: string;
     tags?: string[];
+    loomUrl?: string | null;
   };
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
@@ -66,6 +69,17 @@ export function SkillAccordionContent({
               ))}
             </div>
           )}
+
+          {/* Loom video thumbnail */}
+          {skill.loomUrl &&
+            (() => {
+              const videoId = extractLoomVideoId(skill.loomUrl!);
+              return videoId ? (
+                <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                  <LoomEmbed videoId={videoId} />
+                </div>
+              ) : null;
+            })()}
 
           {/* Install button - stopPropagation is handled internally by InstallButton */}
           <div className="mt-4" onClick={(e) => e.stopPropagation()}>

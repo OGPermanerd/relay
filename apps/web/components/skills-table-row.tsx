@@ -207,6 +207,7 @@ export function SkillsTableRow({
             description: skill.description,
             category: skill.category,
             tags: skill.tags ?? undefined,
+            loomUrl: skill.loomUrl,
           }}
           onMouseEnter={onExpand}
           onMouseLeave={onCollapse}
