@@ -1,5 +1,32 @@
 # Project Milestones: EverySkill
 
+## v7.0 Algorithm & Architecture Rewrite (Shipped: 2026-02-18)
+
+**Delivered:** Research-backed algorithmic infrastructure — community detection, adaptive query routing, temporal tracking, extended visibility, RAGAS benchmarking, and interactive knowledge topology visualization.
+
+**Phases completed:** 69-75 (17 plans total)
+
+**Key accomplishments:**
+- Extended visibility with 4 graduated levels (global_approved, tenant, personal, private) and cross-tenant RLS
+- Community detection via KNN similarity graph + Louvain clustering with AI-generated labels and browse/detail pages
+- Adaptive query routing classifying searches as keyword/semantic/hybrid/browse with automatic fallback
+- RAGAS 4-dimension benchmarking (faithfulness, relevancy, precision, recall) with radar visualization
+- Temporal tracking with "What's New" feed and change summaries since last view
+- MCP bidirectional preference sync between web UI and Claude tools
+- Interactive knowledge topology graph visualization with sigma.js on communities page
+
+**Stats:**
+- 137 files created/modified
+- ~16,095 lines of TypeScript
+- 7 phases, 17 plans, 25 requirements
+- 3 days (2026-02-16 → 2026-02-18)
+
+**Git range:** `36f7f9b` (feat(69-01)) → `cd0e335` (feat: topology graph)
+
+**Archive:** [v7.0-ROADMAP.md](milestones/v7.0-ROADMAP.md) | [v7.0-REQUIREMENTS.md](milestones/v7.0-REQUIREMENTS.md)
+
+---
+
 ## v6.0 IP Dashboard & Skills Portfolio (Shipped: 2026-02-16)
 
 **Delivered:** Company IP dashboard with risk analysis and valuation, individual skills portfolio with impact measurement, shareable skills resume, and pre-LLM history upload.

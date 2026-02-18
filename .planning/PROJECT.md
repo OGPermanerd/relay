@@ -13,29 +13,19 @@ EverySkill is an AI skills platform that turns scattered prompts, workflows, and
 
 Protect and grow your IP. Fast. Skills get better as they pass through more hands, with real metrics proving that value — and the IP is protected for both companies and individuals.
 
-## Current Milestone: v7.0 Algorithm & Architecture Rewrite
+## Current Milestone: v7.0 SHIPPED
 
-**Goal:** Implement research-backed algorithmic infrastructure (GraphRAG communities, adaptive query routing, temporal tracking, extended visibility, multi-model benchmarking) to make the "smart skills database" promise real.
-
-**Target features:**
-- GraphRAG-style skill communities with Leiden detection and pre-computed summaries
-- Adaptive query router classifying exact-match / exploratory / diagnostic queries
-- Bi-temporal skill tracking with drift detection and quality regression signals
-- Extended visibility scopes (global_approved, tenant, personal, private) with cross-AI preference sync
-- Multi-model benchmarking (Google, Llama) with RAGAS-style evaluation
-
-**Critical constraint:** Comprehensive unit tests per phase to manage complex interdependencies.
-
-**Research basis:** `docs/algoresearch.md` — synthesis of ~40 papers on RAG, knowledge graphs, adaptive retrieval, community detection.
+All milestones complete. Next milestone not yet planned.
 
 ## Current State
 
-**v6.0 shipped 2026-02-16** — IP dashboard with risk analysis and valuation, individual skills portfolio with impact measurement, shareable skills resume, pre-LLM history upload.
+**v7.0 shipped 2026-02-18** — Algorithm & architecture rewrite: community detection, adaptive query routing, temporal tracking, extended visibility, RAGAS benchmarking, interactive knowledge topology.
 
-Tech stack: Next.js 16.1.6, PostgreSQL 16, Drizzle ORM, Auth.js v5, MCP SDK, Anthropic SDK, Ollama, pgvector, Recharts, jsPDF, Playwright
-LOC: ~64,000 TypeScript across 469 files
+Tech stack: Next.js 16.1.6, PostgreSQL 16, Drizzle ORM, Auth.js v5, MCP SDK, Anthropic SDK, Ollama, pgvector, Recharts, jsPDF, Playwright, sigma.js, graphology
+LOC: ~80,000 TypeScript across 470+ files
 
 Milestones:
+- v7.0 shipped 2026-02-18 — Community detection, adaptive routing, temporal tracking, visibility, RAGAS benchmarking, topology graph
 - v6.0 shipped 2026-02-16 — IP dashboard, risk analysis, valuation, skills portfolio, resume, pre-LLM history
 - v5.0 shipped 2026-02-15 — Feedback, training data, benchmarking, cost measurement
 - v4.0 shipped 2026-02-14 — Gmail workflow diagnostic, work-activity skill recommendations
@@ -137,6 +127,21 @@ Milestones:
 - ✓ Token/cost measurement with transcript parsing, static pricing table, and cost StatCards — v5.0
 - ✓ Cross-model benchmarking with blinded AI judge and cost trend visualization — v5.0
 - ✓ Secret detection and sanitization across all user-submitted content — v5.0
+
+### Validated — v7.0 Algorithm & Architecture Rewrite
+
+- ✓ Extended visibility with 4 graduated levels (global_approved, tenant, personal, private) and cross-tenant RLS — v7.0
+- ✓ MCP bidirectional preference sync (get/set preferences, search preference boost) — v7.0
+- ✓ Temporal tracking with user-skill view recording and "What's New" feed — v7.0
+- ✓ Skill cards "Updated" badge and change summary on detail page — v7.0
+- ✓ Community detection via KNN similarity graph + Louvain clustering — v7.0
+- ✓ AI-generated community labels and descriptions — v7.0
+- ✓ Community browse page and detail page with similarity scores — v7.0
+- ✓ Adaptive query routing (keyword/semantic/hybrid/browse) with automatic fallback — v7.0
+- ✓ Route type analytics in search dashboard — v7.0
+- ✓ RAGAS 4-dimension benchmarking (faithfulness, relevancy, precision, recall) — v7.0
+- ✓ Radar chart and per-dimension model comparison — v7.0
+- ✓ Interactive knowledge topology graph visualization with sigma.js — v7.0
 
 ### Validated — v6.0 IP Dashboard & Skills Portfolio
 
@@ -280,4 +285,4 @@ Milestones:
 | Client-side file parsing for artifacts | Avoids serializing File objects to server actions; 5MB limit | ✓ Good |
 
 ---
-*Last updated: 2026-02-16 after v7.0 milestone start — Algorithm & Architecture Rewrite*
+*Last updated: 2026-02-18 after v7.0 milestone completion — Algorithm & Architecture Rewrite*
