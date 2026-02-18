@@ -150,3 +150,10 @@ export {
   type CommunityOverview,
   type CommunityDetail,
 } from "./community-queries";
+export {
+  getTopologyGraph,
+  type TopologyNode,
+  type TopologyEdge,
+  type TopologyCommunity,
+  type TopologyResponse,
+} from "./topology";
